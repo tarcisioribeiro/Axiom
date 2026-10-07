@@ -34,18 +34,6 @@ export default {
           'Helvetica Neue',
           'sans-serif',
         ],
-        /* Monospace — SF Mono on macOS, Cascadia Code on Windows 11, JetBrains Mono fallback */
-        mono: [
-          'ui-monospace',
-          'SFMono-Regular',
-          'SF Mono',
-          'Cascadia Code',
-          'Cascadia Mono',
-          'JetBrains Mono',
-          'Consolas',
-          'Liberation Mono',
-          'monospace',
-        ],
       },
       colors: {
         border: 'hsl(var(--border))',

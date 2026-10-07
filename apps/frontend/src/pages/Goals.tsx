@@ -439,6 +439,9 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
   const [isRegisteringFailure, setIsRegisteringFailure] = useState(false);
   const [viewingFailuresGoal, setViewingFailuresGoal] = useState<Goal | undefined>();
   const [detailsGoal, setDetailsGoal] = useState<Goal | undefined>();
+  const detailsTypeMeta = detailsGoal
+    ? GOAL_TYPE_META[detailsGoal.goal_type] ?? GOAL_TYPE_META.custom
+    : undefined;
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -689,10 +692,10 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('pages.goals.registerFailureTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('pages.goals.registerFailureDesc', { name: failureGoal?.title })}
-            </DialogDescription>
+            <DialogTitle className="gap-sm flex items-center">
+              <AlertTriangle className="text-warning h-5 w-5" />
+              {t('pages.goals.registerFailureTitle')}
+            </DialogTitle>
           </DialogHeader>
           <div className="py-sm min-h-[340px]">
             <Label>{t('pages.goals.failureDateLabel')}</Label>
@@ -740,7 +743,19 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{detailsGoal?.title}</DialogTitle>
+            <DialogTitle className="gap-sm flex items-center">
+              {detailsTypeMeta && (
+                <span
+                  className={cn(
+                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
+                    detailsTypeMeta.color
+                  )}
+                >
+                  <detailsTypeMeta.icon className="h-4 w-4" />
+                </span>
+              )}
+              {detailsGoal?.title}
+            </DialogTitle>
             <VisuallyHidden>
               <DialogDescription>
                 {detailsGoal &&

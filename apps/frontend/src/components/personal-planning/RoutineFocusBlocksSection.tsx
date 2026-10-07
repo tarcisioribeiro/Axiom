@@ -183,7 +183,7 @@ export function RoutineFocusBlocksSection({
           items={blocks}
           pageSize={LIST_PAGE_SIZE}
           className="gap-sm grid md:grid-cols-2"
-          pinNav={false}
+          centerList
         >
           {(pageBlocks) =>
             pageBlocks.map((block) => (
@@ -205,7 +205,7 @@ export function RoutineFocusBlocksSection({
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl">
           <DialogHeader sticky>
             <DialogTitle mode={selectedBlock ? 'edit' : 'create'}>
               {selectedBlock
@@ -226,20 +226,20 @@ export function RoutineFocusBlocksSection({
             onSubmit={(data) => void handleSubmit(data)}
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
+            tasksEditor={
+              selectedBlock && (
+                <FocusBlockTasksEditor
+                  block={selectedBlock}
+                  allBlocks={blocks}
+                  routineTasks={routineTasks}
+                  onAddTask={(routineTaskId, occurrenceIndex) =>
+                    void handleAddTask(selectedBlock.id, routineTaskId, occurrenceIndex)
+                  }
+                  onRemoveTask={(id) => void handleRemoveTask(selectedBlock.id, id)}
+                />
+              )
+            }
           />
-          {selectedBlock && (
-            <div className="pt-sm pb-lg border-t">
-              <FocusBlockTasksEditor
-                block={selectedBlock}
-                allBlocks={blocks}
-                routineTasks={routineTasks}
-                onAddTask={(routineTaskId, occurrenceIndex) =>
-                  void handleAddTask(selectedBlock.id, routineTaskId, occurrenceIndex)
-                }
-                onRemoveTask={(id) => void handleRemoveTask(selectedBlock.id, id)}
-              />
-            </div>
-          )}
         </DialogContent>
       </Dialog>
     </div>

@@ -153,7 +153,7 @@ export function VaultRecoveryKeyModal({
                     <Input
                       value={generatedKey}
                       readOnly
-                      className="font-mono text-sm"
+                      className="text-sm"
                     />
                     <Button
                       aria-label={t('common.actions.copy')}
@@ -192,7 +192,6 @@ export function VaultRecoveryKeyModal({
                 value={recoveryInput}
                 onChange={(e) => setRecoveryInput(e.target.value)}
                 placeholder="XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX"
-                className="font-mono"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') void handleUnlock();
                 }}

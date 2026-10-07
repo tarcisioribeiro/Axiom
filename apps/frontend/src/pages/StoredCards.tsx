@@ -358,7 +358,7 @@ export default function StoredCards() {
 
                       {/* Card number */}
                       <div className="mt-lg gap-sm relative flex items-center">
-                        <span className="font-mono text-base tracking-widest">
+                        <span className="text-base tracking-widest">
                           {revealed
                             ? revealed.number
                             : `**** **** **** ${card.last_four_digits || '****'}`}
@@ -395,13 +395,13 @@ export default function StoredCards() {
                           <p className="text-2xs font-medium tracking-widest uppercase opacity-50">
                             {t('pages.storedCards.columns.expiry')}
                           </p>
-                          <p className="font-mono text-sm font-semibold">
+                          <p className="text-sm font-semibold">
                             {String(card.expiration_month).padStart(2, '0')}/
                             {card.expiration_year}
                           </p>
                           {revealed && (
                             <div className="gap-xs mt-0.5 flex items-center justify-end">
-                              <span className="font-mono text-xs opacity-70">
+                              <span className="text-xs opacity-70">
                                 CVV: {revealed.cvv}
                               </span>
                               <Button

@@ -974,46 +974,50 @@ export default function FinancialGoals() {
               </DialogDescription>
             </VisuallyHidden>
           </DialogHeader>
-          <div className="space-y-sm max-h-[300px] overflow-y-auto rounded-md border p-3">
+          <div className="space-y-sm rounded-md border p-3">
             {vaults.length === 0 ? (
               <p className="text-muted-foreground text-sm">
                 {t('pages.financialGoals.noVaults')}
               </p>
             ) : (
-              vaults.map((vault) => (
-                <div
-                  key={vault.id}
-                  className="gap-sm p-sm hover:bg-muted/50 flex items-center rounded"
-                >
-                  <Checkbox
-                    id={`manage-vault-${vault.id}`}
-                    checked={selectedVaultIds.includes(vault.id)}
-                    onCheckedChange={() => toggleVault(vault.id)}
-                  />
-                  <Label
-                    htmlFor={`manage-vault-${vault.id}`}
-                    className="flex-1 cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{vault.description}</div>
-                        <div className="text-muted-foreground text-xs">
-                          {vault.account_name}
+              <PaginatedSlide items={vaults} pageSize={5} pinNav={false} className="space-y-sm">
+                {(pageItems) =>
+                  pageItems.map((vault) => (
+                    <div
+                      key={vault.id}
+                      className="gap-sm p-sm hover:bg-muted/50 flex items-center rounded"
+                    >
+                      <Checkbox
+                        id={`manage-vault-${vault.id}`}
+                        checked={selectedVaultIds.includes(vault.id)}
+                        onCheckedChange={() => toggleVault(vault.id)}
+                      />
+                      <Label
+                        htmlFor={`manage-vault-${vault.id}`}
+                        className="flex-1 cursor-pointer"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{vault.description}</div>
+                            <div className="text-muted-foreground text-xs">
+                              {vault.account_name}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-success font-semibold">
+                              {formatCurrency(parseFloat(vault.current_balance))}
+                            </div>
+                            <div className="text-muted-foreground text-xs">
+                              +{formatCurrency(parseFloat(vault.accumulated_yield))}{' '}
+                              {t('pages.financialGoals.yields')}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-success font-semibold">
-                          {formatCurrency(parseFloat(vault.current_balance))}
-                        </div>
-                        <div className="text-muted-foreground text-xs">
-                          +{formatCurrency(parseFloat(vault.accumulated_yield))}{' '}
-                          {t('pages.financialGoals.yields')}
-                        </div>
-                      </div>
+                      </Label>
                     </div>
-                  </Label>
-                </div>
-              ))
+                  ))
+                }
+              </PaginatedSlide>
             )}
           </div>
           <DialogFooter>

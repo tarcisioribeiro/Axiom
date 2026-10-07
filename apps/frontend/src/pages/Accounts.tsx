@@ -349,7 +349,7 @@ export default function Accounts() {
                   </CardHeader>
                   <CardContent className="gap-md flex flex-1 flex-col">
                     {account.account_number_masked && (
-                      <p className="text-muted-foreground font-mono text-xs">
+                      <p className="text-muted-foreground text-xs">
                         {account.account_number_masked}
                       </p>
                     )}

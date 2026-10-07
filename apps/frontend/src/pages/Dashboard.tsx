@@ -41,6 +41,7 @@ import { useNavigate } from 'react-router';
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
@@ -82,6 +83,9 @@ type CategoryStat = { category: string; name: string; value: number };
 
 // Botões da linha de ferramentas: mesmo tamanho e largura
 const TOOL_BUTTON_CLASS = 'gap-xs w-44';
+
+// Card "Orçamentos do mês": no máximo 5 barras por página
+const BUDGET_PAGE_SIZE = 5;
 
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
@@ -941,53 +945,57 @@ export default function Dashboard() {
                     </div>
                   </CardHeader>
                   <CardContent className="flex flex-1 flex-col justify-center">
-                    <div className="space-y-md">
-                      {budgetStatus.map((item) => {
-                        const pct = Math.min(item.percentage, 100);
-                        const barColor =
-                          item.status === 'exceeded'
-                            ? 'bg-destructive'
-                            : item.status === 'warning'
-                              ? 'bg-warning'
-                              : 'bg-success';
-                        return (
-                          <div key={item.id} className="space-y-xs">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="font-medium">
-                                {translate('expenseCategories', item.category)}
-                              </span>
-                              <div className="gap-sm flex items-center">
-                                <span className="text-muted-foreground">
-                                  {formatCurrency(item.actual_spent)} /{' '}
-                                  {formatCurrency(item.limit_amount)}
+                    <PaginatedSlide
+                      items={budgetStatus}
+                      pageSize={BUDGET_PAGE_SIZE}
+                      pinNav={false}
+                      className="space-y-md"
+                    >
+                      {(pageItems) =>
+                        pageItems.map((item) => {
+                          const pct = Math.min(item.percentage, 100);
+                          const barColor =
+                            item.status === 'exceeded'
+                              ? 'bg-destructive'
+                              : item.status === 'warning'
+                                ? 'bg-warning'
+                                : 'bg-success';
+                          return (
+                            <div key={item.id} className="space-y-xs">
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="font-medium">
+                                  {translate('expenseCategories', item.category)}
                                 </span>
-                                <span
-                                  className={cn(
-                                    'px-sm rounded py-0.5 text-xs font-semibold',
-                                    item.status === 'exceeded'
-                                      ? 'bg-destructive/10 text-destructive'
-                                      : item.status === 'warning'
-                                        ? 'bg-warning/10 text-warning'
-                                        : 'bg-success/10 text-success'
-                                  )}
-                                >
-                                  {item.percentage.toFixed(0)}%
-                                </span>
+                                <div className="gap-sm flex items-center">
+                                  <span className="text-muted-foreground">
+                                    {formatCurrency(item.actual_spent)} /{' '}
+                                    {formatCurrency(item.limit_amount)}
+                                  </span>
+                                  <span
+                                    className={cn(
+                                      'px-sm rounded py-0.5 text-xs font-semibold',
+                                      item.status === 'exceeded'
+                                        ? 'bg-destructive/10 text-destructive'
+                                        : item.status === 'warning'
+                                          ? 'bg-warning/10 text-warning'
+                                          : 'bg-success/10 text-success'
+                                    )}
+                                  >
+                                    {item.percentage.toFixed(0)}%
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+                                <div
+                                  className={cn('h-full rounded-full transition', barColor)}
+                                  style={{ width: `${pct}%` }}
+                                />
                               </div>
                             </div>
-                            <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
-                              <div
-                                className={cn(
-                                  'h-full rounded-full transition',
-                                  barColor
-                                )}
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })
+                      }
+                    </PaginatedSlide>
                   </CardContent>
                 </Card>
               </motion.div>

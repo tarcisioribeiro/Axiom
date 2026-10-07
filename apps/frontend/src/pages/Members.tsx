@@ -306,7 +306,7 @@ export default function Members() {
                       </div>
                     )}
                     {member.document && (
-                      <p className="text-muted-foreground font-mono text-xs">
+                      <p className="text-muted-foreground text-xs">
                         {member.document}
                       </p>
                     )}

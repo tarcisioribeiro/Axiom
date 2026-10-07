@@ -695,7 +695,7 @@ function VaultRecoveryKeyModalInline({
             value={recoveryKey}
             onChange={(e) => setRecoveryKey(e.target.value)}
             placeholder="XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX"
-            className="font-mono text-sm"
+            className="text-sm"
             onKeyDown={(e) => {
               if (e.key === 'Enter') void handleUnlock();
             }}
@@ -759,7 +759,7 @@ function VaultKeyboardShortcutsPanel({
             <span className="text-muted-foreground text-sm">
               {t('pages.vaultGuard.shortcuts.lockVault')}
             </span>
-            <kbd className="bg-muted px-xs rounded py-0.5 font-mono text-xs">
+            <kbd className="bg-muted px-xs rounded py-0.5 text-xs">
               Ctrl+L
             </kbd>
           </div>
@@ -767,7 +767,7 @@ function VaultKeyboardShortcutsPanel({
             <span className="text-muted-foreground text-sm">
               {t('pages.vaultGuard.shortcuts.showShortcuts')}
             </span>
-            <kbd className="bg-muted px-xs rounded py-0.5 font-mono text-xs">?</kbd>
+            <kbd className="bg-muted px-xs rounded py-0.5 text-xs">?</kbd>
           </div>
         </div>
         <DialogCloseFooter />

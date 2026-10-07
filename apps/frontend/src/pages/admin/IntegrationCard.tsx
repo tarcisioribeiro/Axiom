@@ -118,7 +118,7 @@ export function IntegrationCard({
           {check.models.map((m) => (
             <span
               key={m}
-              className="bg-card px-sm text-foreground rounded-full py-0.5 font-mono text-xs shadow-sm"
+              className="bg-card px-sm text-foreground rounded-full py-0.5 text-xs shadow-sm"
             >
               {m}
             </span>

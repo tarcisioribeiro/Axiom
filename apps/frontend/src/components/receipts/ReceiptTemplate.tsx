@@ -55,7 +55,9 @@ const createStyles = (colors: typeof lightColors | typeof themeColors) => ({
     backgroundColor: colors.background,
     color: colors.foreground,
     padding: '24px',
-    fontFamily: 'Arial, Helvetica, sans-serif',
+    // Mesma pilha de fontes do app (tailwind.config.js: theme.fontFamily.sans)
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", "Helvetica Neue", sans-serif',
     boxSizing: 'border-box' as const,
     lineHeight: '1.5',
   },

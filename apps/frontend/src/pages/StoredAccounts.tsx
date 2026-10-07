@@ -402,7 +402,7 @@ export default function StoredAccounts() {
                           <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                             {t('pages.storedAccounts.columns.number')}
                           </span>
-                          <span className="font-mono">
+                          <span>
                             {revealed?.account_number ?? acc.account_number_masked}
                           </span>
                         </div>
@@ -411,7 +411,7 @@ export default function StoredAccounts() {
                             <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                               {t('pages.storedAccounts.columns.agency')}
                             </span>
-                            <span className="font-mono">{acc.agency}</span>
+                            <span>{acc.agency}</span>
                           </div>
                         )}
                       </div>
@@ -424,7 +424,7 @@ export default function StoredAccounts() {
                               {t('pages.storedAccounts.password1')}
                             </span>
                             <div className="gap-xs flex items-center">
-                              <span className="font-mono">
+                              <span>
                                 {revealed.password ||
                                   t('pages.storedAccounts.noPassword')}
                               </span>
@@ -451,7 +451,7 @@ export default function StoredAccounts() {
                               {t('pages.storedAccounts.password2')}
                             </span>
                             <div className="gap-xs flex items-center">
-                              <span className="font-mono">
+                              <span>
                                 {revealed.password2 ||
                                   t('pages.storedAccounts.noPassword')}
                               </span>
@@ -479,7 +479,7 @@ export default function StoredAccounts() {
                           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                             {t('pages.storedAccounts.columns.passwords')}
                           </p>
-                          <p className="text-muted-foreground mt-0.5 font-mono text-sm">
+                          <p className="text-muted-foreground mt-0.5 text-sm">
                             ••••••••
                           </p>
                         </div>

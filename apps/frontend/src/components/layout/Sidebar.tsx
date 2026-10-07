@@ -545,7 +545,7 @@ export const Sidebar = () => {
 
           {!isMobile && !isCollapsed && (
             <>
-              <span className="text-muted-foreground/40 text-2xs font-mono select-none">
+              <span className="text-muted-foreground/40 text-2xs select-none">
                 v{APP_VERSION}
               </span>
               {!IS_PRODUCTION && (

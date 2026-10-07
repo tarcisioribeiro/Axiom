@@ -208,7 +208,7 @@ export function PasswordGenerator({
       {generatedPassword && (
         <div className="space-y-3">
           <div className="gap-sm bg-muted flex items-center rounded-lg p-3">
-            <code className="flex-1 font-mono text-sm break-all select-all">
+            <code className="flex-1 text-sm break-all select-all">
               {generatedPassword}
             </code>
             <Button

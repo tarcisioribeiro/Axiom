@@ -445,7 +445,7 @@ export default function LibraryDashboard() {
           >
             <Timer className="h-4 w-4" />
             {timerRunning ? (
-              <span className="text-primary font-mono">{timerDisplay}</span>
+              <span className="text-primary">{timerDisplay}</span>
             ) : (
               t('pages.libraryDashboard.studyTimer')
             )}
@@ -467,7 +467,7 @@ export default function LibraryDashboard() {
         <div className="border-border bg-card px-lg py-md flex items-center justify-between rounded-lg border">
           <div className="gap-md flex items-center">
             <div className="text-center">
-              <p className="text-foreground font-mono text-4xl font-bold tabular-nums">
+              <p className="text-foreground text-4xl font-bold tabular-nums">
                 {timerDisplay}
               </p>
               <p className="mt-xs text-muted-foreground text-xs">

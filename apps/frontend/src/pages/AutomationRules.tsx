@@ -658,7 +658,7 @@ function RuleCard({
                   <span className="text-muted-foreground text-xs">
                     {t(`pages.automationRules.operators.${c.operator}`)}
                   </span>
-                  <span className="font-mono text-xs font-medium">
+                  <span className="text-xs font-medium">
                     {c.field === 'category'
                       ? translate('expenseCategories', c.value)
                       : c.value}
@@ -677,7 +677,7 @@ function RuleCard({
                   <Badge variant="secondary" className="text-xs">
                     {t(`pages.automationRules.actionTypes.${a.type}`)}
                   </Badge>
-                  <span className="font-mono text-xs font-medium">
+                  <span className="text-xs font-medium">
                     {a.type === 'set_category'
                       ? translate('expenseCategories', a.value)
                       : a.value}

@@ -59,7 +59,7 @@ export const Header = () => {
           >
             <Search className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span className="hidden lg:inline">{t('layout.search')}</span>
-            <kbd className="ml-xs bg-muted px-sm text-muted-foreground hidden items-center gap-0.5 rounded py-0.5 font-mono text-xs lg:flex">
+            <kbd className="ml-xs bg-muted px-sm text-muted-foreground hidden items-center gap-0.5 rounded py-0.5 text-xs lg:flex">
               <span className="text-sm">⌘</span>K
             </kbd>
           </button>

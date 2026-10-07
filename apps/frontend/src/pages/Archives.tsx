@@ -569,7 +569,7 @@ export default function Archives() {
                 value={revealedContent}
                 readOnly
                 rows={20}
-                className="font-mono text-sm"
+                className="text-sm"
               />
               <div className="dialog-footer gap-sm flex justify-end">
                 <Button

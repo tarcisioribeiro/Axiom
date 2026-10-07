@@ -216,13 +216,13 @@ function TOTPBlock({ code, expiresAt }: TOTPRevealData) {
 
   return (
     <div className="mt-sm gap-sm flex items-center justify-between">
-      <code className="font-mono text-xl font-bold tracking-[0.25em]">
+      <code className="text-xl font-bold tracking-[0.25em]">
         {code.slice(0, 3)} {code.slice(3)}
       </code>
       <div className="gap-xs flex items-center">
         <span
           className={cn(
-            'font-mono text-sm',
+            'text-sm',
             secsLeft <= 5 ? 'text-destructive' : 'text-muted-foreground'
           )}
         >
@@ -439,7 +439,7 @@ function DetailPanel({
               </p>
               {revealedPassword ? (
                 <div className="gap-sm flex items-center">
-                  <code className="flex-1 font-mono text-sm">{revealedPassword}</code>
+                  <code className="flex-1 text-sm">{revealedPassword}</code>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -450,7 +450,7 @@ function DetailPanel({
                   </Button>
                 </div>
               ) : (
-                <p className="text-muted-foreground font-mono text-sm">••••••••</p>
+                <p className="text-muted-foreground text-sm">••••••••</p>
               )}
             </div>
 
@@ -1469,7 +1469,6 @@ export default function Passwords() {
                       id="totp_secret"
                       {...register('totp_secret')}
                       placeholder="JBSWY3DPEHPK3PXP"
-                      className="font-mono"
                     />
                   </div>
                 )}

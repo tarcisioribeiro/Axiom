@@ -272,7 +272,10 @@ export function GoalForm({
           )}
 
           <div className="space-y-sm">
-            <Label htmlFor="target_value" className="gap-xs flex items-center">
+            <Label
+              htmlFor="target_value"
+              className="gap-xs flex items-center justify-center"
+            >
               <Target className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.goals.form.targetValueLabel')}
             </Label>

@@ -82,7 +82,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
       );
     if (config.is_secret)
       return <span className="text-muted-foreground">••••••••</span>;
-    return <span className="font-mono text-sm">{config.masked_value}</span>;
+    return <span className="text-sm">{config.masked_value}</span>;
   };
 
   return (
@@ -104,7 +104,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
               </span>
             )}
           </div>
-          <p className="text-muted-foreground mt-0.5 font-mono text-xs">{config.key}</p>
+          <p className="text-muted-foreground mt-0.5 text-xs">{config.key}</p>
           {varDescription && (
             <p className="mt-xs text-muted-foreground text-xs">{varDescription}</p>
           )}
@@ -123,7 +123,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
                       ? t('pages.adminConfig.newSecretPlaceholder')
                       : t('pages.adminConfig.newValuePlaceholder')
                   }
-                  className="pr-10 font-mono"
+                  className="pr-10"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSave();
                     if (e.key === 'Escape') setEditing(false);

@@ -4,20 +4,17 @@ import {
   AlertTriangle,
   Calendar,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Circle,
   AlertCircle,
   Clock,
 } from 'lucide-react';
-import { createElement, useState } from 'react';
+import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { getIconByName } from '@/components/ui/icon-picker';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -43,13 +40,12 @@ const CATEGORY_COLORS: Record<string, string> = {
   other: 'bg-muted/30 border-border text-foreground',
 };
 
-function getWeekStart(offset: number = 0): Date {
+function getWeekStart(): Date {
   const now = new Date();
-  const dayOfWeek = now.getDay();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7) + offset * 7);
-  monday.setHours(0, 0, 0, 0);
-  return monday;
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - now.getDay());
+  sunday.setHours(0, 0, 0, 0);
+  return sunday;
 }
 
 function getWeekDays(weekStart: Date): Date[] {
@@ -126,8 +122,7 @@ function TaskPill({ instance }: { instance: TaskInstance }) {
 
 export default function WeeklyPlanning() {
   const { t, i18n } = useTranslation();
-  const [weekOffset, setWeekOffset] = useState(0);
-  const weekStart = getWeekStart(weekOffset);
+  const weekStart = getWeekStart();
   const weekEnd = getWeekDays(weekStart)[6];
   const days = getWeekDays(weekStart);
 
@@ -182,25 +177,7 @@ export default function WeeklyPlanning() {
             )}
           </div>
 
-          <div className="gap-sm flex items-center">
-            <span className="text-muted-foreground text-sm">{weekLabel}</span>
-            <Button
-              aria-label={t('common.actions.previous')}
-              variant="outline"
-              size="sm"
-              onClick={() => setWeekOffset((o) => o - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              aria-label={t('common.actions.next')}
-              variant="outline"
-              size="sm"
-              onClick={() => setWeekOffset((o) => o + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          <span className="text-muted-foreground text-sm">{weekLabel}</span>
         </div>
 
         {/* 7-day grid */}

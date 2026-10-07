@@ -115,7 +115,7 @@ export function FocusBlockTasksEditor({
                 </span>
               )}
               {bt.occurrence_index !== null && bt.occurrence_index !== undefined && (
-                <span className="bg-primary/10 text-primary px-xs rounded font-mono text-xs font-medium">
+                <span className="bg-primary/10 text-primary px-xs rounded text-xs font-medium">
                   {t('pages.routineTasks.focusBlocks.occurrenceLabel', {
                     index: bt.occurrence_index + 1,
                   })}

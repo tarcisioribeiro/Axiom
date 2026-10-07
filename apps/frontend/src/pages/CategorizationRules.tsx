@@ -106,7 +106,7 @@ function RuleForm({
       {/* Preview ao vivo */}
       {merchantContains && category && (
         <div className="gap-xs border-border/60 bg-muted/30 px-sm py-sm flex items-center overflow-hidden rounded-lg border text-sm">
-          <div className="bg-background px-sm py-xs rounded-md font-mono text-xs font-semibold shadow-sm">
+          <div className="bg-background px-sm py-xs rounded-md text-xs font-semibold shadow-sm">
             &ldquo;{merchantContains}&rdquo;
           </div>
           <div className="gap-xs text-muted-foreground flex items-center">
@@ -392,7 +392,7 @@ export default function CategorizationRules({
                       <p className="text-muted-foreground text-xs">
                         {t('pages.categorizationRules.contains')}
                       </p>
-                      <p className="font-mono text-sm font-semibold">
+                      <p className="text-sm font-semibold">
                         &ldquo;{rule.merchant_contains}&rdquo;
                       </p>
                     </div>

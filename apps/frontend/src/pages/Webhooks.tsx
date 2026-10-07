@@ -320,7 +320,7 @@ export default function Webhooks() {
                           ) : (
                             <Clock className="h-md text-muted-foreground w-md shrink-0" />
                           )}
-                          <span className="bg-muted px-xs rounded font-mono text-xs">
+                          <span className="bg-muted px-xs rounded text-xs">
                             {d.event}
                           </span>
                           {d.response_status_code && (
@@ -445,7 +445,7 @@ export default function Webhooks() {
                       htmlFor={`ev-${ev.value}`}
                       className="cursor-pointer text-sm font-normal"
                     >
-                      <span className="text-muted-foreground font-mono text-xs">
+                      <span className="text-muted-foreground text-xs">
                         {ev.value}
                       </span>
                       {' — '}

@@ -34,7 +34,7 @@ export function BackupCodesDisplay({ codes }: { codes: string[] }) {
           {t('pages.twoFactor.backupDesc')}
         </p>
       </div>
-      <div className="bg-muted p-md relative rounded-md border font-mono text-sm">
+      <div className="bg-muted p-md relative rounded-md border text-sm">
         {visible ? (
           <div className="gap-sm grid grid-cols-2">
             {codes.map((code, i) => (

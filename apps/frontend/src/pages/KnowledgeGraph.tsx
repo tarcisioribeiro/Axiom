@@ -1229,7 +1229,7 @@ export default function KnowledgeGraph() {
                     </strong>
                   </span>
                   <span className="mx-xs text-accent/40">·</span>
-                  <kbd className="border-accent/30 bg-accent/10 px-xs text-2xs rounded border py-0.5 font-mono">
+                  <kbd className="border-accent/30 bg-accent/10 px-xs text-2xs rounded border py-0.5">
                     Esc
                   </kbd>
                   <PlainButton

@@ -67,7 +67,7 @@ export default function AdminIntegrations() {
                 <span className="text-muted-foreground">
                   {t('pages.adminIntegrations.model')}
                 </span>
-                <span className="text-foreground font-mono">{data.ollama_model}</span>
+                <span className="text-foreground">{data.ollama_model}</span>
               </>
             )}
             {data.llm_provider === 'anthropic' && data.anthropic_model && (
@@ -75,7 +75,7 @@ export default function AdminIntegrations() {
                 <span className="text-muted-foreground">
                   {t('pages.adminIntegrations.model')}
                 </span>
-                <span className="text-foreground font-mono">
+                <span className="text-foreground">
                   {data.anthropic_model}
                 </span>
               </>

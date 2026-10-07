@@ -39,7 +39,7 @@ export function VariableHelperPopover({ configKey }: { configKey: string }) {
             <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               {t('pages.adminConfig.popover.acceptedValues')}
             </span>
-            <p className="text-foreground/80 mt-0.5 font-mono text-xs">
+            <p className="text-foreground/80 mt-0.5 text-xs">
               {helper.accepted_values}
             </p>
           </div>
@@ -50,7 +50,7 @@ export function VariableHelperPopover({ configKey }: { configKey: string }) {
             <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               {t('pages.adminConfig.popover.default')}
             </span>
-            <p className="text-foreground/80 mt-0.5 font-mono text-xs">
+            <p className="text-foreground/80 mt-0.5 text-xs">
               {helper.default_value}
             </p>
           </div>
@@ -61,7 +61,7 @@ export function VariableHelperPopover({ configKey }: { configKey: string }) {
             <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               {t('pages.adminConfig.popover.example')}
             </span>
-            <p className="text-foreground/80 mt-0.5 font-mono text-xs">
+            <p className="text-foreground/80 mt-0.5 text-xs">
               {helper.example}
             </p>
           </div>

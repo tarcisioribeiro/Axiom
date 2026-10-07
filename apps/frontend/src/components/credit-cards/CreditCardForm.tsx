@@ -159,7 +159,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
               )}
             </div>
             <div className="space-y-xs">
-              <p className="font-mono text-sm tracking-widest opacity-90">
+              <p className="text-sm tracking-widest opacity-90">
                 {maskedCardNumber}
               </p>
               <div className="flex items-end justify-between">
@@ -171,7 +171,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                 </div>
                 <div className="text-right">
                   <p className="text-xs opacity-60">VALIDADE</p>
-                  <p className="font-mono text-sm">
+                  <p className="text-sm">
                     {watchedValidationDate
                       ? `${watchedValidationDate.substring(5, 7)}/${watchedValidationDate.substring(2, 4)}`
                       : '••/••'}

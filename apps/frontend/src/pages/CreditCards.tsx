@@ -414,7 +414,7 @@ export default function CreditCards({
                             {card.name}
                           </button>
                           {cardNumber && (
-                            <p className="text-muted-foreground font-mono text-xs">
+                            <p className="text-muted-foreground text-xs">
                               {cardNumber}
                             </p>
                           )}

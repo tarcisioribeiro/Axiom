@@ -421,7 +421,7 @@ export function PasswordImportContent() {
                   ([sourceCategory, targetCategory]) => (
                     <div key={sourceCategory} className="gap-md flex items-center">
                       <div className="w-40 shrink-0">
-                        <Badge variant="secondary" className="font-mono">
+                        <Badge variant="secondary">
                           {sourceCategory}
                         </Badge>
                       </div>

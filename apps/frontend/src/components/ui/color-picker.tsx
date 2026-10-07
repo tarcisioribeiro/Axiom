@@ -79,7 +79,7 @@ export function ColorPicker({
             className="ring-border h-5 w-5 shrink-0 rounded-full ring-1"
             style={{ backgroundColor: value }}
           />
-          <span className="text-foreground flex-1 text-left font-mono text-xs uppercase">
+          <span className="text-foreground flex-1 text-left text-xs uppercase">
             {value}
           </span>
           <ChevronDown className="text-muted-foreground h-4 w-4" />
@@ -133,7 +133,7 @@ export function ColorPicker({
               }
             }}
             className={cn(
-              'h-8 font-mono text-xs uppercase',
+              'h-8 text-xs uppercase',
               draftInvalid && 'border-destructive focus-visible:ring-destructive'
             )}
           />

@@ -257,7 +257,7 @@ export function ArchiveForm({
                 aria-invalid={!!errors.text_content}
                 placeholder={t('pages.archives.form.contentPlaceholder')}
                 rows={10}
-                className="font-mono text-sm"
+                className="text-sm"
                 disabled={isLoading}
               />
             </div>

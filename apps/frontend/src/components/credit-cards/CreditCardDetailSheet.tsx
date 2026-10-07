@@ -158,7 +158,7 @@ export function CreditCardDetailSheet({
               </div>
 
               <div className="space-y-xs">
-                <p className="font-mono text-sm tracking-widest opacity-90">
+                <p className="text-sm tracking-widest opacity-90">
                   {card.card_number_masked || '**** **** **** ****'}
                 </p>
                 <div className="gap-md flex items-end justify-between">
@@ -173,14 +173,14 @@ export function CreditCardDetailSheet({
                       <p className="text-xs opacity-60">
                         {t('pages.creditCards.dueDay')}
                       </p>
-                      <p className="gap-xs flex items-center justify-end font-mono text-sm">
+                      <p className="gap-xs flex items-center justify-end text-sm">
                         <CalendarDays className="h-3 w-3" />
                         {card.due_day}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs opacity-60">VALIDADE</p>
-                      <p className="font-mono text-sm">
+                      <p className="text-sm">
                         {card.validation_date
                           ? `${card.validation_date.substring(5, 7)}/${card.validation_date.substring(2, 4)}`
                           : '••/••'}

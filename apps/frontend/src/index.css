@@ -1623,6 +1623,13 @@
   h4 {
     @apply font-display tracking-tight;
   }
+  /* O navegador aplica monoespaçada por padrão nessas tags — app não usa fonte mono */
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: inherit;
+  }
 }
 
 /* Sombras adaptáveis — usam tokens CSS para suporte a temas futuros.
@@ -1815,11 +1822,8 @@
     color: hsl(var(--muted-foreground));
   }
 
-  /* Numeric / financial values — fonte mono do sistema + alinha dígitos */
+  /* Numeric / financial values — alinha dígitos sem trocar a fonte do app */
   .numeric {
-    font-family:
-      ui-monospace, SFMono-Regular, 'SF Mono', 'Cascadia Code', 'Cascadia Mono',
-      'JetBrains Mono', Consolas, 'Liberation Mono', monospace;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
   }
