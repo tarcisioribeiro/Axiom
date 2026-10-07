@@ -1,17 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Plus, Tag as TagIcon, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Pencil, Tag as TagIcon, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { TagFormDialog } from '@/components/tags/TagFormDialog';
-import { Button } from '@/components/ui/button';
 import { PlainButton } from '@/components/ui/plain-button';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -30,7 +29,13 @@ function EmbeddedWrapper({ children }: { children: React.ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function Tags({ embedded = false }: { embedded?: boolean }) {
+export default function Tags({
+  embedded = false,
+  newTagRef,
+}: {
+  embedded?: boolean;
+  newTagRef?: RefObject<(() => void) | undefined>;
+}) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -110,6 +115,12 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
     setDialogOpen(true);
   };
 
+  useEffect(() => {
+    if (newTagRef) {
+      newTagRef.current = handleCreate;
+    }
+  });
+
   const handleEdit = (tag: Tag) => {
     setSelected(tag);
     setForm({ name: tag.name, color: tag.color });
@@ -129,6 +140,21 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
+
+    const duplicate = (data ?? []).some(
+      (t) =>
+        t.id !== selected?.id &&
+        t.name.toLowerCase() === form.name.trim().toLowerCase() &&
+        t.color.toLowerCase() === form.color.toLowerCase()
+    );
+    if (duplicate) {
+      toast({
+        title: t('pages.tags.duplicateError'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (selected) {
       updateMutation.mutate({ id: selected.id, data: form });
     } else {
@@ -142,13 +168,6 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
 
   return (
     <Wrapper>
-      <PageHeader title={t('pages.tags.title')} icon={<TagIcon className="h-5 w-5" />}>
-        <Button onClick={handleCreate} className="gap-sm">
-          <Plus className="h-4 w-4" />
-          {t('pages.tags.newBtn')}
-        </Button>
-      </PageHeader>
-
       <FilterBar hasActiveFilters={!!search} onClear={() => setSearch('')}>
         <SearchInput
           placeholder={`${t('common.actions.search')}...`}

@@ -415,14 +415,18 @@ class MealTypeViewTest(BaseWorkoutNutritionTestCase):
 
     def test_create_meal_type_allowed_below_limit(self):
         for i in range(5):
-            MealType.objects.create(name=f"Refeição {i}", order=i, owner=self.member)
+            MealType.objects.create(
+                name=f"Refeição {i}", order=i, owner=self.member
+            )
         url = reverse("meal-type-list-create")
         response = self.client.post(url, self._meal_type_data())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_meal_type_blocked_at_limit(self):
         for i in range(5):
-            MealType.objects.create(name=f"Refeição {i}", order=i, owner=self.member)
+            MealType.objects.create(
+                name=f"Refeição {i}", order=i, owner=self.member
+            )
         MealType.objects.create(
             name="Inativa", order=5, owner=self.member, is_active=False
         )
@@ -464,7 +468,9 @@ class MealTypeViewTest(BaseWorkoutNutritionTestCase):
             name="Jantar", order=1, owner=self.member, suggested_time="19:00"
         )
         url = reverse("meal-type-detail", kwargs={"pk": mt.pk})
-        response = self.client.patch(url, {"name": "Jantar", "suggested_time": "19:00"})
+        response = self.client.patch(
+            url, {"name": "Jantar", "suggested_time": "19:00"}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_retrieve_meal_type(self):

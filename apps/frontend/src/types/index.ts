@@ -266,8 +266,6 @@ export type {
   BudgetFormData,
   BudgetStatus,
   BudgetHistory,
-  CategorizationRule,
-  CategorizationRuleFormData,
   AutomationRule,
   AutomationRuleFormData,
   AutomationRuleLog,

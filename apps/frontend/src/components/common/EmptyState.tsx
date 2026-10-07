@@ -10,17 +10,17 @@ interface EmptyStateProps {
 
 /**
  * Padrão do app para listas vazias: só ícone + rótulo, sem texto de apoio nem
- * botões. Centralizado no espaço livre da página (`page-fill`); dentro de cards
- * fica na altura natural (ver index.css).
+ * botões, alinhado ao início do espaço livre da página (`page-fill`); dentro
+ * de cards fica na altura natural (ver index.css).
  */
 export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title }) => (
-  <div data-empty-state className="page-fill flex flex-1 flex-col justify-center">
+  <div data-empty-state className="page-fill flex flex-1 flex-col">
     <motion.div
       variants={emptyStateVariants}
       initial="initial"
       animate="animate"
       aria-label={title}
-      className="gap-md bg-card/50 px-xl flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center"
+      className="gap-md bg-card/50 px-xl flex flex-col rounded-lg border border-dashed py-16"
     >
       {icon && (
         <div

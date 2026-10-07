@@ -469,19 +469,6 @@ export const TRANSLATIONS = {
     previous: 'Anterior',
     next: 'Próximo',
   },
-
-  // Categorization Rules
-  categorizationRules: {
-    autoCategorized: 'Auto',
-    merchantContains: 'Estabelecimento contém',
-    applyRules: 'Aplicar Regras',
-    rulesApplied: 'regras aplicadas',
-    noRulesFound: 'Nenhuma regra encontrada',
-    newRule: 'Nova Regra',
-    editRule: 'Editar Regra',
-    ruleActive: 'Ativa',
-    ruleInactive: 'Inativa',
-  },
 };
 
 // Reverse translations - Portuguese to English

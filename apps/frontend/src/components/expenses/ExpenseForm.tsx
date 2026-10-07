@@ -53,14 +53,14 @@ import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { expenseSchema } from '@/lib/validations';
 import { accountsService } from '@/services/accounts-service';
-import { categorizationRulesService } from '@/services/categorization-rules-service';
+import { automationRulesService } from '@/services/automation-rules-service';
 import type { CategorySuggestion } from '@/services/expenses-service';
 import { expensesService } from '@/services/expenses-service';
 import { membersService } from '@/services/members-service';
 import { payableInstallmentsService } from '@/services/payable-installments-service';
 import type {
   Account,
-  CategorizationRule,
+  AutomationRule,
   Expense,
   ExpenseFormData,
   FixedExpense,
@@ -95,6 +95,21 @@ interface ExpenseFormProps {
   isLoading?: boolean;
 }
 
+/** Extrai o padrão simples (merchant contém X → definir categoria Y) de uma
+ * AutomationRule, usado para sugestão instantânea de categoria ao digitar o
+ * estabelecimento. Regras mais complexas (múltiplas condições, add_tag,
+ * etc.) retornam null e só são aplicadas pelo motor de automação no backend. */
+function extractSimpleMerchantRule(
+  rule: AutomationRule
+): { merchantContains: string; category: string } | null {
+  const condition = rule.conditions.find(
+    (c) => c.field === 'merchant' && c.operator === 'contains'
+  );
+  const action = rule.actions.find((a) => a.type === 'set_category');
+  if (!condition?.value || !action?.value) return null;
+  return { merchantContains: condition.value, category: action.value };
+}
+
 export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   expense,
   prefillData,
@@ -110,9 +125,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const { t } = useTranslation();
   const { toast } = useToast();
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
-  const [categorizationRules, setCategorizationRules] = useState<CategorizationRule[]>(
-    []
-  );
+  const [categorizationRules, setCategorizationRules] = useState<AutomationRule[]>([]);
   const [linksOpen, setLinksOpen] = useState(false);
   const [splitOnCreate, setSplitOnCreate] = useState(false);
   const [redistributePreview, setRedistributePreview] =
@@ -176,10 +189,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     };
     const loadRules = async () => {
       try {
-        const data = await categorizationRulesService.getAll();
+        const data = await automationRulesService.getAll();
         const rules = Array.isArray(data)
           ? data
-          : ((data as { results: CategorizationRule[] }).results ?? []);
+          : ((data as { results: AutomationRule[] }).results ?? []);
         setCategorizationRules(rules.filter((r) => r.is_active));
       } catch {
         // rules are optional
@@ -270,19 +283,20 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       // Verificação heurística local (feedback imediato, sem chamada de rede)
       if (categorizationRules.length > 0) {
-        const matched = categorizationRules.find(
-          (rule) =>
-            lower.includes(rule.merchant_contains.toLowerCase()) ||
-            rule.merchant_contains.toLowerCase().includes(lower)
-        );
+        const matched = categorizationRules.find((rule) => {
+          const simple = extractSimpleMerchantRule(rule);
+          if (!simple) return false;
+          const merchantContains = simple.merchantContains.toLowerCase();
+          return lower.includes(merchantContains) || merchantContains.includes(lower);
+        });
         if (matched) {
+          const category = extractSimpleMerchantRule(matched)?.category;
           const currentCategory = getValues('category');
           if (
-            !currentCategory ||
-            currentCategory === 'others' ||
-            currentCategory === ''
+            category &&
+            (!currentCategory || currentCategory === 'others' || currentCategory === '')
           ) {
-            setValue('category', matched.category);
+            setValue('category', category);
           }
           return; // Regra local encontrada — sem necessidade de chamar API
         }

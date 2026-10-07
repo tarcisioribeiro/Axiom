@@ -23,7 +23,6 @@ from expenses.models import (
     EXPENSES_CATEGORIES,
     AutomationRule,
     AutomationRuleLog,
-    CategorizationRule,
     Expense,
     ExpenseSplit,
     FixedExpense,
@@ -36,7 +35,6 @@ from expenses.serializers import (
     BulkGenerateRequestSerializer,
     BulkGenerateResponseSerializer,
     BulkMarkPaidSerializer,
-    CategorizationRuleSerializer,
     ExpenseSerializer,
     ExpenseSplitSerializer,
     FixedExpenseCreateUpdateSerializer,
@@ -293,42 +291,6 @@ class FixedExpensesGeneratedMonthsView(APIView):
         )
 
 
-class CategorizationRuleListCreateView(BaseListCreateView):
-    queryset = CategorizationRule.objects.all()
-    serializer_class = CategorizationRuleSerializer
-
-    def get_queryset(self):
-        return CategorizationRule.objects.filter(
-            owner=self.request.user
-        ).order_by("created_at")
-
-    def perform_create(self, serializer):
-        serializer.save(
-            owner=self.request.user,
-            created_by=self.request.user,
-            updated_by=self.request.user,
-        )
-
-
-class CategorizationRuleRetrieveUpdateDestroyView(
-    BaseRetrieveUpdateDestroyView
-):
-    queryset = CategorizationRule.objects.all()
-    serializer_class = CategorizationRuleSerializer
-
-    def get_queryset(self):
-        return CategorizationRule.objects.filter(owner=self.request.user)
-
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
-
-    def perform_destroy(self, instance):
-        instance.is_deleted = True
-        instance.deleted_at = timezone.now()
-        instance.deleted_by = self.request.user
-        instance.save()
-
-
 class ExpenseSuggestCategoryView(APIView):
     """
     Sugere uma categoria para uma despesa via heurística + LLM fallback.
@@ -371,79 +333,6 @@ class ExpenseSuggestCategoryView(APIView):
             value=value,
         )
         return Response(result)
-
-
-class ApplyCategorizationRulesView(APIView):
-    """
-    Reaplica as regras de categorização em despesas elegíveis do usuário.
-
-    POST /api/v1/categorization-rules/apply/
-
-    Despesas elegíveis: auto_categorized=True ou category='others'.
-    Usa bulk_update para evitar N+1 queries e fuzzy matching para maior
-    cobertura. Retorna o número de despesas atualizadas, o total processado
-    e score por match.
-    """
-
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
-    queryset = CategorizationRule.objects.none()
-
-    def post(self, request):
-        from rapidfuzz import fuzz as _fuzz
-
-        THRESHOLD = 80
-
-        rules = list(
-            CategorizationRule.objects.filter(
-                owner=request.user, is_active=True
-            ).order_by("priority", "created_at")
-        )
-
-        if not rules:
-            return Response({"updated": 0, "total_processed": 0})
-
-        expenses = list(
-            Expense.objects.filter(
-                created_by=request.user,
-            ).filter(Q(auto_categorized=True) | Q(category="others"))
-        )
-
-        total_processed = len(expenses)
-        to_update = []
-        match_details = []
-
-        for expense in expenses:
-            if not expense.merchant:
-                continue
-            merchant_lower = expense.merchant.lower()
-            for rule in rules:
-                rule_lower = rule.merchant_contains.lower()
-                score = _fuzz.partial_ratio(rule_lower, merchant_lower)
-                if rule_lower in merchant_lower or score >= THRESHOLD:
-                    expense.category = rule.category
-                    expense.auto_categorized = True
-                    to_update.append(expense)
-                    match_details.append(
-                        {
-                            "expense_id": expense.id,
-                            "rule_id": rule.id,
-                            "score": score,
-                        }
-                    )
-                    break
-
-        if to_update:
-            Expense.objects.bulk_update(
-                to_update, ["category", "auto_categorized"]
-            )
-
-        return Response(
-            {
-                "updated": len(to_update),
-                "total_processed": total_processed,
-                "matches": match_details,
-            }
-        )
 
 
 # Build a lookup dict for category display names
@@ -864,7 +753,7 @@ class AutomationRuleApplyView(APIView):
         ).order_by("priority", "created_at")
 
         expenses = Expense.objects.filter(
-            account__owner=request.user, is_deleted=False
+            created_by=request.user, is_deleted=False
         ).select_related("account")
 
         total_applied = 0

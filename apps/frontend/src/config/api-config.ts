@@ -1,4 +1,3 @@
-/* eslint-disable max-lines -- flat endpoint registry */
 // API Configuration
 // Calcula a URL da API dinamicamente baseada no hostname atual
 // Isso permite que o app funcione tanto em localhost quanto em IPs de rede
@@ -213,10 +212,6 @@ export const API_CONFIG = {
     // Monthly Planning
     MONTHLY_PLAN_SUMMARY: '/api/v1/monthly-plan/summary/',
     MONTHLY_PLAN: '/api/v1/monthly-plan/',
-
-    // Categorization Rules
-    CATEGORIZATION_RULES: '/api/v1/categorization-rules/',
-    CATEGORIZATION_RULES_APPLY: '/api/v1/categorization-rules/apply/',
 
     // Automation Rules
     AUTOMATION_RULES: '/api/v1/automation-rules/',

@@ -11,17 +11,18 @@ import {
   Save,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapse } from '@/components/ui/collapsible-section';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
   DialogCloseFooter,
@@ -44,11 +45,14 @@ import {
 import { StatusToggle } from '@/components/ui/status-toggle';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
+import { accountsService } from '@/services/accounts-service';
 import { automationRulesService } from '@/services/automation-rules-service';
 import type {
+  Account,
   AutomationAction,
   AutomationActionType,
   AutomationCondition,
@@ -86,14 +90,26 @@ const ACTION_TYPES: AutomationActionType[] = [
   'create_alert',
 ];
 
+const PAYMENT_METHODS = [
+  'cash',
+  'debit_card',
+  'credit_card',
+  'pix',
+  'transfer',
+  'check',
+  'other',
+];
+
 function ConditionRow({
   condition,
   index,
+  accounts,
   onChange,
   onRemove,
 }: {
   condition: AutomationCondition;
   index: number;
+  accounts: Account[];
   onChange: (i: number, c: AutomationCondition) => void;
   onRemove: (i: number) => void;
 }) {
@@ -145,13 +161,56 @@ function ConditionRow({
             <SelectValue placeholder={t('pages.automationRules.conditionValue')} />
           </SelectTrigger>
           <SelectContent>
-            {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
-              <SelectItem key={cat.key} value={cat.key}>
-                {translate('expenseCategories', cat.key)}
+            {EXPENSE_CATEGORIES_CANONICAL.map((cat) => {
+              const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
+              return (
+                <SelectItem key={cat.key} value={cat.key}>
+                  <span className="gap-sm flex items-center">
+                    {CatIcon && <CatIcon className="h-4 w-4" />}
+                    {translate('expenseCategories', cat.key)}
+                  </span>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      ) : condition.field === 'payment_method' ? (
+        <Select
+          value={condition.value}
+          onValueChange={(v) => onChange(index, { ...condition, value: v })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={t('pages.automationRules.conditionValue')} />
+          </SelectTrigger>
+          <SelectContent>
+            {PAYMENT_METHODS.map((pm) => (
+              <SelectItem key={pm} value={pm}>
+                {t(`common.paymentMethods.${pm}`)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+      ) : condition.field === 'account' ? (
+        <Select
+          value={condition.value}
+          onValueChange={(v) => onChange(index, { ...condition, value: v })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={t('pages.automationRules.conditionValue')} />
+          </SelectTrigger>
+          <SelectContent>
+            {accounts.map((acc) => (
+              <SelectItem key={acc.id} value={String(acc.id)}>
+                {acc.account_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : condition.field === 'value' ? (
+        <CurrencyInput
+          value={condition.value}
+          onChange={(e) => onChange(index, { ...condition, value: e.target.value })}
+        />
       ) : (
         <Input
           placeholder={t('pages.automationRules.conditionValue')}
@@ -258,6 +317,11 @@ function RuleFormDialog({
   isLoading?: boolean;
 }) {
   const { t } = useTranslation();
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => accountsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
   const [name, setName] = useState(rule?.name ?? '');
   const [desc, setDesc] = useState(rule?.description ?? '');
   const [logic, setLogic] = useState<'all' | 'any'>(rule?.logic ?? 'all');
@@ -304,10 +368,12 @@ function RuleFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader sticky>
           <DialogTitle mode={rule ? 'edit' : 'create'}>
-            {rule ? t('common.actions.edit') : t('pages.automationRules.newRule')}
+            {rule
+              ? t('pages.automationRules.editRule')
+              : t('pages.automationRules.newRule')}
           </DialogTitle>
           <VisuallyHidden>
             <DialogDescription>{t('pages.automationRules.subtitle')}</DialogDescription>
@@ -342,52 +408,57 @@ function RuleFormDialog({
               />
             </div>
 
-            <div className="space-y-sm">
-              <Label htmlFor="rule-priority">
-                {t('pages.automationRules.form.priorityLabel')}
-              </Label>
-              <NumberStepper
-                id="rule-priority"
-                min={1}
-                max={9999}
-                value={priority}
-                onChange={(v) => setPriority(v ?? 100)}
-              />
-            </div>
+            <div className="gap-md grid grid-cols-3 md:col-span-2">
+              <div className="space-y-sm flex flex-col items-center">
+                <Label htmlFor="rule-priority">
+                  {t('pages.automationRules.form.priorityLabel')}
+                </Label>
+                <NumberStepper
+                  id="rule-priority"
+                  min={1}
+                  max={9999}
+                  value={priority}
+                  onChange={(v) => setPriority(v ?? 100)}
+                />
+              </div>
 
-            <div className="space-y-sm">
-              <Label>{t('pages.automationRules.logic')}</Label>
-              <Select value={logic} onValueChange={(v) => setLogic(v as 'all' | 'any')}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">
-                    {t('pages.automationRules.logicAll')}
-                  </SelectItem>
-                  <SelectItem value="any">
-                    {t('pages.automationRules.logicAny')}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-sm">
+                <Label>{t('pages.automationRules.logic')}</Label>
+                <Select
+                  value={logic}
+                  onValueChange={(v) => setLogic(v as 'all' | 'any')}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t('pages.automationRules.logicAll')}
+                    </SelectItem>
+                    <SelectItem value="any">
+                      {t('pages.automationRules.logicAny')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="gap-sm flex items-center">
-              <StatusToggle
-                value={isActive ? 'active' : 'inactive'}
-                onChange={(v) => setIsActive(v === 'active')}
-                options={[
-                  {
-                    value: 'active',
-                    label: t('pages.automationRules.active'),
-                    accentColor: 'success',
-                  },
-                  {
-                    value: 'inactive',
-                    label: t('pages.automationRules.inactive'),
-                  },
-                ]}
-              />
+              <div className="gap-sm flex items-center">
+                <StatusToggle
+                  value={isActive ? 'active' : 'inactive'}
+                  onChange={(v) => setIsActive(v === 'active')}
+                  options={[
+                    {
+                      value: 'active',
+                      label: t('pages.automationRules.active'),
+                      accentColor: 'success',
+                    },
+                    {
+                      value: 'inactive',
+                      label: t('pages.automationRules.inactive'),
+                    },
+                  ]}
+                />
+              </div>
             </div>
           </div>
 
@@ -402,17 +473,28 @@ function RuleFormDialog({
                 {t('pages.automationRules.addCondition')}
               </Button>
             </div>
-            <div className="space-y-sm">
-              {conditions.map((c, i) => (
-                <ConditionRow
-                  key={i}
-                  condition={c}
-                  index={i}
-                  onChange={updateCondition}
-                  onRemove={removeCondition}
-                />
-              ))}
-            </div>
+            <PaginatedSlide
+              items={conditions}
+              pageSize={2}
+              pinNav={false}
+              className="space-y-sm"
+            >
+              {(pageConditions) =>
+                pageConditions.map((c) => {
+                  const i = conditions.indexOf(c);
+                  return (
+                    <ConditionRow
+                      key={i}
+                      condition={c}
+                      index={i}
+                      accounts={accounts}
+                      onChange={updateCondition}
+                      onRemove={removeCondition}
+                    />
+                  );
+                })
+              }
+            </PaginatedSlide>
           </div>
 
           {/* Ações */}
@@ -426,17 +508,27 @@ function RuleFormDialog({
                 {t('pages.automationRules.addAction')}
               </Button>
             </div>
-            <div className="space-y-sm">
-              {actions.map((a, i) => (
-                <ActionRow
-                  key={i}
-                  action={a}
-                  index={i}
-                  onChange={updateAction}
-                  onRemove={removeAction}
-                />
-              ))}
-            </div>
+            <PaginatedSlide
+              items={actions}
+              pageSize={2}
+              pinNav={false}
+              className="space-y-sm"
+            >
+              {(pageActions) =>
+                pageActions.map((a) => {
+                  const i = actions.indexOf(a);
+                  return (
+                    <ActionRow
+                      key={i}
+                      action={a}
+                      index={i}
+                      onChange={updateAction}
+                      onRemove={removeAction}
+                    />
+                  );
+                })
+              }
+            </PaginatedSlide>
           </div>
 
           <DialogFooter>
@@ -696,7 +788,15 @@ function EmbeddedWrapper({ children }: { children: React.ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function AutomationRules({ embedded = false }: { embedded?: boolean }) {
+export default function AutomationRules({
+  embedded = false,
+  newRuleRef,
+  applyAllRef,
+}: {
+  embedded?: boolean;
+  newRuleRef?: RefObject<(() => void) | undefined>;
+  applyAllRef?: RefObject<(() => void) | undefined>;
+}) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -706,6 +806,15 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
   const [editingRule, setEditingRule] = useState<AutomationRule | undefined>();
   const [logsRule, setLogsRule] = useState<AutomationRule | undefined>();
   const [logsOpen, setLogsOpen] = useState(false);
+
+  useEffect(() => {
+    if (newRuleRef) {
+      newRuleRef.current = () => {
+        setEditingRule(undefined);
+        setFormOpen(true);
+      };
+    }
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['automation-rules'],
@@ -772,6 +881,12 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
     },
   });
 
+  useEffect(() => {
+    if (applyAllRef) {
+      applyAllRef.current = () => applyMutation.mutate();
+    }
+  });
+
   const handleSubmit = (d: AutomationRuleFormData) => {
     if (editingRule) {
       updateMutation.mutate({ id: editingRule.id, data: d });
@@ -819,38 +934,12 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
 
   return (
     <Wrapper>
-      <PageHeader
-        title={t('pages.automationRules.title')}
-        icon={<Zap />}
-        actions={
-          <div className="gap-sm flex">
-            <Button
-              variant="outline"
-              onClick={() => applyMutation.mutate()}
-              disabled={applyMutation.isPending}
-            >
-              <Zap className="h-4 w-4" />
-              {t('pages.automationRules.applyAll')}
-            </Button>
-            <Button
-              onClick={() => {
-                setEditingRule(undefined);
-                setFormOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4" />
-              {t('pages.automationRules.newRule')}
-            </Button>
-          </div>
-        }
-      />
-
       {isLoading ? (
         <LoadingState />
       ) : rules.length === 0 ? (
         <EmptyState title={t('pages.automationRules.empty')} />
       ) : (
-        <PaginatedSlide items={rules} pageSize={LIST_PAGE_SIZE} className="space-y-sm">
+        <PaginatedSlide items={rules} pageSize={5} className="space-y-sm">
           {(pageItems) =>
             pageItems.map((rule) => (
               <RuleCard

@@ -364,18 +364,25 @@ class ExpenseExportFilterTest(BaseFinalTestCase):
 
 
 # ---------------------------------------------------------------------------
-# Apply categorization rules
+# Apply automation rules
 # ---------------------------------------------------------------------------
 
 
-class ApplyCategorizationRulesTest(BaseFinalTestCase):
+class ApplyAutomationRulesTest(BaseFinalTestCase):
     def setUp(self):
         super().setUp()
-        from expenses.models import CategorizationRule, Expense
+        from expenses.models import AutomationRule, Expense
 
-        CategorizationRule.objects.create(
-            merchant_contains="amazon",
-            category="shopping",
+        AutomationRule.objects.create(
+            name="Categorizar: amazon",
+            conditions=[
+                {
+                    "field": "merchant",
+                    "operator": "contains",
+                    "value": "amazon",
+                }
+            ],
+            actions=[{"type": "set_category", "value": "shopping"}],
             is_active=True,
             owner=self.user,
             created_by=self.user,
@@ -393,12 +400,50 @@ class ApplyCategorizationRulesTest(BaseFinalTestCase):
             created_by=self.user,
         )
 
-    def test_apply_categorization_rules(self):
-        url = reverse("categorization-rule-apply")
+    def test_apply_automation_rules(self):
+        url = reverse("automation-rule-apply")
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("updated", response.data)
-        self.assertIn("total_processed", response.data)
+        self.assertIn("applied", response.data)
+
+
+# ---------------------------------------------------------------------------
+# Tag duplicate (name + color) validation
+# ---------------------------------------------------------------------------
+
+
+class TagDuplicateValidationTest(BaseFinalTestCase):
+    def setUp(self):
+        super().setUp()
+        from expenses.models import Tag
+
+        Tag.objects.create(
+            name="Viagem",
+            color="#6366f1",
+            owner=self.user,
+            created_by=self.user,
+        )
+
+    def test_duplicate_name_and_color_is_rejected(self):
+        url = reverse("tag-list-create")
+        response = self.client.post(
+            url, {"name": "Viagem", "color": "#6366f1"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_duplicate_name_and_color_is_rejected_case_insensitive(self):
+        url = reverse("tag-list-create")
+        response = self.client.post(
+            url, {"name": "viagem", "color": "#6366F1"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_same_name_different_color_is_allowed(self):
+        url = reverse("tag-list-create")
+        response = self.client.post(
+            url, {"name": "Viagem", "color": "#ec4899"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
 # ---------------------------------------------------------------------------

@@ -311,5 +311,7 @@ class WorkoutPlanUniqueNameTest(APITestCase):
 
     def test_allows_saving_plan_with_its_own_name(self):
         url = reverse("workout-plan-detail", args=[self.plan.pk])
-        response = self.client.patch(url, {"name": "Hipertrofia", "is_active": False})
+        response = self.client.patch(
+            url, {"name": "Hipertrofia", "is_active": False}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
