@@ -255,24 +255,15 @@ function CardSubSection({
   title,
   icon: Icon,
   total,
-  variant = 'default',
   children,
 }: {
   title: string;
   icon: React.ElementType;
   total: number;
-  variant?: 'revenue' | 'expense' | 'bill' | 'default';
   children: React.ReactNode;
 }) {
-  const accent = {
-    revenue: 'border-l-success/60',
-    expense: 'border-l-destructive/60',
-    bill: 'border-l-warning/60',
-    default: 'border-l-border',
-  }[variant];
-
   return (
-    <div className={cn('space-y-sm pl-sm border-l-2', accent)}>
+    <div className="space-y-sm">
       <div className="gap-xs flex items-center">
         <Icon className="text-muted-foreground h-3.5 w-3.5" />
         <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
@@ -500,7 +491,6 @@ function ExtraItemRow({
 function ActualItemsSection({
   title,
   icon: Icon,
-  variant,
   items,
   emptyText,
   renderItem,
@@ -508,18 +498,14 @@ function ActualItemsSection({
 }: {
   title: string;
   icon: React.ElementType;
-  variant: 'revenue' | 'expense';
   items: unknown[];
   emptyText: string;
   renderItem: (item: unknown, idx: number) => ReactNode;
   summary?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const accent =
-    variant === 'revenue' ? 'border-l-success/60' : 'border-l-destructive/60';
-
   return (
-    <div className={cn('space-y-sm pl-sm border-l-2', accent)}>
+    <div className="space-y-sm">
       <button
         className="gap-xs flex w-full items-center"
         onClick={() => setExpanded((v) => !v)}
@@ -1132,7 +1118,7 @@ export default function MonthlyPlanner({
       <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
         {/* Left: Revenues + Budgets */}
         <div className="space-y-sm">
-          <Card className="border-l-success border-l-4">
+          <Card>
             <CardHeader className="pb-sm">
               <div className="flex items-center justify-between">
                 <div className="gap-sm flex items-center">
@@ -1151,7 +1137,6 @@ export default function MonthlyPlanner({
                 title={t('monthlyPlanner.fixedRevenues')}
                 icon={CircleDollarSign}
                 total={totalFixed}
-                variant="revenue"
               >
                 {(data?.fixed_revenues.length ?? 0) === 0 && (
                   <EmptyState title={t('monthlyPlanner.noFixedRevenues')} />
@@ -1182,7 +1167,6 @@ export default function MonthlyPlanner({
                 title={t('monthlyPlanner.extraRevenues')}
                 icon={CircleDollarSign}
                 total={totalExtra}
-                variant="revenue"
               >
                 {extraRevenues.map((r, i) => (
                   <ExtraItemRow
@@ -1209,7 +1193,6 @@ export default function MonthlyPlanner({
               <ActualItemsSection
                 title={t('monthlyPlanner.registeredRevenues')}
                 icon={TrendingUp}
-                variant="revenue"
                 items={actualRevenueItems}
                 emptyText={t('monthlyPlanner.noRegisteredRevenues')}
                 summary={<VaultSplit total={actualRevenues} inVaults={totalVaults} />}
@@ -1240,7 +1223,7 @@ export default function MonthlyPlanner({
           </Card>
 
           {/* Budget by category */}
-          <Card className="border-l-primary border-l-4">
+          <Card>
             <CardHeader className="pb-sm">
               <div className="flex items-center justify-between">
                 <div className="gap-sm flex items-center">
@@ -1349,7 +1332,7 @@ export default function MonthlyPlanner({
 
         {/* Right: Expenses */}
         <div className="space-y-sm">
-          <Card className="border-l-destructive border-l-4">
+          <Card>
             <CardHeader className="pb-sm">
               <div className="flex items-center justify-between">
                 <div className="gap-sm flex items-center">
@@ -1368,7 +1351,6 @@ export default function MonthlyPlanner({
                 title={t('monthlyPlanner.fixedExpenses')}
                 icon={TrendingDown}
                 total={totalFixedExp}
-                variant="expense"
               >
                 {(data?.fixed_expenses.length ?? 0) === 0 && (
                   <EmptyState title={t('monthlyPlanner.noFixedExpenses')} />
@@ -1403,7 +1385,6 @@ export default function MonthlyPlanner({
                 title={t('monthlyPlanner.creditCardBills')}
                 icon={CreditCard}
                 total={totalBills}
-                variant="bill"
               >
                 {(data?.credit_card_bills.length ?? 0) === 0 && (
                   <EmptyState title={t('monthlyPlanner.noBills')} />
@@ -1423,7 +1404,6 @@ export default function MonthlyPlanner({
                 title={t('monthlyPlanner.extraExpenses')}
                 icon={TrendingDown}
                 total={totalExtraExp}
-                variant="expense"
               >
                 {extraExpenses.map((e, i) => (
                   <ExtraItemRow
@@ -1450,7 +1430,6 @@ export default function MonthlyPlanner({
               <ActualItemsSection
                 title={t('monthlyPlanner.registeredExpenses')}
                 icon={TrendingDown}
-                variant="expense"
                 items={actualExpenseItems}
                 emptyText={t('monthlyPlanner.noRegisteredExpenses')}
                 renderItem={(item, idx) => {

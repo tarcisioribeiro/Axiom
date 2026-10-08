@@ -59,6 +59,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { INTERVENTION_CATEGORY_ICONS } from '@/config/icons';
+import { useTabRoute } from '@/hooks/use-tab-route';
 import { useToast } from '@/hooks/use-toast';
 import { cn, formatLocalDate } from '@/lib/utils';
 import {
@@ -714,7 +715,7 @@ function SelfEsteemTab({
                         key={a.id}
                         role="button"
                         tabIndex={0}
-                        className="hover:border-primary/50 cursor-pointer transition-colors"
+                        className="cursor-pointer"
                         onClick={() => setSelected(a)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
@@ -1023,7 +1024,7 @@ function CheckinTab({
                     key={c.id}
                     role="button"
                     tabIndex={0}
-                    className="hover:border-primary/50 cursor-pointer transition-colors"
+                    className="cursor-pointer"
                     onClick={() => setSelected(c)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
@@ -1662,7 +1663,13 @@ function LibraryTab() {
 
 export default function EmotionalWellness() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<string>('dashboard');
+  const [tab, setTab] = useTabRoute(
+    '/planning/emotional-wellness',
+    TABS.map((x) => x.id),
+    'dashboard'
+  );
+  const activeTab = TABS.find((x) => x.id === tab) ?? TABS[0];
+  const ActiveIcon = activeTab.icon;
   const [selfEsteemFormOpen, setSelfEsteemFormOpen] = useState(false);
   const [checkinFormOpen, setCheckinFormOpen] = useState(false);
   const [crisisFormOpen, setCrisisFormOpen] = useState(false);
@@ -1670,8 +1677,8 @@ export default function EmotionalWellness() {
     <AnimatedPage>
       <PageContainer>
         <PageHeader
-          title={t('pages.emotionalWellness.title')}
-          icon={<Heart />}
+          title={t(`pages.emotionalWellness.tabs.${activeTab.labelKey}`)}
+          icon={<ActiveIcon />}
           actions={
             tab === 'self-esteem' ? (
               <Button onClick={() => setSelfEsteemFormOpen(true)}>
@@ -1694,7 +1701,7 @@ export default function EmotionalWellness() {
           }
         />
 
-        <Tabs value={tab} onValueChange={setTab}>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
           <TabsList className="mb-lg w-full overflow-x-auto">
             {TABS.map((tab) => {
               const Icon = tab.icon;

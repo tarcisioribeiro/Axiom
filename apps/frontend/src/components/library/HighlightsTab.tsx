@@ -38,11 +38,11 @@ import type { Book, BookHighlight, BookHighlightFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 const COLOR_CLASSES: Record<string, string> = {
-  yellow: 'border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20',
-  green: 'border-green-400 bg-green-50 dark:bg-green-950/20',
-  blue: 'border-blue-400 bg-blue-50 dark:bg-blue-950/20',
-  pink: 'border-pink-400 bg-pink-50 dark:bg-pink-950/20',
-  orange: 'border-orange-400 bg-orange-50 dark:bg-orange-950/20',
+  yellow: 'bg-yellow-50 dark:bg-yellow-950/20',
+  green: 'bg-green-50 dark:bg-green-950/20',
+  blue: 'bg-blue-50 dark:bg-blue-950/20',
+  pink: 'bg-pink-50 dark:bg-pink-950/20',
+  orange: 'bg-orange-50 dark:bg-orange-950/20',
 };
 
 const TYPE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
@@ -383,7 +383,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
           {filtered.map((h) => {
             const colorClass = COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow;
             return (
-              <div key={h.id} className={`p-md rounded-lg border-l-4 ${colorClass}`}>
+              <div key={h.id} className={`p-md rounded-lg border ${colorClass}`}>
                 <div className="mb-sm gap-sm flex items-start justify-between">
                   <div className="gap-sm flex flex-wrap items-center">
                     <Badge variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}>

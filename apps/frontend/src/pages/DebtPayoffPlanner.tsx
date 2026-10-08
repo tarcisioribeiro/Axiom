@@ -42,17 +42,6 @@ const URGENCY_BADGE_CLASS: Record<DebtPayoffPlanDebt['urgency'], string> = {
   low: 'bg-muted text-muted-foreground',
 };
 
-const PRIORITY_BORDER_CLASS: Record<number, string> = {
-  1: 'border-l-destructive',
-  2: 'border-l-warning',
-  3: 'border-l-accent',
-};
-const DEFAULT_PRIORITY_BORDER = 'border-l-muted-foreground';
-
-function getPriorityBorderColor(priority: number): string {
-  return PRIORITY_BORDER_CLASS[priority] ?? DEFAULT_PRIORITY_BORDER;
-}
-
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
@@ -299,10 +288,7 @@ export default function DebtPayoffPlanner({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ delay: idx * 0.05 }}
-                        className={cn(
-                          'bg-card p-md rounded-lg border border-l-4',
-                          getPriorityBorderColor(debt.priority)
-                        )}
+                        className="bg-card p-md rounded-lg border"
                       >
                         <div className="gap-sm flex items-start justify-between">
                           <div className="gap-sm flex items-start">

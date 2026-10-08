@@ -56,9 +56,9 @@ import { membersService } from '@/services/members-service';
 import type { Archive, ArchiveFormData, Member } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const TYPE_CONFIG: Record<string, { icon: string; border: string }> = {
-  text: { icon: 'bg-info/10 text-info', border: 'border-l-info/60' },
-  file: { icon: 'bg-warning/10 text-warning', border: 'border-l-warning/60' },
+const TYPE_CONFIG: Record<string, { icon: string }> = {
+  text: { icon: 'bg-info/10 text-info' },
+  file: { icon: 'bg-warning/10 text-warning' },
 };
 
 const ARCHIVE_CATEGORY_KEYS = [
@@ -461,13 +461,9 @@ export default function Archives() {
               pageItems.map((arc) => {
                 const typeConfig = TYPE_CONFIG[arc.archive_type] ?? {
                   icon: 'bg-muted text-muted-foreground',
-                  border: 'border-l-border',
                 };
                 return (
-                  <Card
-                    key={arc.id}
-                    className={cn('overflow-hidden border-l-2', typeConfig.border)}
-                  >
+                  <Card key={arc.id} className="overflow-hidden">
                     <CardHeader className="pb-sm">
                       <div className="flex items-start justify-between">
                         <div className="min-w-0 flex-1">

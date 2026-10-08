@@ -36,7 +36,7 @@ export function RoutineFocusBlockCard({
 }: RoutineFocusBlockCardProps) {
   const { t } = useTranslation();
   return (
-    <div className="overflow-hidden rounded-lg border border-l-4">
+    <div className="overflow-hidden rounded-lg border">
       <div className="gap-sm px-md py-sm bg-muted/20 flex items-center">
         <BlockIcon
           name={block.icon}

@@ -8,7 +8,6 @@ import { ReceiptButton } from '@/components/receipts';
 import { getTransferColumns } from '@/components/transfers/getTransferColumns';
 import { TransferFilters } from '@/components/transfers/TransferFilters';
 import { TransferForm } from '@/components/transfers/TransferForm';
-import { TransferStats } from '@/components/transfers/TransferStats';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -48,10 +47,6 @@ export default function Transfers() {
     setStartDate,
     endDate,
     setEndDate,
-    totalVolume,
-    completedCount,
-    pendingCount,
-    transfers,
     hasActiveFilters,
     clearFilters,
     handleCreate,
@@ -88,13 +83,6 @@ export default function Transfers() {
         accounts={accounts}
         hasActiveFilters={hasActiveFilters}
         onClear={clearFilters}
-      />
-
-      <TransferStats
-        totalVolume={totalVolume}
-        completedCount={completedCount}
-        pendingCount={pendingCount}
-        totalCount={transfers.length}
       />
 
       <DataTable

@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
-  CheckCircle2,
   CircleDot,
   Clock,
   GraduationCap,
@@ -394,10 +393,6 @@ export default function Courses() {
     void navigate(`/agents?context=${context}`);
   };
 
-  const inProgressCount = courses.filter((c) => c.status === 'in_progress').length;
-  const completedCount = courses.filter((c) => c.status === 'completed').length;
-  const totalHours = courses.reduce((s, c) => s + c.invested_hours, 0);
-
   return (
     <AnimatedPage>
       <PageContainer>
@@ -414,40 +409,6 @@ export default function Courses() {
             </Button>
           }
         />
-
-        {/* Stats strip */}
-        <div className="gap-md grid grid-cols-3">
-          {[
-            {
-              label: t('pages.courses.filters.in_progress'),
-              value: inProgressCount,
-              icon: BookOpen,
-            },
-            {
-              label: t('pages.courses.filters.completed'),
-              value: completedCount,
-              icon: CheckCircle2,
-            },
-            {
-              label: t('pages.courses.stats.investedHours'),
-              value: `${totalHours.toFixed(1)}h`,
-              icon: Clock,
-            },
-          ].map(({ label, value, icon: Icon }) => (
-            <div
-              key={label}
-              className="gap-md border-border bg-card p-md flex items-center rounded-lg border"
-            >
-              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                <Icon className="text-primary h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xl font-bold">{value}</p>
-                <p className="text-muted-foreground text-xs">{label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* Study hours this week */}
         <Card>

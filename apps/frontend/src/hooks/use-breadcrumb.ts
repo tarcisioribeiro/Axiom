@@ -1,6 +1,17 @@
 /* eslint-disable max-lines */
 import {
   ArrowLeftRight,
+  BookMarked,
+  BookOpen,
+  ClipboardList,
+  Dumbbell,
+  Flame,
+  Heart,
+  Highlighter,
+  Library,
+  Salad,
+  Star,
+  UtensilsCrossed,
   BarChart3,
   Bell,
   Brain,
@@ -42,7 +53,7 @@ import {
 import { useBreadcrumbExtraStore } from '@/stores/breadcrumb-extra-store';
 import type { IconComponent } from '@/types/icon';
 
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
   label: string;
   href?: string;
   icon?: IconComponent;
@@ -212,6 +223,33 @@ const tabbedRoutes: Record<string, Record<string, TabConfig>> = {
   '/credit-cards': {
     cards: { labelKey: 'pages.creditCards.title', icon: CreditCard },
     bills: { labelKey: 'pages.creditCardBills.title', icon: Receipt },
+  },
+  '/library/books': {
+    books: { labelKey: 'pages.books.title', icon: Library },
+    'reading-queue': { labelKey: 'nav.items.readingQueue', icon: BookMarked },
+    highlights: { labelKey: 'nav.items.highlights', icon: Highlighter },
+  },
+  '/planning/workout': {
+    today: { labelKey: 'pages.workoutHub.todayPlan', icon: Flame },
+    sessions: { labelKey: 'pages.workoutPlans.tabSessions', icon: Zap },
+    calendar: { labelKey: 'pages.workoutPlans.tabCalendar', icon: CalendarDays },
+    plans: { labelKey: 'pages.workoutPlans.tabPlans', icon: ClipboardList },
+    exercises: { labelKey: 'pages.workoutPlans.tabExercises', icon: Dumbbell },
+  },
+  '/planning/nutrition': {
+    log: { labelKey: 'pages.nutritionFoods.tabLog', icon: CalendarDays },
+    'meal-types': {
+      labelKey: 'pages.nutritionFoods.tabMealTypes',
+      icon: UtensilsCrossed,
+    },
+    foods: { labelKey: 'pages.nutritionFoods.tabFoods', icon: Salad },
+  },
+  '/planning/emotional-wellness': {
+    dashboard: { labelKey: 'pages.emotionalWellness.tabs.dashboard', icon: BarChart3 },
+    'self-esteem': { labelKey: 'pages.emotionalWellness.tabs.selfEsteem', icon: Star },
+    checkin: { labelKey: 'pages.emotionalWellness.tabs.checkin', icon: Heart },
+    crisis: { labelKey: 'pages.emotionalWellness.tabs.crisis', icon: Shield },
+    library: { labelKey: 'pages.emotionalWellness.tabs.library', icon: BookOpen },
   },
   '/planning/tasks-goals': {
     daily: { labelKey: 'pages.dailyChecklist.title', icon: CheckCircle2 },

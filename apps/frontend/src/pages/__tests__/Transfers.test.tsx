@@ -48,10 +48,6 @@ vi.mock('@/components/receipts', () => ({
   ReceiptButton: () => <button>Recibo</button>,
 }));
 
-vi.mock('@/components/transfers/TransferStats', () => ({
-  TransferStats: () => <div data-testid="transfer-stats" />,
-}));
-
 vi.mock('@/components/transfers/TransferFilters', () => ({
   TransferFilters: () => <div data-testid="transfer-filters" />,
 }));

@@ -4394,33 +4394,6 @@
         "longBreak": "Long Break"
       }
     },
-    "personalAnalytics": {
-      "title": "Personal Analytics",
-      "rate7d": "7-day Rate",
-      "rate30d": "30-day Rate",
-      "currentStreak": "Current Streak",
-      "bestStreak": "Best Streak",
-      "days": "days",
-      "weekdayChart": "Completion by Day of Week",
-      "avg90d": "90d avg",
-      "heatmap": "Habit Map",
-      "insightsTitle": "Automatic Insights",
-      "byCategory": "By Category",
-      "noData": "Insufficient data for analysis.",
-      "noInsights": "No insights available yet. Keep using the app!",
-      "completionRate": "Completion rate",
-      "less": "Less",
-      "more": "More",
-      "heatmapTooltip": "{{date}}: {{completed}}/{{expected}} completed",
-      "insights": {
-        "bestDay": "{{day}} is your best day ({{rate}}% completion)",
-        "worstDay": "{{day}} has the lowest rate ({{rate}}%)",
-        "weekendDrop": "Weekends drop {{weekday}}% → {{weekend}}%",
-        "weekendBetter": "Weekends are better ({{weekend}}% vs {{weekday}}%)",
-        "overallExcellent": "Excellent! Overall rate of {{rate}}%",
-        "overallLow": "Overall rate of only {{rate}}% — room to improve"
-      }
-    },
     "myWeekPage": {
       "title": "My Week",
       "description": "View and track your tasks throughout the week.",
@@ -6838,11 +6811,6 @@
         "title": "Week",
         "desc": "A weekly view with your tasks spread across days.",
         "tip": "Use it to balance the load across days."
-      },
-      "planningAnalytics": {
-        "title": "Personal analytics",
-        "desc": "Charts about habits, tasks and personal performance.",
-        "tip": "Compare periods to see if you are improving."
       },
       "bodyMetrics": {
         "title": "Body metrics",

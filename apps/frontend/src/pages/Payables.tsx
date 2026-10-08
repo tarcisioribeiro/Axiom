@@ -7,10 +7,6 @@ import {
   Receipt,
   CreditCard,
   List,
-  CheckCircle2,
-  AlertTriangle,
-  Banknote,
-  Clock,
   CalendarRange,
   Tag,
   CircleDot,
@@ -35,7 +31,6 @@ import { PaymentPlanDialog } from '@/components/payables/PaymentPlanDialog';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -182,19 +177,6 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
     setDueEndDate(undefined);
   };
 
-  const { activeCount, overdueCount, paidCount, totalValue } = useMemo(() => {
-    const active = payables.filter((p) => p.status === 'active');
-    const overdue = payables.filter((p) => p.status === 'overdue');
-    const paid = payables.filter((p) => p.status === 'paid');
-    const total = payables.reduce((s, p) => s + parseFloat(p.value), 0);
-    return {
-      activeCount: active.length,
-      overdueCount: overdue.length,
-      paidCount: paid.length,
-      totalValue: total,
-    };
-  }, [payables]);
-
   if (isLoading) return <LoadingState />;
 
   const header = (
@@ -326,70 +308,6 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
         />
       </FilterBar>
 
-      <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
-        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.payables.stats.total')}</p>
-            <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
-              <Banknote className="text-destructive h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-destructive text-2xl font-bold">
-              {formatCurrency(totalValue)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.payables.stats.totalSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-warning/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.payables.stats.active')}</p>
-            <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
-              <Clock className="text-warning h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-warning text-2xl font-bold">{activeCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.payables.stats.activeSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.payables.stats.overdue')}</p>
-            <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
-              <AlertTriangle className="text-destructive h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-destructive text-2xl font-bold">{overdueCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.payables.stats.overdueSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-success/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.payables.stats.paid')}</p>
-            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-              <CheckCircle2 className="text-success h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">{paidCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.payables.stats.paidSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {displayedPayables.length === 0 ? (
         <EmptyState
           icon={<Receipt className="text-muted-foreground h-12 w-12" />}
@@ -435,30 +353,10 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
                 return null;
               };
               const dueBadge = getDueBadge();
-              const urgencyClass =
-                payable.status === 'overdue'
-                  ? 'border-l-4 border-l-destructive'
-                  : payable.status === 'paid'
-                    ? 'border-l-4 border-l-success'
-                    : payable.status === 'cancelled'
-                      ? 'border-l-4 border-l-muted-foreground'
-                      : (() => {
-                          if (!payable.due_date) return 'border-l-4 border-l-warning';
-                          const d = Math.ceil(
-                            (new Date(payable.due_date).getTime() - Date.now()) /
-                              86400000
-                          );
-                          if (d <= 0) return 'border-l-4 border-l-destructive';
-                          if (d <= 7) return 'border-l-4 border-l-warning';
-                          return 'border-l-4 border-l-info';
-                        })();
               return (
                 <div
                   key={payable.id}
-                  className={cn(
-                    'bg-card p-md space-y-3 rounded-lg border transition-colors',
-                    urgencyClass
-                  )}
+                  className="bg-card p-md space-y-3 rounded-lg border"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

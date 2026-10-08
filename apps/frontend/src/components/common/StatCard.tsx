@@ -56,14 +56,6 @@ const extractNumber = (val: string | number): number => {
   return parseFloat(cleaned.replace(/,/g, ''));
 };
 
-const accentCardClasses: Record<NonNullable<StatCardProps['accentColor']>, string> = {
-  green: 'border-l-4 border-l-success border-success/30 bg-success/[0.03]',
-  red: 'border-l-4 border-l-destructive border-destructive/30 bg-destructive/[0.03]',
-  blue: 'border-l-4 border-l-primary border-primary/30 bg-primary/[0.03]',
-  orange: 'border-l-4 border-l-warning border-warning/30 bg-warning/[0.03]',
-  purple: 'border-l-4 border-l-purple-500 border-purple-500/30 bg-purple-500/[0.03]',
-};
-
 const accentIconClasses: Record<NonNullable<StatCardProps['accentColor']>, string> = {
   green: 'bg-success/12 text-success ring-1 ring-inset ring-success/25',
   red: 'bg-destructive/12 text-destructive ring-1 ring-inset ring-destructive/25',
@@ -95,13 +87,6 @@ export const StatCard: React.FC<StatCardProps> = ({
   progressBar,
 }) => {
   const { i18n } = useTranslation();
-  const variantClasses = {
-    default: '',
-    success: 'border-success/40 bg-success/[0.04]',
-    warning: 'border-warning/40 bg-warning/[0.04]',
-    danger: 'border-destructive/40 bg-destructive/[0.04]',
-  };
-
   const iconBadgeClasses = {
     default: 'bg-primary/10 text-primary ring-1 ring-inset ring-primary/20',
     success:
@@ -110,10 +95,6 @@ export const StatCard: React.FC<StatCardProps> = ({
       'bg-warning/12 text-[hsl(var(--warning))] ring-1 ring-inset ring-warning/25',
     danger: 'bg-destructive/12 text-destructive ring-1 ring-inset ring-destructive/25',
   };
-
-  const cardClass = accentColor
-    ? accentCardClasses[accentColor]
-    : variantClasses[variant];
 
   const iconClass = accentColor
     ? accentIconClasses[accentColor]
@@ -151,9 +132,9 @@ export const StatCard: React.FC<StatCardProps> = ({
     <motion.div variants={cardVariants} initial="initial" animate="animate">
       <Card
         className={cn(
-          `h-full ${cardClass}`,
+          'h-full',
           centered && 'flex flex-col',
-          onClick && 'hover:ring-primary/30 cursor-pointer hover:ring-2'
+          onClick && 'cursor-pointer'
         )}
         onClick={onClick}
       >

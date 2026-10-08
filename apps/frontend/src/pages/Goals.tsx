@@ -278,7 +278,7 @@ function GoalCard({
           onOpenDetails(goal);
         }
       }}
-      className="focus-visible:ring-ring relative cursor-pointer overflow-hidden transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:outline-none"
+      className="focus-visible:ring-ring relative cursor-pointer overflow-hidden focus-visible:ring-2 focus-visible:outline-none"
     >
       {/* Completion glow animation */}
       <AnimatePresence>

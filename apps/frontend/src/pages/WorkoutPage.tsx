@@ -86,6 +86,7 @@ import { WorkoutPlanForm } from '@/components/workout/WorkoutPlanForm';
 import { WorkoutSessionForm } from '@/components/workout/WorkoutSessionForm';
 import { TASK_STATUS_ICONS, WORKOUT_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useTabRoute } from '@/hooks/use-tab-route';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -182,13 +183,26 @@ function formatDuration(minutes: number): string {
   return m > 0 ? `${h}h ${m}min` : `${h}h`;
 }
 
+const TABS = ['today', 'sessions', 'calendar', 'plans', 'exercises'] as const;
+
+const TAB_HEADERS: Record<
+  (typeof TABS)[number],
+  { titleKey: string; icon: ReactNode }
+> = {
+  today: { titleKey: 'pages.workoutHub.todayPlan', icon: <Flame /> },
+  sessions: { titleKey: 'pages.workoutPlans.tabSessions', icon: <Zap /> },
+  calendar: { titleKey: 'pages.workoutPlans.tabCalendar', icon: <CalendarDays /> },
+  plans: { titleKey: 'pages.workoutPlans.tabPlans', icon: <ClipboardList /> },
+  exercises: { titleKey: 'pages.workoutPlans.tabExercises', icon: <Dumbbell /> },
+};
+
 export default function WorkoutPage() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState<DialogMode>(null);
-  const [activeTab, setActiveTab] = useState('today');
+  const [activeTab, setActiveTab] = useTabRoute('/planning/workout', TABS, 'today');
   const [viewPlanId, setViewPlanId] = useState<number | null>(null);
   const [viewDayId, setViewDayId] = useState<number | null>(null);
   const [imagePickerExercise, setImagePickerExercise] = useState<Exercise | null>(null);
@@ -872,8 +886,8 @@ export default function WorkoutPage() {
     <AnimatedPage>
       <PageContainer>
         <PageHeader
-          title={t('pages.workoutPlans.title')}
-          icon={<Dumbbell className="text-primary h-6 w-6" />}
+          title={t(TAB_HEADERS[activeTab].titleKey)}
+          icon={TAB_HEADERS[activeTab].icon}
           actions={
             activeTab === 'sessions' ? (
               <Button onClick={() => setDialog({ type: 'new-session' })}>
@@ -896,7 +910,7 @@ export default function WorkoutPage() {
 
         <Tabs
           value={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
           className="flex flex-1 flex-col"
         >
           <TabsList className="mb-lg w-full">
@@ -2109,14 +2123,7 @@ interface PlanCardProps {
 
 function PlanCard({ plan, onOpen, onEdit, onDelete, t }: PlanCardProps) {
   return (
-    <div
-      className={cn(
-        'bg-card flex flex-col overflow-hidden rounded-lg border transition-colors',
-        plan.is_active
-          ? 'border-primary/40 hover:border-primary/70'
-          : 'border-border hover:border-primary/40'
-      )}
-    >
+    <div className="bg-card border-border flex flex-col overflow-hidden rounded-lg border">
       <button
         type="button"
         onClick={onOpen}
@@ -2208,7 +2215,7 @@ function PlanDaysList({ plan, onOpenDay, t }: PlanDaysListProps) {
           type="button"
           onClick={() => onOpenDay(day)}
           // Larguras = colunas do antigo grid (2/3/5), descontando o gap; flex centraliza a última linha
-          className="p-sm border-border bg-background hover:border-primary/40 hover:bg-primary/5 flex w-[calc((100%-var(--spacing-sm))/2)] flex-col items-start rounded-lg border-2 text-left transition sm:w-[calc((100%-2*var(--spacing-sm))/3)] lg:w-[calc((100%-4*var(--spacing-sm))/5)]"
+          className="p-sm border-border bg-background flex w-[calc((100%-var(--spacing-sm))/2)] flex-col items-start rounded-lg border-2 text-left sm:w-[calc((100%-2*var(--spacing-sm))/3)] lg:w-[calc((100%-4*var(--spacing-sm))/5)]"
         >
           <div className="mb-sm bg-primary/15 text-primary flex h-8 w-8 items-center justify-center rounded-lg">
             {getMuscleIcon(day.muscle_groups)}
@@ -2258,7 +2265,7 @@ function SessionCard({ session, onView, onEdit, onDelete, t }: SessionCardProps)
           onView();
         }
       }}
-      className="group gap-md border-border bg-card p-md hover:border-primary/30 focus-visible:ring-ring flex cursor-pointer rounded-lg border transition focus-visible:ring-2 focus-visible:outline-none"
+      className="group gap-md border-border bg-card p-md focus-visible:ring-ring flex cursor-pointer rounded-lg border focus-visible:ring-2 focus-visible:outline-none"
     >
       {/* Date block */}
       <div className="bg-primary/10 py-sm flex w-14 shrink-0 flex-col items-center justify-center rounded-lg text-center">
@@ -2553,7 +2560,7 @@ function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
                       type="button"
                       key={day.id}
                       onClick={() => setOpenDay(day)}
-                      className="border-border bg-card hover:bg-muted/30 w-full overflow-hidden rounded-lg border text-left transition-colors"
+                      className="border-border bg-card w-full overflow-hidden rounded-lg border text-left"
                     >
                       <div className="px-md py-sm flex items-center justify-between">
                         <div className="gap-sm flex items-center">

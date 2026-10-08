@@ -37,12 +37,8 @@ export function DailyFocusBlockCard({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-lg border border-l-4 transition-colors',
-        isAllDone
-          ? 'border-l-success bg-success/5'
-          : hasProgress
-            ? 'border-l-primary bg-primary/[0.03]'
-            : 'border-l-muted-foreground/20 bg-card'
+        'overflow-hidden rounded-lg border',
+        isAllDone ? 'bg-success/5' : hasProgress ? 'bg-primary/[0.03]' : 'bg-card'
       )}
     >
       <div className="gap-sm px-md py-sm flex items-center">

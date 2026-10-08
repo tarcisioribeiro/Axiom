@@ -717,7 +717,7 @@ function RuleCard({
 
   return (
     <div
-      className="border-border bg-card hover:bg-muted/30 p-md gap-sm flex cursor-pointer items-start justify-between rounded-lg border transition"
+      className="border-border bg-card p-md gap-sm flex cursor-pointer items-start justify-between rounded-lg border"
       role="button"
       tabIndex={0}
       onClick={() => onOpenDetails(rule)}

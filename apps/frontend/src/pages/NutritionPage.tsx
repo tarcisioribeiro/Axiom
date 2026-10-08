@@ -61,6 +61,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useTabRoute } from '@/hooks/use-tab-route';
 import { useToast } from '@/hooks/use-toast';
 import { calcCalories } from '@/lib/nutrition-calories';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -181,6 +182,20 @@ function getMealPeriodTheme(time?: string | null): MealPeriodTheme {
   };
 }
 
+const TABS = ['log', 'meal-types', 'foods'] as const;
+
+const TAB_HEADERS: Record<
+  (typeof TABS)[number],
+  { titleKey: string; icon: ReactNode }
+> = {
+  log: { titleKey: 'pages.nutritionFoods.tabLog', icon: <CalendarDays /> },
+  'meal-types': {
+    titleKey: 'pages.nutritionFoods.tabMealTypes',
+    icon: <UtensilsCrossed />,
+  },
+  foods: { titleKey: 'pages.nutritionFoods.tabFoods', icon: <Salad /> },
+};
+
 export default function NutritionPage() {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
@@ -191,7 +206,7 @@ export default function NutritionPage() {
   const [foodSearch, setFoodSearch] = useState('');
   const [mealTypeSearch, setMealTypeSearch] = useState('');
   const [mealTypeStatusFilter, setMealTypeStatusFilter] = useState('all');
-  const [activeTab, setActiveTab] = useState('log');
+  const [activeTab, setActiveTab] = useTabRoute('/planning/nutrition', TABS, 'log');
   const today = formatLocalDate(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(today);
 
@@ -583,8 +598,8 @@ export default function NutritionPage() {
     <AnimatedPage>
       <PageContainer>
         <PageHeader
-          title={t('pages.nutritionFoods.title')}
-          icon={<UtensilsCrossed className="text-category-nutrition h-6 w-6" />}
+          title={t(TAB_HEADERS[activeTab].titleKey)}
+          icon={TAB_HEADERS[activeTab].icon}
           actions={
             activeTab === 'meal-types' ? (
               <Button
@@ -605,7 +620,7 @@ export default function NutritionPage() {
 
         <Tabs
           value={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
           className="flex flex-1 flex-col"
         >
           <TabsList className="mb-lg w-full">
@@ -1463,7 +1478,7 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
   const { t } = useTranslation();
   const initial = food.name.charAt(0).toUpperCase();
   return (
-    <div className="group gap-sm border-border bg-card p-md hover:border-primary/40 flex items-center rounded-lg border transition">
+    <div className="group gap-sm border-border bg-card p-md flex items-center rounded-lg border">
       <div className="bg-category-nutrition/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
         <span className="text-category-nutrition text-base font-bold">{initial}</span>
       </div>

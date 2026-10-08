@@ -77,14 +77,17 @@ describe('StatCard', () => {
     expect(screen.queryByText(/%/)).not.toBeInTheDocument();
   });
 
-  it('applies success variant class', () => {
-    const { container } = render(<StatCard title="OK" value={1} variant="success" />);
-    expect(container.innerHTML).toContain('border-success');
+  it('colors only the icon for a variant, never the card border', () => {
+    const { container } = render(
+      <StatCard title="OK" value={1} variant="success" icon={<span />} />
+    );
+    expect(container.innerHTML).toContain('text-[hsl(var(--success))]');
+    expect(container.innerHTML).not.toContain('border-success');
   });
 
-  it('applies danger variant class', () => {
-    const { container } = render(<StatCard title="Bad" value={1} variant="danger" />);
-    expect(container.innerHTML).toContain('border-destructive');
+  it('has no colored left border for an accent color', () => {
+    const { container } = render(<StatCard title="Bad" value={1} accentColor="red" />);
+    expect(container.innerHTML).not.toContain('border-l-');
   });
 
   it('formats currency value as BRL', () => {

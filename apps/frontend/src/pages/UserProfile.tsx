@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { Bell, Pencil, Shield } from 'lucide-react';
+import { Bell, Pencil, Shield, UserPen } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
 import { NotificationPreferencesContent } from '@/components/notifications/NotificationPreferencesContent';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -35,13 +36,12 @@ export default function UserProfile() {
   const emailVerified = member?.email_verified ?? false;
 
   return (
-    // ponytail: 5rem ≈ altura do Header (que não tem altura fixa); se ele
-    // crescer, trocar por uma variável CSS compartilhada.
-    <PageContainer className="flex min-h-[calc(100dvh-5rem)] flex-col justify-center">
+    <PageContainer>
+      <PageHeader title={t('breadcrumb.profile')} icon={<UserPen />} />
       <Card className="divide-border/60 divide-y overflow-hidden">
         <header className="gap-md p-lg sm:p-xl flex items-center">
           <ProfileAvatar name={fullName} photoUrl={member?.profile_photo} />
-          <h1 className="text-2xl font-bold tracking-tight">{fullName || '—'}</h1>
+          <h2 className="text-2xl font-bold tracking-tight">{fullName || '—'}</h2>
         </header>
 
         <div className="divide-border/60 grid max-lg:divide-y lg:grid-cols-[minmax(0,1fr)_24rem] lg:divide-x">

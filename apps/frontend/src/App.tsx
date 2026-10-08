@@ -100,9 +100,7 @@ const DailyReflections = lazy(() => import('./pages/DailyReflections'));
 const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
 const NutritionPage = lazy(() => import('./pages/NutritionPage'));
 const BodyMetrics = lazy(() => import('./pages/BodyMetrics'));
-const PersonalAnalytics = lazy(() => import('./pages/PersonalAnalytics'));
 const WeeklyPlanning = lazy(() => import('./pages/WeeklyPlanning'));
-const OnboardingWizard = lazy(() => import('./pages/OnboardingWizard'));
 
 // Finance merged pages
 const RulesAndTagsPage = lazy(() => import('./pages/RulesAndTagsPage'));
@@ -409,6 +407,15 @@ function AnimatedRoutes() {
         <Route
           path="/library/books"
           element={
+            <Navigate
+              to={{ pathname: '/library/books/books', search: location.search }}
+              replace
+            />
+          }
+        />
+        <Route
+          path="/library/books/:tab"
+          element={
             <PageWrapper>
               <Books />
             </PageWrapper>
@@ -538,6 +545,10 @@ function AnimatedRoutes() {
           />
           <Route
             path="workout"
+            element={<Navigate to="/planning/workout/today" replace />}
+          />
+          <Route
+            path="workout/:tab"
             element={
               <PageWrapper>
                 <WorkoutPage />
@@ -546,6 +557,10 @@ function AnimatedRoutes() {
           />
           <Route
             path="nutrition"
+            element={<Navigate to="/planning/nutrition/log" replace />}
+          />
+          <Route
+            path="nutrition/:tab"
             element={
               <PageWrapper>
                 <NutritionPage />
@@ -565,14 +580,6 @@ function AnimatedRoutes() {
             element={<Navigate to="/planning/weekly-planning" replace />}
           />
           <Route
-            path="analytics"
-            element={
-              <PageWrapper>
-                <PersonalAnalytics />
-              </PageWrapper>
-            }
-          />
-          <Route
             path="body-metrics"
             element={
               <PageWrapper>
@@ -589,15 +596,11 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="setup"
-            element={
-              <PageWrapper>
-                <OnboardingWizard />
-              </PageWrapper>
-            }
+            path="emotional-wellness"
+            element={<Navigate to="/planning/emotional-wellness/dashboard" replace />}
           />
           <Route
-            path="emotional-wellness"
+            path="emotional-wellness/:tab"
             element={
               <PageWrapper>
                 <EmotionalWellness />

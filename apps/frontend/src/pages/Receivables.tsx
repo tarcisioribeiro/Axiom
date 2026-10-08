@@ -1,18 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  TrendingUp,
-  CheckCircle2,
-  AlertTriangle,
-  Banknote,
-  Clock,
-  Wallet,
-  CircleDot,
-  Tag,
-} from 'lucide-react';
+import { Plus, Pencil, Trash2, TrendingUp, Wallet, CircleDot, Tag } from 'lucide-react';
 import { useState, useMemo, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -29,7 +17,6 @@ import { ReceivableForm } from '@/components/receivables/ReceivableForm';
 import { ReceivableReceiptDialog } from '@/components/receivables/ReceivableReceiptDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -209,15 +196,6 @@ export default function Receivables({
     [receivables, searchTerm, statusFilter, categoryFilter, startDate, endDate]
   );
 
-  const { activeCount, overdueCount, receivedCount, totalValue } = useMemo(() => {
-    return {
-      activeCount: receivables.filter((r) => r.status === 'active').length,
-      overdueCount: receivables.filter((r) => r.status === 'overdue').length,
-      receivedCount: receivables.filter((r) => r.status === 'received').length,
-      totalValue: receivables.reduce((s, r) => s + parseFloat(r.value), 0),
-    };
-  }, [receivables]);
-
   if (isLoading) return <LoadingState />;
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
@@ -363,74 +341,6 @@ export default function Receivables({
         />
       </FilterBar>
 
-      <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
-        <Card className="border-t-success/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.receivables.stats.total')}</p>
-            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-              <Banknote className="text-success h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">
-              {formatCurrency(totalValue)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.receivables.stats.totalSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-warning/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.receivables.stats.active')}</p>
-            <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
-              <Clock className="text-warning h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-warning text-2xl font-bold">{activeCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.receivables.stats.activeSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.receivables.stats.overdue')}
-            </p>
-            <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
-              <AlertTriangle className="text-destructive h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-destructive text-2xl font-bold">{overdueCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.receivables.stats.overdueSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-success/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.receivables.stats.received')}
-            </p>
-            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-              <CheckCircle2 className="text-success h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">{receivedCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.receivables.stats.receivedSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {filteredReceivables.length === 0 ? (
         <EmptyState
           icon={<TrendingUp className="text-muted-foreground h-12 w-12" />}
@@ -475,25 +385,6 @@ export default function Receivables({
                 return null;
               };
               const dueBadge = getDueBadge();
-              const urgencyClass =
-                receivable.status === 'overdue'
-                  ? 'border-l-4 border-l-destructive'
-                  : receivable.status === 'received'
-                    ? 'border-l-4 border-l-success'
-                    : receivable.status === 'cancelled'
-                      ? 'border-l-4 border-l-muted-foreground'
-                      : (() => {
-                          if (!receivable.due_date)
-                            return 'border-l-4 border-l-warning';
-                          const d = Math.ceil(
-                            (new Date(receivable.due_date).getTime() - Date.now()) /
-                              86400000
-                          );
-                          if (d <= 0) return 'border-l-4 border-l-destructive';
-                          if (d <= 7) return 'border-l-4 border-l-warning';
-                          return 'border-l-4 border-l-info';
-                        })();
-
               const total = parseFloat(receivable.value);
               const received = parseFloat(receivable.received_value);
               const pct = total > 0 ? Math.min((received / total) * 100, 100) : 0;
@@ -503,10 +394,7 @@ export default function Receivables({
               return (
                 <div
                   key={receivable.id}
-                  className={cn(
-                    'bg-card p-md space-y-3 rounded-lg border transition-colors',
-                    urgencyClass
-                  )}
+                  className="bg-card p-md space-y-3 rounded-lg border"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

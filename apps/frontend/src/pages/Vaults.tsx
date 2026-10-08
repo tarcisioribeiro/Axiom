@@ -1,14 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  Building2,
-  PiggyBank,
-  Plus,
-  Sparkles,
-  TrendingUp,
-  Vault,
-  Zap,
-} from 'lucide-react';
+import { Building2, Plus, Vault, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -20,7 +12,6 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -182,11 +173,6 @@ export default function Vaults() {
     (sum, v) => sum + parseFloat(v.current_balance),
     0
   );
-  const totalYield = vaults.reduce(
-    (sum, v) => sum + parseFloat(v.accumulated_yield),
-    0
-  );
-  const totalPendingYield = vaults.reduce((sum, v) => sum + v.pending_yield, 0);
 
   return (
     <PageContainer>
@@ -202,48 +188,6 @@ export default function Vaults() {
           </Button>
         </div>
       </PageHeader>
-
-      <div className="mb-lg gap-md grid grid-cols-1 md:grid-cols-3">
-        <Card className="border-t-success border-t-2">
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-sm font-medium">
-              <PiggyBank className="text-success h-4 w-4" />
-              {t('pages.vaults.totalBalance')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">
-              {formatCurrency(totalBalance)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-t-2 border-t-amber-500">
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-sm font-medium">
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              {t('pages.vaults.totalYield')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-              {formatCurrency(totalYield)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-t-info border-t-2">
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-sm font-medium">
-              <TrendingUp className="text-info h-4 w-4" />
-              {t('pages.vaults.pendingYield')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-info text-2xl font-bold">
-              {formatCurrency(totalPendingYield)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {isLoading ? (
         <LoadingState />

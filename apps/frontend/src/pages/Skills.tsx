@@ -311,9 +311,6 @@ export default function Skills() {
     setFormOpen(true);
   };
 
-  const masteredCount = skills.filter((s) => s.status === 'mastered').length;
-  const learningCount = skills.filter((s) => s.status === 'learning').length;
-
   const filteredSkills = skills.filter(
     (s) =>
       (statusFilter === 'all' || s.status === statusFilter) &&
@@ -339,40 +336,6 @@ export default function Skills() {
             </Button>
           }
         />
-
-        {/* Stats */}
-        <div className="gap-md grid grid-cols-3">
-          {[
-            {
-              label: t('common.actions.total'),
-              value: skills.length,
-              color: 'text-foreground',
-            },
-            {
-              label: t('pages.skills.status.mastered'),
-              value: masteredCount,
-              color: 'text-success',
-            },
-            {
-              label: t('pages.skills.status.learning'),
-              value: learningCount,
-              color: 'text-info',
-            },
-          ].map(({ label, value, color }) => (
-            <div
-              key={label}
-              className="gap-md border-border bg-card p-md flex items-center rounded-lg border"
-            >
-              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                <Brain className="text-primary h-5 w-5" />
-              </div>
-              <div>
-                <p className={cn('text-xl font-bold', color)}>{value}</p>
-                <p className="text-muted-foreground text-xs">{label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* Search + View Toggle */}
         <div className="gap-sm flex items-center">

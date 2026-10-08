@@ -26,6 +26,8 @@ import { useSearchParams } from 'react-router';
 import remarkGfm from 'remark-gfm';
 
 import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { Button } from '@/components/ui/button';
 import { PlainButton } from '@/components/ui/plain-button';
 import { useAgentStream } from '@/hooks/use-agent-stream';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
@@ -632,27 +634,44 @@ export default function Agents() {
 
   return (
     <PageContainer>
-      <div className="flex h-[calc(100vh-10rem)] items-center">
-        <div className="border-border bg-card flex h-[calc(100vh-14rem)] w-full flex-col overflow-hidden rounded-lg border">
-          {/* Header */}
+      <PageHeader
+        title={t('pages.agents.title')}
+        icon={<BotMessageSquare />}
+        actions={
+          <>
+            {conversationStarted && (
+              <Button variant="outline" onClick={handleChangeAgent}>
+                <ArrowLeftRight className="h-4 w-4" />
+                {t('pages.agents.changeAgent')}
+              </Button>
+            )}
+            {messages.length > 0 && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => void handleClearHistory()}
+                title={t('pages.agents.clearHistory')}
+                aria-label={t('pages.agents.clearHistory')}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </>
+        }
+      />
+      <div className="flex">
+        <div className="border-border bg-card flex h-[calc(100vh-16rem)] w-full flex-col overflow-hidden rounded-lg border">
+          {/* Barra do agente ativo + status do provedor */}
           <div className="border-border px-md flex flex-shrink-0 flex-wrap items-center gap-3 border-b py-3 md:flex-nowrap">
             <div className="flex min-w-0 flex-1 items-center gap-3">
-              <div className="bg-primary/10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
-                <BotMessageSquare className="text-primary h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-foreground text-sm leading-tight font-semibold">
-                  {activeAgentName ?? t('pages.agents.title')}
-                </h1>
-                {status && (
-                  <div className="mt-0.5">
-                    <StatusBadge
-                      provider={status.provider}
-                      available={status.available}
-                    />
-                  </div>
-                )}
-              </div>
+              {activeAgentName && (
+                <p className="text-foreground text-sm leading-tight font-semibold">
+                  {activeAgentName}
+                </p>
+              )}
+              {status && (
+                <StatusBadge provider={status.provider} available={status.available} />
+              )}
             </div>
 
             {isLlmUnavailable && (
@@ -664,28 +683,6 @@ export default function Agents() {
                 {t('pages.agents.unavailable')}
               </div>
             )}
-
-            <div className="gap-sm flex flex-1 items-center justify-end">
-              {conversationStarted && (
-                <button
-                  onClick={handleChangeAgent}
-                  title={t('pages.agents.changeAgent')}
-                  className="border-border bg-background gap-xs px-sm py-xs text-muted-foreground hover:bg-muted inline-flex items-center rounded-lg border text-xs"
-                >
-                  <ArrowLeftRight className="h-3.5 w-3.5" />
-                  {t('pages.agents.changeAgent')}
-                </button>
-              )}
-              {messages.length > 0 && (
-                <PlainButton
-                  onClick={() => void handleClearHistory()}
-                  title={t('pages.agents.clearHistory')}
-                  className="border-border bg-background p-sm text-muted-foreground rounded-lg border hover:bg-[hsl(var(--destructive)/0.1)] hover:text-[hsl(var(--destructive))]"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </PlainButton>
-              )}
-            </div>
           </div>
 
           {/* Content area */}

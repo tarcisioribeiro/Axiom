@@ -5,8 +5,6 @@ import {
   Trash2,
   TrendingUp,
   Download,
-  CheckCircle2,
-  Clock,
   Tag,
   CircleDot,
 } from 'lucide-react';
@@ -24,7 +22,6 @@ import { TransactionsTabsNav } from '@/components/common/TransactionsTabsNav';
 import { ReceiptButton } from '@/components/receipts';
 import { RevenueForm } from '@/components/revenues/RevenueForm';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -87,7 +84,6 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
     handleDelete,
     handleSubmit,
     handleExport,
-    totalRevenues,
     hasActiveFilters,
     columns,
     prefillRevenueData,
@@ -101,20 +97,6 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
     'bg-accent',
     'bg-destructive',
   ] as const;
-
-  const { receivedCount, receivedAmount, pendingCount, pendingAmount } = useMemo(() => {
-    const filtered = revenues.filter(
-      (r) => !r.related_transfer && !r.is_transfer_generated && !r.is_initial_balance
-    );
-    const received = filtered.filter((r) => r.received);
-    const pending = filtered.filter((r) => !r.received);
-    return {
-      receivedCount: received.length,
-      receivedAmount: received.reduce((s, r) => s + parseFloat(r.value), 0),
-      pendingCount: pending.length,
-      pendingAmount: pending.reduce((s, r) => s + parseFloat(r.value), 0),
-    };
-  }, [revenues]);
 
   const categoryBreakdown = useMemo(() => {
     const groups: Record<string, number> = {};
@@ -254,57 +236,6 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
           onEndChange={setEndDate}
         />
       </FilterBar>
-
-      <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
-        <Card className="border-t-success/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.revenues.stats.totalAmount')}
-            </p>
-            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-              <TrendingUp className="text-success h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">
-              {formatCurrency(totalRevenues)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.revenues.entriesCount', { count: revenues.length })}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-primary/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.revenues.stats.received')}</p>
-            <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
-              <CheckCircle2 className="text-primary h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-primary text-2xl font-bold">{receivedCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {formatCurrency(receivedAmount)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-warning/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.revenues.stats.pending')}</p>
-            <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
-              <Clock className="text-warning h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-warning text-2xl font-bold">{pendingCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {formatCurrency(pendingAmount)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
 
       {categoryBreakdown.length > 1 && (
         <div className="bg-card p-md rounded-lg border">

@@ -106,21 +106,6 @@ export function useTransfersData() {
     [filteredTransfers, page]
   );
 
-  const totalVolume = useMemo(
-    () => transfers.reduce((s, tr) => s + parseFloat(tr.value), 0),
-    [transfers]
-  );
-  const completedCount = useMemo(
-    () => transfers.filter((tr) => getTransferStatus(tr) === 'completed').length,
-    [transfers]
-  );
-  const pendingCount = useMemo(
-    () =>
-      transfers.filter((tr) =>
-        ['pending', 'processing'].includes(getTransferStatus(tr))
-      ).length,
-    [transfers]
-  );
   const hasActiveFilters =
     !!searchTerm ||
     statusFilter !== 'all' ||
@@ -248,9 +233,6 @@ export function useTransfersData() {
     setStartDate,
     endDate,
     setEndDate,
-    totalVolume,
-    completedCount,
-    pendingCount,
     hasActiveFilters,
     clearFilters,
     handleCreate,

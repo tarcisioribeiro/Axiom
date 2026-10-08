@@ -23,7 +23,6 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
-import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -591,28 +590,6 @@ export default function BankReconciliationDetail() {
         </div>
       </div>
 
-      <div className="mb-lg mt-lg gap-md grid grid-cols-2 sm:grid-cols-4">
-        <StatCard
-          title={t('pages.bankReconciliation.detail.matched')}
-          value={importData.matched_count}
-          variant="success"
-        />
-        <StatCard
-          title={t('pages.bankReconciliation.detail.divergences')}
-          value={importData.unmatched_count}
-          variant="danger"
-        />
-        <StatCard
-          title={t('pages.bankReconciliation.detail.ignored')}
-          value={importData.ignored_count}
-        />
-        <StatCard
-          title={t('pages.bankReconciliation.detail.pending')}
-          value={pendingCount}
-          variant="warning"
-        />
-      </div>
-
       <div className="mb-md gap-md flex items-center">
         <Badge variant="outline">{importData.file_format.toUpperCase()}</Badge>
         <span className="text-muted-foreground text-sm">
@@ -756,12 +733,10 @@ export default function BankReconciliationDetail() {
           title: t('pages.bankReconciliation.detail.emptyTitle'),
         }}
         rowClassName={(entry) => {
-          if (entry.status === 'matched')
-            return 'bg-success/[0.03] border-l-4 border-l-success';
-          if (entry.status === 'unmatched')
-            return 'bg-destructive/[0.03] border-l-4 border-l-destructive';
-          if (entry.status === 'ignored') return 'opacity-50 border-l-4 border-l-muted';
-          return 'border-l-4 border-l-warning';
+          if (entry.status === 'matched') return 'bg-success/[0.03]';
+          if (entry.status === 'unmatched') return 'bg-destructive/[0.03]';
+          if (entry.status === 'ignored') return 'opacity-50';
+          return '';
         }}
       />
 

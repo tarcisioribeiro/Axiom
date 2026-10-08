@@ -7,7 +7,6 @@ import {
   Layers,
   PieChart,
   Plus,
-  Ratio,
   RefreshCw,
   Ruler,
   Scale,
@@ -34,7 +33,6 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { StatCard } from '@/components/common/StatCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -144,90 +142,7 @@ function calcPollockBodyFat(sex: string, age: number, sum7: number): number | nu
   return bf < 0 ? null : parseFloat(bf.toFixed(2));
 }
 
-function calcWhr(waistCm: number, hipCm: number): number | null {
-  if (waistCm <= 0 || hipCm <= 0) return null;
-  return waistCm / hipCm;
-}
-
-function whrCategory(
-  whr: number,
-  sex: string,
-  t: (k: string) => string
-): { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } {
-  if (sex === 'F') {
-    if (whr < 0.8) return { label: t('pages.bodyMetrics.whrLow'), variant: 'default' };
-    if (whr < 0.85)
-      return { label: t('pages.bodyMetrics.whrModerate'), variant: 'outline' };
-    return { label: t('pages.bodyMetrics.whrHigh'), variant: 'destructive' };
-  }
-  if (whr < 0.9) return { label: t('pages.bodyMetrics.whrLow'), variant: 'default' };
-  if (whr < 1.0)
-    return { label: t('pages.bodyMetrics.whrModerate'), variant: 'outline' };
-  return { label: t('pages.bodyMetrics.whrHigh'), variant: 'destructive' };
-}
-
-function whrStatVariant(
-  whr: number,
-  sex: string
-): 'success' | 'warning' | 'danger' | 'default' {
-  const high = sex === 'F' ? 0.85 : 1.0;
-  const moderate = sex === 'F' ? 0.8 : 0.9;
-  if (whr >= high) return 'danger';
-  if (whr >= moderate) return 'warning';
-  return 'success';
-}
-
-function sumFields(m: BodyMetric | null, fields: (keyof BodyMetric)[]): number | null {
-  if (!m) return null;
-  let sum = 0;
-  let hasAny = false;
-  for (const field of fields) {
-    const raw = m[field];
-    if (typeof raw === 'string' && raw !== '') {
-      sum += parseFloat(raw);
-      hasAny = true;
-    }
-  }
-  return hasAny ? sum : null;
-}
-
-const PERIMETRY_FIELDS: (keyof BodyMetric)[] = [
-  'neck_cm',
-  'shoulders_cm',
-  'chest_cm',
-  'abdomen_cm',
-  'waist_cm',
-  'hip_cm',
-  'arm_left_cm',
-  'arm_right_cm',
-  'thigh_left_cm',
-  'thigh_right_cm',
-  'calf_left_cm',
-  'calf_right_cm',
-];
-
-const SKINFOLD_FIELDS: (keyof BodyMetric)[] = [
-  'skinfold_triceps_mm',
-  'skinfold_subscapular_mm',
-  'skinfold_suprailiac_mm',
-  'skinfold_chest_mm',
-  'skinfold_midaxillary_mm',
-  'skinfold_abdominal_mm',
-  'skinfold_thigh_mm',
-];
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function fmt(
-  value: string | number | null | undefined,
-  unit: string,
-  decimals = 1
-): string {
-  if (value === null || value === undefined || value === '') return '—';
-  const n = typeof value === 'string' ? parseFloat(value) : value;
-  if (isNaN(n)) return '—';
-  return `${n.toLocaleString('pt-BR', { maximumFractionDigits: decimals })}${unit ? ` ${unit}` : ''}`;
-}
 
 // ── Form state ────────────────────────────────────────────────────────────────
 
@@ -497,13 +412,6 @@ export default function BodyMetrics() {
   });
 
   const latest = metrics[0] ?? null;
-
-  const latestWhr =
-    latest?.waist_cm && latest?.hip_cm
-      ? calcWhr(parseFloat(latest.waist_cm), parseFloat(latest.hip_cm))
-      : null;
-  const sumPerimetryVal = sumFields(latest, PERIMETRY_FIELDS);
-  const sumSkinfoldVal = sumFields(latest, SKINFOLD_FIELDS);
 
   function toggleMetric(key: MetricKey) {
     setActiveMetrics((prev) => {
@@ -834,43 +742,6 @@ export default function BodyMetrics() {
                 );
               })()}
             </div>
-
-            {latest && (
-              <Card className="mt-md">
-                <CardHeader className="py-md pb-sm">
-                  <CardTitle className="text-base">
-                    {t('pages.bodyMetrics.resultsTitle')}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
-                    <StatCard
-                      title={t('pages.bodyMetrics.whr')}
-                      value={latestWhr !== null ? latestWhr.toFixed(2) : '—'}
-                      icon={<Ratio className="h-4 w-4" />}
-                      variant={
-                        latestWhr !== null ? whrStatVariant(latestWhr, sex) : 'default'
-                      }
-                      description={
-                        latestWhr !== null
-                          ? whrCategory(latestWhr, sex, t).label
-                          : undefined
-                      }
-                    />
-                    <StatCard
-                      title={t('pages.bodyMetrics.sumPerimetryLabel')}
-                      value={fmt(sumPerimetryVal, 'cm')}
-                      icon={<Ruler className="h-4 w-4" />}
-                    />
-                    <StatCard
-                      title={t('pages.bodyMetrics.sumSkinfoldsLabel')}
-                      value={fmt(sumSkinfoldVal, 'mm')}
-                      icon={<Layers className="h-4 w-4" />}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </>
         )}
 

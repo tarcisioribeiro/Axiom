@@ -54,7 +54,8 @@ Legenda: **[regra]** = padrão global, aplica-se a todas as telas e módulos. **
 ## Empty states, cards e listas
 
 - **[regra]** Empty state: sem botão, sem texto abaixo do ícone e do rótulo, centralizado na horizontal e na vertical, sem texto colado no topo. Usar o componente `EmptyState` em vez de listas vazias feitas à mão. Status: 127 usos.
-- **[regra]** Cards sem sombra e sem contorno colorido por categoria. Cor e contorno vêm de token global. Status: parcial, ainda há sombras em 28 arquivos; aplicado em `KanbanCard.tsx` (Checklist Diário) — removida a borda esquerda colorida por categoria e o hover com scale/sombra.
+- **[regra]** Cards de registro não têm contorno colorido (faixa lateral/superior por status, categoria, tipo ou prioridade, nem borda colorida de "ativo") e não têm nenhum efeito de hover (movimento, escala, sombra, troca de fundo ou de borda). Borda sempre neutra (`border-border`). Cor por status fica só dentro do card (badge, barra de progresso, valores). Vale também para o `StatCard` (variante/`accentColor` colore só o ícone e o valor) e para seções como as do Planejador Mensal. Destaques de leitura mantêm só o fundo na cor escolhida. Status: aplicado em Contas a Pagar/Receber, Cartões, Arquivos, Contas Guardadas, Senhas, Conciliação, Blocos de Foco, Quitação de Dívidas, Destaques, Planejador Mensal, Metas, Livros, Regras de Automação, Alimentos, Treino e Bem-estar Emocional. Ainda há sombras em outros arquivos.
+- **[regra]** Telas de registros e listas não têm cards de resumo (StatCard ou faixa de totais) — começam direto em filtro + lista. Resumos ficam só em dashboards e análises (Dashboard, Painel de Segurança, Intelecto Hoje, Jornada, Patrimônio, Quitação de Dívidas, Planejador Mensal). Status: removidos de Contas a Pagar/Receber, Empréstimos, Receitas, Cofres, Transferências, Compras do Cartão, Flashcards, Conciliação, Medidas Corporais, Cursos e Habilidades.
 - **[regra]** Texto nunca encosta na borda do card. Conteúdo centralizado na vertical.
 - **[regra]** Cards alinhados em linha e com o mesmo tamanho. Rótulos não mudam de posição.
 - **[regra]** Toggles em accordion: o primeiro aberto por padrão, os demais recolhidos, e só um aberto por vez. Toggles de detalhes começam recolhidos. Status: `Collapse` em 6 arquivos.
@@ -114,7 +115,10 @@ Legenda: **[regra]** = padrão global, aplica-se a todas as telas e módulos. **
 ## Navegação
 
 - **[regra]** O indicador de localização (breadcrumb) nunca fica vazio nem é parcial: toda rota resolve módulo > submódulo > página, e cada nível — exceto a página atual — é clicável. Status: `use-breadcrumb.ts` deriva módulo/submódulo/página a partir do `nav-config.ts` (mesma fonte da Sidebar), em vez de um dicionário próprio mantido à mão.
-- **[regra]** Toda tela com abas tem uma rota própria por aba, refletida na URL (ex.: `/transactions/expenses`), nunca só em estado local/`localStorage`. Nomes de rota em inglês. Acessar a rota "pai" sem aba redireciona para a aba padrão. Status: aplicado via hook `useTabRoute` em Transações, Recorrentes, Regras & Etiquetas, Contas a Pagar/Receber, Cartões de Crédito, Agenda Financeira, Análises, Saúde Financeira e Tarefas e Objetivos (com sub-abas de Rotina Diária).
+- **[regra]** Toda tela com abas tem uma rota própria por aba, refletida na URL (ex.: `/transactions/expenses`), nunca só em estado local/`localStorage`. Nomes de rota em inglês. Acessar a rota "pai" sem aba redireciona para a aba padrão. Status: aplicado via hook `useTabRoute` em Transações, Recorrentes, Regras & Etiquetas, Contas a Pagar/Receber, Cartões de Crédito, Agenda Financeira, Análises, Saúde Financeira, Tarefas e Objetivos (com sub-abas de Rotina Diária), Livros, Treino, Nutrição e Bem-estar Emocional. Alternâncias que só filtram a mesma lista (ex.: Flashcards "Todos / Vencem hoje") são filtro, não aba, e ficam sem rota.
+- **[regra]** Cada tela e cada aba tem `PageHeader` próprio com ícone e título da aba (o mesmo ícone/rótulo do gatilho da aba e do breadcrumb). Vale também para Agents e Meu Perfil.
+- **[regra]** O painel admin usa o mesmo componente `Breadcrumb` na barra superior (`Painel admin › Página`), passando os itens por prop, já que suas rotas ficam fora do `nav-config`.
+- **[regra]** Rota sem link na interface é removida, não mantida órfã.
 
 ## Fora de escopo
 

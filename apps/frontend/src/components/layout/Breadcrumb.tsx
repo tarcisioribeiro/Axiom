@@ -2,11 +2,13 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
-import { useBreadcrumb } from '@/hooks/use-breadcrumb';
+import { type BreadcrumbItem, useBreadcrumb } from '@/hooks/use-breadcrumb';
 import { cn } from '@/lib/utils';
 
 interface BreadcrumbProps {
   className?: string;
+  /** Itens prontos — para layouts fora do `nav-config` (ex.: painel admin). */
+  items?: BreadcrumbItem[];
 }
 
 /**
@@ -20,9 +22,10 @@ interface BreadcrumbProps {
  * <Breadcrumb className="my-md" />
  * ```
  */
-export function Breadcrumb({ className }: BreadcrumbProps) {
+export function Breadcrumb({ className, items }: BreadcrumbProps) {
   const { t } = useTranslation();
-  const { breadcrumbs } = useBreadcrumb();
+  const { breadcrumbs: routeBreadcrumbs } = useBreadcrumb();
+  const breadcrumbs = items ?? routeBreadcrumbs;
 
   if (breadcrumbs.length <= 1) {
     return null;

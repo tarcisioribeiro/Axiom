@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   Layers,
   Plus,
-  RotateCcw,
   Star,
   Loader2,
   Save,
@@ -26,7 +25,6 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
-import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -172,10 +170,7 @@ export default function Flashcards() {
 
   const cards = allCards?.results ?? [];
   const due = dueCards?.results ?? [];
-  const totalCount = allCards?.count ?? 0;
   const dueCount = dueCards?.count ?? 0;
-  const masteredCount = cards.filter((c) => c.status === 'mastered').length;
-  const newCount = cards.filter((c) => c.status === 'new').length;
 
   const currentCard = due[reviewIndex] ?? null;
 
@@ -276,32 +271,6 @@ export default function Flashcards() {
             )
           }
         />
-
-        <div className="gap-md grid grid-cols-2 sm:grid-cols-4">
-          <StatCard
-            title={t('pages.flashcards.stats.total')}
-            value={totalCount}
-            icon={<Brain />}
-          />
-          <StatCard
-            title={t('pages.flashcards.stats.due')}
-            value={dueCount}
-            icon={<RotateCcw />}
-            accentColor="orange"
-          />
-          <StatCard
-            title={t('pages.flashcards.stats.mastered')}
-            value={masteredCount}
-            icon={<Star />}
-            accentColor="green"
-          />
-          <StatCard
-            title={t('pages.flashcards.stats.new')}
-            value={newCount}
-            icon={<Plus />}
-            accentColor="blue"
-          />
-        </div>
 
         {mode === 'review' ? (
           <AnimatePresence mode="wait">

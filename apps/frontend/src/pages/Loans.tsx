@@ -10,8 +10,6 @@ import {
   List,
   TableProperties,
   CheckCircle2,
-  Clock,
-  Banknote,
   Users,
   CalendarRange,
   Tag,
@@ -38,7 +36,6 @@ import { LoanReceiptDialog } from '@/components/loans/LoanReceiptDialog';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -86,7 +83,6 @@ export default function Loans() {
   const queryClient = useQueryClient();
   const invalidateLoans = () => queryClient.invalidateQueries({ queryKey: ['loans'] });
   const {
-    loans,
     accounts,
     members,
     currentUserMemberId,
@@ -201,16 +197,6 @@ export default function Loans() {
     setDueStartDate(undefined);
     setDueEndDate(undefined);
   };
-
-  const { activeCount, paidCount, totalDebt } = useMemo(() => {
-    const active = loans.filter((l) => l.status === 'active');
-    const paid = loans.filter((l) => l.status === 'paid');
-    const debt = loans.reduce(
-      (s, l) => s + Math.max(0, parseFloat(l.value) - parseFloat(l.payed_value)),
-      0
-    );
-    return { activeCount: active.length, paidCount: paid.length, totalDebt: debt };
-  }, [loans]);
 
   if (isLoading) return <LoadingState />;
 
@@ -370,70 +356,6 @@ export default function Loans() {
           onEndChange={setDueEndDate}
         />
       </FilterBar>
-
-      <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
-        <Card className="border-t-primary/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.loans.stats.total')}</p>
-            <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
-              <HandCoins className="text-primary h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-primary text-2xl font-bold">{loans.length}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.loans.stats.totalSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-warning/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.loans.stats.active')}</p>
-            <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
-              <Clock className="text-warning h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-warning text-2xl font-bold">{activeCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.loans.stats.activeSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-success/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.loans.stats.paid')}</p>
-            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-              <CheckCircle2 className="text-success h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">{paidCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.loans.stats.paidSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.loans.stats.totalDebt')}</p>
-            <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
-              <Banknote className="text-destructive h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-destructive text-2xl font-bold">
-              {formatCurrency(totalDebt)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.loans.stats.debtSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
 
       {roleFilteredLoans.length === 0 ? (
         <EmptyState

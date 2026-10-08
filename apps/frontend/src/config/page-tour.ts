@@ -60,7 +60,6 @@ const EXACT: Record<string, string> = {
   '/planning/nutrition': 'nutrition',
   '/planning/journey': 'journey',
   '/planning/week': 'week',
-  '/planning/analytics': 'planningAnalytics',
   '/planning/body-metrics': 'bodyMetrics',
   '/planning/weekly-planning': 'weeklyPlanning',
   '/planning/emotional-wellness': 'emotionalWellness',

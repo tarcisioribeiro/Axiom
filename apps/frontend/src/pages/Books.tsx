@@ -21,7 +21,7 @@ import {
   Check,
   X,
 } from 'lucide-react';
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
 
@@ -76,6 +76,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { BOOK_GENRE_ICONS, READ_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useTabRoute } from '@/hooks/use-tab-route';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn, formatLocalDate } from '@/lib/utils';
@@ -206,7 +207,7 @@ function BookGridCard({
           <img
             src={book.cover}
             alt={t('pages.books.coverAlt', { title: book.title })}
-            className="hoverable:group-hover:scale-105 duration-medium h-full w-full object-cover transition-transform"
+            className="h-full w-full object-cover"
             loading="lazy"
             decoding="async"
           />
@@ -333,15 +334,24 @@ function BookGridCard({
   );
 }
 
+const TABS = ['books', 'reading-queue', 'highlights'] as const;
+
+const TAB_HEADERS: Record<
+  (typeof TABS)[number],
+  { titleKey: string; icon: ReactNode }
+> = {
+  books: { titleKey: 'pages.books.title', icon: <Library /> },
+  'reading-queue': { titleKey: 'nav.items.readingQueue', icon: <BookMarked /> },
+  highlights: { titleKey: 'nav.items.highlights', icon: <Highlighter /> },
+};
+
 export default function Books() {
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') ?? '');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterGenre, setFilterGenre] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('table');
-  const [activeTab, setActiveTab] = useState<'books' | 'reading-queue' | 'highlights'>(
-    'books'
-  );
+  const [activeTab, setActiveTab] = useTabRoute('/library/books', TABS, 'books');
   const [isHighlightCreateOpen, setIsHighlightCreateOpen] = useState(false);
 
   // Form dialog (create / edit)
@@ -582,7 +592,10 @@ export default function Books() {
 
   return (
     <PageContainer>
-      <PageHeader title={t('pages.books.title')} icon={<Library />}>
+      <PageHeader
+        title={t(TAB_HEADERS[activeTab].titleKey)}
+        icon={TAB_HEADERS[activeTab].icon}
+      >
         {activeTab === 'books' && (
           <div className="gap-sm flex items-center">
             <div className="flex items-center rounded-md border">
@@ -623,9 +636,7 @@ export default function Books() {
 
       <Tabs
         value={activeTab}
-        onValueChange={(v) =>
-          setActiveTab(v as 'books' | 'reading-queue' | 'highlights')
-        }
+        onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
       >
         <TabsList className="mb-lg w-full">
           <TabsTrigger value="books" className="gap-xs flex-1">

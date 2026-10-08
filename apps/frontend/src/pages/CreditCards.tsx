@@ -403,15 +403,6 @@ export default function CreditCards({
                       (1000 * 60 * 60 * 24)
                   )
                 : null;
-              const urgencyBorder =
-                openBill && daysUntilDue !== null
-                  ? daysUntilDue < 0
-                    ? 'border-t-4 border-t-destructive'
-                    : daysUntilDue <= 5
-                      ? 'border-t-4 border-t-warning'
-                      : ''
-                  : '';
-
               return (
                 <motion.div
                   key={card.id}
@@ -426,7 +417,7 @@ export default function CreditCards({
                   className="cursor-pointer"
                   title={t('pages.creditCardHub.openHub')}
                 >
-                  <Card className={cn('overflow-hidden', urgencyBorder)}>
+                  <Card className="overflow-hidden">
                     <div className="px-md pb-lg pt-md relative">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">

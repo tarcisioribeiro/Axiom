@@ -1,6 +1,5 @@
 import { AnimatePresence } from 'framer-motion';
 import {
-  Activity,
   LayoutDashboard,
   Link2,
   LogOut,
@@ -12,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -46,6 +46,10 @@ export const AdminLayout = () => {
       exact: false,
     },
   ];
+
+  const currentItem = NAV_ITEMS.find((n) =>
+    n.exact ? location.pathname === n.href : location.pathname.startsWith(n.href)
+  );
 
   return (
     <div className="bg-background flex h-screen">
@@ -118,15 +122,15 @@ export const AdminLayout = () => {
       {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="gap-sm border-border bg-card px-lg flex h-14 items-center border-b">
-          <Activity className="text-primary h-4 w-4" />
-          <span className="text-foreground text-sm font-medium">
-            {NAV_ITEMS.find((n) =>
-              n.exact
-                ? location.pathname === n.href
-                : location.pathname.startsWith(n.href)
-            )?.label ?? 'Admin'}
-          </span>
+        <header className="border-border bg-card px-lg flex h-14 items-center border-b">
+          <Breadcrumb
+            items={[
+              { label: t('layout.adminPanel'), href: '/admin', icon: Shield },
+              ...(currentItem
+                ? [{ label: currentItem.label, icon: currentItem.icon }]
+                : []),
+            ]}
+          />
         </header>
 
         <main className="p-lg flex-1 overflow-auto">

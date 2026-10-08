@@ -11,7 +11,6 @@ import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
-import { sumByProperty } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
 import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
@@ -62,7 +61,6 @@ export interface UseRevenuesPageReturn {
     date_from?: string;
     date_to?: string;
   }) => Promise<void>;
-  totalRevenues: number;
   hasActiveFilters: boolean;
   columns: Column<Revenue>[];
   prefillRevenueData: RevenuePrefillData | undefined;
@@ -306,14 +304,6 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     }
   };
 
-  const totalRevenues = sumByProperty(
-    revenues
-      .filter(
-        (r) => !r.related_transfer && !r.is_transfer_generated && !r.is_initial_balance
-      )
-      .map((r) => ({ value: parseFloat(r.value) })),
-    'value'
-  );
   const hasActiveFilters =
     !!searchTerm ||
     categoryFilter !== 'all' ||
@@ -418,7 +408,6 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     handleDelete,
     handleSubmit,
     handleExport,
-    totalRevenues,
     hasActiveFilters,
     columns,
     prefillRevenueData,

@@ -62,33 +62,28 @@ import type {
 import { ACCOUNT_TYPES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-type AccountTypeConfig = { badge: string; avatar: string; border: string };
+type AccountTypeConfig = { badge: string; avatar: string };
 
 const ACCOUNT_TYPE_CONFIG: Record<string, AccountTypeConfig> = {
   CC: {
     badge: 'bg-primary/10 text-primary border-primary/25',
     avatar: 'bg-primary/15 text-primary ring-1 ring-primary/25',
-    border: 'border-l-primary/60',
   },
   CS: {
     badge: 'bg-success/10 text-success border-success/25',
     avatar: 'bg-success/15 text-success ring-1 ring-success/25',
-    border: 'border-l-success/60',
   },
   CP: {
     badge: 'bg-info/10 text-info border-info/25',
     avatar: 'bg-info/15 text-info ring-1 ring-info/25',
-    border: 'border-l-info/60',
   },
   CI: {
     badge: 'bg-warning/10 text-warning border-warning/25',
     avatar: 'bg-warning/15 text-warning ring-1 ring-warning/25',
-    border: 'border-l-warning/60',
   },
   OTHER: {
     badge: '',
     avatar: 'bg-muted text-muted-foreground ring-1 ring-border',
-    border: 'border-l-border',
   },
 };
 
@@ -454,10 +449,7 @@ export default function StoredAccounts() {
                 const initials = getInstitutionInitials(acc.institution_name);
 
                 return (
-                  <Card
-                    key={acc.id}
-                    className={cn('overflow-hidden border-l-2', typeCfg.border)}
-                  >
+                  <Card key={acc.id} className="overflow-hidden">
                     <CardHeader className="pb-3">
                       {/* Institution row */}
                       <div className="flex items-start gap-3">

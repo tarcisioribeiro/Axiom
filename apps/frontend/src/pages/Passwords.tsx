@@ -91,53 +91,41 @@ import type { Password, PasswordFormData, Member } from '@/types';
 import { PASSWORD_CATEGORIES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const CATEGORY_CONFIG: Record<
-  string,
-  { badge: string; border: string; avatar: string }
-> = {
+const CATEGORY_CONFIG: Record<string, { badge: string; avatar: string }> = {
   social: {
     badge: 'bg-info/10 text-info border-info/25',
-    border: 'border-l-info/60',
     avatar: 'bg-info/10 text-info ring-1 ring-info/25',
   },
   email: {
     badge: 'bg-primary/10 text-primary border-primary/25',
-    border: 'border-l-primary/60',
     avatar: 'bg-primary/10 text-primary ring-1 ring-primary/25',
   },
   banking: {
     badge: 'bg-warning/10 text-warning border-warning/25',
-    border: 'border-l-warning/60',
     avatar: 'bg-warning/10 text-warning ring-1 ring-warning/25',
   },
   work: {
     badge: 'bg-success/10 text-success border-success/25',
-    border: 'border-l-success/60',
     avatar: 'bg-success/10 text-success ring-1 ring-success/25',
   },
   entertainment: {
     badge: 'bg-accent/10 text-accent border-accent/25',
-    border: 'border-l-accent/60',
     avatar: 'bg-accent/10 text-accent ring-1 ring-accent/25',
   },
   shopping: {
     badge: 'bg-warning/10 text-warning border-warning/25',
-    border: 'border-l-warning/60',
     avatar: 'bg-warning/10 text-warning ring-1 ring-warning/25',
   },
   streaming: {
     badge: 'bg-accent/10 text-accent border-accent/25',
-    border: 'border-l-accent/60',
     avatar: 'bg-accent/10 text-accent ring-1 ring-accent/25',
   },
   gaming: {
     badge: 'bg-info/10 text-info border-info/25',
-    border: 'border-l-info/60',
     avatar: 'bg-info/10 text-info ring-1 ring-info/25',
   },
   other: {
     badge: '',
-    border: 'border-l-border',
     avatar: 'bg-muted text-muted-foreground ring-1 ring-border',
   },
 };
@@ -1014,8 +1002,7 @@ export default function Passwords() {
                     <Card
                       key={password.id}
                       className={cn(
-                        'cursor-pointer overflow-hidden border-l-2 transition-shadow hover:shadow-lg',
-                        catConfig.border,
+                        'cursor-pointer overflow-hidden',
                         isSelected && 'ring-primary/50 ring-2'
                       )}
                       onClick={() => handleCardClick(password)}

@@ -4462,33 +4462,6 @@
         "longBreak": "Pausa Longa"
       }
     },
-    "personalAnalytics": {
-      "title": "Analytics Pessoal",
-      "rate7d": "Taxa 7 dias",
-      "rate30d": "Taxa 30 dias",
-      "currentStreak": "Sequência Atual",
-      "bestStreak": "Melhor Sequência",
-      "days": "dias",
-      "weekdayChart": "Conclusão por Dia da Semana",
-      "avg90d": "Média 90d",
-      "heatmap": "Mapa de Hábitos",
-      "insightsTitle": "Insights Automáticos",
-      "byCategory": "Por Categoria",
-      "noData": "Dados insuficientes para análise.",
-      "noInsights": "Nenhum insight disponível ainda. Continue usando o app!",
-      "completionRate": "Taxa de conclusão",
-      "less": "Menos",
-      "more": "Mais",
-      "heatmapTooltip": "{{date}}: {{completed}}/{{expected}} concluídas",
-      "insights": {
-        "bestDay": "{{day}} é seu melhor dia ({{rate}}% de conclusão)",
-        "worstDay": "{{day}} tem taxa mais baixa ({{rate}}%)",
-        "weekendDrop": "Fins de semana caem {{weekday}}% → {{weekend}}%",
-        "weekendBetter": "Fins de semana são melhores ({{weekend}}% vs {{weekday}}%)",
-        "overallExcellent": "Excelente! Taxa global de {{rate}}%",
-        "overallLow": "Taxa global de apenas {{rate}}% — há espaço para melhorar"
-      }
-    },
     "myWeekPage": {
       "title": "Minha Semana",
       "description": "Visualize e acompanhe suas tarefas ao longo da semana.",
@@ -6883,11 +6856,6 @@
         "title": "Semana",
         "desc": "Visão da semana com suas tarefas distribuídas por dia.",
         "tip": "Use para equilibrar a carga entre os dias."
-      },
-      "planningAnalytics": {
-        "title": "Análises pessoais",
-        "desc": "Gráficos sobre hábitos, tarefas e desempenho pessoal.",
-        "tip": "Compare períodos para ver se está evoluindo."
       },
       "bodyMetrics": {
         "title": "Medidas corporais",

@@ -75,6 +75,16 @@ describe('useBreadcrumb', () => {
     expect(result.current.breadcrumbs[3].href).toBeUndefined();
   });
 
+  it('resolve a aba de Treino como último nível', () => {
+    const { result } = renderHook(() => useBreadcrumb(), {
+      wrapper: wrapper('/planning/workout/sessions'),
+    });
+
+    const items = labels(result.current.breadcrumbs);
+    expect(items[1]).toBe('Planejamento Pessoal');
+    expect(items.at(-1)).toBe('Sessões');
+  });
+
   it('resolve uma sub-aba de 2 níveis (routine > focus-blocks)', () => {
     const { result } = renderHook(() => useBreadcrumb(), {
       wrapper: wrapper('/planning/tasks-goals/routine/focus-blocks'),

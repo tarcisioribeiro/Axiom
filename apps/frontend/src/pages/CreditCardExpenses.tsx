@@ -22,7 +22,6 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
-import { StatCard } from '@/components/common/StatCard';
 import { TransactionsTabsNav } from '@/components/common/TransactionsTabsNav';
 import { CreditCardInstallmentForm } from '@/components/credit-cards/CreditCardInstallmentForm';
 import { CreditCardPurchaseForm } from '@/components/credit-cards/CreditCardPurchaseForm';
@@ -819,24 +818,6 @@ export default function CreditCardExpenses({
       />
 
       {embedded && <TransactionsTabsNav />}
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <StatCard
-          title={t('pages.creditCardExpenses.totalPaid')}
-          value={formatCurrency(displayPaid)}
-          accentColor="green"
-        />
-        <StatCard
-          title={t('pages.creditCardExpenses.totalPending')}
-          value={formatCurrency(displayPending)}
-          accentColor="orange"
-        />
-        <StatCard
-          title={t('pages.creditCardExpenses.totalAmount')}
-          value={formatCurrency(displayTotal)}
-          accentColor="red"
-        />
-      </div>
 
       {displayCategoryBreakdown.length > 1 && (
         <div className="bg-card p-md rounded-lg border">
