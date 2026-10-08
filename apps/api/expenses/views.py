@@ -16,6 +16,7 @@ from app.export_utils import (
     build_pdf_response,
     format_decimal,
 )
+from app.pagination import SmallResultsSetPagination
 from app.permissions import GlobalDefaultPermission
 from app.throttles import CategorizationSuggestThrottle, ExportRateThrottle
 from expenses.filters import ExpenseFilter
@@ -55,6 +56,7 @@ class ExpenseCreateListView(BaseListCreateView):
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = ExpenseFilter
     ordering = ["-date", "-id"]
+    pagination_class = SmallResultsSetPagination
 
     def get_queryset(self):
         return (

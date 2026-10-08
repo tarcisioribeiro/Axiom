@@ -1104,7 +1104,7 @@ class PersonalPlanningDashboardStatsView(APIView):
 
         # Objetivos ativos com progresso
         active_goals_data = []
-        for goal in goals_qs.filter(status="active")[:5]:
+        for goal in goals_qs.filter(status="active"):
             active_goals_data.append(
                 {
                     "title": goal.title,
@@ -1754,11 +1754,11 @@ class PersonalPlanningAnalyticsView(APIView):
 
         user = request.user
         today = timezone.now().date()
-        ninety_days_ago = today - timedelta(days=90)
+        window_start = today - timedelta(days=180)
 
         instances = TaskInstance.objects.filter(
             owner__user=user,
-            scheduled_date__gte=ninety_days_ago,
+            scheduled_date__gte=window_start,
             scheduled_date__lte=today,
             deleted_at__isnull=True,
         ).values("scheduled_date", "status")
@@ -1791,7 +1791,7 @@ class PersonalPlanningAnalyticsView(APIView):
 
         return Response(
             {
-                "period_days": 90,
+                "period_days": 180,
                 "completion_by_weekday": completion_by_weekday,
                 "insights": insights,
             }

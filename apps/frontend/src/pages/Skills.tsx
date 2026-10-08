@@ -2,20 +2,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Atom,
   BookOpen,
   Brain,
-  Briefcase,
   CircleDot,
   Clock,
-  Code2,
   Edit,
   GraduationCap,
-  Globe,
   LayoutGrid,
-  MoreHorizontal,
-  Paintbrush,
-  Palette,
   Plus,
   Radar,
   Trash2,
@@ -29,7 +22,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { SkillForm } from '@/components/library/SkillForm';
 import { SkillsRadarChart } from '@/components/library/SkillsRadarChart';
@@ -52,6 +45,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { SKILL_CATEGORY_ICONS, SKILL_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cardVariants } from '@/lib/animations';
@@ -82,16 +76,6 @@ const SKILL_CATEGORIES: IntellectCategory[] = [
   'arts',
   'other',
 ];
-
-const SKILL_CATEGORY_ICONS: Record<IntellectCategory, typeof Brain> = {
-  technology: Code2,
-  languages: Globe,
-  design: Palette,
-  business: Briefcase,
-  science: Atom,
-  arts: Paintbrush,
-  other: MoreHorizontal,
-};
 
 function ProficiencyDots({ level }: { level: number }) {
   return (
@@ -144,10 +128,16 @@ function SkillCard({
         </div>
         <span
           className={cn(
-            'px-sm shrink-0 rounded-full border py-0.5 text-xs font-semibold',
+            'px-sm gap-xs inline-flex shrink-0 items-center rounded-full border py-0.5 text-xs font-semibold',
             STATUS_COLORS[skill.status]
           )}
         >
+          {(() => {
+            const StatusIcon = SKILL_STATUS_ICONS[skill.status];
+            return StatusIcon ? (
+              <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            ) : null;
+          })()}
           {t(`pages.skills.status.${skill.status}`)}
         </span>
       </div>
@@ -432,11 +422,18 @@ export default function Skills() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('pages.skills.allStatus')}</SelectItem>
-                {SKILL_STATUSES.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {t(`pages.skills.status.${status}`)}
-                  </SelectItem>
-                ))}
+                {SKILL_STATUSES.map((status) => {
+                  const StatusIcon = SKILL_STATUS_ICONS[status];
+                  return (
+                    <SelectItem
+                      key={status}
+                      value={status}
+                      icon={<StatusIcon className="h-4 w-4" />}
+                    >
+                      {t(`pages.skills.status.${status}`)}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -531,7 +528,7 @@ export default function Skills() {
             <PaginatedSlide
               key={`${search}-${statusFilter}-${categoryFilter}`}
               items={filteredSkills}
-              pageSize={GRID_PAGE_SIZE}
+              pageSize={LIST_PAGE_SIZE}
               className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             >
               {(pageItems) =>

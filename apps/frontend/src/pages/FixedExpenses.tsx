@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { FixedExpenseForm } from '@/components/expenses/FixedExpenseForm';
 import { LaunchExpensesDialog } from '@/components/expenses/LaunchExpensesDialog';
@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
-import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { EXPENSE_CATEGORY_ICONS, TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -245,11 +245,15 @@ export default function FixedExpenses({
     {
       key: 'is_active',
       label: t('pages.fixedExpenses.columns.status'),
-      render: (item) => (
-        <Badge variant={item.is_active ? 'default' : 'secondary'}>
-          {item.is_active ? t('common.status.active') : t('common.status.inactive')}
-        </Badge>
-      ),
+      render: (item) => {
+        const StatusIcon = TASK_STATUS_ICONS[item.is_active ? 'active' : 'inactive'];
+        return (
+          <Badge variant={item.is_active ? 'default' : 'secondary'} className="gap-xs">
+            <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            {item.is_active ? t('common.status.active') : t('common.status.inactive')}
+          </Badge>
+        );
+      },
     },
   ];
 
@@ -374,8 +378,18 @@ export default function FixedExpenses({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.fixedExpenses.allStatus')}</SelectItem>
-            <SelectItem value="active">{t('common.status.active')}</SelectItem>
-            <SelectItem value="inactive">{t('common.status.inactive')}</SelectItem>
+            <SelectItem
+              value="active"
+              icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+            >
+              {t('common.status.active')}
+            </SelectItem>
+            <SelectItem
+              value="inactive"
+              icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+            >
+              {t('common.status.inactive')}
+            </SelectItem>
           </SelectContent>
         </Select>
       </FilterBar>
@@ -383,7 +397,7 @@ export default function FixedExpenses({
       {/* Table */}
       <DataTable
         centerList
-        pageSize={7}
+        pageSize={LIST_PAGE_SIZE}
         data={filteredExpenses}
         columns={columns}
         keyExtractor={(item) => item.id}
@@ -394,7 +408,7 @@ export default function FixedExpenses({
         }}
         rowClassName={(item) => (item.is_active ? '' : 'opacity-60')}
         actions={(item) => (
-          <div className="gap-sm flex items-center justify-end">
+          <div className="gap-sm flex items-center justify-center">
             {item.total_generated > 0 && (
               <Button
                 variant="ghost"

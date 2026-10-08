@@ -74,6 +74,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { BOOK_GENRE_ICONS, READ_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -88,7 +89,7 @@ import type { Book, BookFormData, Author, Publisher } from '@/types';
 import { BOOK_GENRES, READ_STATUS } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 5;
 
 type DetailTab = 'info' | 'highlights' | 'readings' | 'summaries';
 type ViewMode = 'table' | 'grid';
@@ -213,7 +214,16 @@ function BookGridCard({
           <BookCoverPlaceholder title={book.title} genre={book.genre} />
         )}
         <div className="absolute top-2 right-2">
-          <Badge variant={statusVariant(book.read_status)} className="text-xs shadow">
+          <Badge
+            variant={statusVariant(book.read_status)}
+            className="gap-xs text-xs shadow"
+          >
+            {(() => {
+              const StatusIcon = READ_STATUS_ICONS[book.read_status];
+              return StatusIcon ? (
+                <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : null;
+            })()}
             {t('pages.books.readStatuses.' + book.read_status, {
               defaultValue: book.read_status_display,
             })}
@@ -667,11 +677,20 @@ export default function Books() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t('pages.books.allStatuses')}</SelectItem>
-                    {READ_STATUS.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>
-                        {t(`pages.books.readStatuses.${s.value}`)}
-                      </SelectItem>
-                    ))}
+                    {READ_STATUS.map((s) => {
+                      const StatusIcon = READ_STATUS_ICONS[s.value];
+                      return (
+                        <SelectItem
+                          key={s.value}
+                          value={s.value}
+                          icon={
+                            StatusIcon ? <StatusIcon className="h-4 w-4" /> : undefined
+                          }
+                        >
+                          {t(`pages.books.readStatuses.${s.value}`)}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 <Select
@@ -688,11 +707,20 @@ export default function Books() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t('pages.books.allGenres')}</SelectItem>
-                    {BOOK_GENRES.map((g) => (
-                      <SelectItem key={g.value} value={g.value}>
-                        {t(`pages.books.genres.${g.value}`)}
-                      </SelectItem>
-                    ))}
+                    {BOOK_GENRES.map((g) => {
+                      const GenreIcon = BOOK_GENRE_ICONS[g.value];
+                      return (
+                        <SelectItem
+                          key={g.value}
+                          value={g.value}
+                          icon={
+                            GenreIcon ? <GenreIcon className="h-4 w-4" /> : undefined
+                          }
+                        >
+                          {t(`pages.books.genres.${g.value}`)}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </FilterBar>
@@ -828,8 +856,18 @@ export default function Books() {
                                   <TableCell>
                                     <Badge
                                       variant={statusVariant(book.read_status)}
-                                      className="text-xs"
+                                      className="gap-xs text-xs"
                                     >
+                                      {(() => {
+                                        const StatusIcon =
+                                          READ_STATUS_ICONS[book.read_status];
+                                        return StatusIcon ? (
+                                          <StatusIcon
+                                            className="h-3.5 w-3.5"
+                                            aria-hidden="true"
+                                          />
+                                        ) : null;
+                                      })()}
                                       {t(
                                         'pages.books.readStatuses.' + book.read_status,
                                         {

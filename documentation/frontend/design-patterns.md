@@ -70,8 +70,8 @@ Legenda: **[regra]** = padrão global, aplica-se a todas as telas e módulos. **
 
 ## Tabelas
 
-- **[regra]** Coluna de ações de uma linha de tabela usa a prop nativa `actions` do `DataTable` (botões alinhados à direita), nunca uma coluna customizada com `align: 'center'`/`justify-center` — isso deixa os botões soltos no meio de um espaço maior do que precisam, já que colunas sem largura fixa esticam para preencher a tabela. Status: aplicado em Tarefas Rotineiras (`RoutineTasks.tsx`).
-- **[regra]** O label do cabeçalho dessa coluna ("Ações") fica centralizado, mesmo com os botões da linha alinhados à direita. Status: `DataTable.tsx`, `<th>` de ações.
+- **[regra]** Coluna de ações de uma linha de tabela usa a prop nativa `actions` do `DataTable`, nunca uma coluna customizada — isso deixa os botões soltos no meio de um espaço maior do que precisam, já que colunas sem largura fixa esticam para preencher a tabela. Status: aplicado em Tarefas Rotineiras (`RoutineTasks.tsx`).
+- **[regra]** O label do cabeçalho dessa coluna ("Ações") e os botões de ação de cada linha ficam centralizados. Status: `DataTable.tsx` (`<th>` e `<td>`/fallback mobile) e replicado nos containers de ação próprios de cada página.
 - **[regra]** Tabelas dentro de telas com mais de um nível de abas usam `density="compact"` no `DataTable`, para não empurrar a página para além da viewport (ver "Nenhuma tela tem rolagem de página" em Paginação e filtros). Status: aplicado em Tarefas Rotineiras.
 
 ## Animação

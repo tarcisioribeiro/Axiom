@@ -113,7 +113,7 @@ export default function Transfers() {
           onPageChange: setPage,
         }}
         actions={(transfer) => (
-          <div className="gap-sm flex items-center justify-end">
+          <div className="gap-sm flex items-center justify-center">
             <ReceiptButton
               source={{ type: 'transfer', data: transfer }}
               memberName={getMemberDisplayName(null, user)}

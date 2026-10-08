@@ -18,6 +18,7 @@ import { ptBR, enUS } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -108,11 +109,16 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
+interface FinancialCalendarProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
 export default function FinancialCalendar({
   embedded = false,
-}: {
-  embedded?: boolean;
-}) {
+  headerTarget,
+}: FinancialCalendarProps) {
   const { t, i18n } = useTranslation();
   const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
 
@@ -335,9 +341,13 @@ export default function FinancialCalendar({
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
+  const header = (
+    <PageHeader title={t('financialCalendar.title')} icon={<CalendarDays />} />
+  );
+
   return (
     <Wrapper>
-      <PageHeader title={t('financialCalendar.title')} icon={<CalendarDays />} />
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       <div className="mt-md bg-muted/30 px-md py-sm text-muted-foreground rounded-lg border text-sm font-medium">
         {t('financialCalendar.summaryDue', { count: totalEventsThisMonth })}

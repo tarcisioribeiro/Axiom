@@ -1,4 +1,5 @@
 import { CalendarCheck, CalendarDays } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
@@ -12,6 +13,8 @@ const TABS = ['calendar', 'monthly-planner'] as const;
 
 export default function FinanceAgendaPage() {
   const { t } = useTranslation();
+  // Cada aba renderiza seu cabeçalho (título + ações) aqui, acima das abas.
+  const [headerTarget, setHeaderTarget] = useState<HTMLDivElement | null>(null);
   const [activeTab, setActiveTab] = useTabRoute('/finance/agenda', TABS, 'calendar');
 
   return (
@@ -21,6 +24,7 @@ export default function FinanceAgendaPage() {
         onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
         className="flex flex-1 flex-col"
       >
+        <div ref={setHeaderTarget} className="mb-lg empty:hidden" />
         <TabsList className="mb-lg w-full">
           <TabsTrigger value="calendar" className="gap-xs flex-1">
             <CalendarDays className="h-4 w-4" />
@@ -33,11 +37,11 @@ export default function FinanceAgendaPage() {
         </TabsList>
 
         <TabsContent value="calendar" className="mt-0 flex-1">
-          <FinancialCalendar embedded />
+          <FinancialCalendar embedded headerTarget={headerTarget} />
         </TabsContent>
 
         <TabsContent value="monthly-planner" className="mt-0 flex-1">
-          <MonthlyPlanner embedded />
+          <MonthlyPlanner embedded headerTarget={headerTarget} />
         </TabsContent>
       </Tabs>
     </PageContainer>

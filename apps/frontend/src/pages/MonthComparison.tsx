@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -160,7 +161,16 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function MonthComparison({ embedded = false }: { embedded?: boolean }) {
+interface MonthComparisonProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
+export default function MonthComparison({
+  embedded = false,
+  headerTarget,
+}: MonthComparisonProps) {
   const { t, i18n } = useTranslation();
   const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
 
@@ -214,9 +224,11 @@ export default function MonthComparison({ embedded = false }: { embedded?: boole
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
+  const header = <PageHeader title={t('monthComparison.title')} icon={<BarChart3 />} />;
+
   return (
     <Wrapper>
-      <PageHeader title={t('monthComparison.title')} icon={<BarChart3 />} />
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       <div className="gap-md bg-muted/40 p-md flex flex-wrap items-end rounded-lg border">
         <MonthSelector

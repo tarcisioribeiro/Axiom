@@ -21,6 +21,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { BANK_RECONCILIATION_STATUS_ICONS } from '@/config/icons';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { cn, formatLocalDate } from '@/lib/utils';
@@ -111,10 +113,12 @@ function EntryStatusBadge({ status }: { status: BankStatementEntry['status'] }) 
     unmatched: t('pages.bankReconciliation.detail.statusUnmatched'),
     ignored: t('pages.bankReconciliation.detail.statusIgnored'),
   };
+  const StatusIcon = BANK_RECONCILIATION_STATUS_ICONS[status];
   return (
     <span
-      className={`px-sm inline-flex items-center rounded-full border py-0.5 text-xs font-medium ${variants[status]}`}
+      className={`px-sm gap-xs inline-flex items-center rounded-full border py-0.5 text-xs font-medium ${variants[status]}`}
     >
+      {StatusIcon && <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />}
       {labels[status] ?? status}
     </span>
   );
@@ -683,16 +687,28 @@ export default function BankReconciliationDetail() {
             <SelectItem value="all">
               {t('pages.bankReconciliation.detail.allStatus')}
             </SelectItem>
-            <SelectItem value="matched">
+            <SelectItem
+              value="matched"
+              icon={<BANK_RECONCILIATION_STATUS_ICONS.matched className="h-4 w-4" />}
+            >
               {t('pages.bankReconciliation.detail.statusMatched')}
             </SelectItem>
-            <SelectItem value="unmatched">
+            <SelectItem
+              value="unmatched"
+              icon={<BANK_RECONCILIATION_STATUS_ICONS.unmatched className="h-4 w-4" />}
+            >
               {t('pages.bankReconciliation.detail.statusUnmatched')}
             </SelectItem>
-            <SelectItem value="ignored">
+            <SelectItem
+              value="ignored"
+              icon={<BANK_RECONCILIATION_STATUS_ICONS.ignored className="h-4 w-4" />}
+            >
               {t('pages.bankReconciliation.detail.statusIgnored')}
             </SelectItem>
-            <SelectItem value="pending">
+            <SelectItem
+              value="pending"
+              icon={<BANK_RECONCILIATION_STATUS_ICONS.pending className="h-4 w-4" />}
+            >
               {t('pages.bankReconciliation.detail.statusPending')}
             </SelectItem>
           </SelectContent>
@@ -734,6 +750,7 @@ export default function BankReconciliationDetail() {
         data={filteredEntries}
         columns={columns}
         keyExtractor={(entry) => entry.id}
+        pageSize={LIST_PAGE_SIZE}
         emptyState={{
           icon: <ArrowLeftRight className="h-12 w-12" />,
           title: t('pages.bankReconciliation.detail.emptyTitle'),

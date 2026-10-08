@@ -86,7 +86,7 @@ export function useTransfersData() {
     [transfers, debouncedSearch, statusFilter, accountFilter, startDate, endDate]
   );
 
-  const PAGE_SIZE = 20;
+  const PAGE_SIZE = 5;
   const [page, setPage] = useState(1);
   const filtersKey = JSON.stringify([
     debouncedSearch,

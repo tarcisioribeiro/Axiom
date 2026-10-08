@@ -16,6 +16,7 @@ import {
   CircleDot,
 } from 'lucide-react';
 import { useState, useMemo, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
@@ -24,7 +25,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { IncreaseValueDialog } from '@/components/payables/IncreaseValueDialog';
 import { PayableForm } from '@/components/payables/PayableForm';
@@ -51,7 +52,7 @@ import {
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
-import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { BILL_STATUS_ICONS, EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { usePayablesPage } from '@/hooks/use-payables-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -80,7 +81,13 @@ function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNod
   );
 }
 
-export default function Payables({ embedded = false }: { embedded?: boolean }) {
+interface PayablesProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
+export default function Payables({ embedded = false, headerTarget }: PayablesProps) {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const {
@@ -190,14 +197,18 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
 
   if (isLoading) return <LoadingState />;
 
+  const header = (
+    <PageHeader title={t('pages.payables.title')} icon={<Receipt />}>
+      <Button onClick={handleCreate} className="gap-sm">
+        <Plus className="h-4 w-4" />
+        {t('pages.payables.newBtn')}
+      </Button>
+    </PageHeader>
+  );
+
   return (
     <Wrapper embedded={embedded}>
-      <PageHeader title={t('pages.payables.title')} icon={<Receipt />}>
-        <Button onClick={handleCreate} className="gap-sm">
-          <Plus className="h-4 w-4" />
-          {t('pages.payables.newBtn')}
-        </Button>
-      </PageHeader>
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       <FilterBar
         hasActiveFilters={!!searchTerm || hasExtraFilters}
@@ -257,14 +268,28 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.payables.allStatus')}</SelectItem>
-            <SelectItem value="active">
+            <SelectItem
+              value="active"
+              icon={<BILL_STATUS_ICONS.active className="h-4 w-4" />}
+            >
               {translate('payableStatus', 'active')}
             </SelectItem>
-            <SelectItem value="paid">{translate('payableStatus', 'paid')}</SelectItem>
-            <SelectItem value="overdue">
+            <SelectItem
+              value="paid"
+              icon={<BILL_STATUS_ICONS.paid className="h-4 w-4" />}
+            >
+              {translate('payableStatus', 'paid')}
+            </SelectItem>
+            <SelectItem
+              value="overdue"
+              icon={<BILL_STATUS_ICONS.overdue className="h-4 w-4" />}
+            >
               {translate('payableStatus', 'overdue')}
             </SelectItem>
-            <SelectItem value="cancelled">
+            <SelectItem
+              value="cancelled"
+              icon={<BILL_STATUS_ICONS.cancelled className="h-4 w-4" />}
+            >
               {translate('payableStatus', 'cancelled')}
             </SelectItem>
           </SelectContent>
@@ -378,7 +403,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
         <PaginatedSlide
           key={`${searchTerm}-${statusFilter}-${categoryFilter}-${dueStartDate?.getTime()}-${dueEndDate?.getTime()}`}
           items={displayedPayables}
-          pageSize={GRID_PAGE_SIZE}
+          pageSize={LIST_PAGE_SIZE}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
         >
           {(pageItems) =>
@@ -454,7 +479,16 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                         {translate('expenseCategories', payable.category)}
                       </p>
                     </div>
-                    <Badge variant={STATUS_VARIANTS[payable.status] ?? 'default'}>
+                    <Badge
+                      variant={STATUS_VARIANTS[payable.status] ?? 'default'}
+                      className="gap-xs"
+                    >
+                      {(() => {
+                        const StatusIcon = BILL_STATUS_ICONS[payable.status];
+                        return StatusIcon ? (
+                          <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                        ) : null;
+                      })()}
                       {translate('payableStatus', payable.status)}
                     </Badge>
                   </div>

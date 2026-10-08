@@ -231,6 +231,29 @@ export const debounce = <TArgs extends unknown[]>(
 };
 
 /**
+ * Retorna cor de badge para categoria de tarefa rotineira/bloco de foco
+ *
+ * @param category - Categoria da tarefa ('health', 'intellect', etc.)
+ * @returns Classe CSS do Tailwind para cor do badge
+ */
+export const getTaskCategoryColor = (category: string): string => {
+  const colors: Record<string, string> = {
+    health: 'bg-category-health text-white dark:text-black border-transparent',
+    intellect: 'bg-category-studies text-white dark:text-black border-transparent',
+    spiritual: 'bg-category-spiritual text-white dark:text-black border-transparent',
+    exercise: 'bg-category-exercise text-white dark:text-black border-transparent',
+    nutrition: 'bg-category-nutrition text-white dark:text-black border-transparent',
+    work: 'bg-category-work text-white dark:text-black border-transparent',
+    social: 'bg-category-leisure text-white dark:text-black border-transparent',
+    finance: 'bg-category-finance text-white dark:text-black border-transparent',
+    household: 'bg-category-nutrition text-white dark:text-black border-transparent',
+    personal_care: 'bg-category-health text-white dark:text-black border-transparent',
+    other: 'bg-muted text-muted-foreground border-transparent',
+  };
+  return colors[category] || 'bg-muted text-muted-foreground border-transparent';
+};
+
+/**
  * Retorna cor de badge para módulo do sistema
  *
  * @param module - Nome do módulo ('finance', 'security', 'library')

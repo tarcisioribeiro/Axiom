@@ -12,7 +12,7 @@ import {
   Mail,
   CircleDot,
 } from 'lucide-react';
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -20,7 +20,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { MemberForm } from '@/components/members/MemberForm';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
@@ -78,28 +79,7 @@ function MemberInitials({ name, sex }: { name: string; sex: string }) {
 
 const EMPTY_MEMBERS: Member[] = [];
 
-/** Desktop (lg+): 8 cards por página; demais telas mantêm o padrão da grade. */
-const DESKTOP_QUERY = '(min-width: 1024px)';
-const DESKTOP_PAGE_SIZE = 8;
-
-function useMembersPageSize() {
-  const [pageSize, setPageSize] = useState(() =>
-    window.matchMedia(DESKTOP_QUERY).matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia(DESKTOP_QUERY);
-    const handler = (e: MediaQueryListEvent) =>
-      setPageSize(e.matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  return pageSize;
-}
-
 export default function Members() {
-  const membersPageSize = useMembersPageSize();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -283,8 +263,18 @@ export default function Members() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.members.allStatus')}</SelectItem>
-            <SelectItem value="active">{t('common.status.active')}</SelectItem>
-            <SelectItem value="inactive">{t('common.status.inactive')}</SelectItem>
+            <SelectItem
+              value="active"
+              icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+            >
+              {t('common.status.active')}
+            </SelectItem>
+            <SelectItem
+              value="inactive"
+              icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+            >
+              {t('common.status.inactive')}
+            </SelectItem>
           </SelectContent>
         </Select>
         <Select value={roleFilter} onValueChange={setRoleFilter}>
@@ -320,7 +310,7 @@ export default function Members() {
         <PaginatedSlide
           key={`${searchTerm}-${statusFilter}-${roleFilter}`}
           items={filteredMembers}
-          pageSize={membersPageSize}
+          pageSize={LIST_PAGE_SIZE}
           centerList
           className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
@@ -411,8 +401,15 @@ export default function Members() {
                     <div className="pt-sm mt-auto flex items-center justify-between border-t">
                       <Badge
                         variant={member.active ? 'success' : 'outline'}
-                        className="text-xs"
+                        className="gap-xs text-xs"
                       >
+                        {(() => {
+                          const StatusIcon =
+                            TASK_STATUS_ICONS[member.active ? 'active' : 'inactive'];
+                          return (
+                            <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                          );
+                        })()}
                         {member.active
                           ? t('common.status.active')
                           : t('common.status.inactive')}

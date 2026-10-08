@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Bar,
@@ -110,7 +111,16 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function SpendingInsights({ embedded = false }: { embedded?: boolean }) {
+interface SpendingInsightsProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
+export default function SpendingInsights({
+  embedded = false,
+  headerTarget,
+}: SpendingInsightsProps) {
   const { t, i18n } = useTranslation();
   const chartColors = useChartColors();
   const semanticColors = useSemanticColors();
@@ -160,14 +170,18 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
+  const header = (
+    <PageHeader
+      title={t('spendingInsights.title')}
+      icon={<BarChart3 />}
+      actions={monthNav}
+    />
+  );
+
   if (isError || !data) {
     return (
       <Wrapper>
-        <PageHeader
-          title={t('spendingInsights.title')}
-          icon={<BarChart3 />}
-          actions={monthNav}
-        />
+        {headerTarget ? createPortal(header, headerTarget) : header}
         <EmptyState
           title={t('spendingInsights.unavailable')}
           icon={<BarChart3 className="h-8 w-8" />}
@@ -201,11 +215,7 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
 
   return (
     <Wrapper>
-      <PageHeader
-        title={t('spendingInsights.title')}
-        icon={<BarChart3 />}
-        actions={monthNav}
-      />
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       {/* Trend summary row */}
       <div className="gap-lg grid grid-cols-1 sm:grid-cols-3">

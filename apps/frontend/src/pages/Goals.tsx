@@ -37,6 +37,7 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { GoalForm } from '@/components/personal-planning/GoalForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -60,6 +61,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { GOAL_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
@@ -252,6 +254,7 @@ function GoalCard({
   const TypeIcon = typeMeta.icon;
   const isAutoType = AUTO_GOAL_TYPES.includes(goal.goal_type);
   const isCompleted = goal.status === 'completed';
+  const StatusIcon = GOAL_STATUS_ICONS[goal.status];
 
   const ringColor = isCompleted
     ? 'hsl(var(--chart-2))'
@@ -351,7 +354,11 @@ function GoalCard({
         </div>
 
         <div className="flex items-center justify-between border-t pt-3">
-          <Badge variant={GOAL_STATUS_BADGE[goal.status] ?? 'secondary'}>
+          <Badge
+            variant={GOAL_STATUS_BADGE[goal.status] ?? 'secondary'}
+            className="gap-xs"
+          >
+            {StatusIcon && <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />}
             {t(`pages.goals.form.statusOptions.${goal.status}`)}
           </Badge>
           <div className="gap-xs flex">
@@ -421,7 +428,7 @@ interface GoalsProps {
 
 const EMPTY_GOALS: Goal[] = [];
 // Duas linhas do grid (3 colunas em lg+).
-const GOALS_PAGE_SIZE = 6;
+const GOALS_PAGE_SIZE = 5;
 const EMPTY_TASKS: RoutineTask[] = [];
 
 function Wrapper({
@@ -449,6 +456,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
   const [isRegisteringFailure, setIsRegisteringFailure] = useState(false);
   const [viewingFailuresGoal, setViewingFailuresGoal] = useState<Goal | undefined>();
   const [detailsGoal, setDetailsGoal] = useState<Goal | undefined>();
+  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const detailsTypeMeta = detailsGoal
@@ -616,14 +624,18 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
   const sortedGoals = [...goals].sort((a, b) => statusRank(a) - statusRank(b));
 
   const filteredGoals = sortedGoals.filter((g) => {
+    if (searchTerm && !g.title.toLowerCase().includes(searchTerm.toLowerCase()))
+      return false;
     if (statusFilter !== 'all' && g.status !== statusFilter) return false;
     if (typeFilter !== 'all' && g.goal_type !== typeFilter) return false;
     return true;
   });
 
-  const hasActiveFilters = statusFilter !== 'all' || typeFilter !== 'all';
+  const hasActiveFilters =
+    searchTerm !== '' || statusFilter !== 'all' || typeFilter !== 'all';
 
   const clearFilters = () => {
+    setSearchTerm('');
     setStatusFilter('all');
     setTypeFilter('all');
   };
@@ -678,6 +690,12 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
               : []),
           ]}
         >
+          <SearchInput
+            placeholder={t('pages.goals.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-44"
+          />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger
               className="w-40"
@@ -688,13 +706,22 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('pages.goals.allStatus')}</SelectItem>
-              <SelectItem value="active">
+              <SelectItem
+                value="active"
+                icon={<GOAL_STATUS_ICONS.active className="h-4 w-4" />}
+              >
                 {t('pages.goals.form.statusOptions.active')}
               </SelectItem>
-              <SelectItem value="completed">
+              <SelectItem
+                value="completed"
+                icon={<GOAL_STATUS_ICONS.completed className="h-4 w-4" />}
+              >
                 {t('pages.goals.form.statusOptions.completed')}
               </SelectItem>
-              <SelectItem value="failed">
+              <SelectItem
+                value="failed"
+                icon={<GOAL_STATUS_ICONS.failed className="h-4 w-4" />}
+              >
                 {t('pages.goals.form.statusOptions.failed')}
               </SelectItem>
             </SelectContent>

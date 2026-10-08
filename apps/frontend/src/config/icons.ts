@@ -1,8 +1,10 @@
 /* eslint-disable max-lines */
 import {
+  AlertTriangle,
   ArrowDown,
   ArrowRight,
   ArrowUp,
+  Atom,
   Ban,
   Banknote,
   BarChart3,
@@ -14,12 +16,16 @@ import {
   CalendarDays,
   Car,
   CheckCircle,
+  Circle,
+  CircleDot,
   Clock,
   CloudSun,
+  Code2,
   CreditCard,
   Dog,
   Droplets,
   Dumbbell,
+  EyeOff,
   FileText,
   Film,
   Flame,
@@ -29,18 +35,24 @@ import {
   Globe,
   GraduationCap,
   HandCoins,
+  HandHeart,
   Heart,
   HeartPulse,
   Home,
   Landmark,
   Languages,
   Laptop,
+  Link2,
   Mail,
   Meh,
   Minus,
   Monitor,
   Moon,
+  MoreHorizontal,
   Package,
+  Paintbrush,
+  Palette,
+  Pause,
   Pencil,
   PiggyBank,
   Plane,
@@ -74,6 +86,7 @@ import {
   Users,
   Utensils,
   Wallet,
+  Wind,
   XCircle,
   Zap,
 } from 'lucide-react';
@@ -206,6 +219,11 @@ export const PRIORITY_ICONS: Record<string, IconComponent> = {
   critical: Flame,
 };
 
+export const TASK_STATUS_ICONS: Record<string, IconComponent> = {
+  active: CheckCircle,
+  inactive: XCircle,
+};
+
 export const PERIODICITY_ICONS: Record<string, IconComponent> = {
   daily: CalendarDays,
   weekdays: Calendar,
@@ -305,3 +323,89 @@ export const WORKOUT_CATEGORY_ICONS: Record<string, IconComponent> = {
 export const CARD_FLAG_ICON: IconComponent = CreditCard;
 export const NATIONALITY_ICON: IconComponent = Globe;
 export const COUNTRY_ICON: IconComponent = Globe;
+
+export const PAYMENT_STATUS_ICONS: Record<string, IconComponent> = {
+  paid: CheckCircle,
+  received: CheckCircle,
+  pending: Clock,
+};
+
+export const BILL_STATUS_ICONS: Record<string, IconComponent> = {
+  active: Clock,
+  paid: CheckCircle,
+  received: CheckCircle,
+  overdue: AlertTriangle,
+  cancelled: Ban,
+};
+
+export const LOAN_STATUS_ICONS: Record<string, IconComponent> = {
+  active: Clock,
+  paid: CheckCircle,
+  defaulted: AlertTriangle,
+  cancelled: Ban,
+};
+
+export const CREDIT_CARD_BILL_STATUS_ICONS: Record<string, IconComponent> = {
+  open: CircleDot,
+  closed: CheckCircle,
+  paid: Wallet,
+  overdue: AlertTriangle,
+};
+
+export const TRANSFER_STATUS_ICONS: Record<string, IconComponent> = {
+  pending: Clock,
+  processing: RefreshCw,
+  completed: CheckCircle,
+  failed: XCircle,
+  cancelled: Ban,
+};
+
+export const BANK_RECONCILIATION_STATUS_ICONS: Record<string, IconComponent> = {
+  matched: CheckCircle,
+  unmatched: XCircle,
+  ignored: EyeOff,
+  pending: Clock,
+};
+
+export const FLASHCARD_STATUS_ICONS: Record<string, IconComponent> = {
+  new: Sparkles,
+  learning: BookOpen,
+  review: RefreshCw,
+  mastered: CheckCircle,
+};
+
+export const DAILY_CHECKLIST_STATUS_ICONS: Record<string, IconComponent> = {
+  completed: CheckCircle,
+  pending: Clock,
+};
+
+export const SKILL_STATUS_ICONS: Record<string, IconComponent> = {
+  learning: BookOpen,
+  evolving: TrendingUp,
+  mastered: CheckCircle,
+};
+
+export const COURSE_STATUS_ICONS: Record<string, IconComponent> = {
+  not_started: Circle,
+  in_progress: Clock,
+  completed: CheckCircle,
+  paused: Pause,
+};
+
+export const SKILL_CATEGORY_ICONS: Record<string, IconComponent> = {
+  technology: Code2,
+  languages: Globe,
+  design: Palette,
+  business: Briefcase,
+  science: Atom,
+  arts: Paintbrush,
+  other: MoreHorizontal,
+};
+
+export const INTERVENTION_CATEGORY_ICONS: Record<string, IconComponent> = {
+  self_esteem: Heart,
+  loneliness: Users,
+  neediness: HandHeart,
+  anxiety: Wind,
+  emotional_dependency: Link2,
+};

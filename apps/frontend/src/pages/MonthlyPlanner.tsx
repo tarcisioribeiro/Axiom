@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -557,7 +558,16 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function MonthlyPlanner({ embedded = false }: { embedded?: boolean }) {
+interface MonthlyPlannerProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
+export default function MonthlyPlanner({
+  embedded = false,
+  headerTarget,
+}: MonthlyPlannerProps) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const { showConfirm, showAlert } = useAlertDialog();
@@ -960,12 +970,16 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
   const actualRevenueItems = data?.actual_revenue_items ?? [];
   const actualExpenseItems = data?.actual_expense_items ?? [];
 
+  const header = (
+    <PageHeader
+      title={t('monthlyPlanner.title')}
+      icon={<CalendarCheck className="h-5 w-5" />}
+    />
+  );
+
   return (
     <Wrapper>
-      <PageHeader
-        title={t('monthlyPlanner.title')}
-        icon={<CalendarCheck className="h-5 w-5" />}
-      />
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       {/* Month navigation */}
       <div className="mb-lg flex items-center justify-between">

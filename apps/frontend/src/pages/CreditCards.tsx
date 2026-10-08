@@ -18,7 +18,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { CreditCardDeleteDialog } from '@/components/credit-cards/CreditCardDeleteDialog';
 import { CreditCardDetailSheet } from '@/components/credit-cards/CreditCardDetailSheet';
@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate, TRANSLATIONS } from '@/config/constants';
+import { TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
@@ -90,24 +91,6 @@ function UsageArc({ pct, size = 48 }: { pct: number; size?: number }) {
       />
     </svg>
   );
-}
-
-/** Duas linhas da grade de cards: 4 no tablet (2 colunas), 6 no desktop (3 colunas). */
-const DESKTOP_QUERY = '(min-width: 1024px)';
-
-function useCardsPageSize() {
-  const [pageSize, setPageSize] = useState(() =>
-    window.matchMedia(DESKTOP_QUERY).matches ? 6 : 4
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia(DESKTOP_QUERY);
-    const handler = (e: MediaQueryListEvent) => setPageSize(e.matches ? 6 : 4);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  return pageSize;
 }
 
 const EMPTY_CREDIT_CARDS: CreditCard[] = [];
@@ -176,7 +159,6 @@ export default function CreditCards({
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const cardsPageSize = useCardsPageSize();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -369,8 +351,18 @@ export default function CreditCards({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('pages.creditCards.allStatus')}</SelectItem>
-              <SelectItem value="active">{t('common.status.active')}</SelectItem>
-              <SelectItem value="inactive">{t('common.status.inactive')}</SelectItem>
+              <SelectItem
+                value="active"
+                icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+              >
+                {t('common.status.active')}
+              </SelectItem>
+              <SelectItem
+                value="inactive"
+                icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+              >
+                {t('common.status.inactive')}
+              </SelectItem>
             </SelectContent>
           </Select>
         </FilterBar>
@@ -389,7 +381,7 @@ export default function CreditCards({
       ) : (
         <PaginatedSlide
           items={filteredCreditCards}
-          pageSize={cardsPageSize}
+          pageSize={LIST_PAGE_SIZE}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
         >
           {(pageItems) =>

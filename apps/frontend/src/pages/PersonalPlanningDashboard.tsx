@@ -31,6 +31,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { StreakBadge } from '@/components/common/StreakBadge';
 import {
   DailyCaloricSummaryCard,
@@ -785,7 +786,7 @@ export default function PersonalPlanningDashboard() {
                     {t('pages.planningDashboard.habitConsistency')}
                   </h3>
                   <div className="flex flex-1 flex-col justify-center">
-                    <HabitHeatmap recentDays={90} />
+                    <HabitHeatmap recentDays={180} />
                   </div>
                 </div>
                 {stats.active_goals_progress &&
@@ -795,39 +796,45 @@ export default function PersonalPlanningDashboard() {
                         <Flag className="h-4 w-4" />
                         {t('pages.planningDashboard.activeGoalsProgress')}
                       </h3>
-                      <div className="mx-auto flex max-w-full flex-1 flex-col justify-center space-y-3">
-                        {stats.active_goals_progress.slice(0, 4).map((goal, index) => {
-                          const pct = goal.progress_percentage;
-                          const ringColor =
-                            pct >= 80
-                              ? 'hsl(var(--chart-2))'
-                              : pct >= 40
-                                ? 'hsl(var(--warning))'
-                                : 'hsl(var(--primary))';
-                          return (
-                            <div key={index} className="flex items-center gap-3">
-                              <CircularProgress
-                                value={pct}
-                                size={48}
-                                strokeWidth={5}
-                                color={ringColor}
-                              >
-                                <span className="text-xs font-bold">
-                                  {pct.toFixed(0)}%
-                                </span>
-                              </CircularProgress>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-medium">
-                                  {goal.title}
-                                </p>
-                                <p className="text-muted-foreground text-xs">
-                                  {goal.current_value} / {goal.target_value}
-                                </p>
+                      <PaginatedSlide
+                        items={stats.active_goals_progress}
+                        pageSize={LIST_PAGE_SIZE}
+                        className="space-y-3"
+                      >
+                        {(pageGoals) =>
+                          pageGoals.map((goal, index) => {
+                            const pct = goal.progress_percentage;
+                            const ringColor =
+                              pct >= 80
+                                ? 'hsl(var(--chart-2))'
+                                : pct >= 40
+                                  ? 'hsl(var(--warning))'
+                                  : 'hsl(var(--primary))';
+                            return (
+                              <div key={index} className="flex items-center gap-3">
+                                <CircularProgress
+                                  value={pct}
+                                  size={48}
+                                  strokeWidth={5}
+                                  color={ringColor}
+                                >
+                                  <span className="text-xs font-bold">
+                                    {pct.toFixed(0)}%
+                                  </span>
+                                </CircularProgress>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-medium">
+                                    {goal.title}
+                                  </p>
+                                  <p className="text-muted-foreground text-xs">
+                                    {goal.current_value} / {goal.target_value}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                            );
+                          })
+                        }
+                      </PaginatedSlide>
                     </div>
                   )}
               </CardContent>

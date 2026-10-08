@@ -1,9 +1,9 @@
 import { CircleDot } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { FilterBar } from '@/components/common/FilterBar';
 import { SearchInput } from '@/components/common/SearchInput';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Select,
   SelectContent,
@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { TRANSFER_STATUS_ICONS } from '@/config/icons';
 import { formatDate } from '@/lib/formatters';
 import type { Account } from '@/types';
 
@@ -107,11 +108,36 @@ export function TransferFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">{t('pages.transfers.allStatus')}</SelectItem>
-          <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
-          <SelectItem value="processing">{t('common.status.processing')}</SelectItem>
-          <SelectItem value="completed">{t('common.status.completed')}</SelectItem>
-          <SelectItem value="failed">{t('common.status.failed')}</SelectItem>
-          <SelectItem value="cancelled">{t('common.status.cancelled')}</SelectItem>
+          <SelectItem
+            value="pending"
+            icon={<TRANSFER_STATUS_ICONS.pending className="h-4 w-4" />}
+          >
+            {t('common.status.pending')}
+          </SelectItem>
+          <SelectItem
+            value="processing"
+            icon={<TRANSFER_STATUS_ICONS.processing className="h-4 w-4" />}
+          >
+            {t('common.status.processing')}
+          </SelectItem>
+          <SelectItem
+            value="completed"
+            icon={<TRANSFER_STATUS_ICONS.completed className="h-4 w-4" />}
+          >
+            {t('common.status.completed')}
+          </SelectItem>
+          <SelectItem
+            value="failed"
+            icon={<TRANSFER_STATUS_ICONS.failed className="h-4 w-4" />}
+          >
+            {t('common.status.failed')}
+          </SelectItem>
+          <SelectItem
+            value="cancelled"
+            icon={<TRANSFER_STATUS_ICONS.cancelled className="h-4 w-4" />}
+          >
+            {t('common.status.cancelled')}
+          </SelectItem>
         </SelectContent>
       </Select>
       <Select value={accountFilter} onValueChange={onAccountChange}>
@@ -127,24 +153,12 @@ export function TransferFilters({
           ))}
         </SelectContent>
       </Select>
-      <div className="gap-xs flex items-center">
-        <span className="text-muted-foreground text-xs whitespace-nowrap">
-          {t('pages.transfers.dateFrom')}
-        </span>
-        <DatePicker
-          value={startDate}
-          onChange={onStartDateChange}
-          placeholder={t('pages.transfers.dateFrom')}
-        />
-        <span className="text-muted-foreground text-xs whitespace-nowrap">
-          {t('pages.transfers.dateTo')}
-        </span>
-        <DatePicker
-          value={endDate}
-          onChange={onEndDateChange}
-          placeholder={t('pages.transfers.dateTo')}
-        />
-      </div>
+      <DateRangeFilter
+        startDate={startDate}
+        endDate={endDate}
+        onStartChange={onStartDateChange}
+        onEndChange={onEndDateChange}
+      />
     </FilterBar>
   );
 }

@@ -17,7 +17,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -305,7 +305,7 @@ export default function Vaults() {
           ) : (
             <PaginatedSlide
               items={filteredVaults}
-              pageSize={GRID_PAGE_SIZE}
+              pageSize={LIST_PAGE_SIZE}
               className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
             >
               {(pageItems) =>

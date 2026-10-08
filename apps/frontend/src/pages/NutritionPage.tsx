@@ -59,6 +59,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { calcCalories } from '@/lib/nutrition-calories';
@@ -85,7 +86,7 @@ import type {
 import { getErrorMessage } from '@/utils/error-utils';
 
 // 5 cards por linha × 5 linhas
-const FOODS_PAGE_SIZE = 25;
+const FOODS_PAGE_SIZE = 5;
 // Limite de tipos de refeição por usuário (validado também no backend)
 const MAX_MEAL_TYPES = 6;
 
@@ -806,10 +807,16 @@ export default function NutritionPage() {
                       <SelectItem value="all">
                         {t('pages.nutritionMealTypes.allStatus')}
                       </SelectItem>
-                      <SelectItem value="active">
+                      <SelectItem
+                        value="active"
+                        icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                      >
                         {t('pages.nutritionMealTypes.active')}
                       </SelectItem>
-                      <SelectItem value="inactive">
+                      <SelectItem
+                        value="inactive"
+                        icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                      >
                         {t('pages.nutritionMealTypes.inactive')}
                       </SelectItem>
                     </SelectContent>
@@ -1140,7 +1147,15 @@ function MealTypeCard({
           </div>
         </button>
         <div className="ml-sm gap-xs flex shrink-0 items-center">
-          <Badge variant={mealType.is_active ? 'success' : 'secondary'}>
+          <Badge
+            variant={mealType.is_active ? 'success' : 'secondary'}
+            className="gap-xs"
+          >
+            {(() => {
+              const StatusIcon =
+                TASK_STATUS_ICONS[mealType.is_active ? 'active' : 'inactive'];
+              return <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />;
+            })()}
             {mealType.is_active
               ? t('pages.nutritionMealTypes.active')
               : t('pages.nutritionMealTypes.inactive')}

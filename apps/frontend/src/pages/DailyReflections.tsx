@@ -182,7 +182,7 @@ function ReflectionCard({
 }
 
 const EMPTY_REFLECTIONS: DailyReflection[] = [];
-const REFLECTIONS_PAGE_SIZE = 4;
+const REFLECTIONS_PAGE_SIZE = 5;
 
 export default function DailyReflections() {
   const { t } = useTranslation();

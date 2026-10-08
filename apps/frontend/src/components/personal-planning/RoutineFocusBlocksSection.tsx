@@ -25,8 +25,7 @@ import { FocusBlockTasksEditor } from './FocusBlockTasksEditor';
 import { RoutineFocusBlockCard } from './RoutineFocusBlockCard';
 import { RoutineFocusBlockForm } from './RoutineFocusBlockForm';
 
-// Uma linha do grid (2 colunas em md+).
-const LIST_PAGE_SIZE = 2;
+const LIST_PAGE_SIZE = 5;
 
 export interface RoutineFocusBlocksSectionHandle {
   create: () => void;
@@ -183,7 +182,7 @@ export function RoutineFocusBlocksSection({
           items={blocks}
           pageSize={LIST_PAGE_SIZE}
           className="gap-sm grid md:grid-cols-2"
-          centerList
+          pinNav={false}
         >
           {(pageBlocks) =>
             pageBlocks.map((block) => (

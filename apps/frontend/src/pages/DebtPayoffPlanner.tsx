@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
@@ -56,11 +57,16 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
+interface DebtPayoffPlannerProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
 export default function DebtPayoffPlanner({
   embedded = false,
-}: {
-  embedded?: boolean;
-}) {
+  headerTarget,
+}: DebtPayoffPlannerProps) {
   const { t } = useTranslation();
   const [strategy, setStrategy] = useState<Strategy>('snowball');
   const [extraMonthly, setExtraMonthly] = useState(0);
@@ -112,12 +118,16 @@ export default function DebtPayoffPlanner({
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
+  const header = (
+    <PageHeader
+      title={t('pages.debtPayoff.title')}
+      icon={<TrendingDown className="text-destructive h-6 w-6" />}
+    />
+  );
+
   return (
     <Wrapper>
-      <PageHeader
-        title={t('pages.debtPayoff.title')}
-        icon={<TrendingDown className="text-destructive h-6 w-6" />}
-      />
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       {isLoading ? (
         <div className="text-muted-foreground flex h-64 items-center justify-center">

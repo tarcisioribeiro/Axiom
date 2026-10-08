@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   CheckCircle2,
   Compass,
@@ -31,6 +32,13 @@ const VAULT_WIZARD_KEY = 'vault_onboarding_completed';
 
 const ICONS = [Compass, Lightbulb, Search];
 
+// Mesma técnica de slide do PaginatedSlide: direção conforme avança/volta.
+const slideVariants = {
+  enter: (dir: number) => ({ opacity: 0, x: dir * 24 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: dir * -24 }),
+};
+
 // Tour guiado por tela: aparece sempre ao entrar, exceto se o usuário marcou
 // "não mostrar mais". O botão do header reabre via OPEN_TOUR_EVENT.
 export function PageTour() {
@@ -40,6 +48,10 @@ export function PageTour() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [dontShow, setDontShow] = useState(false);
+  // Direção derivada do passo anterior, para o slide ir ‹ ou › conforme o
+  // botão clicado (mesmo padrão do PaginatedSlide).
+  const [last, setLast] = useState({ step: 0, direction: 1 });
+  if (last.step !== step) setLast({ step, direction: step > last.step ? 1 : -1 });
 
   // Ao trocar de página, reinicia e decide se abre (ajuste de estado no render).
   const [lastPath, setLastPath] = useState<string | null>(null);
@@ -110,12 +122,24 @@ export function PageTour() {
         </div>
 
         {/* Altura fixa: o modal não muda de tamanho entre passos. */}
-        <div className="gap-md py-md flex h-60 flex-col items-center overflow-y-auto text-center">
-          <Icon className="text-primary h-16 w-16" />
-          <div className="space-y-xs">
-            <h3 className="text-lg font-semibold">{steps[step].title}</h3>
-            <p className="text-muted-foreground text-sm">{steps[step].desc}</p>
-          </div>
+        <div className="py-md h-60 overflow-hidden">
+          <AnimatePresence mode="wait" initial={false} custom={last.direction}>
+            <motion.div
+              key={step}
+              custom={last.direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="gap-md flex h-full flex-col items-center overflow-y-auto text-center"
+            >
+              <Icon className="text-primary h-16 w-16" />
+              <div className="space-y-xs">
+                <h3 className="text-lg font-semibold">{steps[step].title}</h3>
+                <p className="text-muted-foreground text-sm">{steps[step].desc}</p>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         <label className="gap-sm text-muted-foreground flex cursor-pointer items-center text-sm">

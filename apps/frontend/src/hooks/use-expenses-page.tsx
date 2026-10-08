@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 
+import { LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import type { ExpensePrefillData } from '@/components/expenses/ExpenseForm';
 import { Badge } from '@/components/ui/badge';
 import { translate } from '@/config/constants';
@@ -147,7 +148,7 @@ export function useExpensesPage(): UseExpensesPageReturn {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const PAGE_SIZE = 50;
+  const PAGE_SIZE = LIST_PAGE_SIZE;
   const [page, setPage] = useState(1);
   const filtersKey = JSON.stringify([
     debouncedSearch,

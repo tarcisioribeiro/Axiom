@@ -26,7 +26,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { LoanAmortizationDialog } from '@/components/loans/LoanAmortizationDialog';
 import { LoanForm } from '@/components/loans/LoanForm';
@@ -59,7 +59,7 @@ import {
   getLoanStatusLabel,
   translate,
 } from '@/config/constants';
-import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { EXPENSE_CATEGORY_ICONS, LOAN_STATUS_ICONS } from '@/config/icons';
 import { useLoansPage } from '@/hooks/use-loans-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
@@ -313,12 +313,28 @@ export default function Loans() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.loans.allStatus')}</SelectItem>
-            <SelectItem value="active">{translate('loanStatus', 'active')}</SelectItem>
-            <SelectItem value="paid">{translate('loanStatus', 'paid')}</SelectItem>
-            <SelectItem value="defaulted">
+            <SelectItem
+              value="active"
+              icon={<LOAN_STATUS_ICONS.active className="h-4 w-4" />}
+            >
+              {translate('loanStatus', 'active')}
+            </SelectItem>
+            <SelectItem
+              value="paid"
+              icon={<LOAN_STATUS_ICONS.paid className="h-4 w-4" />}
+            >
+              {translate('loanStatus', 'paid')}
+            </SelectItem>
+            <SelectItem
+              value="defaulted"
+              icon={<LOAN_STATUS_ICONS.defaulted className="h-4 w-4" />}
+            >
               {translate('loanStatus', 'defaulted')}
             </SelectItem>
-            <SelectItem value="cancelled">
+            <SelectItem
+              value="cancelled"
+              icon={<LOAN_STATUS_ICONS.cancelled className="h-4 w-4" />}
+            >
               {translate('loanStatus', 'cancelled')}
             </SelectItem>
           </SelectContent>
@@ -432,7 +448,7 @@ export default function Loans() {
         <PaginatedSlide
           key={`${roleFilter}-${statusFilter}-${categoryFilter}-${dueStartDate?.getTime()}-${dueEndDate?.getTime()}-${searchTerm}`}
           items={roleFilteredLoans}
-          pageSize={GRID_PAGE_SIZE}
+          pageSize={LIST_PAGE_SIZE}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
         >
           {(pageItems) =>
@@ -453,7 +469,16 @@ export default function Loans() {
                         {translate('expenseCategories', loan.category)}
                       </p>
                     </div>
-                    <Badge variant={STATUS_VARIANTS[loan.status] ?? 'default'}>
+                    <Badge
+                      variant={STATUS_VARIANTS[loan.status] ?? 'default'}
+                      className="gap-xs"
+                    >
+                      {(() => {
+                        const StatusIcon = LOAN_STATUS_ICONS[loan.status];
+                        return StatusIcon ? (
+                          <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                        ) : null;
+                      })()}
                       {getLoanStatusLabel(loan.status, isCreditor)}
                     </Badge>
                   </div>

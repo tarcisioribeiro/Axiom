@@ -1,4 +1,5 @@
 import { BarChart3, GitCompareArrows } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
@@ -12,6 +13,8 @@ const TABS = ['spending-insights', 'month-comparison'] as const;
 
 export default function FinanceAnalyticsPage() {
   const { t } = useTranslation();
+  // Cada aba renderiza seu cabeçalho (título + ações) aqui, acima das abas.
+  const [headerTarget, setHeaderTarget] = useState<HTMLDivElement | null>(null);
   const [activeTab, setActiveTab] = useTabRoute(
     '/finance/analytics',
     TABS,
@@ -25,6 +28,7 @@ export default function FinanceAnalyticsPage() {
         onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
         className="flex flex-1 flex-col"
       >
+        <div ref={setHeaderTarget} className="mb-lg empty:hidden" />
         <TabsList className="mb-lg w-full">
           <TabsTrigger value="spending-insights" className="gap-xs flex-1">
             <BarChart3 className="h-4 w-4" />
@@ -37,11 +41,11 @@ export default function FinanceAnalyticsPage() {
         </TabsList>
 
         <TabsContent value="spending-insights" className="mt-0 flex-1">
-          <SpendingInsights embedded />
+          <SpendingInsights embedded headerTarget={headerTarget} />
         </TabsContent>
 
         <TabsContent value="month-comparison" className="mt-0 flex-1">
-          <MonthComparison embedded />
+          <MonthComparison embedded headerTarget={headerTarget} />
         </TabsContent>
       </Tabs>
     </PageContainer>

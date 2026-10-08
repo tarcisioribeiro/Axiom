@@ -35,7 +35,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { CourseDetailModal } from '@/components/library/CourseDetailModal';
 import { CourseForm } from '@/components/library/CourseForm';
@@ -58,7 +58,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { PLATFORM_ICONS } from '@/config/icons';
+import {
+  COURSE_STATUS_ICONS,
+  PLATFORM_ICONS,
+  SKILL_CATEGORY_ICONS,
+} from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cardVariants } from '@/lib/animations';
@@ -160,7 +164,16 @@ function CourseCard({
             {t(`pages.courses.platform.${course.platform}`)}
           </p>
         </div>
-        <Badge variant={STATUS_BADGE[course.status]} className="shrink-0 text-xs">
+        <Badge
+          variant={STATUS_BADGE[course.status]}
+          className="gap-xs shrink-0 text-xs"
+        >
+          {(() => {
+            const StatusIcon = COURSE_STATUS_ICONS[course.status];
+            return StatusIcon ? (
+              <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            ) : null;
+          })()}
           {t(`pages.courses.status.${course.status}`)}
         </Badge>
       </div>
@@ -547,11 +560,18 @@ export default function Courses() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {STATUS_FILTER_KEYS.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {t(`pages.courses.filters.${s}`)}
-                </SelectItem>
-              ))}
+              {STATUS_FILTER_KEYS.map((s) => {
+                const StatusIcon = COURSE_STATUS_ICONS[s];
+                return (
+                  <SelectItem
+                    key={s}
+                    value={s}
+                    icon={StatusIcon ? <StatusIcon className="h-4 w-4" /> : undefined}
+                  >
+                    {t(`pages.courses.filters.${s}`)}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
           <Select
@@ -566,11 +586,20 @@ export default function Courses() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('pages.courses.allCategories')}</SelectItem>
-              {CATEGORY_FILTER_KEYS.filter((c) => c !== 'all').map((c) => (
-                <SelectItem key={c} value={c}>
-                  {t(`pages.courses.category.${c}`)}
-                </SelectItem>
-              ))}
+              {CATEGORY_FILTER_KEYS.filter((c) => c !== 'all').map((c) => {
+                const CategoryIcon = SKILL_CATEGORY_ICONS[c];
+                return (
+                  <SelectItem
+                    key={c}
+                    value={c}
+                    icon={
+                      CategoryIcon ? <CategoryIcon className="h-4 w-4" /> : undefined
+                    }
+                  >
+                    {t(`pages.courses.category.${c}`)}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
           <Select
@@ -618,7 +647,7 @@ export default function Courses() {
             <PaginatedSlide
               key={`${statusFilter}-${categoryFilter}-${platformFilter}-${search}`}
               items={courses}
-              pageSize={GRID_PAGE_SIZE}
+              pageSize={LIST_PAGE_SIZE}
               className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             >
               {(pageItems) =>

@@ -28,8 +28,8 @@
       "clearTime": "Clear time",
       "remove": "Remove",
       "filters": {
-        "fromDate": "From: DD/MM/YYYY",
-        "toDate": "To: DD/MM/YYYY"
+        "fromDate": "From",
+        "toDate": "To"
       },
       "yes": "Yes",
       "no": "No",
@@ -4075,6 +4075,7 @@
     },
     "goals": {
       "title": "Goals",
+      "searchPlaceholder": "Search by goal name...",
       "newBtn": "New Goal",
       "editTitle": "Edit Goal",
       "newTitle": "New Goal",

@@ -21,6 +21,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { StatCard } from '@/components/common/StatCard';
 import { TransactionsTabsNav } from '@/components/common/TransactionsTabsNav';
 import { CreditCardInstallmentForm } from '@/components/credit-cards/CreditCardInstallmentForm';
@@ -50,7 +51,7 @@ import {
   TRANSLATIONS,
   EXPENSE_CATEGORIES_CANONICAL,
 } from '@/config/constants';
-import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { EXPENSE_CATEGORY_ICONS, PAYMENT_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { pageVariants } from '@/lib/animations';
@@ -79,7 +80,7 @@ const EMPTY_INSTALLMENTS: CreditCardInstallment[] = [];
 const EMPTY_CARDS: CreditCard[] = [];
 const EMPTY_BILLS: CreditCardBill[] = [];
 
-const PURCHASES_PAGE_SIZE = 20;
+const PURCHASES_PAGE_SIZE = 5;
 
 const isBillOpen = (bill: CreditCardBill) =>
   bill.status !== 'paid' && bill.status !== 'closed';
@@ -783,8 +784,10 @@ export default function CreditCardExpenses({
       label: t('pages.creditCardExpenses.columns.status'),
       render: (purchase) => {
         const paid = purchase.installments.every((i) => i.payed);
+        const StatusIcon = PAYMENT_STATUS_ICONS[paid ? 'paid' : 'pending'];
         return (
-          <Badge variant={paid ? 'success' : 'destructive'}>
+          <Badge variant={paid ? 'success' : 'destructive'} className="gap-xs">
+            <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
             {paid
               ? t('pages.creditCardExpenses.status.paid')
               : t('pages.creditCardExpenses.status.pending')}
@@ -973,8 +976,18 @@ export default function CreditCardExpenses({
               <SelectItem value="all">
                 {t('pages.creditCardExpenses.allStatus')}
               </SelectItem>
-              <SelectItem value="paid">{t('common.status.paid')}</SelectItem>
-              <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
+              <SelectItem
+                value="paid"
+                icon={<PAYMENT_STATUS_ICONS.paid className="h-4 w-4" />}
+              >
+                {t('common.status.paid')}
+              </SelectItem>
+              <SelectItem
+                value="pending"
+                icon={<PAYMENT_STATUS_ICONS.pending className="h-4 w-4" />}
+              >
+                {t('common.status.pending')}
+              </SelectItem>
             </SelectContent>
           </Select>
         </FilterBar>
@@ -1154,6 +1167,7 @@ export default function CreditCardExpenses({
                         columns={groupedColumns}
                         keyExtractor={(installment) => installment.id}
                         isLoading={false}
+                        pageSize={LIST_PAGE_SIZE}
                         emptyState={{
                           icon: (
                             <ShoppingCart className="text-muted-foreground h-12 w-12" />
@@ -1166,7 +1180,7 @@ export default function CreditCardExpenses({
                           );
                           const isOrphan = !installment.bill;
                           return (
-                            <div className="gap-sm flex items-center justify-end">
+                            <div className="gap-sm flex items-center justify-center">
                               {purchase && (
                                 <ReceiptButton
                                   source={{
@@ -1274,7 +1288,7 @@ export default function CreditCardExpenses({
                 onPageChange: setPurchasesPage,
               }}
               actions={(purchase) => (
-                <div className="gap-sm flex items-center justify-end">
+                <div className="gap-sm flex items-center justify-center">
                   <ReceiptButton
                     source={{ type: 'credit_card_purchase', data: purchase }}
                     memberName={getMemberDisplayName(purchase.member_name, user)}

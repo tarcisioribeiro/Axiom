@@ -17,6 +17,7 @@ import { DataTable, type Column } from '@/components/common/DataTable';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
+import { LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
 import { BillPurchasesDialog } from '@/components/credit-cards/BillPurchasesDialog';
 import { CreditCardBillForm } from '@/components/credit-cards/CreditCardBillForm';
@@ -40,6 +41,7 @@ import {
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate, TRANSLATIONS } from '@/config/constants';
+import { CREDIT_CARD_BILL_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -432,21 +434,26 @@ export default function CreditCardBills({
     {
       key: 'status',
       label: t('pages.creditCardBills.columns.status'),
-      render: (bill) => (
-        <Badge
-          variant={
-            bill.status === 'paid'
-              ? 'success'
-              : bill.status === 'overdue'
-                ? 'destructive'
-                : bill.status === 'closed'
-                  ? 'secondary'
-                  : 'default'
-          }
-        >
-          {translate('billStatus', bill.status)}
-        </Badge>
-      ),
+      render: (bill) => {
+        const StatusIcon = CREDIT_CARD_BILL_STATUS_ICONS[bill.status];
+        return (
+          <Badge
+            variant={
+              bill.status === 'paid'
+                ? 'success'
+                : bill.status === 'overdue'
+                  ? 'destructive'
+                  : bill.status === 'closed'
+                    ? 'secondary'
+                    : 'default'
+            }
+            className="gap-xs"
+          >
+            {StatusIcon && <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />}
+            {translate('billStatus', bill.status)}
+          </Badge>
+        );
+      },
     },
     {
       key: 'due_date',
@@ -527,11 +534,18 @@ export default function CreditCardBills({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.creditCardBills.allStatus')}</SelectItem>
-            {Object.keys(TRANSLATIONS.billStatus).map((k) => (
-              <SelectItem key={k} value={k}>
-                {translate('billStatus', k)}
-              </SelectItem>
-            ))}
+            {Object.keys(TRANSLATIONS.billStatus).map((k) => {
+              const StatusIcon = CREDIT_CARD_BILL_STATUS_ICONS[k];
+              return (
+                <SelectItem
+                  key={k}
+                  value={k}
+                  icon={StatusIcon ? <StatusIcon className="h-4 w-4" /> : undefined}
+                >
+                  {translate('billStatus', k)}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
         <Select value={yearFilter} onValueChange={setYearFilter}>
@@ -559,7 +573,7 @@ export default function CreditCardBills({
         data={filteredBills}
         columns={columns}
         keyExtractor={(bill) => bill.id}
-        pageSize={6}
+        pageSize={LIST_PAGE_SIZE}
         isLoading={isLoading}
         emptyState={{
           icon: <Receipt className="text-muted-foreground h-12 w-12" />,
@@ -570,7 +584,7 @@ export default function CreditCardBills({
           setIsPurchasesDialogOpen(true);
         }}
         actions={(bill) => (
-          <div className="gap-sm flex items-center justify-end">
+          <div className="gap-sm flex items-center justify-center">
             {bill.status === 'paid' && (
               <ReceiptButton
                 source={{ type: 'credit_card_bill', data: bill }}

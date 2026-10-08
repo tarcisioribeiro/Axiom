@@ -612,9 +612,9 @@ class AnalyticsInsightsTest(BasePlanningCoverageTestCase):
             owner=self.member,
         )
         today = date.today()
-        # Build 90 days worth of data so weekday buckets have entries with
+        # Build 180 days worth of data so weekday buckets have entries with
         # clearly different completion rates (best/worst/weekend insights).
-        for i in range(90):
+        for i in range(180):
             day = today - timedelta(days=i)
             wd = day.weekday()
             # Weekdays (0-4) mostly completed, weekends (5,6) mostly not.
@@ -629,7 +629,7 @@ class AnalyticsInsightsTest(BasePlanningCoverageTestCase):
         url = reverse("personal-planning-analytics")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["period_days"], 90)
+        self.assertEqual(response.data["period_days"], 180)
         self.assertEqual(len(response.data["completion_by_weekday"]), 7)
         # Some insight should have been generated given the strong skew.
         self.assertIsInstance(response.data["insights"], list)

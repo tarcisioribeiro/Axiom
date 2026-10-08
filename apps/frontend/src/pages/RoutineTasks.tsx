@@ -50,10 +50,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate } from '@/config/constants';
-import { TASK_CATEGORY_ICONS } from '@/config/icons';
+import { PRIORITY_ICONS, TASK_CATEGORY_ICONS, TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useTabRoute } from '@/hooks/use-tab-route';
 import { useToast } from '@/hooks/use-toast';
+import { getTaskCategoryColor } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { type routineTaskSchema } from '@/lib/validations';
@@ -249,23 +250,6 @@ export default function RoutineTasks({
     );
   }
 
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      health: 'bg-category-health text-white dark:text-black border-transparent',
-      intellect: 'bg-category-studies text-white dark:text-black border-transparent',
-      spiritual: 'bg-category-spiritual text-white dark:text-black border-transparent',
-      exercise: 'bg-category-exercise text-white dark:text-black border-transparent',
-      nutrition: 'bg-category-nutrition text-white dark:text-black border-transparent',
-      work: 'bg-category-work text-white dark:text-black border-transparent',
-      social: 'bg-category-leisure text-white dark:text-black border-transparent',
-      finance: 'bg-category-finance text-white dark:text-black border-transparent',
-      household: 'bg-category-nutrition text-white dark:text-black border-transparent',
-      personal_care: 'bg-category-health text-white dark:text-black border-transparent',
-      other: 'bg-muted text-muted-foreground border-transparent',
-    };
-    return colors[category] || 'bg-muted text-muted-foreground border-transparent';
-  };
-
   const filteredTasks = tasks.filter((task) => {
     if (searchTerm && !task.name.toLowerCase().includes(searchTerm.toLowerCase()))
       return false;
@@ -310,7 +294,7 @@ export default function RoutineTasks({
       key: 'category',
       label: t('pages.routineTasks.columns.category'),
       render: (task) => (
-        <Badge className={getCategoryColor(task.category)}>
+        <Badge className={getTaskCategoryColor(task.category)}>
           {translate('taskCategories', task.category)}
         </Badge>
       ),
@@ -357,8 +341,15 @@ export default function RoutineTasks({
           high: 'warning',
           critical: 'destructive',
         };
+        const PriorityIcon = PRIORITY_ICONS[task.priority];
         return (
-          <Badge variant={priorityVariant[task.priority] ?? 'secondary'}>
+          <Badge
+            variant={priorityVariant[task.priority] ?? 'secondary'}
+            className="gap-xs"
+          >
+            {PriorityIcon && (
+              <PriorityIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
             {t(`pages.routineTasks.form.priorityOptions.${task.priority}`, {
               defaultValue: task.priority_display,
             })}
@@ -369,18 +360,22 @@ export default function RoutineTasks({
     {
       key: 'is_active',
       label: t('pages.routineTasks.columns.status'),
-      render: (task) => (
-        <Badge variant={task.is_active ? 'success' : 'secondary'}>
-          {task.is_active
-            ? t('pages.routineTasks.statusActive')
-            : t('pages.routineTasks.statusInactive')}
-        </Badge>
-      ),
+      render: (task) => {
+        const StatusIcon = TASK_STATUS_ICONS[task.is_active ? 'active' : 'inactive'];
+        return (
+          <Badge variant={task.is_active ? 'success' : 'secondary'} className="gap-xs">
+            {StatusIcon && <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />}
+            {task.is_active
+              ? t('pages.routineTasks.statusActive')
+              : t('pages.routineTasks.statusInactive')}
+          </Badge>
+        );
+      },
     },
   ];
 
   const renderActions = (task: RoutineTask) => (
-    <div className="gap-sm flex justify-end">
+    <div className="gap-sm flex justify-center">
       <Button
         variant="ghost"
         size="icon"
@@ -530,10 +525,16 @@ export default function RoutineTasks({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('pages.routineTasks.allStatus')}</SelectItem>
-                <SelectItem value="active">
+                <SelectItem
+                  value="active"
+                  icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                >
                   {t('pages.routineTasks.statusActive')}
                 </SelectItem>
-                <SelectItem value="inactive">
+                <SelectItem
+                  value="inactive"
+                  icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                >
                   {t('pages.routineTasks.statusInactive')}
                 </SelectItem>
               </SelectContent>
@@ -550,16 +551,28 @@ export default function RoutineTasks({
                 <SelectItem value="all">
                   {t('pages.routineTasks.allPriorities')}
                 </SelectItem>
-                <SelectItem value="low">
+                <SelectItem
+                  value="low"
+                  icon={<PRIORITY_ICONS.low className="h-4 w-4" />}
+                >
                   {t('pages.routineTasks.form.priorityOptions.low')}
                 </SelectItem>
-                <SelectItem value="medium">
+                <SelectItem
+                  value="medium"
+                  icon={<PRIORITY_ICONS.medium className="h-4 w-4" />}
+                >
                   {t('pages.routineTasks.form.priorityOptions.medium')}
                 </SelectItem>
-                <SelectItem value="high">
+                <SelectItem
+                  value="high"
+                  icon={<PRIORITY_ICONS.high className="h-4 w-4" />}
+                >
                   {t('pages.routineTasks.form.priorityOptions.high')}
                 </SelectItem>
-                <SelectItem value="critical">
+                <SelectItem
+                  value="critical"
+                  icon={<PRIORITY_ICONS.critical className="h-4 w-4" />}
+                >
                   {t('pages.routineTasks.form.priorityOptions.critical')}
                 </SelectItem>
               </SelectContent>

@@ -50,6 +50,7 @@ import {
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { API_CONFIG } from '@/config/api-config';
+import { TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/services/api-client';
@@ -294,8 +295,18 @@ export default function Webhooks() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('webhooks.allStatus')}</SelectItem>
-                <SelectItem value="active">{t('common.status.active')}</SelectItem>
-                <SelectItem value="inactive">{t('common.status.inactive')}</SelectItem>
+                <SelectItem
+                  value="active"
+                  icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                >
+                  {t('common.status.active')}
+                </SelectItem>
+                <SelectItem
+                  value="inactive"
+                  icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                >
+                  {t('common.status.inactive')}
+                </SelectItem>
               </SelectContent>
             </Select>
             <Select value={eventFilter} onValueChange={setEventFilter}>
@@ -343,7 +354,11 @@ export default function Webhooks() {
                           <div className="gap-sm flex flex-wrap items-center">
                             <span className="font-medium">{w.name}</span>
                             {!w.is_active && (
-                              <Badge variant="secondary">
+                              <Badge variant="secondary" className="gap-xs">
+                                <TASK_STATUS_ICONS.inactive
+                                  className="h-3.5 w-3.5"
+                                  aria-hidden="true"
+                                />
                                 {t('webhooks.inactive')}
                               </Badge>
                             )}

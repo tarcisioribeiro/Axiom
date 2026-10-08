@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
@@ -44,7 +45,16 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function NetWorthTracker({ embedded = false }: { embedded?: boolean }) {
+interface NetWorthTrackerProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
+export default function NetWorthTracker({
+  embedded = false,
+  headerTarget,
+}: NetWorthTrackerProps) {
   const { t } = useTranslation();
 
   const accountsQuery = useQuery({
@@ -235,9 +245,11 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
+  const header = <PageHeader title={t('netWorth.title')} icon={<TrendingUp />} />;
+
   return (
     <Wrapper>
-      <PageHeader title={t('netWorth.title')} icon={<TrendingUp />} />
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       <div className="mt-md gap-md grid grid-cols-1 md:grid-cols-3">
         <StatCard

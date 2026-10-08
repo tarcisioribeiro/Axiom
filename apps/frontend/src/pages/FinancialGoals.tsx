@@ -29,7 +29,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -64,7 +64,11 @@ import {
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
-import { FINANCIAL_GOAL_CATEGORY_ICONS, EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import {
+  FINANCIAL_GOAL_CATEGORY_ICONS,
+  EXPENSE_CATEGORY_ICONS,
+  GOAL_STATUS_ICONS,
+} from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useNow } from '@/hooks/use-now';
 import { useToast } from '@/hooks/use-toast';
@@ -630,8 +634,18 @@ export default function FinancialGoals() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.financialGoals.allStatus')}</SelectItem>
-            <SelectItem value="active">{t('common.status.active')}</SelectItem>
-            <SelectItem value="completed">{t('common.status.completed')}</SelectItem>
+            <SelectItem
+              value="active"
+              icon={<GOAL_STATUS_ICONS.active className="h-4 w-4" />}
+            >
+              {t('common.status.active')}
+            </SelectItem>
+            <SelectItem
+              value="completed"
+              icon={<GOAL_STATUS_ICONS.completed className="h-4 w-4" />}
+            >
+              {t('common.status.completed')}
+            </SelectItem>
           </SelectContent>
         </Select>
       </FilterBar>
@@ -647,7 +661,7 @@ export default function FinancialGoals() {
       ) : (
         <PaginatedSlide
           items={filteredGoals}
-          pageSize={6}
+          pageSize={LIST_PAGE_SIZE}
           centerList
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
         >

@@ -34,7 +34,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,6 +58,7 @@ import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { INTERVENTION_CATEGORY_ICONS } from '@/config/icons';
 import { useToast } from '@/hooks/use-toast';
 import { cn, formatLocalDate } from '@/lib/utils';
 import {
@@ -1012,7 +1013,7 @@ function CheckinTab({
             <PaginatedSlide
               key={`${checkinStartDate ? formatLocalDate(checkinStartDate) : ''}|${checkinEndDate ? formatLocalDate(checkinEndDate) : ''}`}
               items={filteredHistory}
-              pageSize={7}
+              pageSize={LIST_PAGE_SIZE}
               centerList
               className="space-y-3"
             >
@@ -1406,7 +1407,7 @@ function CrisisTab({
             <PaginatedSlide
               key={`${crisisStartDate ? formatLocalDate(crisisStartDate) : ''}|${crisisEndDate ? formatLocalDate(crisisEndDate) : ''}`}
               items={filteredLogs}
-              pageSize={6}
+              pageSize={LIST_PAGE_SIZE}
               centerList
               className="space-y-3"
             >
@@ -1546,11 +1547,18 @@ function LibraryTab() {
             />
           </SelectTrigger>
           <SelectContent>
-            {categories.map((c) => (
-              <SelectItem key={c.value} value={c.value}>
-                {c.label}
-              </SelectItem>
-            ))}
+            {categories.map((c) => {
+              const CategoryIcon = INTERVENTION_CATEGORY_ICONS[c.value];
+              return (
+                <SelectItem
+                  key={c.value}
+                  value={c.value}
+                  icon={CategoryIcon ? <CategoryIcon className="h-4 w-4" /> : undefined}
+                >
+                  {c.label}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </FilterBar>
@@ -1566,7 +1574,7 @@ function LibraryTab() {
         <PaginatedSlide
           key={String(selectedCategory)}
           items={data?.results ?? []}
-          pageSize={3}
+          pageSize={LIST_PAGE_SIZE}
           centerList
           className="space-y-3"
         >

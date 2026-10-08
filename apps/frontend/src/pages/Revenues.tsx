@@ -41,7 +41,7 @@ import {
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { REVENUE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
-import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
+import { PAYMENT_STATUS_ICONS, REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { useRevenuesPage } from '@/hooks/use-revenues-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
@@ -233,10 +233,18 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.revenues.allStatus')}</SelectItem>
-            <SelectItem value="received">
+            <SelectItem
+              value="received"
+              icon={<PAYMENT_STATUS_ICONS.received className="h-4 w-4" />}
+            >
               {t('pages.revenues.stats.received')}
             </SelectItem>
-            <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
+            <SelectItem
+              value="pending"
+              icon={<PAYMENT_STATUS_ICONS.pending className="h-4 w-4" />}
+            >
+              {t('common.status.pending')}
+            </SelectItem>
           </SelectContent>
         </Select>
         <DateRangeFilter
@@ -371,7 +379,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
                 </span>
               </div>
             </div>
-            <div className="mt-sm gap-xs flex items-center justify-end">
+            <div className="mt-sm gap-xs flex items-center justify-center">
               {revenue.received && (
                 <ReceiptButton
                   source={{ type: 'revenue', data: revenue }}
@@ -398,7 +406,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
           </div>
         )}
         actions={(revenue) => (
-          <div className="gap-sm flex items-center justify-end">
+          <div className="gap-sm flex items-center justify-center">
             {revenue.received && (
               <ReceiptButton
                 source={{ type: 'revenue', data: revenue }}

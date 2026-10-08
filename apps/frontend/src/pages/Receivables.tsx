@@ -14,6 +14,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { useState, useMemo, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
@@ -22,7 +23,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { ReceivableForm } from '@/components/receivables/ReceivableForm';
 import { ReceivableReceiptDialog } from '@/components/receivables/ReceivableReceiptDialog';
@@ -49,7 +50,7 @@ import {
   TRANSLATIONS,
   translate,
 } from '@/config/constants';
-import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
+import { BILL_STATUS_ICONS, REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -74,7 +75,16 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function Receivables({ embedded = false }: { embedded?: boolean }) {
+interface ReceivablesProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
+export default function Receivables({
+  embedded = false,
+  headerTarget,
+}: ReceivablesProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -212,14 +222,18 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
+  const header = (
+    <PageHeader title={t('pages.receivables.title')} icon={<TrendingUp />}>
+      <Button onClick={handleCreate} className="gap-sm">
+        <Plus className="h-4 w-4" />
+        {t('pages.receivables.newBtn')}
+      </Button>
+    </PageHeader>
+  );
+
   return (
     <Wrapper>
-      <PageHeader title={t('pages.receivables.title')} icon={<TrendingUp />}>
-        <Button onClick={handleCreate} className="gap-sm">
-          <Plus className="h-4 w-4" />
-          {t('pages.receivables.newBtn')}
-        </Button>
-      </PageHeader>
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       <FilterBar
         hasActiveFilters={
@@ -315,16 +329,28 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.receivables.allStatus')}</SelectItem>
-            <SelectItem value="active">
+            <SelectItem
+              value="active"
+              icon={<BILL_STATUS_ICONS.active className="h-4 w-4" />}
+            >
               {t('pages.receivables.status.active')}
             </SelectItem>
-            <SelectItem value="received">
+            <SelectItem
+              value="received"
+              icon={<BILL_STATUS_ICONS.received className="h-4 w-4" />}
+            >
               {t('pages.receivables.status.received')}
             </SelectItem>
-            <SelectItem value="overdue">
+            <SelectItem
+              value="overdue"
+              icon={<BILL_STATUS_ICONS.overdue className="h-4 w-4" />}
+            >
               {t('pages.receivables.status.overdue')}
             </SelectItem>
-            <SelectItem value="cancelled">
+            <SelectItem
+              value="cancelled"
+              icon={<BILL_STATUS_ICONS.cancelled className="h-4 w-4" />}
+            >
               {t('pages.receivables.status.cancelled')}
             </SelectItem>
           </SelectContent>
@@ -418,7 +444,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
         <PaginatedSlide
           key={`${searchTerm}-${statusFilter}-${categoryFilter}-${String(startDate)}-${String(endDate)}`}
           items={filteredReceivables}
-          pageSize={GRID_PAGE_SIZE}
+          pageSize={LIST_PAGE_SIZE}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
         >
           {(pageItems) =>
@@ -503,7 +529,16 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
                         ] ?? receivable.category}
                       </p>
                     </div>
-                    <Badge variant={STATUS_VARIANTS[receivable.status] ?? 'default'}>
+                    <Badge
+                      variant={STATUS_VARIANTS[receivable.status] ?? 'default'}
+                      className="gap-xs"
+                    >
+                      {(() => {
+                        const StatusIcon = BILL_STATUS_ICONS[receivable.status];
+                        return StatusIcon ? (
+                          <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                        ) : null;
+                      })()}
                       {t(`pages.receivables.status.${receivable.status}`)}
                     </Badge>
                   </div>

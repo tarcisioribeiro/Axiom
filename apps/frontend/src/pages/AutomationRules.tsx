@@ -25,7 +25,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,7 @@ import {
 import { StatusToggle } from '@/components/ui/status-toggle';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
-import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { EXPENSE_CATEGORY_ICONS, TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -544,7 +544,7 @@ function RuleFormDialog({
             </div>
             <PaginatedSlide
               items={conditions}
-              pageSize={2}
+              pageSize={LIST_PAGE_SIZE}
               pinNav={false}
               className="space-y-sm"
             >
@@ -579,7 +579,7 @@ function RuleFormDialog({
             </div>
             <PaginatedSlide
               items={actions}
-              pageSize={2}
+              pageSize={LIST_PAGE_SIZE}
               pinNav={false}
               className="space-y-sm"
             >
@@ -730,12 +730,17 @@ function RuleCard({
           <span className="font-semibold">{rule.name}</span>
           <Badge
             variant="outline"
-            className={
+            className={`gap-xs ${
               rule.is_active
                 ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600'
                 : 'border-border bg-muted text-muted-foreground'
-            }
+            }`}
           >
+            {(() => {
+              const StatusIcon =
+                TASK_STATUS_ICONS[rule.is_active ? 'active' : 'inactive'];
+              return <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />;
+            })()}
             {rule.is_active
               ? t('pages.automationRules.active')
               : t('pages.automationRules.inactive')}
@@ -992,10 +997,16 @@ export default function AutomationRules({
                 <SelectItem value="all">
                   {t('pages.automationRules.allStatus')}
                 </SelectItem>
-                <SelectItem value="active">
+                <SelectItem
+                  value="active"
+                  icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                >
                   {t('pages.automationRules.active')}
                 </SelectItem>
-                <SelectItem value="inactive">
+                <SelectItem
+                  value="inactive"
+                  icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                >
                   {t('pages.automationRules.inactive')}
                 </SelectItem>
               </SelectContent>

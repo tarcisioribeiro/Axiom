@@ -1,4 +1,5 @@
 import { Landmark, TrendingUp } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
@@ -12,6 +13,8 @@ const TABS = ['net-worth', 'debt-payoff'] as const;
 
 export default function FinancialHealthPage() {
   const { t } = useTranslation();
+  // Cada aba renderiza seu cabeçalho (título + ações) aqui, acima das abas.
+  const [headerTarget, setHeaderTarget] = useState<HTMLDivElement | null>(null);
   const [activeTab, setActiveTab] = useTabRoute(
     '/finance/financial-health',
     TABS,
@@ -25,6 +28,7 @@ export default function FinancialHealthPage() {
         onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
         className="flex flex-1 flex-col"
       >
+        <div ref={setHeaderTarget} className="mb-lg empty:hidden" />
         <TabsList className="mb-lg w-full">
           <TabsTrigger value="net-worth" className="gap-xs flex-1">
             <TrendingUp className="h-4 w-4" />
@@ -37,11 +41,11 @@ export default function FinancialHealthPage() {
         </TabsList>
 
         <TabsContent value="net-worth" className="mt-0 flex-1">
-          <NetWorthTracker embedded />
+          <NetWorthTracker embedded headerTarget={headerTarget} />
         </TabsContent>
 
         <TabsContent value="debt-payoff" className="mt-0 flex-1">
-          <DebtPayoffPlanner embedded />
+          <DebtPayoffPlanner embedded headerTarget={headerTarget} />
         </TabsContent>
       </Tabs>
     </PageContainer>

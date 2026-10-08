@@ -207,7 +207,7 @@ export function DataTable<T>({
                     </div>
                   ))}
                   {actions && (
-                    <div className="pt-xs flex justify-end">{actions(item)}</div>
+                    <div className="pt-xs flex justify-center">{actions(item)}</div>
                   )}
                 </div>
               )}
@@ -300,7 +300,7 @@ export function DataTable<T>({
                         </td>
                       ))}
                       {actions && (
-                        <td className={`${cellPad} text-right`}>{actions(item)}</td>
+                        <td className={`${cellPad} text-center`}>{actions(item)}</td>
                       )}
                     </motion.tr>
                   );

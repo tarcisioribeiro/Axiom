@@ -28,8 +28,8 @@
       "clearTime": "Limpar horário",
       "remove": "Remover",
       "filters": {
-        "fromDate": "De: DD/MM/AAAA",
-        "toDate": "Até: DD/MM/AAAA"
+        "fromDate": "De",
+        "toDate": "Até"
       },
       "yes": "Sim",
       "no": "Não",
@@ -4143,6 +4143,7 @@
     },
     "goals": {
       "title": "Objetivos",
+      "searchPlaceholder": "Buscar por nome do objetivo...",
       "newBtn": "Novo Objetivo",
       "editTitle": "Editar Objetivo",
       "newTitle": "Novo Objetivo",

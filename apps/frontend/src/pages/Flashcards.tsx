@@ -24,7 +24,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { FLASHCARD_STATUS_ICONS } from '@/config/icons';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -409,16 +410,28 @@ export default function Flashcards() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('pages.flashcards.allStatus')}</SelectItem>
-                  <SelectItem value="new">
+                  <SelectItem
+                    value="new"
+                    icon={<FLASHCARD_STATUS_ICONS.new className="h-4 w-4" />}
+                  >
                     {t('pages.flashcards.status.new')}
                   </SelectItem>
-                  <SelectItem value="learning">
+                  <SelectItem
+                    value="learning"
+                    icon={<FLASHCARD_STATUS_ICONS.learning className="h-4 w-4" />}
+                  >
                     {t('pages.flashcards.status.learning')}
                   </SelectItem>
-                  <SelectItem value="review">
+                  <SelectItem
+                    value="review"
+                    icon={<FLASHCARD_STATUS_ICONS.review className="h-4 w-4" />}
+                  >
                     {t('pages.flashcards.status.review')}
                   </SelectItem>
-                  <SelectItem value="mastered">
+                  <SelectItem
+                    value="mastered"
+                    icon={<FLASHCARD_STATUS_ICONS.mastered className="h-4 w-4" />}
+                  >
                     {t('pages.flashcards.status.mastered')}
                   </SelectItem>
                 </SelectContent>
@@ -465,7 +478,7 @@ export default function Flashcards() {
               ) : (
                 <PaginatedSlide
                   items={filteredCards}
-                  pageSize={GRID_PAGE_SIZE}
+                  pageSize={LIST_PAGE_SIZE}
                   className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3"
                 >
                   {(pageItems) =>
@@ -475,8 +488,17 @@ export default function Flashcards() {
                           <div className="gap-sm flex items-start justify-between">
                             <Badge
                               variant={STATUS_BADGE_VARIANT[card.status]}
-                              className="text-xs"
+                              className="gap-xs text-xs"
                             >
+                              {(() => {
+                                const StatusIcon = FLASHCARD_STATUS_ICONS[card.status];
+                                return StatusIcon ? (
+                                  <StatusIcon
+                                    className="h-3.5 w-3.5"
+                                    aria-hidden="true"
+                                  />
+                                ) : null;
+                              })()}
                               {t(`pages.flashcards.status.${card.status}`)}
                             </Badge>
                             {card.book_title && (
@@ -522,7 +544,7 @@ export default function Flashcards() {
               ) : (
                 <PaginatedSlide
                   items={filteredDue}
-                  pageSize={GRID_PAGE_SIZE}
+                  pageSize={LIST_PAGE_SIZE}
                   className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3"
                 >
                   {(pageItems) =>

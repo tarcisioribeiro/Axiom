@@ -21,7 +21,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { StoredCardForm } from '@/components/security/StoredCardForm';
 import { VaultGuard } from '@/components/security/VaultGuard';
@@ -373,7 +373,7 @@ export default function StoredCards() {
           <PaginatedSlide
             key={`${searchTerm}-${flagFilter}-${showFavoritesOnly}`}
             items={filteredCards}
-            pageSize={GRID_PAGE_SIZE}
+            pageSize={LIST_PAGE_SIZE}
             className="gap-lg grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
           >
             {(pageItems) =>

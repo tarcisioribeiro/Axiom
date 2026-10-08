@@ -72,7 +72,7 @@ import {
 import { SuccessAnimation } from '@/components/ui/success-animation';
 import { Tooltip } from '@/components/ui/tooltip';
 import { translate } from '@/config/constants';
-import { TASK_CATEGORY_ICONS } from '@/config/icons';
+import { DAILY_CHECKLIST_STATUS_ICONS, TASK_CATEGORY_ICONS } from '@/config/icons';
 import { useTaskReminders } from '@/hooks/use-task-reminders';
 import { useToast } from '@/hooks/use-toast';
 import { cn, formatLocalDate, parseLocalDate } from '@/lib/utils';
@@ -713,7 +713,12 @@ export default function DailyChecklist({
 
       {/* Saudação + progresso do dia */}
       <div className="gap-md bg-card px-lg py-md flex items-center rounded-lg border">
-        <CircularProgress value={dayRate} size={64} strokeWidth={5} color={dayRingColor}>
+        <CircularProgress
+          value={dayRate}
+          size={64}
+          strokeWidth={5}
+          color={dayRingColor}
+        >
           <span className="text-sm font-bold">{completedTasks}</span>
         </CircularProgress>
         <div className="gap-sm flex items-center">
@@ -933,10 +938,20 @@ export default function DailyChecklist({
                       <SelectItem value="all">
                         {t('pages.dailyChecklist.allStatus')}
                       </SelectItem>
-                      <SelectItem value="completed">
+                      <SelectItem
+                        value="completed"
+                        icon={
+                          <DAILY_CHECKLIST_STATUS_ICONS.completed className="h-4 w-4" />
+                        }
+                      >
                         {t('pages.dailyChecklist.done')}
                       </SelectItem>
-                      <SelectItem value="pending">
+                      <SelectItem
+                        value="pending"
+                        icon={
+                          <DAILY_CHECKLIST_STATUS_ICONS.pending className="h-4 w-4" />
+                        }
+                      >
                         {t('common.status.pending')}
                       </SelectItem>
                     </SelectContent>

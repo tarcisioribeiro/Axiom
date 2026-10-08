@@ -40,13 +40,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import React, {
-  type ReactNode,
-  useMemo,
-  useState,
-  useCallback,
-  useSyncExternalStore,
-} from 'react';
+import React, { type ReactNode, useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -56,7 +50,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -90,7 +84,7 @@ import { WorkoutDayForm } from '@/components/workout/WorkoutDayForm';
 import { WorkoutExerciseModal } from '@/components/workout/WorkoutExerciseModal';
 import { WorkoutPlanForm } from '@/components/workout/WorkoutPlanForm';
 import { WorkoutSessionForm } from '@/components/workout/WorkoutSessionForm';
-import { WORKOUT_CATEGORY_ICONS } from '@/config/icons';
+import { TASK_STATUS_ICONS, WORKOUT_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
@@ -143,30 +137,6 @@ interface ExerciseCatalogFormValues {
 }
 
 const SESSIONS_PAGE_SIZE = 5;
-const CATALOG_ROWS_PER_PAGE = 2;
-const PLANS_ROWS_PER_PAGE = 3;
-
-/** Colunas atuais de um grid responsivo: [min-width em px, colunas], da maior
- * para a menor largura; abaixo de todas, 1 coluna. */
-const gridColumns = (breakpoints: [number, number][]) =>
-  breakpoints.find(([px]) => window.matchMedia(`(min-width: ${px}px)`).matches)?.[1] ??
-  1;
-// Espelham as classes sm:/lg:/xl:grid-cols-* dos grids correspondentes
-const getCatalogColumns = () =>
-  gridColumns([
-    [1280, 4],
-    [1024, 3],
-    [640, 2],
-  ]);
-const getPlanColumns = () =>
-  gridColumns([
-    [1024, 3],
-    [640, 2],
-  ]);
-const subscribeResize = (onChange: () => void) => {
-  window.addEventListener('resize', onChange);
-  return () => window.removeEventListener('resize', onChange);
-};
 
 /** "Peso corporal", "20 kg" ou null — carga padrão de um exercício do plano. */
 function formatExerciseLoad(
@@ -234,8 +204,6 @@ export default function WorkoutPage() {
   const [planStatusFilter, setPlanStatusFilter] = useState<
     'all' | 'active' | 'inactive'
   >('all');
-  const catalogColumns = useSyncExternalStore(subscribeResize, getCatalogColumns);
-  const planColumns = useSyncExternalStore(subscribeResize, getPlanColumns);
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -1132,10 +1100,16 @@ export default function WorkoutPage() {
                       <SelectItem value="all">
                         {t('pages.workoutPlans.allStatus')}
                       </SelectItem>
-                      <SelectItem value="active">
+                      <SelectItem
+                        value="active"
+                        icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                      >
                         {t('pages.workoutPlans.active')}
                       </SelectItem>
-                      <SelectItem value="inactive">
+                      <SelectItem
+                        value="inactive"
+                        icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                      >
                         {t('pages.workoutPlans.inactive')}
                       </SelectItem>
                     </SelectContent>
@@ -1151,7 +1125,7 @@ export default function WorkoutPage() {
                   <PaginatedSlide
                     key={`${planCategoryFilter}|${planStatusFilter}`}
                     items={filteredPlans}
-                    pageSize={planColumns * PLANS_ROWS_PER_PAGE}
+                    pageSize={LIST_PAGE_SIZE}
                     centerList
                     className="gap-md grid sm:grid-cols-2 lg:grid-cols-3"
                   >
@@ -1317,7 +1291,7 @@ export default function WorkoutPage() {
                     // Filtro novo → remonta e volta à página 1
                     key={`${exerciseSearch}|${exerciseCategoryFilter}|${exerciseTypeFilter}|${exerciseMuscleFilter}`}
                     items={filteredCatalogExercises}
-                    pageSize={catalogColumns * CATALOG_ROWS_PER_PAGE}
+                    pageSize={LIST_PAGE_SIZE}
                     centerList
                     className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                   >
@@ -2175,7 +2149,15 @@ function PlanCard({ plan, onOpen, onEdit, onDelete, t }: PlanCardProps) {
         </div>
       </button>
       <div className="border-border px-md py-xs flex items-center justify-between border-t">
-        <Badge variant={plan.is_active ? 'success' : 'secondary'} className="text-xs">
+        <Badge
+          variant={plan.is_active ? 'success' : 'secondary'}
+          className="gap-xs text-xs"
+        >
+          {(() => {
+            const StatusIcon =
+              TASK_STATUS_ICONS[plan.is_active ? 'active' : 'inactive'];
+            return <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />;
+          })()}
           {plan.is_active
             ? t('pages.workoutPlans.active')
             : t('pages.workoutPlans.inactive')}
