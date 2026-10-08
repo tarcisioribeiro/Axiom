@@ -22,7 +22,7 @@ import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
@@ -979,38 +979,42 @@ export default function AutomationRules({
                 : []),
             ]}
           >
-            <SearchInput
-              placeholder={t('pages.automationRules.searchPlaceholder')}
-              value={searchTerm}
-              onValueChange={setSearchTerm}
-              className="w-44"
-            />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger
-                className="w-36"
-                aria-label={t('pages.automationRules.allStatus')}
-                startIcon={<CircleDot className="h-3.5 w-3.5" />}
-              >
-                <SelectValue placeholder={t('pages.automationRules.allStatus')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t('pages.automationRules.allStatus')}
-                </SelectItem>
-                <SelectItem
-                  value="active"
-                  icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+            <FilterField label={t('common.filterLabels.search')}>
+              <SearchInput
+                placeholder={t('pages.automationRules.searchPlaceholder')}
+                value={searchTerm}
+                onValueChange={setSearchTerm}
+                className="w-44"
+              />
+            </FilterField>
+            <FilterField label={t('common.fields.status')}>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger
+                  className="w-36"
+                  aria-label={t('pages.automationRules.allStatus')}
+                  startIcon={<CircleDot className="h-3.5 w-3.5" />}
                 >
-                  {t('pages.automationRules.active')}
-                </SelectItem>
-                <SelectItem
-                  value="inactive"
-                  icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
-                >
-                  {t('pages.automationRules.inactive')}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+                  <SelectValue placeholder={t('pages.automationRules.allStatus')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {t('pages.automationRules.allStatus')}
+                  </SelectItem>
+                  <SelectItem
+                    value="active"
+                    icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                  >
+                    {t('pages.automationRules.active')}
+                  </SelectItem>
+                  <SelectItem
+                    value="inactive"
+                    icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                  >
+                    {t('pages.automationRules.inactive')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
           </FilterBar>
 
           {filteredRules.length === 0 ? (

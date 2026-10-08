@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
@@ -348,11 +348,13 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
           hasActiveFilters={!!searchTerm}
           onClear={() => setSearchTerm('')}
         >
-          <SearchInput
-            placeholder={t('pages.highlights.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-          />
+          <FilterField label={t('common.filterLabels.search')}>
+            <SearchInput
+              placeholder={t('pages.highlights.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+            />
+          </FilterField>
         </FilterBar>
         {highlights.length > 0 && (
           <Button

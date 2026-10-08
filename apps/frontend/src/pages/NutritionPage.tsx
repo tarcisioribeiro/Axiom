@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -800,42 +800,46 @@ export default function NutritionPage() {
                       : []),
                   ]}
                 >
-                  <SearchInput
-                    placeholder={t('pages.nutritionMealTypes.searchPlaceholder')}
-                    value={mealTypeSearch}
-                    onValueChange={setMealTypeSearch}
-                  />
-                  <Select
-                    value={mealTypeStatusFilter}
-                    onValueChange={setMealTypeStatusFilter}
-                  >
-                    <SelectTrigger
-                      className="w-36"
-                      aria-label={t('pages.nutritionMealTypes.allStatus')}
-                      startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                  <FilterField label={t('common.filterLabels.search')}>
+                    <SearchInput
+                      placeholder={t('pages.nutritionMealTypes.searchPlaceholder')}
+                      value={mealTypeSearch}
+                      onValueChange={setMealTypeSearch}
+                    />
+                  </FilterField>
+                  <FilterField label={t('common.fields.status')}>
+                    <Select
+                      value={mealTypeStatusFilter}
+                      onValueChange={setMealTypeStatusFilter}
                     >
-                      <SelectValue
-                        placeholder={t('pages.nutritionMealTypes.allStatus')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t('pages.nutritionMealTypes.allStatus')}
-                      </SelectItem>
-                      <SelectItem
-                        value="active"
-                        icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                      <SelectTrigger
+                        className="w-36"
+                        aria-label={t('pages.nutritionMealTypes.allStatus')}
+                        startIcon={<CircleDot className="h-3.5 w-3.5" />}
                       >
-                        {t('pages.nutritionMealTypes.active')}
-                      </SelectItem>
-                      <SelectItem
-                        value="inactive"
-                        icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
-                      >
-                        {t('pages.nutritionMealTypes.inactive')}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                        <SelectValue
+                          placeholder={t('pages.nutritionMealTypes.allStatus')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.nutritionMealTypes.allStatus')}
+                        </SelectItem>
+                        <SelectItem
+                          value="active"
+                          icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                        >
+                          {t('pages.nutritionMealTypes.active')}
+                        </SelectItem>
+                        <SelectItem
+                          value="inactive"
+                          icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                        >
+                          {t('pages.nutritionMealTypes.inactive')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
                 </FilterBar>
 
                 {mealTypesLoading ? (
@@ -887,11 +891,13 @@ export default function NutritionPage() {
               hasActiveFilters={!!foodSearch}
               onClear={() => setFoodSearch('')}
             >
-              <SearchInput
-                placeholder={t('pages.nutritionFoods.searchPlaceholder')}
-                value={foodSearch}
-                onValueChange={setFoodSearch}
-              />
+              <FilterField label={t('common.filterLabels.search')}>
+                <SearchInput
+                  placeholder={t('pages.nutritionFoods.searchPlaceholder')}
+                  value={foodSearch}
+                  onValueChange={setFoodSearch}
+                />
+              </FilterField>
             </FilterBar>
 
             {foodsLoading ? (

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -216,29 +216,33 @@ export default function Vaults() {
                 : []),
             ]}
           >
-            <SearchInput
-              placeholder={t('pages.vaults.searchPlaceholder')}
-              value={searchTerm}
-              onValueChange={setSearchTerm}
-              className="w-44"
-            />
-            <Select value={accountFilter} onValueChange={setAccountFilter}>
-              <SelectTrigger
-                className="w-48"
-                aria-label={t('pages.vaults.allAccounts')}
-                startIcon={<Building2 className="h-3.5 w-3.5" />}
-              >
-                <SelectValue placeholder={t('pages.vaults.allAccounts')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('pages.vaults.allAccounts')}</SelectItem>
-                {accounts.map((account) => (
-                  <SelectItem key={account.id} value={String(account.id)}>
-                    {account.account_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FilterField label={t('common.filterLabels.search')}>
+              <SearchInput
+                placeholder={t('pages.vaults.searchPlaceholder')}
+                value={searchTerm}
+                onValueChange={setSearchTerm}
+                className="w-44"
+              />
+            </FilterField>
+            <FilterField label={t('common.fields.account')}>
+              <Select value={accountFilter} onValueChange={setAccountFilter}>
+                <SelectTrigger
+                  className="w-48"
+                  aria-label={t('pages.vaults.allAccounts')}
+                  startIcon={<Building2 className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('pages.vaults.allAccounts')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('pages.vaults.allAccounts')}</SelectItem>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={String(account.id)}>
+                      {account.account_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
           </FilterBar>
 
           {filteredVaults.length === 0 ? (

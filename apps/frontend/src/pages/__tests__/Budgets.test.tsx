@@ -43,6 +43,7 @@ vi.mock('@/stores/auth-store', () => ({
 
 vi.mock('@/components/common/FilterBar', () => ({
   FilterBar: () => <div data-testid="filter-bar" />,
+  FilterField: () => null,
 }));
 
 vi.mock('@/components/common/AnimatedPage', () => ({

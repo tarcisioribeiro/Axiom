@@ -25,7 +25,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -587,67 +587,73 @@ export default function FinancialGoals() {
       />
 
       <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
-        <SearchInput
-          placeholder={t('pages.financialGoals.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-52 sm:w-64"
-        />
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger
-            className="w-44"
-            aria-label={t('pages.financialGoals.allCategories')}
-            startIcon={<Tag className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.financialGoals.allCategories')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">
-              {t('pages.financialGoals.allCategories')}
-            </SelectItem>
-            {CATEGORIES.map((cat) => {
-              const CatIcon =
-                FINANCIAL_GOAL_CATEGORY_ICONS[cat.value] ??
-                FINANCIAL_GOAL_CATEGORY_ICONS['other'];
-              return (
-                <SelectItem
-                  key={cat.value}
-                  value={cat.value}
-                  icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
-                >
-                  {t(`pages.financialGoals.categories.${cat.value}`)}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <Select
-          value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v as 'all' | 'active' | 'completed')}
-        >
-          <SelectTrigger
-            className="w-36"
-            aria-label={t('pages.financialGoals.allStatus')}
-            startIcon={<Target className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.financialGoals.allStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.financialGoals.allStatus')}</SelectItem>
-            <SelectItem
-              value="active"
-              icon={<GOAL_STATUS_ICONS.active className="h-4 w-4" />}
+        <FilterField label={t('common.filterLabels.search')}>
+          <SearchInput
+            placeholder={t('pages.financialGoals.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.category')}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.financialGoals.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
             >
-              {t('common.status.active')}
-            </SelectItem>
-            <SelectItem
-              value="completed"
-              icon={<GOAL_STATUS_ICONS.completed className="h-4 w-4" />}
+              <SelectValue placeholder={t('pages.financialGoals.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.financialGoals.allCategories')}
+              </SelectItem>
+              {CATEGORIES.map((cat) => {
+                const CatIcon =
+                  FINANCIAL_GOAL_CATEGORY_ICONS[cat.value] ??
+                  FINANCIAL_GOAL_CATEGORY_ICONS['other'];
+                return (
+                  <SelectItem
+                    key={cat.value}
+                    value={cat.value}
+                    icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                  >
+                    {t(`pages.financialGoals.categories.${cat.value}`)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.status')}>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v as 'all' | 'active' | 'completed')}
+          >
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.financialGoals.allStatus')}
+              startIcon={<Target className="h-3.5 w-3.5" />}
             >
-              {t('common.status.completed')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
+              <SelectValue placeholder={t('pages.financialGoals.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.financialGoals.allStatus')}</SelectItem>
+              <SelectItem
+                value="active"
+                icon={<GOAL_STATUS_ICONS.active className="h-4 w-4" />}
+              >
+                {t('common.status.active')}
+              </SelectItem>
+              <SelectItem
+                value="completed"
+                icon={<GOAL_STATUS_ICONS.completed className="h-4 w-4" />}
+              >
+                {t('common.status.completed')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
       </FilterBar>
 
       {/* Goal Cards Grid */}

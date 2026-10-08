@@ -46,7 +46,7 @@ import { useTranslation } from 'react-i18next';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -977,12 +977,14 @@ export default function WorkoutPage() {
                       : []),
                   ]}
                 >
-                  <DateRangeFilter
-                    startDate={sessionStartDate}
-                    endDate={sessionEndDate}
-                    onStartChange={setSessionStartDate}
-                    onEndChange={setSessionEndDate}
-                  />
+                  <FilterField label={t('common.filterLabels.period')}>
+                    <DateRangeFilter
+                      startDate={sessionStartDate}
+                      endDate={sessionEndDate}
+                      onStartChange={setSessionStartDate}
+                      onEndChange={setSessionEndDate}
+                    />
+                  </FilterField>
                 </FilterBar>
 
                 {filteredSessions.length === 0 ? (
@@ -1064,70 +1066,76 @@ export default function WorkoutPage() {
                       : []),
                   ]}
                 >
-                  <Select
-                    value={planCategoryFilter}
-                    onValueChange={(v) =>
-                      setPlanCategoryFilter(v as WorkoutCategory | 'all')
-                    }
-                  >
-                    <SelectTrigger
-                      className="w-44"
-                      aria-label={t('pages.workoutPlans.allCategories')}
-                      startIcon={<Activity className="h-3.5 w-3.5" />}
+                  <FilterField label={t('common.fields.category')}>
+                    <Select
+                      value={planCategoryFilter}
+                      onValueChange={(v) =>
+                        setPlanCategoryFilter(v as WorkoutCategory | 'all')
+                      }
                     >
-                      <SelectValue
-                        placeholder={t('pages.workoutPlans.allCategories')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t('pages.workoutPlans.allCategories')}
-                      </SelectItem>
-                      {WORKOUT_CATEGORIES.map((key) => {
-                        const CatIcon = WORKOUT_CATEGORY_ICONS[key];
-                        return (
-                          <SelectItem
-                            key={key}
-                            value={key}
-                            icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
-                          >
-                            {t(`pages.workoutPlans.categories.${key}`)}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={planStatusFilter}
-                    onValueChange={(v) =>
-                      setPlanStatusFilter(v as 'all' | 'active' | 'inactive')
-                    }
-                  >
-                    <SelectTrigger
-                      className="w-36"
-                      aria-label={t('pages.workoutPlans.allStatus')}
-                      startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                      <SelectTrigger
+                        className="w-44"
+                        aria-label={t('pages.workoutPlans.allCategories')}
+                        startIcon={<Activity className="h-3.5 w-3.5" />}
+                      >
+                        <SelectValue
+                          placeholder={t('pages.workoutPlans.allCategories')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.workoutPlans.allCategories')}
+                        </SelectItem>
+                        {WORKOUT_CATEGORIES.map((key) => {
+                          const CatIcon = WORKOUT_CATEGORY_ICONS[key];
+                          return (
+                            <SelectItem
+                              key={key}
+                              value={key}
+                              icon={
+                                CatIcon ? <CatIcon className="h-4 w-4" /> : undefined
+                              }
+                            >
+                              {t(`pages.workoutPlans.categories.${key}`)}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
+                  <FilterField label={t('common.fields.status')}>
+                    <Select
+                      value={planStatusFilter}
+                      onValueChange={(v) =>
+                        setPlanStatusFilter(v as 'all' | 'active' | 'inactive')
+                      }
                     >
-                      <SelectValue placeholder={t('pages.workoutPlans.allStatus')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t('pages.workoutPlans.allStatus')}
-                      </SelectItem>
-                      <SelectItem
-                        value="active"
-                        icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                      <SelectTrigger
+                        className="w-36"
+                        aria-label={t('pages.workoutPlans.allStatus')}
+                        startIcon={<CircleDot className="h-3.5 w-3.5" />}
                       >
-                        {t('pages.workoutPlans.active')}
-                      </SelectItem>
-                      <SelectItem
-                        value="inactive"
-                        icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
-                      >
-                        {t('pages.workoutPlans.inactive')}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                        <SelectValue placeholder={t('pages.workoutPlans.allStatus')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.workoutPlans.allStatus')}
+                        </SelectItem>
+                        <SelectItem
+                          value="active"
+                          icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                        >
+                          {t('pages.workoutPlans.active')}
+                        </SelectItem>
+                        <SelectItem
+                          value="inactive"
+                          icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                        >
+                          {t('pages.workoutPlans.inactive')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
                 </FilterBar>
 
                 {filteredPlans.length === 0 ? (
@@ -1214,85 +1222,95 @@ export default function WorkoutPage() {
                       : []),
                   ]}
                 >
-                  <SearchInput
-                    placeholder={t('pages.exercises.searchPlaceholder')}
-                    value={exerciseSearch}
-                    onValueChange={setExerciseSearch}
-                    className="w-44"
-                  />
-                  <Select
-                    value={exerciseCategoryFilter}
-                    onValueChange={setExerciseCategoryFilter}
-                  >
-                    <SelectTrigger
+                  <FilterField label={t('common.filterLabels.search')}>
+                    <SearchInput
+                      placeholder={t('pages.exercises.searchPlaceholder')}
+                      value={exerciseSearch}
+                      onValueChange={setExerciseSearch}
                       className="w-44"
-                      aria-label={t('pages.exercises.allCategories')}
-                      startIcon={<Activity className="h-3.5 w-3.5" />}
+                    />
+                  </FilterField>
+                  <FilterField label={t('common.fields.category')}>
+                    <Select
+                      value={exerciseCategoryFilter}
+                      onValueChange={setExerciseCategoryFilter}
                     >
-                      <SelectValue placeholder={t('pages.exercises.allCategories')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t('pages.exercises.allCategories')}
-                      </SelectItem>
-                      {WORKOUT_CATEGORIES.map((key) => {
-                        const CatIcon = WORKOUT_CATEGORY_ICONS[key];
-                        return (
-                          <SelectItem
-                            key={key}
-                            value={key}
-                            icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
-                          >
-                            {t(`pages.workoutPlans.categories.${key}`)}
+                      <SelectTrigger
+                        className="w-44"
+                        aria-label={t('pages.exercises.allCategories')}
+                        startIcon={<Activity className="h-3.5 w-3.5" />}
+                      >
+                        <SelectValue placeholder={t('pages.exercises.allCategories')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.exercises.allCategories')}
+                        </SelectItem>
+                        {WORKOUT_CATEGORIES.map((key) => {
+                          const CatIcon = WORKOUT_CATEGORY_ICONS[key];
+                          return (
+                            <SelectItem
+                              key={key}
+                              value={key}
+                              icon={
+                                CatIcon ? <CatIcon className="h-4 w-4" /> : undefined
+                              }
+                            >
+                              {t(`pages.workoutPlans.categories.${key}`)}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
+                  <FilterField label={t('common.fields.type')}>
+                    <Select
+                      value={exerciseTypeFilter}
+                      onValueChange={setExerciseTypeFilter}
+                    >
+                      <SelectTrigger
+                        className="w-44"
+                        aria-label={t('pages.exercises.allTypes')}
+                        startIcon={<Dumbbell className="h-3.5 w-3.5" />}
+                      >
+                        <SelectValue placeholder={t('pages.exercises.allTypes')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.exercises.allTypes')}
+                        </SelectItem>
+                        {EXERCISE_TYPE_FILTER_KEYS.map((key) => (
+                          <SelectItem key={key} value={key}>
+                            {t(`pages.workoutPlans.muscleChips.${key}`)}
                           </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={exerciseTypeFilter}
-                    onValueChange={setExerciseTypeFilter}
-                  >
-                    <SelectTrigger
-                      className="w-44"
-                      aria-label={t('pages.exercises.allTypes')}
-                      startIcon={<Dumbbell className="h-3.5 w-3.5" />}
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
+                  <FilterField label={t('common.filterLabels.muscle')}>
+                    <Select
+                      value={exerciseMuscleFilter}
+                      onValueChange={setExerciseMuscleFilter}
                     >
-                      <SelectValue placeholder={t('pages.exercises.allTypes')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t('pages.exercises.allTypes')}
-                      </SelectItem>
-                      {EXERCISE_TYPE_FILTER_KEYS.map((key) => (
-                        <SelectItem key={key} value={key}>
-                          {t(`pages.workoutPlans.muscleChips.${key}`)}
+                      <SelectTrigger
+                        className="w-44"
+                        aria-label={t('pages.exercises.allMuscles')}
+                        startIcon={<Layers className="h-3.5 w-3.5" />}
+                      >
+                        <SelectValue placeholder={t('pages.exercises.allMuscles')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.exercises.allMuscles')}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={exerciseMuscleFilter}
-                    onValueChange={setExerciseMuscleFilter}
-                  >
-                    <SelectTrigger
-                      className="w-44"
-                      aria-label={t('pages.exercises.allMuscles')}
-                      startIcon={<Layers className="h-3.5 w-3.5" />}
-                    >
-                      <SelectValue placeholder={t('pages.exercises.allMuscles')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t('pages.exercises.allMuscles')}
-                      </SelectItem>
-                      {EXERCISE_MUSCLE_FILTER_KEYS.map((key) => (
-                        <SelectItem key={key} value={key}>
-                          {t(`pages.workoutPlans.muscleChips.${key}`)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        {EXERCISE_MUSCLE_FILTER_KEYS.map((key) => (
+                          <SelectItem key={key} value={key}>
+                            {t(`pages.workoutPlans.muscleChips.${key}`)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
                 </FilterBar>
 
                 {filteredCatalogExercises.length === 0 ? (

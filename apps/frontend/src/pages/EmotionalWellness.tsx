@@ -30,7 +30,7 @@ import { useTranslation } from 'react-i18next';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -997,12 +997,14 @@ function CheckinTab({
                 : []),
             ]}
           >
-            <DateRangeFilter
-              startDate={checkinStartDate}
-              endDate={checkinEndDate}
-              onStartChange={setCheckinStartDate}
-              onEndChange={setCheckinEndDate}
-            />
+            <FilterField label={t('common.filterLabels.period')}>
+              <DateRangeFilter
+                startDate={checkinStartDate}
+                endDate={checkinEndDate}
+                onStartChange={setCheckinStartDate}
+                onEndChange={setCheckinEndDate}
+              />
+            </FilterField>
           </FilterBar>
 
           {filteredHistory.length === 0 ? (
@@ -1391,12 +1393,14 @@ function CrisisTab({
                 : []),
             ]}
           >
-            <DateRangeFilter
-              startDate={crisisStartDate}
-              endDate={crisisEndDate}
-              onStartChange={setCrisisStartDate}
-              onEndChange={setCrisisEndDate}
-            />
+            <FilterField label={t('common.filterLabels.period')}>
+              <DateRangeFilter
+                startDate={crisisStartDate}
+                endDate={crisisEndDate}
+                onStartChange={setCrisisStartDate}
+                onEndChange={setCrisisEndDate}
+              />
+            </FilterField>
           </FilterBar>
 
           {filteredLogs.length === 0 ? (
@@ -1534,34 +1538,40 @@ function LibraryTab() {
             : []),
         ]}
       >
-        <Select
-          value={selectedCategory}
-          onValueChange={(v) => setSelectedCategory(v as InterventionCategory | 'all')}
-        >
-          <SelectTrigger
-            className="w-48"
-            aria-label={t('pages.emotionalWellness.library.categoryLabel')}
-            startIcon={<BookOpen className="h-3.5 w-3.5" />}
+        <FilterField label={t('common.fields.category')}>
+          <Select
+            value={selectedCategory}
+            onValueChange={(v) =>
+              setSelectedCategory(v as InterventionCategory | 'all')
+            }
           >
-            <SelectValue
-              placeholder={t('pages.emotionalWellness.library.categoryLabel')}
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((c) => {
-              const CategoryIcon = INTERVENTION_CATEGORY_ICONS[c.value];
-              return (
-                <SelectItem
-                  key={c.value}
-                  value={c.value}
-                  icon={CategoryIcon ? <CategoryIcon className="h-4 w-4" /> : undefined}
-                >
-                  {c.label}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
+            <SelectTrigger
+              className="w-48"
+              aria-label={t('pages.emotionalWellness.library.categoryLabel')}
+              startIcon={<BookOpen className="h-3.5 w-3.5" />}
+            >
+              <SelectValue
+                placeholder={t('pages.emotionalWellness.library.categoryLabel')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((c) => {
+                const CategoryIcon = INTERVENTION_CATEGORY_ICONS[c.value];
+                return (
+                  <SelectItem
+                    key={c.value}
+                    value={c.value}
+                    icon={
+                      CategoryIcon ? <CategoryIcon className="h-4 w-4" /> : undefined
+                    }
+                  >
+                    {c.label}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
       </FilterBar>
 
       {isLoading ? (

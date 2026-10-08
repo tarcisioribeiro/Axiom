@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 
 import { BudgetPurchasesDialog } from '@/components/budgets/BudgetPurchasesDialog';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { IconButton } from '@/components/common/IconButton';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -287,83 +287,93 @@ export default function Budgets() {
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={t('pages.budgets.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-44 flex-none"
-        />
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger
-            className="w-44"
-            aria-label={t('pages.budgets.allCategories')}
-            startIcon={<Tag className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.budgets.allCategories')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.budgets.allCategories')}</SelectItem>
-            {EXPENSE_CATEGORIES_CANONICAL.map((cat) => {
-              const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
-              return (
-                <SelectItem
-                  key={cat.key}
-                  value={cat.key}
-                  icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
-                >
-                  {translate('expenseCategories', cat.key)}
+        <FilterField label={t('common.filterLabels.search')}>
+          <SearchInput
+            placeholder={t('pages.budgets.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-44 flex-none"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.category')}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.budgets.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.budgets.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.budgets.allCategories')}</SelectItem>
+              {EXPENSE_CATEGORIES_CANONICAL.map((cat) => {
+                const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
+                return (
+                  <SelectItem
+                    key={cat.key}
+                    value={cat.key}
+                    icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                  >
+                    {translate('expenseCategories', cat.key)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.member')}>
+          <Select value={memberFilter} onValueChange={setMemberFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.budgets.allMembers')}
+              startIcon={<User className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.budgets.allMembers')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.budgets.allMembers')}</SelectItem>
+              {members.map((m) => (
+                <SelectItem key={m.id} value={String(m.id)}>
+                  {m.name}
                 </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <Select value={memberFilter} onValueChange={setMemberFilter}>
-          <SelectTrigger
-            className="w-40"
-            aria-label={t('pages.budgets.allMembers')}
-            startIcon={<User className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.budgets.allMembers')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.budgets.allMembers')}</SelectItem>
-            {members.map((m) => (
-              <SelectItem key={m.id} value={String(m.id)}>
-                {m.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={filterMonth} onValueChange={setFilterMonth}>
-          <SelectTrigger
-            className="w-40"
-            startIcon={<CalendarDays className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.budgets.month')} />
-          </SelectTrigger>
-          <SelectContent>
-            {MONTHS.map((m) => (
-              <SelectItem key={m.value} value={String(m.value)}>
-                {m.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={filterYear} onValueChange={setFilterYear}>
-          <SelectTrigger
-            className="w-28"
-            startIcon={<CalendarDays className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.budgets.year')} />
-          </SelectTrigger>
-          <SelectContent>
-            {YEARS.map((y) => (
-              <SelectItem key={y} value={String(y)}>
-                {y}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.month')}>
+          <Select value={filterMonth} onValueChange={setFilterMonth}>
+            <SelectTrigger
+              className="w-40"
+              startIcon={<CalendarDays className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.budgets.month')} />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m) => (
+                <SelectItem key={m.value} value={String(m.value)}>
+                  {m.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.year')}>
+          <Select value={filterYear} onValueChange={setFilterYear}>
+            <SelectTrigger
+              className="w-28"
+              startIcon={<CalendarDays className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.budgets.year')} />
+            </SelectTrigger>
+            <SelectContent>
+              {YEARS.map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
       </FilterBar>
 
       {filteredBudgets.length === 0 ? (

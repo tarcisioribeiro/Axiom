@@ -8,13 +8,13 @@ import {
   Tag,
   CircleDot,
 } from 'lucide-react';
-import { useMemo, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable } from '@/components/common/DataTable';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { ExportModal } from '@/components/common/ExportModal';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
@@ -89,32 +89,6 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
     prefillRevenueData,
   } = useRevenuesPage();
 
-  const BREAKDOWN_COLORS = [
-    'bg-success',
-    'bg-primary',
-    'bg-info',
-    'bg-warning',
-    'bg-accent',
-    'bg-destructive',
-  ] as const;
-
-  const categoryBreakdown = useMemo(() => {
-    const groups: Record<string, number> = {};
-    for (const r of revenues.filter(
-      (r) => !r.related_transfer && !r.is_transfer_generated && !r.is_initial_balance
-    )) {
-      groups[r.category] = (groups[r.category] ?? 0) + parseFloat(r.value);
-    }
-    const total = Object.values(groups).reduce((s, v) => s + v, 0);
-    return Object.entries(groups)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 6)
-      .map(([cat, amount]) => ({
-        cat,
-        pct: total > 0 ? (amount / total) * 100 : 0,
-      }));
-  }, [revenues]);
-
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
   return (
@@ -180,92 +154,70 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={t('pages.revenues.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-44"
-        />
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-40" startIcon={<Tag className="h-3.5 w-3.5" />}>
-            <SelectValue placeholder={t('pages.revenues.allCategories')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.revenues.allCategories')}</SelectItem>
-            {REVENUE_CATEGORIES_CANONICAL.map(({ key }) => {
-              const Icon = REVENUE_CATEGORY_ICONS[key];
-              return (
-                <SelectItem
-                  key={key}
-                  value={key}
-                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
-                >
-                  {translate('revenueCategories', key)}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger
-            className="w-36"
-            startIcon={<CircleDot className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.revenues.allStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.revenues.allStatus')}</SelectItem>
-            <SelectItem
-              value="received"
-              icon={<PAYMENT_STATUS_ICONS.received className="h-4 w-4" />}
+        <FilterField label={t('common.filterLabels.search')}>
+          <SearchInput
+            placeholder={t('pages.revenues.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-44"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.category')}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-40" startIcon={<Tag className="h-3.5 w-3.5" />}>
+              <SelectValue placeholder={t('pages.revenues.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.revenues.allCategories')}</SelectItem>
+              {REVENUE_CATEGORIES_CANONICAL.map(({ key }) => {
+                const Icon = REVENUE_CATEGORY_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {translate('revenueCategories', key)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.status')}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-36"
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
             >
-              {t('pages.revenues.stats.received')}
-            </SelectItem>
-            <SelectItem
-              value="pending"
-              icon={<PAYMENT_STATUS_ICONS.pending className="h-4 w-4" />}
-            >
-              {t('common.status.pending')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <DateRangeFilter
-          startDate={startDate}
-          endDate={endDate}
-          onStartChange={setStartDate}
-          onEndChange={setEndDate}
-        />
+              <SelectValue placeholder={t('pages.revenues.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.revenues.allStatus')}</SelectItem>
+              <SelectItem
+                value="received"
+                icon={<PAYMENT_STATUS_ICONS.received className="h-4 w-4" />}
+              >
+                {t('pages.revenues.stats.received')}
+              </SelectItem>
+              <SelectItem
+                value="pending"
+                icon={<PAYMENT_STATUS_ICONS.pending className="h-4 w-4" />}
+              >
+                {t('common.status.pending')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')}>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartChange={setStartDate}
+            onEndChange={setEndDate}
+          />
+        </FilterField>
       </FilterBar>
-
-      {categoryBreakdown.length > 1 && (
-        <div className="bg-card p-md rounded-lg border">
-          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            {t('pages.revenues.byCategory')}
-          </p>
-          <div className="bg-muted flex h-2 overflow-hidden rounded-full">
-            {categoryBreakdown.map(({ cat, pct }, i) => (
-              <div
-                key={cat}
-                className={`h-full transition-[width] ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
-                style={{ width: `${pct}%` }}
-                title={`${translateCategory(cat, 'revenue')}: ${pct.toFixed(1)}%`}
-              />
-            ))}
-          </div>
-          <div className="mt-sm gap-md flex flex-wrap">
-            {categoryBreakdown.map(({ cat, pct }, i) => (
-              <div key={cat} className="gap-xs flex items-center">
-                <span
-                  className={`h-2 w-2 shrink-0 rounded-full ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
-                />
-                <span className="text-muted-foreground text-xs">
-                  {translateCategory(cat, 'revenue')} · {Math.round(pct)}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <DataTable
         data={revenues}

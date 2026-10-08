@@ -30,7 +30,7 @@ import {
 import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -505,92 +505,100 @@ export default function Courses() {
               : []),
           ]}
         >
-          <SearchInput
-            placeholder={t('pages.courses.searchPlaceholder')}
-            value={search}
-            onValueChange={setSearch}
-          />
-          <Select
-            value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v as CourseStatus | 'all')}
-          >
-            <SelectTrigger
-              aria-label={t('common.fields.status')}
-              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+          <FilterField label={t('common.filterLabels.search')}>
+            <SearchInput
+              placeholder={t('pages.courses.searchPlaceholder')}
+              value={search}
+              onValueChange={setSearch}
+            />
+          </FilterField>
+          <FilterField label={t('common.fields.status')}>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as CourseStatus | 'all')}
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_FILTER_KEYS.map((s) => {
-                const StatusIcon = COURSE_STATUS_ICONS[s];
-                return (
-                  <SelectItem
-                    key={s}
-                    value={s}
-                    icon={StatusIcon ? <StatusIcon className="h-4 w-4" /> : undefined}
-                  >
-                    {t(`pages.courses.filters.${s}`)}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-          <Select
-            value={categoryFilter}
-            onValueChange={(v) => setCategoryFilter(v as IntellectCategory | 'all')}
-          >
-            <SelectTrigger
-              aria-label={t('pages.courses.allCategories')}
-              startIcon={<Tag className="h-3.5 w-3.5" />}
+              <SelectTrigger
+                aria-label={t('common.fields.status')}
+                startIcon={<CircleDot className="h-3.5 w-3.5" />}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_FILTER_KEYS.map((s) => {
+                  const StatusIcon = COURSE_STATUS_ICONS[s];
+                  return (
+                    <SelectItem
+                      key={s}
+                      value={s}
+                      icon={StatusIcon ? <StatusIcon className="h-4 w-4" /> : undefined}
+                    >
+                      {t(`pages.courses.filters.${s}`)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </FilterField>
+          <FilterField label={t('common.fields.category')}>
+            <Select
+              value={categoryFilter}
+              onValueChange={(v) => setCategoryFilter(v as IntellectCategory | 'all')}
             >
-              <SelectValue placeholder={t('pages.courses.allCategories')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.courses.allCategories')}</SelectItem>
-              {CATEGORY_FILTER_KEYS.filter((c) => c !== 'all').map((c) => {
-                const CategoryIcon = SKILL_CATEGORY_ICONS[c];
-                return (
-                  <SelectItem
-                    key={c}
-                    value={c}
-                    icon={
-                      CategoryIcon ? <CategoryIcon className="h-4 w-4" /> : undefined
-                    }
-                  >
-                    {t(`pages.courses.category.${c}`)}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-          <Select
-            value={platformFilter}
-            onValueChange={(v) => setPlatformFilter(v as CoursePlatform | 'all')}
-          >
-            <SelectTrigger
-              aria-label={t('pages.courses.allPlatforms')}
-              startIcon={<BookOpen className="h-3.5 w-3.5" />}
+              <SelectTrigger
+                aria-label={t('pages.courses.allCategories')}
+                startIcon={<Tag className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.courses.allCategories')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.courses.allCategories')}</SelectItem>
+                {CATEGORY_FILTER_KEYS.filter((c) => c !== 'all').map((c) => {
+                  const CategoryIcon = SKILL_CATEGORY_ICONS[c];
+                  return (
+                    <SelectItem
+                      key={c}
+                      value={c}
+                      icon={
+                        CategoryIcon ? <CategoryIcon className="h-4 w-4" /> : undefined
+                      }
+                    >
+                      {t(`pages.courses.category.${c}`)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </FilterField>
+          <FilterField label={t('common.filterLabels.platform')}>
+            <Select
+              value={platformFilter}
+              onValueChange={(v) => setPlatformFilter(v as CoursePlatform | 'all')}
             >
-              <SelectValue placeholder={t('pages.courses.allPlatforms')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.courses.allPlatforms')}</SelectItem>
-              {PLATFORM_FILTER_KEYS.filter((p) => p !== 'all').map((p) => {
-                const PlatformIcon = PLATFORM_ICONS[p];
-                return (
-                  <SelectItem
-                    key={p}
-                    value={p}
-                    icon={
-                      PlatformIcon ? <PlatformIcon className="h-4 w-4" /> : undefined
-                    }
-                  >
-                    {t(`pages.courses.platform.${p}`)}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+              <SelectTrigger
+                aria-label={t('pages.courses.allPlatforms')}
+                startIcon={<BookOpen className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.courses.allPlatforms')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.courses.allPlatforms')}</SelectItem>
+                {PLATFORM_FILTER_KEYS.filter((p) => p !== 'all').map((p) => {
+                  const PlatformIcon = PLATFORM_ICONS[p];
+                  return (
+                    <SelectItem
+                      key={p}
+                      value={p}
+                      icon={
+                        PlatformIcon ? <PlatformIcon className="h-4 w-4" /> : undefined
+                      }
+                    >
+                      {t(`pages.courses.platform.${p}`)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </FilterField>
         </FilterBar>
 
         {/* Grid */}

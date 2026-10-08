@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -260,101 +260,111 @@ export default function Loans() {
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={t('pages.loans.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-52 sm:w-64"
-        />
+        <FilterField label={t('common.filterLabels.search')}>
+          <SearchInput
+            placeholder={t('pages.loans.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
         {currentUserMemberId !== null && (
-          <Select
-            value={roleFilter}
-            onValueChange={(v) => setRoleFilter(v as LoanRole)}
-          >
+          <FilterField label={t('common.filterLabels.role')}>
+            <Select
+              value={roleFilter}
+              onValueChange={(v) => setRoleFilter(v as LoanRole)}
+            >
+              <SelectTrigger
+                className="w-40"
+                aria-label={t('pages.loans.allRoles')}
+                startIcon={<Users className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.loans.allRoles')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.loans.filter.all')}</SelectItem>
+                <SelectItem value="benefited">
+                  {t('pages.loans.filter.benefited')}
+                </SelectItem>
+                <SelectItem value="creditor">
+                  {t('pages.loans.filter.creditor')}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </FilterField>
+        )}
+        <FilterField label={t('common.fields.status')}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger
               className="w-40"
-              aria-label={t('pages.loans.allRoles')}
-              startIcon={<Users className="h-3.5 w-3.5" />}
+              aria-label={t('pages.loans.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
             >
-              <SelectValue placeholder={t('pages.loans.allRoles')} />
+              <SelectValue placeholder={t('pages.loans.allStatus')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{t('pages.loans.filter.all')}</SelectItem>
-              <SelectItem value="benefited">
-                {t('pages.loans.filter.benefited')}
+              <SelectItem value="all">{t('pages.loans.allStatus')}</SelectItem>
+              <SelectItem
+                value="active"
+                icon={<LOAN_STATUS_ICONS.active className="h-4 w-4" />}
+              >
+                {translate('loanStatus', 'active')}
               </SelectItem>
-              <SelectItem value="creditor">
-                {t('pages.loans.filter.creditor')}
+              <SelectItem
+                value="paid"
+                icon={<LOAN_STATUS_ICONS.paid className="h-4 w-4" />}
+              >
+                {translate('loanStatus', 'paid')}
+              </SelectItem>
+              <SelectItem
+                value="defaulted"
+                icon={<LOAN_STATUS_ICONS.defaulted className="h-4 w-4" />}
+              >
+                {translate('loanStatus', 'defaulted')}
+              </SelectItem>
+              <SelectItem
+                value="cancelled"
+                icon={<LOAN_STATUS_ICONS.cancelled className="h-4 w-4" />}
+              >
+                {translate('loanStatus', 'cancelled')}
               </SelectItem>
             </SelectContent>
           </Select>
-        )}
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger
-            className="w-40"
-            aria-label={t('pages.loans.allStatus')}
-            startIcon={<CircleDot className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.loans.allStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.loans.allStatus')}</SelectItem>
-            <SelectItem
-              value="active"
-              icon={<LOAN_STATUS_ICONS.active className="h-4 w-4" />}
+        </FilterField>
+        <FilterField label={t('common.fields.category')}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.loans.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
             >
-              {translate('loanStatus', 'active')}
-            </SelectItem>
-            <SelectItem
-              value="paid"
-              icon={<LOAN_STATUS_ICONS.paid className="h-4 w-4" />}
-            >
-              {translate('loanStatus', 'paid')}
-            </SelectItem>
-            <SelectItem
-              value="defaulted"
-              icon={<LOAN_STATUS_ICONS.defaulted className="h-4 w-4" />}
-            >
-              {translate('loanStatus', 'defaulted')}
-            </SelectItem>
-            <SelectItem
-              value="cancelled"
-              icon={<LOAN_STATUS_ICONS.cancelled className="h-4 w-4" />}
-            >
-              {translate('loanStatus', 'cancelled')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger
-            className="w-44"
-            aria-label={t('pages.loans.allCategories')}
-            startIcon={<Tag className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.loans.allCategories')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.loans.allCategories')}</SelectItem>
-            {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
-              const Icon = EXPENSE_CATEGORY_ICONS[key];
-              return (
-                <SelectItem
-                  key={key}
-                  value={key}
-                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
-                >
-                  {label}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <DateRangeFilter
-          startDate={dueStartDate}
-          endDate={dueEndDate}
-          onStartChange={setDueStartDate}
-          onEndChange={setDueEndDate}
-        />
+              <SelectValue placeholder={t('pages.loans.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.loans.allCategories')}</SelectItem>
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
+                const Icon = EXPENSE_CATEGORY_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {label}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')}>
+          <DateRangeFilter
+            startDate={dueStartDate}
+            endDate={dueEndDate}
+            onStartChange={setDueStartDate}
+            onEndChange={setDueEndDate}
+          />
+        </FilterField>
       </FilterBar>
 
       {roleFilteredLoans.length === 0 ? (

@@ -17,7 +17,7 @@ import { useNavigate, useParams } from 'react-router';
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -643,84 +643,98 @@ export default function BankReconciliationDetail() {
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={t('pages.bankReconciliation.detail.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-44"
-        />
-        <Select
-          value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
-        >
-          <SelectTrigger
-            className="w-36"
-            aria-label={t('pages.bankReconciliation.detail.allStatus')}
-            startIcon={<CircleDot className="h-3.5 w-3.5" />}
+        <FilterField label={t('common.filterLabels.search')}>
+          <SearchInput
+            placeholder={t('pages.bankReconciliation.detail.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-44"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.status')}>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
           >
-            <SelectValue placeholder={t('pages.bankReconciliation.detail.allStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">
-              {t('pages.bankReconciliation.detail.allStatus')}
-            </SelectItem>
-            <SelectItem
-              value="matched"
-              icon={<BANK_RECONCILIATION_STATUS_ICONS.matched className="h-4 w-4" />}
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.bankReconciliation.detail.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
             >
-              {t('pages.bankReconciliation.detail.statusMatched')}
-            </SelectItem>
-            <SelectItem
-              value="unmatched"
-              icon={<BANK_RECONCILIATION_STATUS_ICONS.unmatched className="h-4 w-4" />}
-            >
-              {t('pages.bankReconciliation.detail.statusUnmatched')}
-            </SelectItem>
-            <SelectItem
-              value="ignored"
-              icon={<BANK_RECONCILIATION_STATUS_ICONS.ignored className="h-4 w-4" />}
-            >
-              {t('pages.bankReconciliation.detail.statusIgnored')}
-            </SelectItem>
-            <SelectItem
-              value="pending"
-              icon={<BANK_RECONCILIATION_STATUS_ICONS.pending className="h-4 w-4" />}
-            >
-              {t('pages.bankReconciliation.detail.statusPending')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          value={transactionTypeFilter}
-          onValueChange={(v) =>
-            setTransactionTypeFilter(v as typeof transactionTypeFilter)
-          }
-        >
-          <SelectTrigger
-            className="w-36"
-            aria-label={t('pages.bankReconciliation.detail.allTypes')}
-            startIcon={<ArrowDownUp className="h-3.5 w-3.5" />}
+              <SelectValue
+                placeholder={t('pages.bankReconciliation.detail.allStatus')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.bankReconciliation.detail.allStatus')}
+              </SelectItem>
+              <SelectItem
+                value="matched"
+                icon={<BANK_RECONCILIATION_STATUS_ICONS.matched className="h-4 w-4" />}
+              >
+                {t('pages.bankReconciliation.detail.statusMatched')}
+              </SelectItem>
+              <SelectItem
+                value="unmatched"
+                icon={
+                  <BANK_RECONCILIATION_STATUS_ICONS.unmatched className="h-4 w-4" />
+                }
+              >
+                {t('pages.bankReconciliation.detail.statusUnmatched')}
+              </SelectItem>
+              <SelectItem
+                value="ignored"
+                icon={<BANK_RECONCILIATION_STATUS_ICONS.ignored className="h-4 w-4" />}
+              >
+                {t('pages.bankReconciliation.detail.statusIgnored')}
+              </SelectItem>
+              <SelectItem
+                value="pending"
+                icon={<BANK_RECONCILIATION_STATUS_ICONS.pending className="h-4 w-4" />}
+              >
+                {t('pages.bankReconciliation.detail.statusPending')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.type')}>
+          <Select
+            value={transactionTypeFilter}
+            onValueChange={(v) =>
+              setTransactionTypeFilter(v as typeof transactionTypeFilter)
+            }
           >
-            <SelectValue placeholder={t('pages.bankReconciliation.detail.allTypes')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">
-              {t('pages.bankReconciliation.detail.allTypes')}
-            </SelectItem>
-            <SelectItem value="debit">
-              {t('pages.bankReconciliation.detail.debit')}
-            </SelectItem>
-            <SelectItem value="credit">
-              {t('pages.bankReconciliation.detail.credit')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <DateRangeFilter
-          startDate={startDate}
-          endDate={endDate}
-          onStartChange={setStartDate}
-          onEndChange={setEndDate}
-        />
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.bankReconciliation.detail.allTypes')}
+              startIcon={<ArrowDownUp className="h-3.5 w-3.5" />}
+            >
+              <SelectValue
+                placeholder={t('pages.bankReconciliation.detail.allTypes')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.bankReconciliation.detail.allTypes')}
+              </SelectItem>
+              <SelectItem value="debit">
+                {t('pages.bankReconciliation.detail.debit')}
+              </SelectItem>
+              <SelectItem value="credit">
+                {t('pages.bankReconciliation.detail.credit')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')}>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartChange={setStartDate}
+            onEndChange={setEndDate}
+          />
+        </FilterField>
       </FilterBar>
 
       <DataTable

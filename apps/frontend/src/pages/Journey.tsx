@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -212,12 +212,14 @@ export default function Journey() {
                         : []),
                     ]}
                   >
-                    <DateRangeFilter
-                      startDate={startDate}
-                      endDate={endDate}
-                      onStartChange={setStartDate}
-                      onEndChange={setEndDate}
-                    />
+                    <FilterField label={t('common.filterLabels.period')}>
+                      <DateRangeFilter
+                        startDate={startDate}
+                        endDate={endDate}
+                        onStartChange={setStartDate}
+                        onEndChange={setEndDate}
+                      />
+                    </FilterField>
                   </FilterBar>
 
                   {filteredEvents.length === 0 ? (

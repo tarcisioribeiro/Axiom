@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
@@ -323,31 +323,35 @@ export default function StoredCards() {
               : []),
           ]}
         >
-          <SearchInput
-            placeholder={t('pages.storedCards.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            className="w-52 sm:w-64"
-          />
-          <Select value={flagFilter} onValueChange={setFlagFilter}>
-            <SelectTrigger
-              className="w-40"
-              aria-label={t('pages.storedCards.allFlags')}
-              startIcon={<CreditCardIcon className="h-3.5 w-3.5" />}
-            >
-              <SelectValue placeholder={t('pages.storedCards.allFlags')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.storedCards.allFlags')}</SelectItem>
-              {CARD_FLAGS.map((flag) => (
-                <SelectItem key={flag.value} value={flag.value}>
-                  {flag.value === 'OTHER'
-                    ? t('pages.storedCards.otherBrand')
-                    : flag.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterField label={t('common.filterLabels.search')}>
+            <SearchInput
+              placeholder={t('pages.storedCards.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="w-52 sm:w-64"
+            />
+          </FilterField>
+          <FilterField label={t('common.filterLabels.brand')}>
+            <Select value={flagFilter} onValueChange={setFlagFilter}>
+              <SelectTrigger
+                className="w-40"
+                aria-label={t('pages.storedCards.allFlags')}
+                startIcon={<CreditCardIcon className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.storedCards.allFlags')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.storedCards.allFlags')}</SelectItem>
+                {CARD_FLAGS.map((flag) => (
+                  <SelectItem key={flag.value} value={flag.value}>
+                    {flag.value === 'OTHER'
+                      ? t('pages.storedCards.otherBrand')
+                      : flag.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterField>
           <Button
             variant={showFavoritesOnly ? 'default' : 'outline'}
             size="sm"

@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -363,68 +363,76 @@ export default function Flashcards() {
                   : []),
               ]}
             >
-              <SearchInput
-                placeholder={t('pages.flashcards.searchPlaceholder')}
-                value={searchTerm}
-                onValueChange={setSearchTerm}
-                className="w-44"
-              />
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger
-                  className="w-40"
-                  aria-label={t('pages.flashcards.allStatus')}
-                  startIcon={<CircleDot className="h-3.5 w-3.5" />}
-                >
-                  <SelectValue placeholder={t('pages.flashcards.allStatus')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('pages.flashcards.allStatus')}</SelectItem>
-                  <SelectItem
-                    value="new"
-                    icon={<FLASHCARD_STATUS_ICONS.new className="h-4 w-4" />}
-                  >
-                    {t('pages.flashcards.status.new')}
-                  </SelectItem>
-                  <SelectItem
-                    value="learning"
-                    icon={<FLASHCARD_STATUS_ICONS.learning className="h-4 w-4" />}
-                  >
-                    {t('pages.flashcards.status.learning')}
-                  </SelectItem>
-                  <SelectItem
-                    value="review"
-                    icon={<FLASHCARD_STATUS_ICONS.review className="h-4 w-4" />}
-                  >
-                    {t('pages.flashcards.status.review')}
-                  </SelectItem>
-                  <SelectItem
-                    value="mastered"
-                    icon={<FLASHCARD_STATUS_ICONS.mastered className="h-4 w-4" />}
-                  >
-                    {t('pages.flashcards.status.mastered')}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              {bookTitles.length > 0 && (
-                <Select value={bookFilter} onValueChange={setBookFilter}>
+              <FilterField label={t('common.filterLabels.search')}>
+                <SearchInput
+                  placeholder={t('pages.flashcards.searchPlaceholder')}
+                  value={searchTerm}
+                  onValueChange={setSearchTerm}
+                  className="w-44"
+                />
+              </FilterField>
+              <FilterField label={t('common.fields.status')}>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger
-                    className="w-44"
-                    aria-label={t('pages.flashcards.allBooks')}
-                    startIcon={<BookOpen className="h-3.5 w-3.5" />}
+                    className="w-40"
+                    aria-label={t('pages.flashcards.allStatus')}
+                    startIcon={<CircleDot className="h-3.5 w-3.5" />}
                   >
-                    <SelectValue placeholder={t('pages.flashcards.allBooks')} />
+                    <SelectValue placeholder={t('pages.flashcards.allStatus')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">
-                      {t('pages.flashcards.allBooks')}
+                      {t('pages.flashcards.allStatus')}
                     </SelectItem>
-                    {bookTitles.map((title) => (
-                      <SelectItem key={title} value={title}>
-                        {title}
-                      </SelectItem>
-                    ))}
+                    <SelectItem
+                      value="new"
+                      icon={<FLASHCARD_STATUS_ICONS.new className="h-4 w-4" />}
+                    >
+                      {t('pages.flashcards.status.new')}
+                    </SelectItem>
+                    <SelectItem
+                      value="learning"
+                      icon={<FLASHCARD_STATUS_ICONS.learning className="h-4 w-4" />}
+                    >
+                      {t('pages.flashcards.status.learning')}
+                    </SelectItem>
+                    <SelectItem
+                      value="review"
+                      icon={<FLASHCARD_STATUS_ICONS.review className="h-4 w-4" />}
+                    >
+                      {t('pages.flashcards.status.review')}
+                    </SelectItem>
+                    <SelectItem
+                      value="mastered"
+                      icon={<FLASHCARD_STATUS_ICONS.mastered className="h-4 w-4" />}
+                    >
+                      {t('pages.flashcards.status.mastered')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
+              </FilterField>
+              {bookTitles.length > 0 && (
+                <FilterField label={t('common.filterLabels.book')}>
+                  <Select value={bookFilter} onValueChange={setBookFilter}>
+                    <SelectTrigger
+                      className="w-44"
+                      aria-label={t('pages.flashcards.allBooks')}
+                      startIcon={<BookOpen className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.flashcards.allBooks')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.flashcards.allBooks')}
+                      </SelectItem>
+                      {bookTitles.map((title) => (
+                        <SelectItem key={title} value={title}>
+                          {title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FilterField>
               )}
             </FilterBar>
             <TabsList className="w-full">

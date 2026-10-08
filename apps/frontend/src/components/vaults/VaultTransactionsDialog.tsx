@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -199,21 +199,25 @@ export function VaultTransactionsDialog({
             hasActiveFilters={filter !== 'all'}
             onClear={() => handleFilterChange('all')}
           >
-            <Select value={filter} onValueChange={handleFilterChange}>
-              <SelectTrigger aria-label={t('pages.vaults.filterByType')}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('pages.vaults.filterAll')}</SelectItem>
-                <SelectItem value="deposit">
-                  {t('pages.vaults.filterDeposits')}
-                </SelectItem>
-                <SelectItem value="withdrawal">
-                  {t('pages.vaults.filterWithdrawals')}
-                </SelectItem>
-                <SelectItem value="yield">{t('pages.vaults.filterYields')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <FilterField label={t('common.fields.type')}>
+              <Select value={filter} onValueChange={handleFilterChange}>
+                <SelectTrigger aria-label={t('pages.vaults.filterByType')}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('pages.vaults.filterAll')}</SelectItem>
+                  <SelectItem value="deposit">
+                    {t('pages.vaults.filterDeposits')}
+                  </SelectItem>
+                  <SelectItem value="withdrawal">
+                    {t('pages.vaults.filterWithdrawals')}
+                  </SelectItem>
+                  <SelectItem value="yield">
+                    {t('pages.vaults.filterYields')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
           </FilterBar>
           <div className="rounded-md border">
             <Table>

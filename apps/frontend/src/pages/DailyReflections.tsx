@@ -21,7 +21,7 @@ import type { z } from 'zod';
 
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -349,40 +349,46 @@ export default function DailyReflections() {
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={t('pages.dailyReflections.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-52 sm:w-64"
-        />
-        <Select value={moodFilter} onValueChange={setMoodFilter}>
-          <SelectTrigger
-            className="w-44"
-            startIcon={<SmilePlus className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.dailyReflections.filters.allMoods')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">
-              {t('pages.dailyReflections.filters.allMoods')}
-            </SelectItem>
-            {MOOD_CHOICES.map((choice) => (
-              <SelectItem
-                key={choice.value}
-                value={choice.value}
-                icon={getMoodIcon(choice.value)}
-              >
-                {t(`common.mood.${choice.value}`)}
+        <FilterField label={t('common.filterLabels.search')}>
+          <SearchInput
+            placeholder={t('pages.dailyReflections.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.filterLabels.mood')}>
+          <Select value={moodFilter} onValueChange={setMoodFilter}>
+            <SelectTrigger
+              className="w-44"
+              startIcon={<SmilePlus className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.dailyReflections.filters.allMoods')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.dailyReflections.filters.allMoods')}
               </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <DateRangeFilter
-          startDate={startDate}
-          endDate={endDate}
-          onStartChange={setStartDate}
-          onEndChange={setEndDate}
-        />
+              {MOOD_CHOICES.map((choice) => (
+                <SelectItem
+                  key={choice.value}
+                  value={choice.value}
+                  icon={getMoodIcon(choice.value)}
+                >
+                  {t(`common.mood.${choice.value}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')}>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartChange={setStartDate}
+            onEndChange={setEndDate}
+          />
+        </FilterField>
       </FilterBar>
 
       {/* Entradas no estilo diário */}

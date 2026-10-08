@@ -137,3 +137,4 @@ graphify-out/
 *.mp4
 *.jpg
 *.png
+.kubeconform-cache/

@@ -28,7 +28,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 const BookReader = lazy(() => import('./BookReader'));
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -666,74 +666,84 @@ export default function Books() {
                   setFilterGenre('');
                 }}
               >
-                <SearchInput
-                  placeholder={t('pages.books.searchPlaceholder')}
-                  value={searchTerm}
-                  onValueChange={(v) => {
-                    setSearchTerm(v);
-                  }}
-                  className="w-44 flex-none"
-                />
-                <Select
-                  value={filterStatus || 'all'}
-                  onValueChange={(v) => {
-                    setFilterStatus(v === 'all' ? '' : v);
-                  }}
-                >
-                  <SelectTrigger
-                    className="w-36"
-                    startIcon={<BookOpen className="h-3.5 w-3.5" />}
+                <FilterField label={t('common.filterLabels.search')}>
+                  <SearchInput
+                    placeholder={t('pages.books.searchPlaceholder')}
+                    value={searchTerm}
+                    onValueChange={(v) => {
+                      setSearchTerm(v);
+                    }}
+                    className="w-44 flex-none"
+                  />
+                </FilterField>
+                <FilterField label={t('common.fields.status')}>
+                  <Select
+                    value={filterStatus || 'all'}
+                    onValueChange={(v) => {
+                      setFilterStatus(v === 'all' ? '' : v);
+                    }}
                   >
-                    <SelectValue placeholder={t('pages.books.statusPlaceholder')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('pages.books.allStatuses')}</SelectItem>
-                    {READ_STATUS.map((s) => {
-                      const StatusIcon = READ_STATUS_ICONS[s.value];
-                      return (
-                        <SelectItem
-                          key={s.value}
-                          value={s.value}
-                          icon={
-                            StatusIcon ? <StatusIcon className="h-4 w-4" /> : undefined
-                          }
-                        >
-                          {t(`pages.books.readStatuses.${s.value}`)}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={filterGenre || 'all'}
-                  onValueChange={(v) => {
-                    setFilterGenre(v === 'all' ? '' : v);
-                  }}
-                >
-                  <SelectTrigger
-                    className="w-36"
-                    startIcon={<Library className="h-3.5 w-3.5" />}
+                    <SelectTrigger
+                      className="w-36"
+                      startIcon={<BookOpen className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.books.statusPlaceholder')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.books.allStatuses')}
+                      </SelectItem>
+                      {READ_STATUS.map((s) => {
+                        const StatusIcon = READ_STATUS_ICONS[s.value];
+                        return (
+                          <SelectItem
+                            key={s.value}
+                            value={s.value}
+                            icon={
+                              StatusIcon ? (
+                                <StatusIcon className="h-4 w-4" />
+                              ) : undefined
+                            }
+                          >
+                            {t(`pages.books.readStatuses.${s.value}`)}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </FilterField>
+                <FilterField label={t('common.filterLabels.genre')}>
+                  <Select
+                    value={filterGenre || 'all'}
+                    onValueChange={(v) => {
+                      setFilterGenre(v === 'all' ? '' : v);
+                    }}
                   >
-                    <SelectValue placeholder={t('pages.books.genrePlaceholder')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('pages.books.allGenres')}</SelectItem>
-                    {BOOK_GENRES.map((g) => {
-                      const GenreIcon = BOOK_GENRE_ICONS[g.value];
-                      return (
-                        <SelectItem
-                          key={g.value}
-                          value={g.value}
-                          icon={
-                            GenreIcon ? <GenreIcon className="h-4 w-4" /> : undefined
-                          }
-                        >
-                          {t(`pages.books.genres.${g.value}`)}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                    <SelectTrigger
+                      className="w-36"
+                      startIcon={<Library className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.books.genrePlaceholder')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('pages.books.allGenres')}</SelectItem>
+                      {BOOK_GENRES.map((g) => {
+                        const GenreIcon = BOOK_GENRE_ICONS[g.value];
+                        return (
+                          <SelectItem
+                            key={g.value}
+                            value={g.value}
+                            icon={
+                              GenreIcon ? <GenreIcon className="h-4 w-4" /> : undefined
+                            }
+                          >
+                            {t(`pages.books.genres.${g.value}`)}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </FilterField>
               </FilterBar>
 
               {filteredBooks.length === 0 ? (

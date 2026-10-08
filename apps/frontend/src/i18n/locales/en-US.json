@@ -246,6 +246,29 @@
       "neutral": "Neutral",
       "bad": "Bad",
       "terrible": "Terrible"
+    },
+    "filterLabels": {
+      "search": "Search",
+      "period": "Period",
+      "role": "Role",
+      "brand": "Brand",
+      "card": "Card",
+      "bill": "Bill",
+      "year": "Year",
+      "month": "Month",
+      "priority": "Priority",
+      "platform": "Platform",
+      "nationality": "Nationality",
+      "mood": "Mood",
+      "member": "Member",
+      "muscle": "Muscle",
+      "country": "Country",
+      "color": "Color",
+      "book": "Book",
+      "action": "Action",
+      "event": "Event",
+      "genre": "Genre",
+      "user": "User"
     }
   },
   "nav": {
@@ -1496,7 +1519,7 @@
       "noBills": "No bills",
       "allCategories": "All Categories",
       "allStatus": "All Status",
-      "viewMode": "View:",
+      "viewMode": "View",
       "byBill": "Bills",
       "list": "Purchases",
       "foundInstallments": "{{count}} installment(s) found",

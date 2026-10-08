@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router';
 
 import { AccountForm } from '@/components/accounts/AccountForm';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
@@ -306,36 +306,40 @@ export default function Accounts() {
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={t('pages.accounts.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-52 sm:w-64"
-        />
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger
-            className="w-44"
-            aria-label={t('pages.accounts.allTypes')}
-            startIcon={<Wallet className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.accounts.allTypes')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.accounts.allTypes')}</SelectItem>
-            {Object.keys(TRANSLATIONS.accountTypes).map((key) => {
-              const Icon = ACCOUNT_TYPE_ICONS[key];
-              return (
-                <SelectItem
-                  key={key}
-                  value={key}
-                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
-                >
-                  {translate('accountTypes', key)}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
+        <FilterField label={t('common.filterLabels.search')}>
+          <SearchInput
+            placeholder={t('pages.accounts.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.type')}>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.accounts.allTypes')}
+              startIcon={<Wallet className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.accounts.allTypes')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.accounts.allTypes')}</SelectItem>
+              {Object.keys(TRANSLATIONS.accountTypes).map((key) => {
+                const Icon = ACCOUNT_TYPE_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {translate('accountTypes', key)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
       </FilterBar>
 
       {isLoading ? (

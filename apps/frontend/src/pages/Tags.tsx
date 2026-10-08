@@ -6,7 +6,7 @@ import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
@@ -203,37 +203,41 @@ export default function Tags({
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={`${t('common.actions.search')}...`}
-          value={search}
-          onValueChange={setSearch}
-        />
-        <Select value={colorFilter} onValueChange={setColorFilter}>
-          <SelectTrigger
-            className="w-40"
-            aria-label={t('pages.tags.allColors')}
-            startIcon={<Palette className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.tags.allColors')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.tags.allColors')}</SelectItem>
-            {colorOptions.map((color) => (
-              <SelectItem
-                key={color}
-                value={color}
-                icon={
-                  <span
-                    className="h-3 w-3 rounded-full"
-                    style={{ backgroundColor: `hsl(var(--${color}))` }}
-                  />
-                }
-              >
-                {t(`common.colorTokens.${color}`, color)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FilterField label={t('common.filterLabels.search')}>
+          <SearchInput
+            placeholder={`${t('common.actions.search')}...`}
+            value={search}
+            onValueChange={setSearch}
+          />
+        </FilterField>
+        <FilterField label={t('common.filterLabels.color')}>
+          <Select value={colorFilter} onValueChange={setColorFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.tags.allColors')}
+              startIcon={<Palette className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.tags.allColors')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.tags.allColors')}</SelectItem>
+              {colorOptions.map((color) => (
+                <SelectItem
+                  key={color}
+                  value={color}
+                  icon={
+                    <span
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: `hsl(var(--${color}))` }}
+                    />
+                  }
+                >
+                  {t(`common.colorTokens.${color}`, color)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
       </FilterBar>
 
       {isLoading ? (

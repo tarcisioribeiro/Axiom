@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
@@ -364,55 +364,63 @@ export default function StoredAccounts() {
               : []),
           ]}
         >
-          <SearchInput
-            placeholder={t('pages.storedAccounts.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            className="w-52 sm:w-64"
-          />
-          <Select value={accountTypeFilter} onValueChange={setAccountTypeFilter}>
-            <SelectTrigger
-              className="w-44"
-              aria-label={t('pages.storedAccounts.allTypes')}
-              startIcon={<CreditCard className="h-3.5 w-3.5" />}
-            >
-              <SelectValue placeholder={t('pages.storedAccounts.allTypes')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.storedAccounts.allTypes')}</SelectItem>
-              {ACCOUNT_TYPES.map(({ value }) => {
-                const Icon = STORED_ACCOUNT_TYPE_ICONS[value] ?? Building2;
-                return (
-                  <SelectItem
-                    key={value}
-                    value={value}
-                    icon={<Icon className="h-4 w-4" />}
-                  >
-                    {t(`pages.storedAccounts.accountTypes.${value}`)}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-          <Select value={institutionFilter} onValueChange={setInstitutionFilter}>
-            <SelectTrigger
-              className="w-48"
-              aria-label={t('pages.storedAccounts.allInstitutions')}
-              startIcon={<Building2 className="h-3.5 w-3.5" />}
-            >
-              <SelectValue placeholder={t('pages.storedAccounts.allInstitutions')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">
-                {t('pages.storedAccounts.allInstitutions')}
-              </SelectItem>
-              {institutionOptions.map((institution) => (
-                <SelectItem key={institution} value={institution}>
-                  {translate('institutions', institution)}
+          <FilterField label={t('common.filterLabels.search')}>
+            <SearchInput
+              placeholder={t('pages.storedAccounts.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="w-52 sm:w-64"
+            />
+          </FilterField>
+          <FilterField label={t('common.fields.type')}>
+            <Select value={accountTypeFilter} onValueChange={setAccountTypeFilter}>
+              <SelectTrigger
+                className="w-44"
+                aria-label={t('pages.storedAccounts.allTypes')}
+                startIcon={<CreditCard className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.storedAccounts.allTypes')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('pages.storedAccounts.allTypes')}
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {ACCOUNT_TYPES.map(({ value }) => {
+                  const Icon = STORED_ACCOUNT_TYPE_ICONS[value] ?? Building2;
+                  return (
+                    <SelectItem
+                      key={value}
+                      value={value}
+                      icon={<Icon className="h-4 w-4" />}
+                    >
+                      {t(`pages.storedAccounts.accountTypes.${value}`)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </FilterField>
+          <FilterField label={t('common.fields.institution')}>
+            <Select value={institutionFilter} onValueChange={setInstitutionFilter}>
+              <SelectTrigger
+                className="w-48"
+                aria-label={t('pages.storedAccounts.allInstitutions')}
+                startIcon={<Building2 className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.storedAccounts.allInstitutions')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('pages.storedAccounts.allInstitutions')}
+                </SelectItem>
+                {institutionOptions.map((institution) => (
+                  <SelectItem key={institution} value={institution}>
+                    {translate('institutions', institution)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterField>
           <Button
             variant={showFavoritesOnly ? 'default' : 'outline'}
             size="sm"

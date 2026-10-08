@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -370,59 +370,65 @@ export default function Skills() {
                 : []),
             ]}
           >
-            <SearchInput
-              placeholder={t('pages.skills.searchPlaceholder')}
-              value={search}
-              onValueChange={setSearch}
-            />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger
-                className="w-36"
-                aria-label={t('pages.skills.allStatus')}
-                startIcon={<CircleDot className="h-3.5 w-3.5" />}
-              >
-                <SelectValue placeholder={t('pages.skills.allStatus')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('pages.skills.allStatus')}</SelectItem>
-                {SKILL_STATUSES.map((status) => {
-                  const StatusIcon = SKILL_STATUS_ICONS[status];
-                  return (
-                    <SelectItem
-                      key={status}
-                      value={status}
-                      icon={<StatusIcon className="h-4 w-4" />}
-                    >
-                      {t(`pages.skills.status.${status}`)}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger
-                className="w-40"
-                aria-label={t('pages.skills.allCategories')}
-                startIcon={<Brain className="h-3.5 w-3.5" />}
-              >
-                <SelectValue placeholder={t('pages.skills.allCategories')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('pages.skills.allCategories')}</SelectItem>
-                {SKILL_CATEGORIES.map((category) => {
-                  const Icon = SKILL_CATEGORY_ICONS[category];
-                  return (
-                    <SelectItem
-                      key={category}
-                      value={category}
-                      icon={<Icon className="h-4 w-4" />}
-                    >
-                      {t(`pages.skills.category.${category}`)}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            <FilterField label={t('common.filterLabels.search')}>
+              <SearchInput
+                placeholder={t('pages.skills.searchPlaceholder')}
+                value={search}
+                onValueChange={setSearch}
+              />
+            </FilterField>
+            <FilterField label={t('common.fields.status')}>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger
+                  className="w-36"
+                  aria-label={t('pages.skills.allStatus')}
+                  startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('pages.skills.allStatus')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('pages.skills.allStatus')}</SelectItem>
+                  {SKILL_STATUSES.map((status) => {
+                    const StatusIcon = SKILL_STATUS_ICONS[status];
+                    return (
+                      <SelectItem
+                        key={status}
+                        value={status}
+                        icon={<StatusIcon className="h-4 w-4" />}
+                      >
+                        {t(`pages.skills.status.${status}`)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('common.fields.category')}>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger
+                  className="w-40"
+                  aria-label={t('pages.skills.allCategories')}
+                  startIcon={<Brain className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('pages.skills.allCategories')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('pages.skills.allCategories')}</SelectItem>
+                  {SKILL_CATEGORIES.map((category) => {
+                    const Icon = SKILL_CATEGORY_ICONS[category];
+                    return (
+                      <SelectItem
+                        key={category}
+                        value={category}
+                        icon={<Icon className="h-4 w-4" />}
+                      >
+                        {t(`pages.skills.category.${category}`)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </FilterField>
           </FilterBar>
           <div className="border-border flex rounded-lg border">
             <PlainButton

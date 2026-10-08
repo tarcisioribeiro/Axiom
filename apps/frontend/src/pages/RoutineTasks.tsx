@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -483,100 +483,110 @@ export default function RoutineTasks({
                 : []),
             ]}
           >
-            <SearchInput
-              placeholder={t('pages.routineTasks.searchPlaceholder')}
-              value={searchTerm}
-              onValueChange={setSearchTerm}
-              className="w-44"
-            />
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger
+            <FilterField label={t('common.filterLabels.search')}>
+              <SearchInput
+                placeholder={t('pages.routineTasks.searchPlaceholder')}
+                value={searchTerm}
+                onValueChange={setSearchTerm}
                 className="w-44"
-                aria-label={t('pages.routineTasks.columns.category')}
-                startIcon={<Tag className="h-3.5 w-3.5" />}
-              >
-                <SelectValue placeholder={t('pages.routineTasks.allCategories')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t('pages.routineTasks.allCategories')}
-                </SelectItem>
-                {TASK_CATEGORIES.map(({ value }) => {
-                  const CatIcon = TASK_CATEGORY_ICONS[value];
-                  return (
-                    <SelectItem
-                      key={value}
-                      value={value}
-                      icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
-                    >
-                      {translate('taskCategories', value)}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger
-                className="w-36"
-                aria-label={t('pages.routineTasks.allStatus')}
-                startIcon={<CircleDot className="h-3.5 w-3.5" />}
-              >
-                <SelectValue placeholder={t('pages.routineTasks.allStatus')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('pages.routineTasks.allStatus')}</SelectItem>
-                <SelectItem
-                  value="active"
-                  icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+              />
+            </FilterField>
+            <FilterField label={t('common.fields.category')}>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger
+                  className="w-44"
+                  aria-label={t('pages.routineTasks.columns.category')}
+                  startIcon={<Tag className="h-3.5 w-3.5" />}
                 >
-                  {t('pages.routineTasks.statusActive')}
-                </SelectItem>
-                <SelectItem
-                  value="inactive"
-                  icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                  <SelectValue placeholder={t('pages.routineTasks.allCategories')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {t('pages.routineTasks.allCategories')}
+                  </SelectItem>
+                  {TASK_CATEGORIES.map(({ value }) => {
+                    const CatIcon = TASK_CATEGORY_ICONS[value];
+                    return (
+                      <SelectItem
+                        key={value}
+                        value={value}
+                        icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                      >
+                        {translate('taskCategories', value)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('common.fields.status')}>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger
+                  className="w-36"
+                  aria-label={t('pages.routineTasks.allStatus')}
+                  startIcon={<CircleDot className="h-3.5 w-3.5" />}
                 >
-                  {t('pages.routineTasks.statusInactive')}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger
-                className="w-36"
-                aria-label={t('pages.routineTasks.allPriorities')}
-                startIcon={<Flag className="h-3.5 w-3.5" />}
-              >
-                <SelectValue placeholder={t('pages.routineTasks.allPriorities')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t('pages.routineTasks.allPriorities')}
-                </SelectItem>
-                <SelectItem
-                  value="low"
-                  icon={<PRIORITY_ICONS.low className="h-4 w-4" />}
+                  <SelectValue placeholder={t('pages.routineTasks.allStatus')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {t('pages.routineTasks.allStatus')}
+                  </SelectItem>
+                  <SelectItem
+                    value="active"
+                    icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                  >
+                    {t('pages.routineTasks.statusActive')}
+                  </SelectItem>
+                  <SelectItem
+                    value="inactive"
+                    icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                  >
+                    {t('pages.routineTasks.statusInactive')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('common.filterLabels.priority')}>
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger
+                  className="w-36"
+                  aria-label={t('pages.routineTasks.allPriorities')}
+                  startIcon={<Flag className="h-3.5 w-3.5" />}
                 >
-                  {t('pages.routineTasks.form.priorityOptions.low')}
-                </SelectItem>
-                <SelectItem
-                  value="medium"
-                  icon={<PRIORITY_ICONS.medium className="h-4 w-4" />}
-                >
-                  {t('pages.routineTasks.form.priorityOptions.medium')}
-                </SelectItem>
-                <SelectItem
-                  value="high"
-                  icon={<PRIORITY_ICONS.high className="h-4 w-4" />}
-                >
-                  {t('pages.routineTasks.form.priorityOptions.high')}
-                </SelectItem>
-                <SelectItem
-                  value="critical"
-                  icon={<PRIORITY_ICONS.critical className="h-4 w-4" />}
-                >
-                  {t('pages.routineTasks.form.priorityOptions.critical')}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+                  <SelectValue placeholder={t('pages.routineTasks.allPriorities')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {t('pages.routineTasks.allPriorities')}
+                  </SelectItem>
+                  <SelectItem
+                    value="low"
+                    icon={<PRIORITY_ICONS.low className="h-4 w-4" />}
+                  >
+                    {t('pages.routineTasks.form.priorityOptions.low')}
+                  </SelectItem>
+                  <SelectItem
+                    value="medium"
+                    icon={<PRIORITY_ICONS.medium className="h-4 w-4" />}
+                  >
+                    {t('pages.routineTasks.form.priorityOptions.medium')}
+                  </SelectItem>
+                  <SelectItem
+                    value="high"
+                    icon={<PRIORITY_ICONS.high className="h-4 w-4" />}
+                  >
+                    {t('pages.routineTasks.form.priorityOptions.high')}
+                  </SelectItem>
+                  <SelectItem
+                    value="critical"
+                    icon={<PRIORITY_ICONS.critical className="h-4 w-4" />}
+                  >
+                    {t('pages.routineTasks.form.priorityOptions.critical')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
           </FilterBar>
 
           <DataTable

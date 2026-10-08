@@ -21,7 +21,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -279,53 +279,59 @@ export default function Webhooks() {
                 : []),
             ]}
           >
-            <SearchInput
-              placeholder={t('webhooks.searchPlaceholder')}
-              value={searchTerm}
-              onValueChange={setSearchTerm}
-              className="w-44"
-            />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger
-                className="w-36"
-                aria-label={t('webhooks.allStatus')}
-                startIcon={<CircleDot className="h-3.5 w-3.5" />}
-              >
-                <SelectValue placeholder={t('webhooks.allStatus')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('webhooks.allStatus')}</SelectItem>
-                <SelectItem
-                  value="active"
-                  icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
-                >
-                  {t('common.status.active')}
-                </SelectItem>
-                <SelectItem
-                  value="inactive"
-                  icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
-                >
-                  {t('common.status.inactive')}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={eventFilter} onValueChange={setEventFilter}>
-              <SelectTrigger
+            <FilterField label={t('common.filterLabels.search')}>
+              <SearchInput
+                placeholder={t('webhooks.searchPlaceholder')}
+                value={searchTerm}
+                onValueChange={setSearchTerm}
                 className="w-44"
-                aria-label={t('webhooks.allEvents')}
-                startIcon={<Zap className="h-3.5 w-3.5" />}
-              >
-                <SelectValue placeholder={t('webhooks.allEvents')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('webhooks.allEvents')}</SelectItem>
-                {(events ?? []).map((ev) => (
-                  <SelectItem key={ev.value} value={ev.value}>
-                    {ev.label}
+              />
+            </FilterField>
+            <FilterField label={t('common.fields.status')}>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger
+                  className="w-36"
+                  aria-label={t('webhooks.allStatus')}
+                  startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('webhooks.allStatus')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('webhooks.allStatus')}</SelectItem>
+                  <SelectItem
+                    value="active"
+                    icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                  >
+                    {t('common.status.active')}
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  <SelectItem
+                    value="inactive"
+                    icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                  >
+                    {t('common.status.inactive')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('common.filterLabels.event')}>
+              <Select value={eventFilter} onValueChange={setEventFilter}>
+                <SelectTrigger
+                  className="w-44"
+                  aria-label={t('webhooks.allEvents')}
+                  startIcon={<Zap className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('webhooks.allEvents')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('webhooks.allEvents')}</SelectItem>
+                  {(events ?? []).map((ev) => (
+                    <SelectItem key={ev.value} value={ev.value}>
+                      {ev.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
           </FilterBar>
 
           {filteredWebhooks.length === 0 ? (

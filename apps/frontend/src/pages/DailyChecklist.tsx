@@ -47,7 +47,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -898,64 +898,72 @@ export default function DailyChecklist({
                       : []),
                   ]}
                 >
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger
-                      className="w-44"
-                      aria-label={t('pages.dailyChecklist.allCategories')}
-                      startIcon={<Tag className="h-3.5 w-3.5" />}
-                    >
-                      <SelectValue
-                        placeholder={t('pages.dailyChecklist.allCategories')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t('pages.dailyChecklist.allCategories')}
-                      </SelectItem>
-                      {TASK_CATEGORIES.map(({ value }) => {
-                        const CatIcon = TASK_CATEGORY_ICONS[value];
-                        return (
-                          <SelectItem
-                            key={value}
-                            value={value}
-                            icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
-                          >
-                            {translate('taskCategories', value)}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger
-                      className="w-36"
-                      aria-label={t('pages.dailyChecklist.allStatus')}
-                      startIcon={<CircleDot className="h-3.5 w-3.5" />}
-                    >
-                      <SelectValue placeholder={t('pages.dailyChecklist.allStatus')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t('pages.dailyChecklist.allStatus')}
-                      </SelectItem>
-                      <SelectItem
-                        value="completed"
-                        icon={
-                          <DAILY_CHECKLIST_STATUS_ICONS.completed className="h-4 w-4" />
-                        }
+                  <FilterField label={t('common.fields.category')}>
+                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                      <SelectTrigger
+                        className="w-44"
+                        aria-label={t('pages.dailyChecklist.allCategories')}
+                        startIcon={<Tag className="h-3.5 w-3.5" />}
                       >
-                        {t('pages.dailyChecklist.done')}
-                      </SelectItem>
-                      <SelectItem
-                        value="pending"
-                        icon={
-                          <DAILY_CHECKLIST_STATUS_ICONS.pending className="h-4 w-4" />
-                        }
+                        <SelectValue
+                          placeholder={t('pages.dailyChecklist.allCategories')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.dailyChecklist.allCategories')}
+                        </SelectItem>
+                        {TASK_CATEGORIES.map(({ value }) => {
+                          const CatIcon = TASK_CATEGORY_ICONS[value];
+                          return (
+                            <SelectItem
+                              key={value}
+                              value={value}
+                              icon={
+                                CatIcon ? <CatIcon className="h-4 w-4" /> : undefined
+                              }
+                            >
+                              {translate('taskCategories', value)}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
+                  <FilterField label={t('common.fields.status')}>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger
+                        className="w-36"
+                        aria-label={t('pages.dailyChecklist.allStatus')}
+                        startIcon={<CircleDot className="h-3.5 w-3.5" />}
                       >
-                        {t('common.status.pending')}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                        <SelectValue
+                          placeholder={t('pages.dailyChecklist.allStatus')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.dailyChecklist.allStatus')}
+                        </SelectItem>
+                        <SelectItem
+                          value="completed"
+                          icon={
+                            <DAILY_CHECKLIST_STATUS_ICONS.completed className="h-4 w-4" />
+                          }
+                        >
+                          {t('pages.dailyChecklist.done')}
+                        </SelectItem>
+                        <SelectItem
+                          value="pending"
+                          icon={
+                            <DAILY_CHECKLIST_STATUS_ICONS.pending className="h-4 w-4" />
+                          }
+                        >
+                          {t('common.status.pending')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
                 </FilterBar>
 
                 {filteredInstances.length === 0 ? (

@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -200,29 +200,33 @@ export default function Publishers() {
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={t('pages.publishers.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-52 sm:w-64"
-        />
-        <Select value={countryFilter} onValueChange={setCountryFilter}>
-          <SelectTrigger
-            className="w-44"
-            aria-label={t('pages.publishers.allCountries')}
-            startIcon={<Globe className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.publishers.allCountries')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.publishers.allCountries')}</SelectItem>
-            {COUNTRIES.map((country) => (
-              <SelectItem key={country.value} value={country.value}>
-                {t(`pages.publishers.countries.${country.value}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FilterField label={t('common.filterLabels.search')}>
+          <SearchInput
+            placeholder={t('pages.publishers.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.filterLabels.country')}>
+          <Select value={countryFilter} onValueChange={setCountryFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.publishers.allCountries')}
+              startIcon={<Globe className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.publishers.allCountries')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.publishers.allCountries')}</SelectItem>
+              {COUNTRIES.map((country) => (
+                <SelectItem key={country.value} value={country.value}>
+                  {t(`pages.publishers.countries.${country.value}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
       </FilterBar>
 
       {filteredPublishers.length === 0 ? (

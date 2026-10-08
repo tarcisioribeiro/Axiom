@@ -32,7 +32,7 @@ import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -690,63 +690,69 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
               : []),
           ]}
         >
-          <SearchInput
-            placeholder={t('pages.goals.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            className="w-44"
-          />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger
-              className="w-40"
-              aria-label={t('pages.goals.allStatus')}
-              startIcon={<CircleDot className="h-3.5 w-3.5" />}
-            >
-              <SelectValue placeholder={t('pages.goals.allStatus')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.goals.allStatus')}</SelectItem>
-              <SelectItem
-                value="active"
-                icon={<GOAL_STATUS_ICONS.active className="h-4 w-4" />}
-              >
-                {t('pages.goals.form.statusOptions.active')}
-              </SelectItem>
-              <SelectItem
-                value="completed"
-                icon={<GOAL_STATUS_ICONS.completed className="h-4 w-4" />}
-              >
-                {t('pages.goals.form.statusOptions.completed')}
-              </SelectItem>
-              <SelectItem
-                value="failed"
-                icon={<GOAL_STATUS_ICONS.failed className="h-4 w-4" />}
-              >
-                {t('pages.goals.form.statusOptions.failed')}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger
+          <FilterField label={t('common.filterLabels.search')}>
+            <SearchInput
+              placeholder={t('pages.goals.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
               className="w-44"
-              aria-label={t('pages.goals.allTypes')}
-              startIcon={<Layers className="h-3.5 w-3.5" />}
-            >
-              <SelectValue placeholder={t('pages.goals.allTypes')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.goals.allTypes')}</SelectItem>
-              {Object.entries(GOAL_TYPE_META).map(([key, meta]) => (
+            />
+          </FilterField>
+          <FilterField label={t('common.fields.status')}>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger
+                className="w-40"
+                aria-label={t('pages.goals.allStatus')}
+                startIcon={<CircleDot className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.goals.allStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.goals.allStatus')}</SelectItem>
                 <SelectItem
-                  key={key}
-                  value={key}
-                  icon={<meta.icon className="h-4 w-4" />}
+                  value="active"
+                  icon={<GOAL_STATUS_ICONS.active className="h-4 w-4" />}
                 >
-                  {t(`pages.goals.goalTypes.${key}`, { defaultValue: meta.label })}
+                  {t('pages.goals.form.statusOptions.active')}
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                <SelectItem
+                  value="completed"
+                  icon={<GOAL_STATUS_ICONS.completed className="h-4 w-4" />}
+                >
+                  {t('pages.goals.form.statusOptions.completed')}
+                </SelectItem>
+                <SelectItem
+                  value="failed"
+                  icon={<GOAL_STATUS_ICONS.failed className="h-4 w-4" />}
+                >
+                  {t('pages.goals.form.statusOptions.failed')}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </FilterField>
+          <FilterField label={t('common.fields.type')}>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger
+                className="w-44"
+                aria-label={t('pages.goals.allTypes')}
+                startIcon={<Layers className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.goals.allTypes')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.goals.allTypes')}</SelectItem>
+                {Object.entries(GOAL_TYPE_META).map(([key, meta]) => (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={<meta.icon className="h-4 w-4" />}
+                  >
+                    {t(`pages.goals.goalTypes.${key}`, { defaultValue: meta.label })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterField>
         </FilterBar>
       )}
 

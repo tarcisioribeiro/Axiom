@@ -12,15 +12,11 @@ describe('getTourKey', () => {
   });
 
   it('sobe dois níveis para uma sub-aba aninhada', () => {
-    expect(getTourKey('/planning/tasks-goals/routine/focus-blocks')).toBe(
-      'tasksGoals'
-    );
+    expect(getTourKey('/planning/tasks-goals/routine/focus-blocks')).toBe('tasksGoals');
   });
 
   it('casa o padrão de detalhe de conciliação bancária', () => {
-    expect(getTourKey('/bank-reconciliation/abc123')).toBe(
-      'bankReconciliationDetail'
-    );
+    expect(getTourKey('/bank-reconciliation/abc123')).toBe('bankReconciliationDetail');
   });
 
   it('retorna undefined para rota desconhecida', () => {

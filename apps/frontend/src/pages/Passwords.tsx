@@ -35,7 +35,7 @@ import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -941,38 +941,44 @@ export default function Passwords() {
               : []),
           ]}
         >
-          <SearchInput
-            placeholder={t('pages.passwords.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            className="w-52 sm:w-64"
-          />
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger
-              className="w-44"
-              aria-label={t('pages.passwords.allCategories')}
-              startIcon={<Tag className="h-3.5 w-3.5" />}
-            >
-              <SelectValue placeholder={t('pages.passwords.allCategories')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.passwords.allCategories')}</SelectItem>
-              {PASSWORD_CATEGORIES.map((cat) => {
-                const Icon =
-                  PASSWORD_CATEGORY_ICONS[cat.value] ??
-                  PASSWORD_CATEGORY_ICONS['other'];
-                return (
-                  <SelectItem
-                    key={cat.value}
-                    value={cat.value}
-                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
-                  >
-                    {t(`pages.passwords.categories.${cat.value}`)}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+          <FilterField label={t('common.filterLabels.search')}>
+            <SearchInput
+              placeholder={t('pages.passwords.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="w-52 sm:w-64"
+            />
+          </FilterField>
+          <FilterField label={t('common.fields.category')}>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger
+                className="w-44"
+                aria-label={t('pages.passwords.allCategories')}
+                startIcon={<Tag className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.passwords.allCategories')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('pages.passwords.allCategories')}
+                </SelectItem>
+                {PASSWORD_CATEGORIES.map((cat) => {
+                  const Icon =
+                    PASSWORD_CATEGORY_ICONS[cat.value] ??
+                    PASSWORD_CATEGORY_ICONS['other'];
+                  return (
+                    <SelectItem
+                      key={cat.value}
+                      value={cat.value}
+                      icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                    >
+                      {t(`pages.passwords.categories.${cat.value}`)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </FilterField>
           <Button
             variant={showFavoritesOnly ? 'default' : 'outline'}
             size="sm"

@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -267,78 +267,88 @@ export default function Receivables({
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={t('pages.receivables.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-52 sm:w-64"
-        />
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger
-            className="w-44"
-            aria-label={t('pages.receivables.allCategories')}
-            startIcon={<Tag className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.receivables.allCategories')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.receivables.allCategories')}</SelectItem>
-            {REVENUE_CATEGORIES_CANONICAL.map(({ key }) => {
-              const Icon = REVENUE_CATEGORY_ICONS[key];
-              return (
-                <SelectItem
-                  key={key}
-                  value={key}
-                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
-                >
-                  {translate('revenueCategories', key)}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger
-            className="w-40"
-            aria-label={t('pages.receivables.allStatus')}
-            startIcon={<CircleDot className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.receivables.allStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.receivables.allStatus')}</SelectItem>
-            <SelectItem
-              value="active"
-              icon={<BILL_STATUS_ICONS.active className="h-4 w-4" />}
+        <FilterField label={t('common.filterLabels.search')}>
+          <SearchInput
+            placeholder={t('pages.receivables.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.category')}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.receivables.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
             >
-              {t('pages.receivables.status.active')}
-            </SelectItem>
-            <SelectItem
-              value="received"
-              icon={<BILL_STATUS_ICONS.received className="h-4 w-4" />}
+              <SelectValue placeholder={t('pages.receivables.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.receivables.allCategories')}
+              </SelectItem>
+              {REVENUE_CATEGORIES_CANONICAL.map(({ key }) => {
+                const Icon = REVENUE_CATEGORY_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {translate('revenueCategories', key)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.status')}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.receivables.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
             >
-              {t('pages.receivables.status.received')}
-            </SelectItem>
-            <SelectItem
-              value="overdue"
-              icon={<BILL_STATUS_ICONS.overdue className="h-4 w-4" />}
-            >
-              {t('pages.receivables.status.overdue')}
-            </SelectItem>
-            <SelectItem
-              value="cancelled"
-              icon={<BILL_STATUS_ICONS.cancelled className="h-4 w-4" />}
-            >
-              {t('pages.receivables.status.cancelled')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <DateRangeFilter
-          startDate={startDate}
-          endDate={endDate}
-          onStartChange={setStartDate}
-          onEndChange={setEndDate}
-        />
+              <SelectValue placeholder={t('pages.receivables.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.receivables.allStatus')}</SelectItem>
+              <SelectItem
+                value="active"
+                icon={<BILL_STATUS_ICONS.active className="h-4 w-4" />}
+              >
+                {t('pages.receivables.status.active')}
+              </SelectItem>
+              <SelectItem
+                value="received"
+                icon={<BILL_STATUS_ICONS.received className="h-4 w-4" />}
+              >
+                {t('pages.receivables.status.received')}
+              </SelectItem>
+              <SelectItem
+                value="overdue"
+                icon={<BILL_STATUS_ICONS.overdue className="h-4 w-4" />}
+              >
+                {t('pages.receivables.status.overdue')}
+              </SelectItem>
+              <SelectItem
+                value="cancelled"
+                icon={<BILL_STATUS_ICONS.cancelled className="h-4 w-4" />}
+              >
+                {t('pages.receivables.status.cancelled')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')}>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartChange={setStartDate}
+            onEndChange={setEndDate}
+          />
+        </FilterField>
       </FilterBar>
 
       {filteredReceivables.length === 0 ? (

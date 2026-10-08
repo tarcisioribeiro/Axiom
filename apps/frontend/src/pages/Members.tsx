@@ -16,7 +16,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -247,54 +247,60 @@ export default function Members() {
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={t('pages.members.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-52 sm:w-64"
-        />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger
-            className="w-36"
-            aria-label={t('pages.members.allStatus')}
-            startIcon={<CircleDot className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.members.allStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.members.allStatus')}</SelectItem>
-            <SelectItem
-              value="active"
-              icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+        <FilterField label={t('common.filterLabels.search')}>
+          <SearchInput
+            placeholder={t('pages.members.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.status')}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.members.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
             >
-              {t('common.status.active')}
-            </SelectItem>
-            <SelectItem
-              value="inactive"
-              icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+              <SelectValue placeholder={t('pages.members.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.members.allStatus')}</SelectItem>
+              <SelectItem
+                value="active"
+                icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+              >
+                {t('common.status.active')}
+              </SelectItem>
+              <SelectItem
+                value="inactive"
+                icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+              >
+                {t('common.status.inactive')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.role')}>
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.members.allRoles')}
+              startIcon={<Users className="h-3.5 w-3.5" />}
             >
-              {t('common.status.inactive')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger
-            className="w-40"
-            aria-label={t('pages.members.allRoles')}
-            startIcon={<Users className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.members.allRoles')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.members.allRoles')}</SelectItem>
-            <SelectItem value="creditor" icon={<Banknote className="h-4 w-4" />}>
-              {t('common.fields.is_creditor')}
-            </SelectItem>
-            <SelectItem value="benefited" icon={<HandCoins className="h-4 w-4" />}>
-              {t('common.fields.is_benefited')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
+              <SelectValue placeholder={t('pages.members.allRoles')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.members.allRoles')}</SelectItem>
+              <SelectItem value="creditor" icon={<Banknote className="h-4 w-4" />}>
+                {t('common.fields.is_creditor')}
+              </SelectItem>
+              <SelectItem value="benefited" icon={<HandCoins className="h-4 w-4" />}>
+                {t('common.fields.is_benefited')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
       </FilterBar>
 
       {filteredMembers.length === 0 ? (

@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -283,37 +283,43 @@ export default function ActivityLogs() {
                 : []),
             ]}
           >
-            <SearchInput
-              placeholder={t('pages.activityLogs.searchPlaceholder')}
-              value={searchTerm}
-              onValueChange={setSearchTerm}
-              className="w-44"
-            />
-            <Select value={actionFilter} onValueChange={setActionFilter}>
-              <SelectTrigger
+            <FilterField label={t('common.filterLabels.search')}>
+              <SearchInput
+                placeholder={t('pages.activityLogs.searchPlaceholder')}
+                value={searchTerm}
+                onValueChange={setSearchTerm}
                 className="w-44"
-                aria-label={t('pages.activityLogs.allActions')}
-                startIcon={<Activity className="h-3.5 w-3.5" />}
-              >
-                <SelectValue placeholder={t('pages.activityLogs.allActions')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t('pages.activityLogs.allActions')}
-                </SelectItem>
-                {ACTION_KEYS.map((action) => (
-                  <SelectItem key={action} value={action}>
-                    {t(`pages.adminLogs.actions.${action}`)}
+              />
+            </FilterField>
+            <FilterField label={t('common.filterLabels.action')}>
+              <Select value={actionFilter} onValueChange={setActionFilter}>
+                <SelectTrigger
+                  className="w-44"
+                  aria-label={t('pages.activityLogs.allActions')}
+                  startIcon={<Activity className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('pages.activityLogs.allActions')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {t('pages.activityLogs.allActions')}
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <DateRangeFilter
-              startDate={startDate}
-              endDate={endDate}
-              onStartChange={setStartDate}
-              onEndChange={setEndDate}
-            />
+                  {ACTION_KEYS.map((action) => (
+                    <SelectItem key={action} value={action}>
+                      {t(`pages.adminLogs.actions.${action}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('common.filterLabels.period')}>
+              <DateRangeFilter
+                startDate={startDate}
+                endDate={endDate}
+                onStartChange={setStartDate}
+                onEndChange={setEndDate}
+              />
+            </FilterField>
           </FilterBar>
 
           {filteredLogs.length === 0 ? (

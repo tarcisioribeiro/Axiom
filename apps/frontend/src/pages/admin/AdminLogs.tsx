@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PageSlide } from '@/components/common/PaginatedSlide';
@@ -90,33 +90,39 @@ export default function AdminLogs() {
       />
 
       <FilterBar hasActiveFilters={hasFilters} onClear={clearFilters}>
-        <SearchInput
-          placeholder={t('pages.adminLogs.userPlaceholder')}
-          value={username}
-          onValueChange={setUsername}
-        />
-        <Select
-          value={action || 'all'}
-          onValueChange={(v) => setAction(v === 'all' ? '' : v)}
-        >
-          <SelectTrigger aria-label={t('pages.adminLogs.allActions')}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.adminLogs.allActions')}</SelectItem>
-            {Object.keys(ACTION_KEYS).map((k) => (
-              <SelectItem key={k} value={k}>
-                {t(`pages.adminLogs.actions.${k}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <DateRangeFilter
-          startDate={dateFrom}
-          endDate={dateTo}
-          onStartChange={(date) => setDateFrom(date ? formatLocalDate(date) : '')}
-          onEndChange={(date) => setDateTo(date ? formatLocalDate(date) : '')}
-        />
+        <FilterField label={t('common.filterLabels.user')}>
+          <SearchInput
+            placeholder={t('pages.adminLogs.userPlaceholder')}
+            value={username}
+            onValueChange={setUsername}
+          />
+        </FilterField>
+        <FilterField label={t('common.filterLabels.action')}>
+          <Select
+            value={action || 'all'}
+            onValueChange={(v) => setAction(v === 'all' ? '' : v)}
+          >
+            <SelectTrigger aria-label={t('pages.adminLogs.allActions')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.adminLogs.allActions')}</SelectItem>
+              {Object.keys(ACTION_KEYS).map((k) => (
+                <SelectItem key={k} value={k}>
+                  {t(`pages.adminLogs.actions.${k}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')}>
+          <DateRangeFilter
+            startDate={dateFrom}
+            endDate={dateTo}
+            onStartChange={(date) => setDateFrom(date ? formatLocalDate(date) : '')}
+            onEndChange={(date) => setDateTo(date ? formatLocalDate(date) : '')}
+          />
+        </FilterField>
         <Button size="sm" onClick={applyFilters}>
           {t('pages.adminLogs.applyFilters')}
         </Button>

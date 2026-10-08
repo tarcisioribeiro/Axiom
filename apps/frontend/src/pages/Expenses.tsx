@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/common/DataTable';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { ExportModal } from '@/components/common/ExportModal';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
@@ -160,66 +160,74 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={t('pages.expenses.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-44"
-        />
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger
-            className="w-40"
-            aria-label={t('pages.expenses.allCategories')}
-            startIcon={<Tag className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.expenses.allCategories')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.expenses.allCategories')}</SelectItem>
-            {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
-              const Icon = EXPENSE_CATEGORY_ICONS[key];
-              return (
-                <SelectItem
-                  key={key}
-                  value={key}
-                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
-                >
-                  {label}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger
-            className="w-36"
-            aria-label={t('pages.expenses.allStatus')}
-            startIcon={<CircleDot className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.expenses.allStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.expenses.allStatus')}</SelectItem>
-            <SelectItem
-              value="paid"
-              icon={<PAYMENT_STATUS_ICONS.paid className="h-4 w-4" />}
+        <FilterField label={t('common.filterLabels.search')}>
+          <SearchInput
+            placeholder={t('pages.expenses.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-44"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.category')}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.expenses.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
             >
-              {t('common.status.paid')}
-            </SelectItem>
-            <SelectItem
-              value="pending"
-              icon={<PAYMENT_STATUS_ICONS.pending className="h-4 w-4" />}
+              <SelectValue placeholder={t('pages.expenses.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.expenses.allCategories')}</SelectItem>
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
+                const Icon = EXPENSE_CATEGORY_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {label}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.status')}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.expenses.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
             >
-              {t('common.status.pending')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <DateRangeFilter
-          startDate={startDate}
-          endDate={endDate}
-          onStartChange={setStartDate}
-          onEndChange={setEndDate}
-        />
+              <SelectValue placeholder={t('pages.expenses.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.expenses.allStatus')}</SelectItem>
+              <SelectItem
+                value="paid"
+                icon={<PAYMENT_STATUS_ICONS.paid className="h-4 w-4" />}
+              >
+                {t('common.status.paid')}
+              </SelectItem>
+              <SelectItem
+                value="pending"
+                icon={<PAYMENT_STATUS_ICONS.pending className="h-4 w-4" />}
+              >
+                {t('common.status.pending')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')}>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartChange={setStartDate}
+            onEndChange={setEndDate}
+          />
+        </FilterField>
       </FilterBar>
 
       <DataTable

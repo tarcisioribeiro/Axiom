@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
@@ -504,69 +504,79 @@ export default function CreditCardBills({
             : []),
         ]}
       >
-        <Select value={cardFilter} onValueChange={setCardFilter}>
-          <SelectTrigger className="w-52">
-            <SelectValue placeholder={t('pages.creditCardBills.allCards')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.creditCardBills.allCards')}</SelectItem>
-            {creditCards.map((c) => {
-              const masked = c.card_number_masked || '****';
-              const digitsOnly = masked.replace(/[^\d]/g, '');
-              const last4 = digitsOnly.length >= 4 ? digitsOnly.slice(-4) : '****';
-              const hasValidNumber = last4 !== '****' && /^\d{4}$/.test(last4);
-              const cardNumber = hasValidNumber ? `**** ${last4}` : '';
-              const brandName = translate('cardBrands', c.flag);
-              return (
-                <SelectItem key={c.id} value={c.id.toString()}>
-                  {c.on_card_name} {cardNumber} - {brandName}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger
-            className="w-auto whitespace-nowrap"
-            startIcon={<CircleDot className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.creditCardBills.allStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.creditCardBills.allStatus')}</SelectItem>
-            {Object.keys(TRANSLATIONS.billStatus).map((k) => {
-              const StatusIcon = CREDIT_CARD_BILL_STATUS_ICONS[k];
-              return (
-                <SelectItem
-                  key={k}
-                  value={k}
-                  icon={StatusIcon ? <StatusIcon className="h-4 w-4" /> : undefined}
-                >
-                  {translate('billStatus', k)}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <Select value={yearFilter} onValueChange={setYearFilter}>
-          <SelectTrigger className="w-auto whitespace-nowrap">
-            <SelectValue placeholder={t('pages.creditCardBills.allYears')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.creditCardBills.allYears')}</SelectItem>
-            {years.map((y) => (
-              <SelectItem key={y} value={y}>
-                {y}
+        <FilterField label={t('common.filterLabels.card')}>
+          <Select value={cardFilter} onValueChange={setCardFilter}>
+            <SelectTrigger className="w-52">
+              <SelectValue placeholder={t('pages.creditCardBills.allCards')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.creditCardBills.allCards')}</SelectItem>
+              {creditCards.map((c) => {
+                const masked = c.card_number_masked || '****';
+                const digitsOnly = masked.replace(/[^\d]/g, '');
+                const last4 = digitsOnly.length >= 4 ? digitsOnly.slice(-4) : '****';
+                const hasValidNumber = last4 !== '****' && /^\d{4}$/.test(last4);
+                const cardNumber = hasValidNumber ? `**** ${last4}` : '';
+                const brandName = translate('cardBrands', c.flag);
+                return (
+                  <SelectItem key={c.id} value={c.id.toString()}>
+                    {c.on_card_name} {cardNumber} - {brandName}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.status')}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-auto whitespace-nowrap"
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.creditCardBills.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.creditCardBills.allStatus')}
               </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <DateRangeFilter
-          startDate={dueDateStart}
-          endDate={dueDateEnd}
-          onStartChange={setDueDateStart}
-          onEndChange={setDueDateEnd}
-        />
+              {Object.keys(TRANSLATIONS.billStatus).map((k) => {
+                const StatusIcon = CREDIT_CARD_BILL_STATUS_ICONS[k];
+                return (
+                  <SelectItem
+                    key={k}
+                    value={k}
+                    icon={StatusIcon ? <StatusIcon className="h-4 w-4" /> : undefined}
+                  >
+                    {translate('billStatus', k)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.year')}>
+          <Select value={yearFilter} onValueChange={setYearFilter}>
+            <SelectTrigger className="w-auto whitespace-nowrap">
+              <SelectValue placeholder={t('pages.creditCardBills.allYears')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.creditCardBills.allYears')}</SelectItem>
+              {years.map((y) => (
+                <SelectItem key={y} value={y}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')}>
+          <DateRangeFilter
+            startDate={dueDateStart}
+            endDate={dueDateEnd}
+            onStartChange={setDueDateStart}
+            onEndChange={setDueDateEnd}
+          />
+        </FilterField>
       </FilterBar>
 
       <DataTable

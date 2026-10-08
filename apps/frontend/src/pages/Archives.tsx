@@ -19,7 +19,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -382,53 +382,59 @@ export default function Archives() {
               : []),
           ]}
         >
-          <SearchInput
-            placeholder={t('pages.archives.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            className="w-52 sm:w-64"
-          />
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger
-              className="w-40"
-              aria-label={t('pages.archives.allCategories')}
-              startIcon={<Tag className="h-3.5 w-3.5" />}
-            >
-              <SelectValue placeholder={t('pages.archives.allCategories')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.archives.allCategories')}</SelectItem>
-              {ARCHIVE_CATEGORY_KEYS.map((key) => {
-                const Icon = ARCHIVE_CATEGORY_ICONS[key];
-                return (
-                  <SelectItem
-                    key={key}
-                    value={key}
-                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
-                  >
-                    {t(`pages.archives.categories.${key}`)}
+          <FilterField label={t('common.filterLabels.search')}>
+            <SearchInput
+              placeholder={t('pages.archives.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="w-52 sm:w-64"
+            />
+          </FilterField>
+          <FilterField label={t('common.fields.category')}>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger
+                className="w-40"
+                aria-label={t('pages.archives.allCategories')}
+                startIcon={<Tag className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.archives.allCategories')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.archives.allCategories')}</SelectItem>
+                {ARCHIVE_CATEGORY_KEYS.map((key) => {
+                  const Icon = ARCHIVE_CATEGORY_ICONS[key];
+                  return (
+                    <SelectItem
+                      key={key}
+                      value={key}
+                      icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                    >
+                      {t(`pages.archives.categories.${key}`)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </FilterField>
+          <FilterField label={t('common.fields.type')}>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger
+                className="w-36"
+                aria-label={t('pages.archives.allTypes')}
+                startIcon={<FileText className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.archives.allTypes')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.archives.allTypes')}</SelectItem>
+                {ARCHIVE_TYPE_KEYS.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {t(`pages.archives.types.${key}`)}
                   </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger
-              className="w-36"
-              aria-label={t('pages.archives.allTypes')}
-              startIcon={<FileText className="h-3.5 w-3.5" />}
-            >
-              <SelectValue placeholder={t('pages.archives.allTypes')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.archives.allTypes')}</SelectItem>
-              {ARCHIVE_TYPE_KEYS.map((key) => (
-                <SelectItem key={key} value={key}>
-                  {t(`pages.archives.types.${key}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterField>
           <Button
             variant={showFavoritesOnly ? 'default' : 'outline'}
             size="sm"

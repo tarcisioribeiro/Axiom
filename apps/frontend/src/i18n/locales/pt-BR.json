@@ -246,6 +246,29 @@
       "neutral": "Neutro",
       "bad": "Ruim",
       "terrible": "Péssimo"
+    },
+    "filterLabels": {
+      "search": "Busca",
+      "period": "Período",
+      "role": "Papel",
+      "brand": "Bandeira",
+      "card": "Cartão",
+      "bill": "Fatura",
+      "year": "Ano",
+      "month": "Mês",
+      "priority": "Prioridade",
+      "platform": "Plataforma",
+      "nationality": "Nacionalidade",
+      "mood": "Humor",
+      "member": "Membro",
+      "muscle": "Músculo",
+      "country": "País",
+      "color": "Cor",
+      "book": "Livro",
+      "action": "Ação",
+      "event": "Evento",
+      "genre": "Gênero",
+      "user": "Usuário"
     }
   },
   "nav": {
@@ -1496,7 +1519,7 @@
       "noBills": "Nenhuma fatura",
       "allCategories": "Todas as Categorias",
       "allStatus": "Todos os Status",
-      "viewMode": "Visualização:",
+      "viewMode": "Visualização",
       "byBill": "Faturas",
       "list": "Compras",
       "foundInstallments": "{{count}} parcela(s) encontrada(s)",
