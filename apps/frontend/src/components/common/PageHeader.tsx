@@ -13,6 +13,8 @@ interface PageHeaderProps {
   };
   actions?: React.ReactNode;
   children?: React.ReactNode;
+  /** Classe do wrapper de `children`/`actions`. Padrão: `flex items-center gap-3` (bloco colado à direita). */
+  childrenClassName?: string;
 }
 
 type Module = 'finance' | 'security' | 'library' | 'planning' | 'workout' | 'nutrition';
@@ -78,6 +80,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   action,
   actions,
   children,
+  childrenClassName,
 }) => {
   const { pathname } = useLocation();
   const module = getModuleFromPath(pathname);
@@ -109,7 +112,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         <h1 className="heading-1">{title}</h1>
       </div>
       {(children || actions || action) && (
-        <div className="flex items-center gap-3">
+        <div className={childrenClassName ?? 'flex items-center gap-3'}>
           {children}
           {actions}
           {action && (

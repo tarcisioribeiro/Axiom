@@ -250,7 +250,7 @@ export function DataTable<T>({
                 {actions && (
                   <th
                     scope="col"
-                    className={`${cellPad} text-right text-sm font-semibold`}
+                    className={`${cellPad} text-center text-sm font-semibold`}
                   >
                     {t('common.table.actions')}
                   </th>

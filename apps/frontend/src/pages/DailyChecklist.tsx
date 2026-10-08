@@ -28,7 +28,8 @@ import {
   Moon,
   Sun,
   Sunset,
-  Timer,
+  Target,
+  Coffee,
   Play,
   Pause,
   RotateCcw,
@@ -69,6 +70,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SuccessAnimation } from '@/components/ui/success-animation';
+import { Tooltip } from '@/components/ui/tooltip';
 import { translate } from '@/config/constants';
 import { TASK_CATEGORY_ICONS } from '@/config/icons';
 import { useTaskReminders } from '@/hooks/use-task-reminders';
@@ -85,10 +87,12 @@ import {
   type TaskCard,
   type KanbanStatus,
   type InstanceStatus,
+  type InstancesForDateResponse,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type ViewMode = 'list' | 'kanban' | 'focusBlocks';
+const EMPTY_INSTANCES: TaskInstance[] = [];
 const VIEW_MODE_KEY = 'dailyChecklist.viewMode';
 const POMODORO_CYCLES_KEY = 'dailyChecklist.pomodoroCycles';
 const LIST_PAGE_SIZE = 5;
@@ -98,6 +102,11 @@ const POMODORO_DURATIONS: Record<PomodoroMode, number> = {
   focus: 25 * 60,
   shortBreak: 5 * 60,
   longBreak: 15 * 60,
+};
+const POMODORO_MODE_ICONS: Record<PomodoroMode, typeof Target> = {
+  focus: Target,
+  shortBreak: Coffee,
+  longBreak: Moon,
 };
 
 function PomodoroBar() {
@@ -163,28 +172,27 @@ function PomodoroBar() {
 
   return (
     <div className="gap-md bg-card px-lg py-md flex flex-wrap items-center rounded-lg border">
-      <div className="gap-sm flex items-center">
-        <Timer className="text-muted-foreground h-4 w-4" />
-        <span className="text-muted-foreground text-sm font-medium">
-          {t('pages.todayTasks.pomodoroTitle')}
-        </span>
-      </div>
       <div className="gap-xs flex items-center rounded-md border p-0.5">
-        {(['focus', 'shortBreak', 'longBreak'] as PomodoroMode[]).map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => switchMode(m)}
-            className={cn(
-              'px-sm py-xs rounded text-xs transition-colors',
-              mode === m
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            {t(`pages.todayTasks.pomodoroMode.${m}`)}
-          </button>
-        ))}
+        {(['focus', 'shortBreak', 'longBreak'] as PomodoroMode[]).map((m) => {
+          const ModeIcon = POMODORO_MODE_ICONS[m];
+          return (
+            <Tooltip key={m} content={t(`pages.todayTasks.pomodoroMode.${m}`)}>
+              <button
+                type="button"
+                onClick={() => switchMode(m)}
+                aria-label={t(`pages.todayTasks.pomodoroMode.${m}`)}
+                className={cn(
+                  'flex h-7 w-7 items-center justify-center rounded transition-colors',
+                  mode === m
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <ModeIcon className="h-4 w-4" />
+              </button>
+            </Tooltip>
+          );
+        })}
       </div>
       <CircularProgress value={progress} size={52} strokeWidth={4} color={ringColor}>
         <span className="text-xs font-bold tabular-nums">{timeString}</span>
@@ -263,14 +271,12 @@ export default function DailyChecklist({
   embedded = false,
   headerTarget,
 }: DailyChecklistProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<string>(() =>
     formatLocalDate(new Date())
   );
-  const [instances, setInstances] = useState<TaskInstance[]>([]);
   const [cards, setCards] = useState<TaskCard[]>([]);
   const [activeCard, setActiveCard] = useState<TaskCard | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [ownerId, setOwnerId] = useState(0);
@@ -345,14 +351,12 @@ export default function DailyChecklist({
     return { label: t('pages.todayTasks.greetingEvening'), Icon: Moon };
   }, [hour, t]);
 
-  useQuery({
+  const { data: instancesResponse, isLoading } = useQuery({
     queryKey: ['daily-checklist', 'data', selectedDate, ownerId],
-    queryFn: async () => {
-      await loadData();
-      return true;
-    },
+    queryFn: () => taskInstancesService.getForDate(selectedDate),
     enabled: ownerId > 0 && !!selectedDate,
   });
+  const instances = instancesResponse?.instances ?? EMPTY_INSTANCES;
 
   // Deriva os cards a partir de `instances` durante o render (sem efeito),
   // permitindo que `setCards` continue editável localmente (drag-and-drop).
@@ -417,39 +421,22 @@ export default function DailyChecklist({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadedDateRef = useRef<string | null>(null);
-
-  const loadData = async (sync: boolean = false) => {
-    // A resposta de qualquer mutação no app invalida todas as queries
-    // (api-client.ts), incluindo esta. Só mostramos o loading de página
-    // inteira quando a data mudou de fato — do contrário, uma tarefa
-    // marcada como concluída dispara um refetch em segundo plano que
-    // piscaria a tela inteira sem necessidade.
-    const isFreshDate = loadedDateRef.current !== selectedDate;
-    try {
-      if (isFreshDate) setIsLoading(true);
-      const instancesResponse = await taskInstancesService.getForDate(
-        selectedDate,
-        sync
+  const setInstancesCache = useCallback(
+    (updater: (prev: TaskInstance[]) => TaskInstance[]) => {
+      queryClient.setQueryData<InstancesForDateResponse>(
+        ['daily-checklist', 'data', selectedDate, ownerId],
+        (prev) => (prev ? { ...prev, instances: updater(prev.instances) } : prev)
       );
-      setInstances(instancesResponse.instances);
-      loadedDateRef.current = selectedDate;
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.dailyChecklist.loadError', { reason: getErrorMessage(error) }),
-        variant: 'destructive',
-      });
-    } finally {
-      if (isFreshDate) setIsLoading(false);
-    }
-  };
+    },
+    [queryClient, selectedDate, ownerId]
+  );
 
   const handleToggleTaskComplete = useCallback(
     async (task: TaskInstance) => {
       const newStatus: InstanceStatus =
         task.status === 'completed' ? 'pending' : 'completed';
       setUpdatingTaskId(task.id);
-      setInstances((prev) =>
+      setInstancesCache((prev) =>
         prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t))
       );
       try {
@@ -459,7 +446,7 @@ export default function DailyChecklist({
         // Ex.: tarefa vinculada ao treino não pode ser concluída manualmente
         if (result.errors.length > 0) throw new Error(result.errors[0].error);
       } catch (error: unknown) {
-        setInstances((prev) =>
+        setInstancesCache((prev) =>
           prev.map((t) => (t.id === task.id ? { ...t, status: task.status } : t))
         );
         toast({
@@ -472,7 +459,7 @@ export default function DailyChecklist({
         setUpdatingTaskId(null);
       }
     },
-    [toast, t]
+    [toast, t, setInstancesCache]
   );
 
   // Status do card no início do arraste: o handleDragOver já move o card de
@@ -579,7 +566,11 @@ export default function DailyChecklist({
   const handleSync = async () => {
     try {
       setIsSyncing(true);
-      await loadData(true);
+      const synced = await taskInstancesService.getForDate(selectedDate, true);
+      queryClient.setQueryData(
+        ['daily-checklist', 'data', selectedDate, ownerId],
+        synced
+      );
       void queryClient.invalidateQueries({ queryKey: ['daily-checklist', 'data'] });
       toast({
         title: t('pages.dailyChecklist.syncedDesc'),
@@ -634,14 +625,6 @@ export default function DailyChecklist({
     setCategoryFilter('all');
     setStatusFilter('all');
   };
-
-  const dateLabel = selectedDate
-    ? new Date(selectedDate + 'T00:00:00').toLocaleDateString(i18n.language, {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-      })
-    : '';
 
   const viewToggle = (
     <div className="flex items-center rounded-md border p-0.5">
@@ -729,28 +712,20 @@ export default function DailyChecklist({
       <PomodoroBar />
 
       {/* Saudação + progresso do dia */}
-      <div className="gap-lg bg-card px-lg py-md flex items-center rounded-lg border">
+      <div className="gap-md bg-card px-lg py-md flex items-center rounded-lg border">
         <CircularProgress value={dayRate} size={64} strokeWidth={5} color={dayRingColor}>
           <span className="text-sm font-bold">{completedTasks}</span>
         </CircularProgress>
-        <div className="flex-1">
-          <div className="gap-sm flex items-center">
-            <GreetIcon className="text-muted-foreground h-5 w-5" />
-            <span className="text-lg font-semibold">{greeting.label}</span>
-          </div>
-          <p className="text-muted-foreground mt-0.5 capitalize">{dateLabel}</p>
+        <div className="gap-sm flex items-center">
+          <GreetIcon className="text-muted-foreground h-5 w-5" />
+          <span className="text-lg font-semibold">{greeting.label}</span>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold">
-            {completedTasks}
-            <span className="text-muted-foreground text-base font-normal">
-              /{cards.length}
-            </span>
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {t('pages.todayTasks.tasksLabel')}
-          </p>
-        </div>
+        <p className="text-2xl font-bold">
+          {completedTasks}
+          <span className="text-muted-foreground text-base font-normal">
+            /{cards.length}
+          </span>
+        </p>
       </div>
 
       {gamification && (
@@ -827,9 +802,14 @@ export default function DailyChecklist({
   );
 
   const header = (
-    <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />}>
+    <PageHeader
+      title={t('pages.dailyChecklist.title')}
+      icon={<CheckCircle2 />}
+      childrenClassName="flex flex-1 items-center"
+    >
+      <div className="flex-1" />
       {toolbar}
-      {viewToggle}
+      <div className="flex flex-1 justify-end">{viewToggle}</div>
     </PageHeader>
   );
 

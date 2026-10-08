@@ -54,7 +54,7 @@ Legenda: **[regra]** = padrão global, aplica-se a todas as telas e módulos. **
 ## Empty states, cards e listas
 
 - **[regra]** Empty state: sem botão, sem texto abaixo do ícone e do rótulo, centralizado na horizontal e na vertical, sem texto colado no topo. Usar o componente `EmptyState` em vez de listas vazias feitas à mão. Status: 127 usos.
-- **[regra]** Cards sem sombra e sem contorno colorido por categoria. Cor e contorno vêm de token global. Status: parcial, ainda há sombras em 28 arquivos.
+- **[regra]** Cards sem sombra e sem contorno colorido por categoria. Cor e contorno vêm de token global. Status: parcial, ainda há sombras em 28 arquivos; aplicado em `KanbanCard.tsx` (Checklist Diário) — removida a borda esquerda colorida por categoria e o hover com scale/sombra.
 - **[regra]** Texto nunca encosta na borda do card. Conteúdo centralizado na vertical.
 - **[regra]** Cards alinhados em linha e com o mesmo tamanho. Rótulos não mudam de posição.
 - **[regra]** Toggles em accordion: o primeiro aberto por padrão, os demais recolhidos, e só um aberto por vez. Toggles de detalhes começam recolhidos. Status: `Collapse` em 6 arquivos.
@@ -70,7 +70,8 @@ Legenda: **[regra]** = padrão global, aplica-se a todas as telas e módulos. **
 
 ## Tabelas
 
-- **[regra]** Coluna de ações de uma linha de tabela usa a prop nativa `actions` do `DataTable` (alinhada à direita), nunca uma coluna customizada com `align: 'center'`/`justify-center` — isso deixa os botões soltos no meio de um espaço maior do que precisam, já que colunas sem largura fixa esticam para preencher a tabela. Status: aplicado em Tarefas Rotineiras (`RoutineTasks.tsx`).
+- **[regra]** Coluna de ações de uma linha de tabela usa a prop nativa `actions` do `DataTable` (botões alinhados à direita), nunca uma coluna customizada com `align: 'center'`/`justify-center` — isso deixa os botões soltos no meio de um espaço maior do que precisam, já que colunas sem largura fixa esticam para preencher a tabela. Status: aplicado em Tarefas Rotineiras (`RoutineTasks.tsx`).
+- **[regra]** O label do cabeçalho dessa coluna ("Ações") fica centralizado, mesmo com os botões da linha alinhados à direita. Status: `DataTable.tsx`, `<th>` de ações.
 - **[regra]** Tabelas dentro de telas com mais de um nível de abas usam `density="compact"` no `DataTable`, para não empurrar a página para além da viewport (ver "Nenhuma tela tem rolagem de página" em Paginação e filtros). Status: aplicado em Tarefas Rotineiras.
 
 ## Animação

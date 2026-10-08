@@ -4354,7 +4354,6 @@
       "greetingMorning": "Good morning!",
       "greetingAfternoon": "Good afternoon!",
       "greetingEvening": "Good evening!",
-      "tasksLabel": "tasks completed",
       "taskCount_one": "{{count}} task",
       "taskCount_other": "{{count}} tasks",
       "emptyColumn": "No tasks",
@@ -4380,7 +4379,6 @@
         "personal_care": "Personal Care",
         "other": "Other"
       },
-      "pomodoroTitle": "Focus Mode",
       "pomodoroStart": "Start",
       "pomodoroPause": "Pause",
       "pomodoroReset": "Reset",
