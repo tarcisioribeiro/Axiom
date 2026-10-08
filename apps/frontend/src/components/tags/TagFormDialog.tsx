@@ -72,7 +72,10 @@ export function TagFormDialog({
             {form.color && (
               <span
                 className="px-sm inline-block rounded-full py-0.5 text-xs font-medium"
-                style={{ backgroundColor: `${form.color}22`, color: form.color }}
+                style={{
+                  backgroundColor: `hsl(var(--${form.color}) / 0.13)`,
+                  color: `hsl(var(--${form.color}))`,
+                }}
               >
                 {form.name || t('pages.tags.name')}
               </span>

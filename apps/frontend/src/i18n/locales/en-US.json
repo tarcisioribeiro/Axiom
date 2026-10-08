@@ -204,9 +204,23 @@
       }
     },
     "noResults": "No results found",
-    "colorPicker": {
-      "preset": "Color {{color}}",
-      "hex": "Hex code"
+    "colorTokens": {
+      "primary": "Primary",
+      "star": "Golden",
+      "accent": "Accent",
+      "destructive": "Alert",
+      "success": "Success",
+      "warning": "Warning",
+      "info": "Info",
+      "category-finance": "Finance",
+      "category-health": "Health",
+      "category-studies": "Studies",
+      "category-spiritual": "Spiritual",
+      "category-exercise": "Exercise",
+      "category-nutrition": "Nutrition",
+      "category-work": "Work",
+      "category-leisure": "Leisure",
+      "category-intellect": "Intellect"
     },
     "iconPicker": {
       "placeholder": "Select an icon...",
@@ -292,7 +306,6 @@
       "dailyChecklist": "Daily Checklist",
       "routineTasks": "Routine Tasks",
       "goals": "Goals",
-      "bankReconciliation": "Bank Reconciliation",
       "receivables": "Receivables",
       "journey": "Journey",
       "workout": "Workout",
@@ -412,7 +425,6 @@
     "finance": "Financial Control",
     "security": "Security",
     "library": "Intellect",
-    "bankReconciliation": "Bank Reconciliation",
     "workout": "Workout",
     "nutrition": "Diet",
     "bodyMetrics": "Body Measurements",
@@ -4387,49 +4399,6 @@
       "statusPending": "Pending"
     },
     "bankReconciliation": {
-      "title": "Bank Reconciliation",
-      "importBtn": "Import Statement",
-      "totalImports": "Total Imports",
-      "lastImport": "Last Import",
-      "emptyTitle": "No statements imported",
-      "emptyMessage": "Click 'Import Statement' to get started.",
-      "flowTitle": "How bank reconciliation works:",
-      "flowStep1": "Import Statement",
-      "flowStep2": "Review Transactions",
-      "flowStep3": "Confirm Reconciliation",
-      "emptyGuide": "Start by importing a bank statement in OFX or CSV format. Then review the identified transactions and confirm the reconciliation.",
-      "reconciliationLabel": "Reconciliation",
-      "columns": {
-        "file": "File",
-        "format": "Format",
-        "status": "Status",
-        "entries": "Entries",
-        "matched": "Matched",
-        "divergences": "Divergences",
-        "importedAt": "Imported at",
-        "actions": "Actions"
-      },
-      "statuses": {
-        "completed": "Completed",
-        "processing": "Processing",
-        "failed": "Failed"
-      },
-      "upload": {
-        "title": "Import Bank Statement",
-        "desc": "Select the bank statement file and the corresponding account.",
-        "dropzone": "Drag or click to select",
-        "supportedFormats": "Supported: OFX, CSV",
-        "fileLabel": "File (.ofx or .csv)",
-        "accountLabel": "Account",
-        "accountPlaceholder": "Select an account",
-        "detectedFormat": "detected format",
-        "unknownFormat": "unknown",
-        "importBtn": "Import",
-        "importing": "Importing...",
-        "success": "Statement imported successfully!",
-        "fillRequired": "Please fill in all fields.",
-        "invalidFormat": "Invalid format. Use OFX or CSV."
-      },
       "viewBtn": "View",
       "detail": {
         "progress": "Reconciliation progress",
@@ -4471,17 +4440,7 @@
         "statusMatched": "Matched",
         "statusUnmatched": "Divergent",
         "statusIgnored": "Ignored"
-      },
-      "importWithPreview": "Import with Preview",
-      "completedLabel": "completed",
-      "pendingLabel": "pending",
-      "transactionsLabel": "transactions",
-      "importedAtLabel": "imported at",
-      "reconciliationTitle": "Reconciliation",
-      "matchedLabel": "matched",
-      "divergencesLabel": "divergences",
-      "dragDrop": "Drag or click to select",
-      "supportedFormats": "Supported: OFX, CSV"
+      }
     },
     "agents": {
       "title": "AI Agents",
@@ -6463,16 +6422,6 @@
         "title": "Webhooks",
         "desc": "Send Axiom events (new expenses, budget exceeded, etc.) to other systems.",
         "tip": "Each delivery is HMAC-signed; check the delivery history to debug."
-      },
-      "bankReconciliation": {
-        "title": "Bank reconciliation",
-        "desc": "Compare imported statements with Axiom entries to find differences.",
-        "tip": "Import a statement to start a new reconciliation."
-      },
-      "bankImport": {
-        "title": "Import statement",
-        "desc": "Upload your bank file to reconcile it with your entries.",
-        "tip": "Check the column mapping before confirming the import."
       },
       "bankReconciliationDetail": {
         "title": "Reconciliation detail",

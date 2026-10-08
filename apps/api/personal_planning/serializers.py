@@ -1016,7 +1016,8 @@ class WorkoutPlanSerializer(serializers.ModelSerializer):
         return data
 
     def _validate_unique_name(self, data):
-        """Um plano por nome (sem diferenciar maiúsculas) + categoria por dono."""
+        """Um plano por nome (sem diferenciar maiúsculas) + categoria
+        por dono."""
         instance = self.instance
         name = data.get("name", instance.name if instance else "")
         name = (name or "").strip()

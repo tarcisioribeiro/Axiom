@@ -10,6 +10,28 @@ from app.models import (
     BaseModel,
 )
 
+# Tokens de cor do tema (semânticos + categorias) — mesmos nomes das
+# variáveis CSS em apps/frontend/src/index.css, então a cor da tag
+# acompanha o tema ativo em vez de ficar congelada num hex.
+TAG_COLOR_CHOICES = [
+    ("primary", "Primária"),
+    ("star", "Dourado"),
+    ("accent", "Destaque"),
+    ("destructive", "Alerta"),
+    ("success", "Sucesso"),
+    ("warning", "Atenção"),
+    ("info", "Informação"),
+    ("category-finance", "Financeiro"),
+    ("category-health", "Saúde"),
+    ("category-studies", "Estudos"),
+    ("category-spiritual", "Espiritual"),
+    ("category-exercise", "Exercício"),
+    ("category-nutrition", "Nutrição"),
+    ("category-work", "Trabalho"),
+    ("category-leisure", "Lazer"),
+    ("category-intellect", "Intelecto"),
+]
+
 
 class Tag(BaseModel):
     """
@@ -22,10 +44,11 @@ class Tag(BaseModel):
         max_length=50, null=False, blank=False, verbose_name="Nome"
     )
     color = models.CharField(
-        max_length=7,
-        default="#6366f1",
+        max_length=24,
+        choices=TAG_COLOR_CHOICES,
+        default="primary",
         verbose_name="Cor",
-        help_text="Cor hexadecimal (#RRGGBB)",
+        help_text="Token de cor do tema (ex.: primary, category-finance)",
     )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,

@@ -2449,7 +2449,8 @@ class MealTypeListCreateView(BaseListCreateView):
             raise ValidationError(
                 {
                     "detail": (
-                        f"Limite de {MAX_MEAL_TYPES_PER_USER} refeições atingido."
+                        f"Limite de {MAX_MEAL_TYPES_PER_USER} "
+                        "refeições atingido."
                     )
                 }
             )

@@ -440,7 +440,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
   const [viewingFailuresGoal, setViewingFailuresGoal] = useState<Goal | undefined>();
   const [detailsGoal, setDetailsGoal] = useState<Goal | undefined>();
   const detailsTypeMeta = detailsGoal
-    ? GOAL_TYPE_META[detailsGoal.goal_type] ?? GOAL_TYPE_META.custom
+    ? (GOAL_TYPE_META[detailsGoal.goal_type] ?? GOAL_TYPE_META.custom)
     : undefined;
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();

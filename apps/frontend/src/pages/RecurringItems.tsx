@@ -18,7 +18,8 @@ export default function RecurringItems() {
 
   // Guarda contra valor obsoleto no localStorage (ex.: a antiga aba "subscriptions").
   const storedTab = localStorage.getItem(TAB_KEY);
-  const defaultTab = storedTab && VALID_TABS.has(storedTab) ? storedTab : 'fixed-expenses';
+  const defaultTab =
+    storedTab && VALID_TABS.has(storedTab) ? storedTab : 'fixed-expenses';
   const [activeTab, setActiveTab] = useState(defaultTab);
 
   const newExpenseRef = useRef<() => void>(undefined);

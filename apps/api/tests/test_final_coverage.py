@@ -419,7 +419,7 @@ class TagDuplicateValidationTest(BaseFinalTestCase):
 
         Tag.objects.create(
             name="Viagem",
-            color="#6366f1",
+            color="primary",
             owner=self.user,
             created_by=self.user,
         )
@@ -427,22 +427,20 @@ class TagDuplicateValidationTest(BaseFinalTestCase):
     def test_duplicate_name_and_color_is_rejected(self):
         url = reverse("tag-list-create")
         response = self.client.post(
-            url, {"name": "Viagem", "color": "#6366f1"}
+            url, {"name": "Viagem", "color": "primary"}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_duplicate_name_and_color_is_rejected_case_insensitive(self):
         url = reverse("tag-list-create")
         response = self.client.post(
-            url, {"name": "viagem", "color": "#6366F1"}
+            url, {"name": "viagem", "color": "primary"}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_same_name_different_color_is_allowed(self):
         url = reverse("tag-list-create")
-        response = self.client.post(
-            url, {"name": "Viagem", "color": "#ec4899"}
-        )
+        response = self.client.post(url, {"name": "Viagem", "color": "accent"})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 

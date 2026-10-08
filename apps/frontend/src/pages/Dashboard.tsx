@@ -41,8 +41,8 @@ import { useNavigate } from 'react-router';
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { StatCard } from '@/components/common/StatCard';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { HealthScore } from '@/components/dashboard/HealthScore';
@@ -987,7 +987,10 @@ export default function Dashboard() {
                               </div>
                               <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                                 <div
-                                  className={cn('h-full rounded-full transition', barColor)}
+                                  className={cn(
+                                    'h-full rounded-full transition',
+                                    barColor
+                                  )}
                                   style={{ width: `${pct}%` }}
                                 />
                               </div>

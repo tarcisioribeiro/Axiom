@@ -124,7 +124,8 @@ export default function FixedRevenues({
 
   useEffect(() => {
     if (newRevenueRef) newRevenueRef.current = openCreate;
-    if (launchRevenuesRef) launchRevenuesRef.current = () => setIsLaunchDialogOpen(true);
+    if (launchRevenuesRef)
+      launchRevenuesRef.current = () => setIsLaunchDialogOpen(true);
   });
 
   const { data: pageData, isLoading } = useQuery({

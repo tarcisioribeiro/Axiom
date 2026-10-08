@@ -470,11 +470,7 @@ export default function BankReconciliationDetail() {
   return (
     <PageContainer>
       <div className="mb-lg gap-md flex items-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/bank-reconciliation')}
-        >
+        <Button variant="ghost" size="sm" onClick={() => navigate('/accounts')}>
           <ArrowLeft className="h-4 w-4" />
           {t('common.actions.back')}
         </Button>

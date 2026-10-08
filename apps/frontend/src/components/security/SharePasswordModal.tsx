@@ -388,9 +388,7 @@ export function SharePasswordModal({
                       <p className="text-muted-foreground text-xs">
                         {password?.username}
                       </p>
-                      <p className="mt-xs text-muted-foreground text-sm">
-                        ••••••••
-                      </p>
+                      <p className="mt-xs text-muted-foreground text-sm">••••••••</p>
                     </div>
                   </div>
                 )}

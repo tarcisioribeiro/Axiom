@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { TagFormDialog } from '@/components/tags/TagFormDialog';
 import { PlainButton } from '@/components/ui/plain-button';
@@ -19,7 +19,8 @@ import { tagsService } from '@/services/tags-service';
 import type { Tag, TagFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const DEFAULT_TAG_COLOR = '#6366f1';
+const DEFAULT_TAG_COLOR = 'primary';
+const TAGS_PAGE_SIZE = 36;
 
 function getDefaultForm(): TagFormData {
   return { name: '', color: DEFAULT_TAG_COLOR };
@@ -187,7 +188,8 @@ export default function Tags({
         <PaginatedSlide
           key={search}
           items={tags}
-          pageSize={GRID_PAGE_SIZE}
+          pageSize={TAGS_PAGE_SIZE}
+          centerList
           className="gap-sm grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
         >
           {(pageItems) =>
@@ -199,13 +201,13 @@ export default function Tags({
                 <div className="gap-sm flex min-w-0 flex-1 items-center">
                   <span
                     className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: tag.color }}
+                    style={{ backgroundColor: `hsl(var(--${tag.color}))` }}
                   />
                   <span
                     className="px-sm truncate rounded-full py-0.5 text-xs font-medium"
                     style={{
-                      backgroundColor: `${tag.color}22`,
-                      color: tag.color,
+                      backgroundColor: `hsl(var(--${tag.color}) / 0.13)`,
+                      color: `hsl(var(--${tag.color}))`,
                     }}
                   >
                     {tag.name}

@@ -30,7 +30,6 @@ import {
   Sun,
   Plus,
   ShoppingCart,
-  FileUp,
 } from 'lucide-react';
 
 import type { IconComponent } from '@/types/icon';
@@ -281,15 +280,6 @@ export const navigationCommands: Command[] = [
     icon: ShieldCheck,
     href: '/security/health',
     keywords: ['saude', 'cofre', 'seguranca', 'senhas', 'analise', 'health'],
-    section: 'navigation',
-  },
-  {
-    id: 'bank-statement-import',
-    title: 'Importar Extrato Bancário',
-    description: 'Importar transações de arquivo OFX ou CSV',
-    icon: FileUp,
-    href: '/bank-reconciliation/import',
-    keywords: ['importar', 'extrato', 'bancario', 'ofx', 'csv', 'transacoes'],
     section: 'navigation',
   },
   {

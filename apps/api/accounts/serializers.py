@@ -78,6 +78,7 @@ class AccountSerializer(serializers.ModelSerializer):
             )
         request = self.context.get("request")
         account_number = attrs.get("account_number")
+        number_hash: str | None
         if account_number:
             number_hash = compute_account_number_hash(
                 account_number, os.getenv("ENCRYPTION_KEY", "")

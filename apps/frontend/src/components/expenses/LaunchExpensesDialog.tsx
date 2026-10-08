@@ -334,7 +334,9 @@ export const LaunchExpensesDialog = ({
                                   expenseValues[exp.id] ?? parseFloat(exp.default_value)
                                 }
                                 onValueChange={(v) => handleValueChange(exp.id, v)}
-                                disabled={isSubmitting || !selectedExpenseIds.has(exp.id)}
+                                disabled={
+                                  isSubmitting || !selectedExpenseIds.has(exp.id)
+                                }
                               />
                             ) : (
                               <div className="text-right font-semibold">
@@ -349,7 +351,6 @@ export const LaunchExpensesDialog = ({
                 </PaginatedSlide>
               </div>
             </div>
-
           </div>
         )}
 

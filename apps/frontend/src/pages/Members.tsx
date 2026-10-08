@@ -306,9 +306,7 @@ export default function Members() {
                       </div>
                     )}
                     {member.document && (
-                      <p className="text-muted-foreground text-xs">
-                        {member.document}
-                      </p>
+                      <p className="text-muted-foreground text-xs">{member.document}</p>
                     )}
                     {member.monthly_income && (
                       <div className="bg-muted/50 px-sm py-xs rounded text-xs">

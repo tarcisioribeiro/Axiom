@@ -715,7 +715,11 @@ class ExpensesExtendedViewTest(BaseWithMemberTestCase):
         data = {
             "name": "Categorizar: starbucks",
             "conditions": [
-                {"field": "merchant", "operator": "contains", "value": "starbucks"}
+                {
+                    "field": "merchant",
+                    "operator": "contains",
+                    "value": "starbucks",
+                }
             ],
             "actions": [{"type": "set_category", "value": "food and drink"}],
             "is_active": True,

@@ -159,9 +159,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
               )}
             </div>
             <div className="space-y-xs">
-              <p className="text-sm tracking-widest opacity-90">
-                {maskedCardNumber}
-              </p>
+              <p className="text-sm tracking-widest opacity-90">{maskedCardNumber}</p>
               <div className="flex items-end justify-between">
                 <div>
                   <p className="text-xs opacity-60">{t('common.fields.name')}</p>

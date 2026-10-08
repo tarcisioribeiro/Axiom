@@ -1,16 +1,21 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ChevronDown,
-  ChevronUp,
-  History,
-  Plus,
-  Trash2,
-  Zap,
+  ArrowLeftRight,
+  Banknote,
+  CreditCard,
   Loader2,
+  MoreHorizontal,
+  Plus,
+  QrCode,
+  Receipt,
   Save,
+  Trash2,
+  Wallet,
   X,
+  Zap,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +26,6 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Collapse } from '@/components/ui/collapsible-section';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
@@ -51,6 +55,7 @@ import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
 import { accountsService } from '@/services/accounts-service';
 import { automationRulesService } from '@/services/automation-rules-service';
+import { tagsService } from '@/services/tags-service';
 import type {
   Account,
   AutomationAction,
@@ -60,7 +65,7 @@ import type {
   AutomationOperator,
   AutomationRule,
   AutomationRuleFormData,
-  AutomationRuleLog,
+  Tag,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -73,16 +78,14 @@ const CONDITION_FIELDS: AutomationConditionField[] = [
   'payment_method',
 ];
 
-const OPERATORS: AutomationOperator[] = [
-  'contains',
-  'not_contains',
-  'eq',
-  'neq',
-  'gt',
-  'gte',
-  'lt',
-  'lte',
-];
+const OPERATORS_BY_FIELD: Record<AutomationConditionField, AutomationOperator[]> = {
+  merchant: ['contains', 'eq'],
+  description: ['contains', 'eq'],
+  category: ['contains'],
+  payment_method: ['contains'],
+  account: ['contains'],
+  value: ['eq', 'gt', 'lt', 'gte', 'lte'],
+};
 
 const ACTION_TYPES: AutomationActionType[] = [
   'set_category',
@@ -99,6 +102,16 @@ const PAYMENT_METHODS = [
   'check',
   'other',
 ];
+
+const PAYMENT_METHOD_ICONS: Record<string, LucideIcon> = {
+  cash: Banknote,
+  debit_card: Wallet,
+  credit_card: CreditCard,
+  pix: QrCode,
+  transfer: ArrowLeftRight,
+  check: Receipt,
+  other: MoreHorizontal,
+};
 
 function ConditionRow({
   condition,
@@ -118,9 +131,14 @@ function ConditionRow({
     <div className="gap-sm border-border/60 bg-muted/20 p-sm grid grid-cols-[1fr_1fr_1fr_auto] rounded-lg border">
       <Select
         value={condition.field}
-        onValueChange={(v) =>
-          onChange(index, { ...condition, field: v as AutomationConditionField })
-        }
+        onValueChange={(v) => {
+          const field = v as AutomationConditionField;
+          const allowedOps = OPERATORS_BY_FIELD[field];
+          const operator = allowedOps.includes(condition.operator)
+            ? condition.operator
+            : allowedOps[0];
+          onChange(index, { ...condition, field, operator });
+        }}
       >
         <SelectTrigger>
           <SelectValue placeholder={t('pages.automationRules.conditionField')} />
@@ -144,7 +162,7 @@ function ConditionRow({
           <SelectValue placeholder={t('pages.automationRules.conditionOperator')} />
         </SelectTrigger>
         <SelectContent>
-          {OPERATORS.map((op) => (
+          {OPERATORS_BY_FIELD[condition.field].map((op) => (
             <SelectItem key={op} value={op}>
               {t(`pages.automationRules.operators.${op}`)}
             </SelectItem>
@@ -183,11 +201,17 @@ function ConditionRow({
             <SelectValue placeholder={t('pages.automationRules.conditionValue')} />
           </SelectTrigger>
           <SelectContent>
-            {PAYMENT_METHODS.map((pm) => (
-              <SelectItem key={pm} value={pm}>
-                {t(`common.paymentMethods.${pm}`)}
-              </SelectItem>
-            ))}
+            {PAYMENT_METHODS.map((pm) => {
+              const PmIcon = PAYMENT_METHOD_ICONS[pm];
+              return (
+                <SelectItem key={pm} value={pm}>
+                  <span className="gap-sm flex items-center">
+                    {PmIcon && <PmIcon className="h-4 w-4" />}
+                    {t(`common.paymentMethods.${pm}`)}
+                  </span>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       ) : condition.field === 'account' ? (
@@ -236,11 +260,13 @@ function ConditionRow({
 function ActionRow({
   action,
   index,
+  tags,
   onChange,
   onRemove,
 }: {
   action: AutomationAction;
   index: number;
+  tags: Tag[];
   onChange: (i: number, a: AutomationAction) => void;
   onRemove: (i: number) => void;
 }) {
@@ -274,9 +300,37 @@ function ActionRow({
             <SelectValue placeholder={t('pages.automationRules.actionValue')} />
           </SelectTrigger>
           <SelectContent>
-            {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
-              <SelectItem key={cat.key} value={cat.key}>
-                {translate('expenseCategories', cat.key)}
+            {EXPENSE_CATEGORIES_CANONICAL.map((cat) => {
+              const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
+              return (
+                <SelectItem key={cat.key} value={cat.key}>
+                  <span className="gap-sm flex items-center">
+                    {CatIcon && <CatIcon className="h-4 w-4" />}
+                    {translate('expenseCategories', cat.key)}
+                  </span>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      ) : action.type === 'add_tag' ? (
+        <Select
+          value={action.value}
+          onValueChange={(v) => onChange(index, { ...action, value: v })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={t('pages.automationRules.actionValue')} />
+          </SelectTrigger>
+          <SelectContent>
+            {tags.map((tag) => (
+              <SelectItem key={tag.id} value={String(tag.id)}>
+                <span className="gap-sm flex items-center">
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: `hsl(var(--${tag.color}))` }}
+                  />
+                  {tag.name}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -320,6 +374,11 @@ function RuleFormDialog({
   const { data: accounts = [] } = useQuery({
     queryKey: ['accounts'],
     queryFn: () => accountsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const { data: tags = [] } = useQuery({
+    queryKey: ['tags'],
+    queryFn: async () => (await tagsService.getAll()).results ?? [],
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
   const [name, setName] = useState(rule?.name ?? '');
@@ -383,7 +442,7 @@ function RuleFormDialog({
         <form onSubmit={handleSubmit} className="space-y-lg">
           {/* Básico */}
           <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-            <div className="space-y-sm md:col-span-2">
+            <div className="space-y-sm">
               <Label htmlFor="rule-name">
                 {t('pages.automationRules.form.nameLabel')}
               </Label>
@@ -396,7 +455,7 @@ function RuleFormDialog({
               />
             </div>
 
-            <div className="space-y-sm md:col-span-2">
+            <div className="space-y-sm">
               <Label htmlFor="rule-desc">
                 {t('pages.automationRules.form.descLabel')}
               </Label>
@@ -422,7 +481,7 @@ function RuleFormDialog({
                 />
               </div>
 
-              <div className="space-y-sm">
+              <div className="space-y-sm flex flex-col items-center">
                 <Label>{t('pages.automationRules.logic')}</Label>
                 <Select
                   value={logic}
@@ -442,22 +501,25 @@ function RuleFormDialog({
                 </Select>
               </div>
 
-              <div className="gap-sm flex items-center">
-                <StatusToggle
-                  value={isActive ? 'active' : 'inactive'}
-                  onChange={(v) => setIsActive(v === 'active')}
-                  options={[
-                    {
-                      value: 'active',
-                      label: t('pages.automationRules.active'),
-                      accentColor: 'success',
-                    },
-                    {
-                      value: 'inactive',
-                      label: t('pages.automationRules.inactive'),
-                    },
-                  ]}
-                />
+              <div className="space-y-sm flex flex-col items-center">
+                <Label>{t('pages.automationRules.form.isActiveLabel')}</Label>
+                <div className="gap-sm flex items-center">
+                  <StatusToggle
+                    value={isActive ? 'active' : 'inactive'}
+                    onChange={(v) => setIsActive(v === 'active')}
+                    options={[
+                      {
+                        value: 'active',
+                        label: t('pages.automationRules.active'),
+                        accentColor: 'success',
+                      },
+                      {
+                        value: 'inactive',
+                        label: t('pages.automationRules.inactive'),
+                      },
+                    ]}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -522,6 +584,7 @@ function RuleFormDialog({
                       key={i}
                       action={a}
                       index={i}
+                      tags={tags}
                       onChange={updateAction}
                       onRemove={removeAction}
                     />
@@ -559,7 +622,7 @@ function RuleFormDialog({
   );
 }
 
-function RuleLogsDialog({
+function RuleDetailsDialog({
   rule,
   open,
   onOpenChange,
@@ -569,173 +632,20 @@ function RuleLogsDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const { t } = useTranslation();
-  const { data: logs = [], isLoading } = useQuery<AutomationRuleLog[]>({
-    queryKey: ['automation-rule-logs', rule.id],
-    queryFn: () => automationRulesService.getLogs(rule.id),
-    enabled: open,
-  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>
-            {t('pages.automationRules.logsTitle')} — {rule.name}
+          <DialogTitle className="gap-sm flex items-center">
+            <Zap className="text-primary h-5 w-5 shrink-0" />
+            {rule.name}
           </DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>{rule.name}</DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
-        {isLoading ? (
-          <LoadingState />
-        ) : logs.length === 0 ? (
-          <EmptyState title={t('pages.automationRules.noLogs')} />
-        ) : (
-          <div className="space-y-sm max-h-96 overflow-y-auto">
-            {logs.map((log) => (
-              <div
-                key={log.id}
-                className="border-border/60 bg-muted/20 p-sm rounded-lg border text-sm"
-              >
-                <p className="font-medium">{log.expense_description}</p>
-                <p className="text-muted-foreground text-xs">
-                  {new Date(log.created_at).toLocaleString('pt-BR')}
-                </p>
-                <div className="mt-xs gap-xs flex flex-wrap">
-                  {log.actions_applied.map((a, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs">
-                      {a}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        <DialogCloseFooter />
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function RuleCard({
-  rule,
-  onEdit,
-  onDelete,
-  onToggle,
-  onViewLogs,
-}: {
-  rule: AutomationRule;
-  onEdit: (r: AutomationRule) => void;
-  onDelete: (id: number) => void;
-  onToggle: (r: AutomationRule) => void;
-  onViewLogs: (r: AutomationRule) => void;
-}) {
-  const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className="border-border bg-card p-md rounded-lg border transition">
-      <div className="gap-sm flex items-start justify-between">
-        <div className="flex-1">
-          <div className="gap-sm flex items-center">
-            <span className="font-semibold">{rule.name}</span>
-            <Badge
-              variant="outline"
-              className={
-                rule.is_active
-                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600'
-                  : 'border-border bg-muted text-muted-foreground'
-              }
-            >
-              {rule.is_active
-                ? t('pages.automationRules.active')
-                : t('pages.automationRules.inactive')}
-            </Badge>
-            <Badge variant="secondary" className="text-xs">
-              #{rule.priority}
-            </Badge>
-          </div>
-          {rule.description && (
-            <p className="mt-xs text-muted-foreground text-sm">{rule.description}</p>
-          )}
-          <p className="mt-xs text-muted-foreground text-xs">
-            {rule.apply_count} {t('pages.automationRules.applied')}
-          </p>
-        </div>
-
-        <div className="gap-xs flex items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            title={t('pages.automationRules.logsTitle')}
-            onClick={() => onViewLogs(rule)}
-          >
-            <History className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => onToggle(rule)}
-            title={
-              rule.is_active
-                ? t('pages.automationRules.inactive')
-                : t('pages.automationRules.active')
-            }
-          >
-            <Zap
-              className={`h-3.5 w-3.5 ${rule.is_active ? 'text-primary' : 'text-muted-foreground'}`}
-            />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => onEdit(rule)}
-          >
-            <span className="sr-only">{t('common.actions.edit')}</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-3.5 w-3.5"
-            >
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-          </Button>
-          <Button
-            aria-label={t('common.actions.delete')}
-            variant="ghost"
-            size="icon"
-            className="text-destructive hover:text-destructive h-7 w-7"
-            onClick={() => onDelete(rule.id)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            aria-label={t(
-              expanded ? 'common.actions.collapse' : 'common.actions.expand'
-            )}
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => setExpanded((v) => !v)}
-          >
-            {expanded ? (
-              <ChevronUp className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronDown className="h-3.5 w-3.5" />
-            )}
-          </Button>
-        </div>
-      </div>
-
-      <Collapse open={expanded}>
-        <div className="mt-md gap-sm border-border/40 pt-md grid border-t md:grid-cols-2">
+        <div className="gap-md grid md:grid-cols-2">
           <div>
             <p className="mb-xs text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               {t('pages.automationRules.conditions')} (
@@ -779,7 +689,100 @@ function RuleCard({
             </div>
           </div>
         </div>
-      </Collapse>
+        <DialogCloseFooter />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RuleCard({
+  rule,
+  onEdit,
+  onDelete,
+  onOpenDetails,
+}: {
+  rule: AutomationRule;
+  onEdit: (r: AutomationRule) => void;
+  onDelete: (id: number) => void;
+  onOpenDetails: (r: AutomationRule) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div
+      className="border-border bg-card hover:bg-muted/30 p-md gap-sm flex cursor-pointer items-start justify-between rounded-lg border transition"
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpenDetails(rule)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') onOpenDetails(rule);
+      }}
+    >
+      <div className="flex-1">
+        <div className="gap-sm flex items-center">
+          <span className="font-semibold">{rule.name}</span>
+          <Badge
+            variant="outline"
+            className={
+              rule.is_active
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600'
+                : 'border-border bg-muted text-muted-foreground'
+            }
+          >
+            {rule.is_active
+              ? t('pages.automationRules.active')
+              : t('pages.automationRules.inactive')}
+          </Badge>
+          <Badge variant="secondary" className="text-xs">
+            #{rule.priority}
+          </Badge>
+        </div>
+        {rule.description && (
+          <p className="mt-xs text-muted-foreground text-sm">{rule.description}</p>
+        )}
+        <p className="mt-xs text-muted-foreground text-xs">
+          {rule.apply_count} {t('pages.automationRules.applied')}
+        </p>
+      </div>
+
+      <div className="gap-xs flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(rule);
+          }}
+        >
+          <span className="sr-only">{t('common.actions.edit')}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-3.5 w-3.5"
+          >
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </Button>
+        <Button
+          aria-label={t('common.actions.delete')}
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive h-7 w-7"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(rule.id);
+          }}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -804,8 +807,8 @@ export default function AutomationRules({
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<AutomationRule | undefined>();
-  const [logsRule, setLogsRule] = useState<AutomationRule | undefined>();
-  const [logsOpen, setLogsOpen] = useState(false);
+  const [detailsRule, setDetailsRule] = useState<AutomationRule | undefined>();
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (newRuleRef) {
@@ -908,24 +911,9 @@ export default function AutomationRules({
     if (ok) deleteMutation.mutate(id);
   };
 
-  const handleToggle = (rule: AutomationRule) => {
-    updateMutation.mutate({
-      id: rule.id,
-      data: {
-        name: rule.name,
-        description: rule.description ?? undefined,
-        logic: rule.logic,
-        conditions: rule.conditions,
-        actions: rule.actions,
-        is_active: !rule.is_active,
-        priority: rule.priority,
-      },
-    });
-  };
-
-  const handleViewLogs = (rule: AutomationRule) => {
-    setLogsRule(rule);
-    setLogsOpen(true);
+  const handleOpenDetails = (rule: AutomationRule) => {
+    setDetailsRule(rule);
+    setDetailsOpen(true);
   };
 
   const isMutating = createMutation.isPending || updateMutation.isPending;
@@ -939,7 +927,7 @@ export default function AutomationRules({
       ) : rules.length === 0 ? (
         <EmptyState title={t('pages.automationRules.empty')} />
       ) : (
-        <PaginatedSlide items={rules} pageSize={5} className="space-y-sm">
+        <PaginatedSlide items={rules} pageSize={5} centerList className="space-y-sm">
           {(pageItems) =>
             pageItems.map((rule) => (
               <RuleCard
@@ -947,8 +935,7 @@ export default function AutomationRules({
                 rule={rule}
                 onEdit={handleEdit}
                 onDelete={(id) => void handleDelete(id)}
-                onToggle={handleToggle}
-                onViewLogs={handleViewLogs}
+                onOpenDetails={handleOpenDetails}
               />
             ))
           }
@@ -967,8 +954,12 @@ export default function AutomationRules({
         isLoading={isMutating}
       />
 
-      {logsRule && (
-        <RuleLogsDialog rule={logsRule} open={logsOpen} onOpenChange={setLogsOpen} />
+      {detailsRule && (
+        <RuleDetailsDialog
+          rule={detailsRule}
+          open={detailsOpen}
+          onOpenChange={setDetailsOpen}
+        />
       )}
     </Wrapper>
   );

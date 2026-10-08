@@ -759,9 +759,7 @@ function VaultKeyboardShortcutsPanel({
             <span className="text-muted-foreground text-sm">
               {t('pages.vaultGuard.shortcuts.lockVault')}
             </span>
-            <kbd className="bg-muted px-xs rounded py-0.5 text-xs">
-              Ctrl+L
-            </kbd>
+            <kbd className="bg-muted px-xs rounded py-0.5 text-xs">Ctrl+L</kbd>
           </div>
           <div className="px-sm py-xs flex items-center justify-between rounded-md border">
             <span className="text-muted-foreground text-sm">

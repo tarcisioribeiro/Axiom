@@ -20,7 +20,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title }) => (
       initial="initial"
       animate="animate"
       aria-label={title}
-      className="gap-md bg-card/50 px-xl flex flex-col rounded-lg border border-dashed py-16"
+      className="gap-md bg-card/50 px-xl flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center"
     >
       {icon && (
         <div

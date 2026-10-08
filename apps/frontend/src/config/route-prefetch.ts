@@ -30,7 +30,6 @@ const routeLoaders: Record<string, () => Promise<unknown>> = {
   '/bills': () => import('@/pages/PayablesReceivables'),
   '/vaults': () => import('@/pages/Vaults'),
   '/loans': () => import('@/pages/Loans'),
-  '/bank-reconciliation': () => import('@/pages/BankReconciliation'),
   '/finance/agenda': () => import('@/pages/FinanceAgendaPage'),
   '/finance/analytics': () => import('@/pages/FinanceAnalyticsPage'),
   '/finance/financial-health': () => import('@/pages/FinancialHealthPage'),

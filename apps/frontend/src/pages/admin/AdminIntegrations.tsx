@@ -75,9 +75,7 @@ export default function AdminIntegrations() {
                 <span className="text-muted-foreground">
                   {t('pages.adminIntegrations.model')}
                 </span>
-                <span className="text-foreground">
-                  {data.anthropic_model}
-                </span>
+                <span className="text-foreground">{data.anthropic_model}</span>
               </>
             )}
           </div>

@@ -8,10 +8,7 @@ interface AppVersionBadgeProps {
 export function AppVersionBadge({ className }: AppVersionBadgeProps) {
   return (
     <span
-      className={cn(
-        'text-muted-foreground/50 text-2xs select-none',
-        className
-      )}
+      className={cn('text-muted-foreground/50 text-2xs select-none', className)}
       aria-label={`Versão ${APP_VERSION}`}
     >
       v{APP_VERSION}

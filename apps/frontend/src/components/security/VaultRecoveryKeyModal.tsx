@@ -150,11 +150,7 @@ export function VaultRecoveryKeyModal({
                 <div className="space-y-xs">
                   <Label>{t('userProfile.security.recoveryKey.yourKey')}</Label>
                   <div className="gap-sm flex">
-                    <Input
-                      value={generatedKey}
-                      readOnly
-                      className="text-sm"
-                    />
+                    <Input value={generatedKey} readOnly className="text-sm" />
                     <Button
                       aria-label={t('common.actions.copy')}
                       variant="outline"

@@ -980,7 +980,12 @@ export default function FinancialGoals() {
                 {t('pages.financialGoals.noVaults')}
               </p>
             ) : (
-              <PaginatedSlide items={vaults} pageSize={5} pinNav={false} className="space-y-sm">
+              <PaginatedSlide
+                items={vaults}
+                pageSize={5}
+                pinNav={false}
+                className="space-y-sm"
+              >
                 {(pageItems) =>
                   pageItems.map((vault) => (
                     <div

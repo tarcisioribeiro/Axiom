@@ -192,6 +192,8 @@ class Command(BaseCommand):
 
         to_update = []
         for obj in qs.iterator(chunk_size=200):
+            if not obj._account_number:
+                continue
             plain = _decrypt(obj._account_number, old_key)
             if plain is None:
                 self.stdout.write(

@@ -445,9 +445,7 @@ export default function Webhooks() {
                       htmlFor={`ev-${ev.value}`}
                       className="cursor-pointer text-sm font-normal"
                     >
-                      <span className="text-muted-foreground text-xs">
-                        {ev.value}
-                      </span>
+                      <span className="text-muted-foreground text-xs">{ev.value}</span>
                       {' — '}
                       {ev.label}
                     </Label>

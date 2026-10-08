@@ -17,8 +17,6 @@ const EXACT: Record<string, string> = {
   '/members': 'members',
   '/budgets': 'budgets',
   '/webhooks': 'webhooks',
-  '/bank-reconciliation': 'bankReconciliation',
-  '/bank-reconciliation/import': 'bankImport',
   '/vaults': 'vaults',
   '/vaults/simulator': 'vaultSimulator',
   '/financial-goals': 'financialGoals',

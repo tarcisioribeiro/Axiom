@@ -334,7 +334,9 @@ export default function FixedExpenses({
               {t('pages.fixedExpenses.historyTitle')}: {historyItem?.description}
             </DialogTitle>
             <VisuallyHidden>
-              <DialogDescription>{t('pages.fixedExpenses.historyDesc')}</DialogDescription>
+              <DialogDescription>
+                {t('pages.fixedExpenses.historyDesc')}
+              </DialogDescription>
             </VisuallyHidden>
           </DialogHeader>
           {historyLoading ? (

@@ -85,9 +85,7 @@ const NotificationPreferences = lazy(() => import('./pages/NotificationPreferenc
 const UserProfile = lazy(() => import('./pages/UserProfile'));
 
 // Bank Reconciliation
-const BankReconciliation = lazy(() => import('./pages/BankReconciliation'));
 const BankReconciliationDetail = lazy(() => import('./pages/BankReconciliationDetail'));
-const BankStatementImport = lazy(() => import('./pages/BankStatementImport'));
 
 // Vault Simulator
 const VaultSimulator = lazy(() => import('./pages/VaultSimulator'));
@@ -578,28 +576,12 @@ function AnimatedRoutes() {
           }
         />
 
-        {/* Bank Reconciliation */}
-        <Route
-          path="/bank-reconciliation"
-          element={
-            <PageWrapper>
-              <BankReconciliation />
-            </PageWrapper>
-          }
-        />
+        {/* Bank Reconciliation — acessada só pelas contas em /accounts */}
         <Route
           path="/bank-reconciliation/:importId"
           element={
             <PageWrapper>
               <BankReconciliationDetail />
-            </PageWrapper>
-          }
-        />
-        <Route
-          path="/bank-reconciliation/import"
-          element={
-            <PageWrapper>
-              <BankStatementImport />
             </PageWrapper>
           }
         />

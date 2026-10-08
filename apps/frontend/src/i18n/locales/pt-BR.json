@@ -204,9 +204,23 @@
       }
     },
     "noResults": "Nenhum resultado encontrado",
-    "colorPicker": {
-      "preset": "Cor {{color}}",
-      "hex": "Código hexadecimal"
+    "colorTokens": {
+      "primary": "Primária",
+      "star": "Dourado",
+      "accent": "Destaque",
+      "destructive": "Alerta",
+      "success": "Sucesso",
+      "warning": "Atenção",
+      "info": "Informação",
+      "category-finance": "Financeiro",
+      "category-health": "Saúde",
+      "category-studies": "Estudos",
+      "category-spiritual": "Espiritual",
+      "category-exercise": "Exercício",
+      "category-nutrition": "Nutrição",
+      "category-work": "Trabalho",
+      "category-leisure": "Lazer",
+      "category-intellect": "Intelecto"
     },
     "iconPicker": {
       "placeholder": "Selecione um ícone...",
@@ -292,7 +306,6 @@
       "dailyChecklist": "Checklist Diário",
       "routineTasks": "Tarefas Rotineiras",
       "goals": "Objetivos",
-      "bankReconciliation": "Conciliação Bancária",
       "receivables": "Valores a Receber",
       "journey": "Jornada",
       "workout": "Treino",
@@ -412,7 +425,6 @@
     "finance": "Controle Financeiro",
     "security": "Segurança",
     "library": "Intelecto",
-    "bankReconciliation": "Conciliação Bancária",
     "workout": "Treino",
     "nutrition": "Dieta",
     "bodyMetrics": "Medidas Corporais",
@@ -4454,49 +4466,6 @@
       "statusPending": "Pendente"
     },
     "bankReconciliation": {
-      "title": "Conciliação Bancária",
-      "importBtn": "Importar Extrato",
-      "totalImports": "Total de Importações",
-      "lastImport": "Última Importação",
-      "emptyTitle": "Nenhum extrato importado",
-      "emptyMessage": "Clique em 'Importar Extrato' para começar.",
-      "flowTitle": "Como funciona a conciliação bancária:",
-      "flowStep1": "Importar Extrato",
-      "flowStep2": "Revisar Transações",
-      "flowStep3": "Confirmar Conciliação",
-      "emptyGuide": "Comece importando o extrato bancário no formato OFX ou CSV. Em seguida, revise as transações identificadas e confirme a conciliação.",
-      "reconciliationLabel": "Conciliação",
-      "columns": {
-        "file": "Arquivo",
-        "format": "Formato",
-        "status": "Status",
-        "entries": "Entradas",
-        "matched": "Conciliados",
-        "divergences": "Divergências",
-        "importedAt": "Importado em",
-        "actions": "Ações"
-      },
-      "statuses": {
-        "completed": "Concluído",
-        "processing": "Processando",
-        "failed": "Falhou"
-      },
-      "upload": {
-        "title": "Importar Extrato Bancário",
-        "desc": "Selecione o arquivo do extrato bancário e a conta correspondente.",
-        "dropzone": "Arraste ou clique para selecionar",
-        "supportedFormats": "Suporte: OFX, CSV",
-        "fileLabel": "Arquivo (.ofx ou .csv)",
-        "accountLabel": "Conta",
-        "accountPlaceholder": "Selecione a conta",
-        "detectedFormat": "formato detectado",
-        "unknownFormat": "desconhecido",
-        "importBtn": "Importar",
-        "importing": "Importando...",
-        "success": "Extrato importado com sucesso!",
-        "fillRequired": "Preencha todos os campos.",
-        "invalidFormat": "Formato inválido. Use OFX ou CSV."
-      },
       "viewBtn": "Ver",
       "detail": {
         "progress": "Progresso da conciliação",
@@ -4538,17 +4507,7 @@
         "statusMatched": "Conciliado",
         "statusUnmatched": "Divergente",
         "statusIgnored": "Ignorado"
-      },
-      "importWithPreview": "Importar com prévia",
-      "completedLabel": "concluídos",
-      "pendingLabel": "pendentes",
-      "transactionsLabel": "transações",
-      "importedAtLabel": "importado em",
-      "reconciliationTitle": "Conciliação",
-      "matchedLabel": "conciliados",
-      "divergencesLabel": "divergências",
-      "dragDrop": "Arraste ou clique para selecionar",
-      "supportedFormats": "Suporte: OFX, CSV"
+      }
     },
     "agents": {
       "title": "Agentes IA",
@@ -6508,16 +6467,6 @@
         "title": "Webhooks",
         "desc": "Envie eventos do Axiom (novas despesas, orçamento estourado etc.) para outros sistemas.",
         "tip": "Cada envio é assinado com HMAC; consulte o histórico de entregas para depurar."
-      },
-      "bankReconciliation": {
-        "title": "Conciliação bancária",
-        "desc": "Compare extratos importados com os lançamentos do Axiom para achar diferenças.",
-        "tip": "Importe um extrato para iniciar uma nova conciliação."
-      },
-      "bankImport": {
-        "title": "Importar extrato",
-        "desc": "Envie o arquivo do seu banco para conciliar com seus lançamentos.",
-        "tip": "Confira o mapeamento das colunas antes de confirmar a importação."
       },
       "bankReconciliationDetail": {
         "title": "Detalhe da conciliação",
