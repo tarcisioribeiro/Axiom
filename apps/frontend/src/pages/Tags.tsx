@@ -1,6 +1,7 @@
+/* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Tag as TagIcon, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Palette, Pencil, Tag as TagIcon, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -12,6 +13,13 @@ import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { TagFormDialog } from '@/components/tags/TagFormDialog';
 import { PlainButton } from '@/components/ui/plain-button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -43,6 +51,7 @@ export default function Tags({
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState('');
+  const [colorFilter, setColorFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<Tag | null>(null);
   const [form, setForm] = useState<TagFormData>(getDefaultForm());
@@ -56,8 +65,15 @@ export default function Tags({
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
-  const tags = (data ?? []).filter((t) =>
-    t.name.toLowerCase().includes(search.toLowerCase())
+  const colorOptions = useMemo(
+    () => Array.from(new Set((data ?? []).map((tag) => tag.color))).sort(),
+    [data]
+  );
+
+  const tags = (data ?? []).filter(
+    (t) =>
+      (colorFilter === 'all' || t.color === colorFilter) &&
+      t.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const invalidate = () => void queryClient.invalidateQueries({ queryKey: ['tags'] });
@@ -169,12 +185,55 @@ export default function Tags({
 
   return (
     <Wrapper>
-      <FilterBar hasActiveFilters={!!search} onClear={() => setSearch('')}>
+      <FilterBar
+        hasActiveFilters={!!search || colorFilter !== 'all'}
+        onClear={() => {
+          setSearch('');
+          setColorFilter('all');
+        }}
+        activeFilters={[
+          ...(colorFilter !== 'all'
+            ? [
+                {
+                  key: 'color',
+                  label: `${t('pages.tags.allColors')}: ${t(`common.colorTokens.${colorFilter}`, colorFilter)}`,
+                  onRemove: () => setColorFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
         <SearchInput
           placeholder={`${t('common.actions.search')}...`}
           value={search}
           onValueChange={setSearch}
         />
+        <Select value={colorFilter} onValueChange={setColorFilter}>
+          <SelectTrigger
+            className="w-40"
+            aria-label={t('pages.tags.allColors')}
+            startIcon={<Palette className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.tags.allColors')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.tags.allColors')}</SelectItem>
+            {colorOptions.map((color) => (
+              <SelectItem
+                key={color}
+                value={color}
+                icon={
+                  <span
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: `hsl(var(--${color}))` }}
+                  />
+                }
+              >
+                {t(`common.colorTokens.${color}`, color)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </FilterBar>
 
       {isLoading ? (
@@ -186,7 +245,7 @@ export default function Tags({
         />
       ) : (
         <PaginatedSlide
-          key={search}
+          key={`${search}-${colorFilter}`}
           items={tags}
           pageSize={TAGS_PAGE_SIZE}
           centerList

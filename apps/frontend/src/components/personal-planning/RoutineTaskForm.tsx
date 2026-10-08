@@ -344,7 +344,9 @@ export function RoutineTaskForm({
                   return (
                     <SelectItem key={cat.value} value={cat.value}>
                       <span className="flex items-center gap-2">
-                        {CatIcon && <CatIcon className="h-4 w-4" />}
+                        {CatIcon && (
+                          <CatIcon className="text-muted-foreground h-4 w-4 shrink-0" />
+                        )}
                         {translate('taskCategories', cat.value)}
                       </span>
                     </SelectItem>

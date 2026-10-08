@@ -58,6 +58,7 @@ import {
   Smile,
   Sparkles,
   Stethoscope,
+  StretchHorizontal,
   Sun,
   Sunrise,
   Sunset,
@@ -293,6 +294,12 @@ export const TRANSFER_TYPE_ICONS: Record<string, IconComponent> = {
   ted: Building2,
   doc: FileText,
   withdrawal: Banknote,
+};
+
+export const WORKOUT_CATEGORY_ICONS: Record<string, IconComponent> = {
+  cardio: HeartPulse,
+  resistance: Dumbbell,
+  mobility: StretchHorizontal,
 };
 
 export const CARD_FLAG_ICON: IconComponent = CreditCard;

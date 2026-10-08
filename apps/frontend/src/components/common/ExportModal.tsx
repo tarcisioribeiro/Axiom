@@ -7,7 +7,6 @@ import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -30,7 +29,6 @@ interface ExportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description?: string;
   onExport: (params: ExportParams) => Promise<void>;
   initialDateFrom?: Date;
   initialDateTo?: Date;
@@ -45,7 +43,6 @@ export function ExportModal({
   open,
   onOpenChange,
   title,
-  description,
   onExport,
   initialDateFrom,
   initialDateTo,
@@ -82,10 +79,12 @@ export function ExportModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
+          <DialogTitle className="gap-sm flex items-center">
+            <Download className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
+            {title}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-md">
@@ -96,6 +95,7 @@ export function ExportModal({
                 value={dateFrom}
                 onChange={setDateFrom}
                 placeholder={t('common.export.from')}
+                floating={false}
               />
             </div>
             <div className="space-y-xs">
@@ -104,6 +104,7 @@ export function ExportModal({
                 value={dateTo}
                 onChange={setDateTo}
                 placeholder={t('common.export.to')}
+                floating={false}
               />
             </div>
           </div>
@@ -123,10 +124,6 @@ export function ExportModal({
               </SelectContent>
             </Select>
           </div>
-
-          <p className="text-muted-foreground text-xs">
-            {t('common.export.activeFiltersNote')}
-          </p>
         </div>
 
         <div className="dialog-footer gap-sm pt-sm flex justify-end">

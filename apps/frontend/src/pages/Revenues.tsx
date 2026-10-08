@@ -20,6 +20,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
+import { TransactionsTabsNav } from '@/components/common/TransactionsTabsNav';
 import { ReceiptButton } from '@/components/receipts';
 import { RevenueForm } from '@/components/revenues/RevenueForm';
 import { Button } from '@/components/ui/button';
@@ -152,6 +153,8 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
           </Button>
         </div>
       </PageHeader>
+
+      {embedded && <TransactionsTabsNav />}
 
       <FilterBar
         hasActiveFilters={hasActiveFilters}
@@ -428,7 +431,6 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
         open={isExportModalOpen}
         onOpenChange={setIsExportModalOpen}
         title={t('pages.revenues.exportTitle')}
-        description={t('pages.revenues.exportDesc')}
         onExport={handleExport}
         initialDateFrom={startDate}
         initialDateTo={endDate}

@@ -19,17 +19,18 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { z } from 'zod';
 
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { DailyReflectionForm } from '@/components/personal-planning/DailyReflectionForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -45,7 +46,8 @@ import {
 } from '@/components/ui/select';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { cn, formatLocalDate } from '@/lib/utils';
+import { formatDate } from '@/lib/formatters';
+import { cn } from '@/lib/utils';
 import type { dailyReflectionSchema } from '@/lib/validations';
 import { dailyReflectionsService } from '@/services/daily-reflections-service';
 import { MOOD_CHOICES, type DailyReflection } from '@/types';
@@ -191,14 +193,17 @@ export default function DailyReflections() {
   const [moodFilter, setMoodFilter] = useState<string>('all');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
-  const hasActiveFilters = moodFilter !== 'all' || !!startDate || !!endDate;
+  const hasActiveFilters =
+    moodFilter !== 'all' || !!startDate || !!endDate || !!searchTerm;
   const clearFilters = () => {
     setMoodFilter('all');
     setStartDate(undefined);
     setEndDate(undefined);
+    setSearchTerm('');
   };
 
   const { data: reflections = EMPTY_REFLECTIONS, isLoading } = useQuery({
@@ -223,8 +228,12 @@ export default function DailyReflections() {
     if (moodFilter !== 'all') result = result.filter((r) => r.mood === moodFilter);
     if (startDate) result = result.filter((r) => new Date(r.date) >= startDate);
     if (endDate) result = result.filter((r) => new Date(r.date) <= endDate);
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter((r) => r.reflection.toLowerCase().includes(q));
+    }
     return result;
-  }, [reflections, moodFilter, startDate, endDate]);
+  }, [reflections, moodFilter, startDate, endDate, searchTerm]);
 
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: ['daily-reflections'] });
@@ -307,7 +316,45 @@ export default function DailyReflections() {
       />
 
       {/* Filtros */}
-      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
+      <FilterBar
+        hasActiveFilters={hasActiveFilters}
+        onClear={clearFilters}
+        activeFilters={[
+          ...(moodFilter !== 'all'
+            ? [
+                {
+                  key: 'mood',
+                  label: t(`common.mood.${moodFilter}`),
+                  onRemove: () => setMoodFilter('all'),
+                },
+              ]
+            : []),
+          ...(startDate
+            ? [
+                {
+                  key: 'startDate',
+                  label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
+                  onRemove: () => setStartDate(undefined),
+                },
+              ]
+            : []),
+          ...(endDate
+            ? [
+                {
+                  key: 'endDate',
+                  label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
+                  onRemove: () => setEndDate(undefined),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <SearchInput
+          placeholder={t('pages.dailyReflections.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-52 sm:w-64"
+        />
         <Select value={moodFilter} onValueChange={setMoodFilter}>
           <SelectTrigger
             className="w-44"
@@ -330,24 +377,12 @@ export default function DailyReflections() {
             ))}
           </SelectContent>
         </Select>
-        <div className="gap-xs flex items-center">
-          <span className="text-muted-foreground text-xs whitespace-nowrap">
-            {t('pages.dailyReflections.filters.startDate')}
-          </span>
-          <DatePicker
-            value={startDate ? formatLocalDate(startDate) : ''}
-            onChange={setStartDate}
-            placeholder={t('pages.dailyReflections.filters.startDate')}
-          />
-          <span className="text-muted-foreground text-xs whitespace-nowrap">
-            {t('pages.dailyReflections.filters.endDate')}
-          </span>
-          <DatePicker
-            value={endDate ? formatLocalDate(endDate) : ''}
-            onChange={setEndDate}
-            placeholder={t('pages.dailyReflections.filters.endDate')}
-          />
-        </div>
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartChange={setStartDate}
+          onEndChange={setEndDate}
+        />
       </FilterBar>
 
       {/* Entradas no estilo diário */}
@@ -358,7 +393,7 @@ export default function DailyReflections() {
         />
       ) : (
         <PaginatedSlide
-          key={`${moodFilter}-${startDate?.getTime()}-${endDate?.getTime()}`}
+          key={`${moodFilter}-${startDate?.getTime()}-${endDate?.getTime()}-${searchTerm}`}
           items={filtered}
           pageSize={REFLECTIONS_PAGE_SIZE}
           centerList

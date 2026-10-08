@@ -36,8 +36,16 @@ import {
 } from '@/components/ui/dialog';
 import { FileInput } from '@/components/ui/file-input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { translate } from '@/config/constants';
+import { translate, TRANSLATIONS } from '@/config/constants';
+import { ACCOUNT_TYPE_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -82,6 +90,7 @@ export default function Accounts() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   // Bank reconciliation state
   const [reconciliationAccount, setReconciliationAccount] = useState<
@@ -164,15 +173,17 @@ export default function Accounts() {
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const filteredAccounts = useMemo(() => {
-    if (!searchTerm) return accounts;
-    const q = searchTerm.toLowerCase();
-    return accounts.filter(
-      (a) =>
+    return accounts.filter((a) => {
+      const q = searchTerm.toLowerCase();
+      const matchesSearch =
+        !searchTerm ||
         a.account_name.toLowerCase().includes(q) ||
         translate('institutions', a.institution).toLowerCase().includes(q) ||
-        (a.account_number_masked ?? '').toLowerCase().includes(q)
-    );
-  }, [accounts, searchTerm]);
+        (a.account_number_masked ?? '').toLowerCase().includes(q);
+      const matchesType = typeFilter === 'all' || a.account_type === typeFilter;
+      return matchesSearch && matchesType;
+    });
+  }, [accounts, searchTerm, typeFilter]);
 
   const ACCOUNT_TYPE_COLORS: Record<string, { icon: string; bg: string }> = {
     CC: { icon: 'text-info', bg: 'bg-info/5' },
@@ -277,13 +288,54 @@ export default function Accounts() {
         </Button>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+      <FilterBar
+        hasActiveFilters={!!searchTerm || typeFilter !== 'all'}
+        onClear={() => {
+          setSearchTerm('');
+          setTypeFilter('all');
+        }}
+        activeFilters={[
+          ...(typeFilter !== 'all'
+            ? [
+                {
+                  key: 'type',
+                  label: `${t('common.fields.type')}: ${translate('accountTypes', typeFilter)}`,
+                  onRemove: () => setTypeFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
         <SearchInput
           placeholder={t('pages.accounts.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="w-52 sm:w-64"
         />
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger
+            className="w-44"
+            aria-label={t('pages.accounts.allTypes')}
+            startIcon={<Wallet className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.accounts.allTypes')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.accounts.allTypes')}</SelectItem>
+            {Object.keys(TRANSLATIONS.accountTypes).map((key) => {
+              const Icon = ACCOUNT_TYPE_ICONS[key];
+              return (
+                <SelectItem
+                  key={key}
+                  value={key}
+                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                >
+                  {translate('accountTypes', key)}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
       </FilterBar>
 
       {isLoading ? (
@@ -299,7 +351,7 @@ export default function Accounts() {
         />
       ) : (
         <PaginatedSlide
-          key={searchTerm}
+          key={`${searchTerm}-${typeFilter}`}
           items={filteredAccounts}
           pageSize={ACCOUNTS_PAGE_SIZE}
           className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"

@@ -599,6 +599,7 @@ export default function Passwords() {
   const [revealedAt, setRevealedAt] = useState<Map<number, number>>(new Map());
   const [countdown, setCountdown] = useState<Map<number, number>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
   const [sharingPassword, setSharingPassword] = useState<Password | null>(null);
@@ -899,6 +900,7 @@ export default function Passwords() {
 
   const filteredPasswords = passwords.filter((pwd) => {
     if (showFavoritesOnly && !pwd.is_favorite) return false;
+    if (categoryFilter !== 'all' && pwd.category !== categoryFilter) return false;
     return (
       pwd.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pwd.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -931,11 +933,25 @@ export default function Passwords() {
         </PageHeader>
 
         <FilterBar
-          hasActiveFilters={!!searchTerm || showFavoritesOnly}
+          hasActiveFilters={
+            !!searchTerm || showFavoritesOnly || categoryFilter !== 'all'
+          }
           onClear={() => {
             setSearchTerm('');
             setShowFavoritesOnly(false);
+            setCategoryFilter('all');
           }}
+          activeFilters={[
+            ...(categoryFilter !== 'all'
+              ? [
+                  {
+                    key: 'category',
+                    label: `${t('common.fields.category')}: ${t(`pages.passwords.categories.${categoryFilter}`)}`,
+                    onRemove: () => setCategoryFilter('all'),
+                  },
+                ]
+              : []),
+          ]}
         >
           <SearchInput
             placeholder={t('pages.passwords.searchPlaceholder')}
@@ -943,6 +959,32 @@ export default function Passwords() {
             onValueChange={setSearchTerm}
             className="w-52 sm:w-64"
           />
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.passwords.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.passwords.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.passwords.allCategories')}</SelectItem>
+              {PASSWORD_CATEGORIES.map((cat) => {
+                const Icon =
+                  PASSWORD_CATEGORY_ICONS[cat.value] ??
+                  PASSWORD_CATEGORY_ICONS['other'];
+                return (
+                  <SelectItem
+                    key={cat.value}
+                    value={cat.value}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {t(`pages.passwords.categories.${cat.value}`)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
           <Button
             variant={showFavoritesOnly ? 'default' : 'outline'}
             size="sm"
@@ -958,7 +1000,7 @@ export default function Passwords() {
         <div className={cn('gap-lg flex', detailPassword ? 'lg:flex-row' : 'flex-col')}>
           <div className={cn('min-w-0', detailPassword ? 'lg:w-[40%]' : 'w-full')}>
             <PaginatedSlide
-              key={searchTerm}
+              key={`${searchTerm}-${categoryFilter}-${showFavoritesOnly}`}
               items={filteredPasswords}
               pageSize={GRID_PAGE_SIZE}
               className="gap-md grid md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
@@ -1212,7 +1254,7 @@ export default function Passwords() {
               <EmptyState
                 icon={<Key className="text-muted-foreground h-12 w-12" />}
                 title={
-                  searchTerm
+                  searchTerm || categoryFilter !== 'all' || showFavoritesOnly
                     ? t('pages.passwords.emptySearch')
                     : t('pages.passwords.emptyState')
                 }

@@ -11,6 +11,7 @@ import {
   UserCircle,
   ChevronDown,
   ChevronUp,
+  Globe,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -40,10 +41,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { authorsService } from '@/services/authors-service';
+import { NATIONALITIES } from '@/types';
 import type { Author, AuthorFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -186,6 +195,7 @@ function AuthorCard({
 
 export default function Authors() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [nationalityFilter, setNationalityFilter] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState<Author | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -277,11 +287,15 @@ export default function Authors() {
     }
   };
 
-  const filteredAuthors = authors.filter(
-    (author) =>
+  const filteredAuthors = authors.filter((author) => {
+    if (nationalityFilter !== 'all' && author.nationality !== nationalityFilter) {
+      return false;
+    }
+    return (
       author.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (author.nationality?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-  );
+    );
+  });
 
   if (loading) {
     return <LoadingState />;
@@ -296,13 +310,47 @@ export default function Authors() {
         </Button>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+      <FilterBar
+        hasActiveFilters={!!searchTerm || nationalityFilter !== 'all'}
+        onClear={() => {
+          setSearchTerm('');
+          setNationalityFilter('all');
+        }}
+        activeFilters={[
+          ...(nationalityFilter !== 'all'
+            ? [
+                {
+                  key: 'nationality',
+                  label: `${t('pages.authors.nationalityFilterLabel')}: ${t(`pages.authors.nationalities.${nationalityFilter}`)}`,
+                  onRemove: () => setNationalityFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
         <SearchInput
           placeholder={t('pages.authors.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="w-52 sm:w-64"
         />
+        <Select value={nationalityFilter} onValueChange={setNationalityFilter}>
+          <SelectTrigger
+            className="w-48"
+            aria-label={t('pages.authors.allNationalities')}
+            startIcon={<Globe className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.authors.allNationalities')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.authors.allNationalities')}</SelectItem>
+            {NATIONALITIES.map((nat) => (
+              <SelectItem key={nat.value} value={nat.value}>
+                {t(`pages.authors.nationalities.${nat.value}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </FilterBar>
 
       {filteredAuthors.length === 0 ? (
@@ -314,7 +362,7 @@ export default function Authors() {
         />
       ) : (
         <PaginatedSlide
-          key={searchTerm}
+          key={`${searchTerm}-${nationalityFilter}`}
           items={filteredAuthors}
           pageSize={GRID_PAGE_SIZE}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"

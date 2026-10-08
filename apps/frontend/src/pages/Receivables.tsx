@@ -10,10 +10,13 @@ import {
   Banknote,
   Clock,
   Wallet,
+  CircleDot,
+  Tag,
 } from 'lucide-react';
 import { useState, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -33,8 +36,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { TRANSLATIONS } from '@/config/constants';
+import {
+  REVENUE_CATEGORIES_CANONICAL,
+  TRANSLATIONS,
+  translate,
+} from '@/config/constants';
+import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -71,6 +86,10 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
   >();
   const [receiptReceivable, setReceiptReceivable] = useState<Receivable | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
 
   const { data: receivables = [], isLoading: receivablesLoading } = useQuery({
     queryKey: ['receivables'],
@@ -168,10 +187,16 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
 
   const filteredReceivables = useMemo(
     () =>
-      receivables.filter((r) =>
-        r.description.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [receivables, searchTerm]
+      receivables.filter((r) => {
+        if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+        if (categoryFilter !== 'all' && r.category !== categoryFilter) return false;
+        if (startDate && (!r.due_date || new Date(r.due_date) < new Date(startDate)))
+          return false;
+        if (endDate && (!r.due_date || new Date(r.due_date) > new Date(endDate)))
+          return false;
+        return r.description.toLowerCase().includes(searchTerm.toLowerCase());
+      }),
+    [receivables, searchTerm, statusFilter, categoryFilter, startDate, endDate]
   );
 
   const { activeCount, overdueCount, receivedCount, totalValue } = useMemo(() => {
@@ -196,12 +221,119 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
         </Button>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+      <FilterBar
+        hasActiveFilters={
+          !!searchTerm ||
+          statusFilter !== 'all' ||
+          categoryFilter !== 'all' ||
+          !!startDate ||
+          !!endDate
+        }
+        onClear={() => {
+          setSearchTerm('');
+          setStatusFilter('all');
+          setCategoryFilter('all');
+          setStartDate(undefined);
+          setEndDate(undefined);
+        }}
+        activeFilters={[
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${t(`pages.receivables.status.${statusFilter}`)}`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+          ...(categoryFilter !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('pages.receivables.allCategories')}: ${translate('revenueCategories', categoryFilter)}`,
+                  onRemove: () => setCategoryFilter('all'),
+                },
+              ]
+            : []),
+          ...(startDate
+            ? [
+                {
+                  key: 'startDate',
+                  label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
+                  onRemove: () => setStartDate(undefined),
+                },
+              ]
+            : []),
+          ...(endDate
+            ? [
+                {
+                  key: 'endDate',
+                  label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
+                  onRemove: () => setEndDate(undefined),
+                },
+              ]
+            : []),
+        ]}
+      >
         <SearchInput
           placeholder={t('pages.receivables.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="w-52 sm:w-64"
+        />
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger
+            className="w-44"
+            aria-label={t('pages.receivables.allCategories')}
+            startIcon={<Tag className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.receivables.allCategories')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.receivables.allCategories')}</SelectItem>
+            {REVENUE_CATEGORIES_CANONICAL.map(({ key }) => {
+              const Icon = REVENUE_CATEGORY_ICONS[key];
+              return (
+                <SelectItem
+                  key={key}
+                  value={key}
+                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                >
+                  {translate('revenueCategories', key)}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger
+            className="w-40"
+            aria-label={t('pages.receivables.allStatus')}
+            startIcon={<CircleDot className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.receivables.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.receivables.allStatus')}</SelectItem>
+            <SelectItem value="active">
+              {t('pages.receivables.status.active')}
+            </SelectItem>
+            <SelectItem value="received">
+              {t('pages.receivables.status.received')}
+            </SelectItem>
+            <SelectItem value="overdue">
+              {t('pages.receivables.status.overdue')}
+            </SelectItem>
+            <SelectItem value="cancelled">
+              {t('pages.receivables.status.cancelled')}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartChange={setStartDate}
+          onEndChange={setEndDate}
         />
       </FilterBar>
 
@@ -284,7 +416,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
         />
       ) : (
         <PaginatedSlide
-          key={searchTerm}
+          key={`${searchTerm}-${statusFilter}-${categoryFilter}-${String(startDate)}-${String(endDate)}`}
           items={filteredReceivables}
           pageSize={GRID_PAGE_SIZE}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"

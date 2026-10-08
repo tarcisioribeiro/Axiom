@@ -22,6 +22,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
+import { TransactionsTabsNav } from '@/components/common/TransactionsTabsNav';
 import { CreditCardInstallmentForm } from '@/components/credit-cards/CreditCardInstallmentForm';
 import { CreditCardPurchaseForm } from '@/components/credit-cards/CreditCardPurchaseForm';
 import { ReceiptButton } from '@/components/receipts';
@@ -814,6 +815,8 @@ export default function CreditCardExpenses({
         }}
       />
 
+      {embedded && <TransactionsTabsNav />}
+
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard
           title={t('pages.creditCardExpenses.totalPaid')}
@@ -1043,7 +1046,10 @@ export default function CreditCardExpenses({
             className="space-y-lg"
           >
             {installmentsByBill.length === 0 ? (
-              <EmptyState title={t('pages.creditCardExpenses.emptyState')} />
+              <EmptyState
+                icon={<ShoppingCart className="h-6 w-6" />}
+                title={t('pages.creditCardExpenses.emptyState')}
+              />
             ) : (
               installmentsByBill.map(
                 ({

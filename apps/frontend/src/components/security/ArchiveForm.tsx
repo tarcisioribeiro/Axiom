@@ -201,7 +201,9 @@ export function ArchiveForm({
                     <span className="flex items-center gap-2">
                       {(() => {
                         const CatIcon = ARCHIVE_CATEGORY_ICONS[key];
-                        return CatIcon ? <CatIcon className="h-4 w-4" /> : null;
+                        return CatIcon ? (
+                          <CatIcon className="text-muted-foreground h-4 w-4 shrink-0" />
+                        ) : null;
                       })()}
                       {t(`pages.archives.categories.${key}`)}
                     </span>

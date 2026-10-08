@@ -2,12 +2,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  Atom,
   BookOpen,
   Brain,
+  Briefcase,
+  CircleDot,
   Clock,
+  Code2,
   Edit,
   GraduationCap,
+  Globe,
   LayoutGrid,
+  MoreHorizontal,
+  Paintbrush,
+  Palette,
   Plus,
   Radar,
   Trash2,
@@ -36,6 +44,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { PlainButton } from '@/components/ui/plain-button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -45,7 +60,7 @@ import { cn } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import { skillHistoryService } from '@/services/skill-history-service';
 import { skillsService } from '@/services/skills-service';
-import type { Skill, SkillFormData, SkillStatus } from '@/types';
+import type { IntellectCategory, Skill, SkillFormData, SkillStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type ViewMode = 'list' | 'radar';
@@ -54,6 +69,28 @@ const STATUS_COLORS: Record<SkillStatus, string> = {
   learning: 'bg-info/10 text-info border-info/30',
   evolving: 'bg-warning/10 text-warning border-warning/30',
   mastered: 'bg-success/10 text-success border-success/30',
+};
+
+const SKILL_STATUSES: SkillStatus[] = ['learning', 'evolving', 'mastered'];
+
+const SKILL_CATEGORIES: IntellectCategory[] = [
+  'technology',
+  'languages',
+  'design',
+  'business',
+  'science',
+  'arts',
+  'other',
+];
+
+const SKILL_CATEGORY_ICONS: Record<IntellectCategory, typeof Brain> = {
+  technology: Code2,
+  languages: Globe,
+  design: Palette,
+  business: Briefcase,
+  science: Atom,
+  arts: Paintbrush,
+  other: MoreHorizontal,
 };
 
 function ProficiencyDots({ level }: { level: number }) {
@@ -199,6 +236,8 @@ export default function Skills() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [formOpen, setFormOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
@@ -285,6 +324,12 @@ export default function Skills() {
   const masteredCount = skills.filter((s) => s.status === 'mastered').length;
   const learningCount = skills.filter((s) => s.status === 'learning').length;
 
+  const filteredSkills = skills.filter(
+    (s) =>
+      (statusFilter === 'all' || s.status === statusFilter) &&
+      (categoryFilter === 'all' || s.category === categoryFilter)
+  );
+
   return (
     <AnimatedPage>
       <PageContainer>
@@ -343,14 +388,81 @@ export default function Skills() {
         <div className="gap-sm flex items-center">
           <FilterBar
             className="flex-1"
-            hasActiveFilters={!!search}
-            onClear={() => setSearch('')}
+            hasActiveFilters={
+              !!search || statusFilter !== 'all' || categoryFilter !== 'all'
+            }
+            onClear={() => {
+              setSearch('');
+              setStatusFilter('all');
+              setCategoryFilter('all');
+            }}
+            activeFilters={[
+              ...(statusFilter !== 'all'
+                ? [
+                    {
+                      key: 'status',
+                      label: `${t('pages.skills.allStatus')}: ${t(`pages.skills.status.${statusFilter}`)}`,
+                      onRemove: () => setStatusFilter('all'),
+                    },
+                  ]
+                : []),
+              ...(categoryFilter !== 'all'
+                ? [
+                    {
+                      key: 'category',
+                      label: `${t('pages.skills.allCategories')}: ${t(`pages.skills.category.${categoryFilter}`)}`,
+                      onRemove: () => setCategoryFilter('all'),
+                    },
+                  ]
+                : []),
+            ]}
           >
             <SearchInput
               placeholder={t('pages.skills.searchPlaceholder')}
               value={search}
               onValueChange={setSearch}
             />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger
+                className="w-36"
+                aria-label={t('pages.skills.allStatus')}
+                startIcon={<CircleDot className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.skills.allStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.skills.allStatus')}</SelectItem>
+                {SKILL_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {t(`pages.skills.status.${status}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger
+                className="w-40"
+                aria-label={t('pages.skills.allCategories')}
+                startIcon={<Brain className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.skills.allCategories')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.skills.allCategories')}</SelectItem>
+                {SKILL_CATEGORIES.map((category) => {
+                  const Icon = SKILL_CATEGORY_ICONS[category];
+                  return (
+                    <SelectItem
+                      key={category}
+                      value={category}
+                      icon={<Icon className="h-4 w-4" />}
+                    >
+                      {t(`pages.skills.category.${category}`)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
           </FilterBar>
           <div className="border-border flex rounded-lg border">
             <PlainButton
@@ -387,9 +499,9 @@ export default function Skills() {
           <LoadingState />
         ) : viewMode === 'radar' ? (
           <div className="gap-md grid lg:grid-cols-2">
-            <SkillsRadarChart skills={skills} />
+            <SkillsRadarChart skills={filteredSkills} />
             <div className="space-y-sm">
-              {skills.slice(0, 8).map((skill) => (
+              {filteredSkills.slice(0, 8).map((skill) => (
                 <div
                   key={skill.id}
                   className="border-border bg-card px-md py-sm flex items-center justify-between rounded-lg border"
@@ -405,18 +517,20 @@ export default function Skills() {
               ))}
             </div>
           </div>
-        ) : skills.length === 0 ? (
+        ) : filteredSkills.length === 0 ? (
           <EmptyState
             title={
-              search ? t('pages.skills.emptySearch') : t('pages.skills.emptyState')
+              search || statusFilter !== 'all' || categoryFilter !== 'all'
+                ? t('pages.skills.emptySearch')
+                : t('pages.skills.emptyState')
             }
             icon={<Brain className="text-muted-foreground h-10 w-10" />}
           />
         ) : (
           <AnimatePresence>
             <PaginatedSlide
-              key={search}
-              items={skills}
+              key={`${search}-${statusFilter}-${categoryFilter}`}
+              items={filteredSkills}
               pageSize={GRID_PAGE_SIZE}
               className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             >

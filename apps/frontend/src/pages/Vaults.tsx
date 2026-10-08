@@ -1,16 +1,33 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { PiggyBank, Plus, Sparkles, TrendingUp, Vault, Zap } from 'lucide-react';
+import {
+  Building2,
+  PiggyBank,
+  Plus,
+  Sparkles,
+  TrendingUp,
+  Vault,
+  Zap,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VaultCard } from '@/components/vaults/VaultCard';
 import { VaultContributionsDialog } from '@/components/vaults/VaultContributionsDialog';
 import { VaultFormDialog } from '@/components/vaults/VaultFormDialog';
@@ -39,6 +56,8 @@ export default function Vaults() {
   const queryClient = useQueryClient();
 
   const [selectedVault, setSelectedVault] = useState<VaultType | undefined>();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [accountFilter, setAccountFilter] = useState('all');
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
@@ -141,6 +160,24 @@ export default function Vaults() {
     }
   };
 
+  const filteredVaults = vaults.filter((vault) => {
+    if (
+      searchTerm &&
+      !vault.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+      return false;
+    if (accountFilter !== 'all' && String(vault.account) !== accountFilter)
+      return false;
+    return true;
+  });
+
+  const hasActiveFilters = searchTerm !== '' || accountFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setAccountFilter('all');
+  };
+
   const totalBalance = vaults.reduce(
     (sum, v) => sum + parseFloat(v.current_balance),
     0
@@ -216,45 +253,97 @@ export default function Vaults() {
           title={t('pages.vaults.emptyState')}
         />
       ) : (
-        <PaginatedSlide
-          items={vaults}
-          pageSize={GRID_PAGE_SIZE}
-          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
-        >
-          {(pageItems) =>
-            pageItems.map((vault, index) => (
-              <VaultCard
-                key={vault.id}
-                vault={vault}
-                index={index}
-                totalBalance={totalBalance}
-                onDeposit={(v) => {
-                  setSelectedVault(v);
-                  setIsDepositOpen(true);
-                }}
-                onWithdraw={(v) => {
-                  setSelectedVault(v);
-                  setIsWithdrawOpen(true);
-                }}
-                onApplyYield={(v) => void handleApplyYield(v)}
-                onTransactions={(v) => {
-                  setSelectedVault(v);
-                  setIsTransactionsOpen(true);
-                }}
-                onContributions={(v) => {
-                  setSelectedVault(v);
-                  setIsContributionsOpen(true);
-                }}
-                onSimulator={(v) => {
-                  setSelectedVault(v);
-                  setIsSimulatorOpen(true);
-                }}
-                onEdit={handleEdit}
-                onDelete={(id) => void handleDelete(id)}
-              />
-            ))
-          }
-        </PaginatedSlide>
+        <>
+          <FilterBar
+            hasActiveFilters={hasActiveFilters}
+            onClear={clearFilters}
+            activeFilters={[
+              ...(accountFilter !== 'all'
+                ? [
+                    {
+                      key: 'account',
+                      label: `${t('pages.vaults.allAccounts')}: ${
+                        accounts.find((a) => String(a.id) === accountFilter)
+                          ?.account_name ?? accountFilter
+                      }`,
+                      onRemove: () => setAccountFilter('all'),
+                    },
+                  ]
+                : []),
+            ]}
+          >
+            <SearchInput
+              placeholder={t('pages.vaults.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="w-44"
+            />
+            <Select value={accountFilter} onValueChange={setAccountFilter}>
+              <SelectTrigger
+                className="w-48"
+                aria-label={t('pages.vaults.allAccounts')}
+                startIcon={<Building2 className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.vaults.allAccounts')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.vaults.allAccounts')}</SelectItem>
+                {accounts.map((account) => (
+                  <SelectItem key={account.id} value={String(account.id)}>
+                    {account.account_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterBar>
+
+          {filteredVaults.length === 0 ? (
+            <EmptyState
+              icon={<Vault className="text-muted-foreground h-12 w-12" />}
+              title={t('pages.vaults.emptyState')}
+            />
+          ) : (
+            <PaginatedSlide
+              items={filteredVaults}
+              pageSize={GRID_PAGE_SIZE}
+              className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+            >
+              {(pageItems) =>
+                pageItems.map((vault, index) => (
+                  <VaultCard
+                    key={vault.id}
+                    vault={vault}
+                    index={index}
+                    totalBalance={totalBalance}
+                    onDeposit={(v) => {
+                      setSelectedVault(v);
+                      setIsDepositOpen(true);
+                    }}
+                    onWithdraw={(v) => {
+                      setSelectedVault(v);
+                      setIsWithdrawOpen(true);
+                    }}
+                    onApplyYield={(v) => void handleApplyYield(v)}
+                    onTransactions={(v) => {
+                      setSelectedVault(v);
+                      setIsTransactionsOpen(true);
+                    }}
+                    onContributions={(v) => {
+                      setSelectedVault(v);
+                      setIsContributionsOpen(true);
+                    }}
+                    onSimulator={(v) => {
+                      setSelectedVault(v);
+                      setIsSimulatorOpen(true);
+                    }}
+                    onEdit={handleEdit}
+                    onDelete={(id) => void handleDelete(id)}
+                  />
+                ))
+              }
+            </PaginatedSlide>
+          )}
+        </>
       )}
 
       <VaultFormDialog

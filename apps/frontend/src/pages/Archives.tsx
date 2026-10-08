@@ -37,8 +37,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { ARCHIVE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
@@ -53,6 +61,18 @@ const TYPE_CONFIG: Record<string, { icon: string; border: string }> = {
   file: { icon: 'bg-warning/10 text-warning', border: 'border-l-warning/60' },
 };
 
+const ARCHIVE_CATEGORY_KEYS = [
+  'personal',
+  'financial',
+  'legal',
+  'medical',
+  'tax',
+  'work',
+  'other',
+] as const;
+
+const ARCHIVE_TYPE_KEYS = ['text', 'pdf', 'image', 'document', 'other'] as const;
+
 export default function Archives() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -64,6 +84,8 @@ export default function Archives() {
   const [isRevealing, setIsRevealing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   // #197 — inline preview state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<'image' | 'pdf' | null>(null);
@@ -295,6 +317,9 @@ export default function Archives() {
 
   const filteredArchives = archives.filter((arc) => {
     if (showFavoritesOnly && !arc.is_favorite) return false;
+    if (categoryFilter !== 'all' && arc.category !== categoryFilter) return false;
+    if (typeFilter !== 'all' && arc.archive_type !== typeFilter) return false;
+    if (!searchTerm) return true;
     return (
       arc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       arc.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -324,11 +349,38 @@ export default function Archives() {
         </PageHeader>
 
         <FilterBar
-          hasActiveFilters={!!searchTerm || showFavoritesOnly}
+          hasActiveFilters={
+            !!searchTerm ||
+            showFavoritesOnly ||
+            categoryFilter !== 'all' ||
+            typeFilter !== 'all'
+          }
           onClear={() => {
             setSearchTerm('');
             setShowFavoritesOnly(false);
+            setCategoryFilter('all');
+            setTypeFilter('all');
           }}
+          activeFilters={[
+            ...(categoryFilter !== 'all'
+              ? [
+                  {
+                    key: 'category',
+                    label: `${t('common.fields.category')}: ${t(`pages.archives.categories.${categoryFilter}`)}`,
+                    onRemove: () => setCategoryFilter('all'),
+                  },
+                ]
+              : []),
+            ...(typeFilter !== 'all'
+              ? [
+                  {
+                    key: 'type',
+                    label: `${t('common.fields.type')}: ${t(`pages.archives.types.${typeFilter}`)}`,
+                    onRemove: () => setTypeFilter('all'),
+                  },
+                ]
+              : []),
+          ]}
         >
           <SearchInput
             placeholder={t('pages.archives.searchPlaceholder')}
@@ -336,6 +388,47 @@ export default function Archives() {
             onValueChange={setSearchTerm}
             className="w-52 sm:w-64"
           />
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.archives.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.archives.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.archives.allCategories')}</SelectItem>
+              {ARCHIVE_CATEGORY_KEYS.map((key) => {
+                const Icon = ARCHIVE_CATEGORY_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {t(`pages.archives.categories.${key}`)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.archives.allTypes')}
+              startIcon={<FileText className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.archives.allTypes')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.archives.allTypes')}</SelectItem>
+              {ARCHIVE_TYPE_KEYS.map((key) => (
+                <SelectItem key={key} value={key}>
+                  {t(`pages.archives.types.${key}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant={showFavoritesOnly ? 'default' : 'outline'}
             size="sm"
@@ -359,7 +452,7 @@ export default function Archives() {
           />
         ) : (
           <PaginatedSlide
-            key={searchTerm}
+            key={`${searchTerm}-${categoryFilter}-${typeFilter}-${showFavoritesOnly}`}
             items={filteredArchives}
             pageSize={GRID_PAGE_SIZE}
             className="gap-md grid md:grid-cols-2 lg:grid-cols-3"

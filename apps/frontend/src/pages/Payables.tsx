@@ -12,10 +12,13 @@ import {
   Banknote,
   Clock,
   CalendarRange,
+  Tag,
+  CircleDot,
 } from 'lucide-react';
 import { useState, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -39,8 +42,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { translate } from '@/config/constants';
+import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { usePayablesPage } from '@/hooks/use-payables-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -100,6 +111,11 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
   const invalidatePayables = () =>
     void queryClient.invalidateQueries({ queryKey: ['payables'] });
 
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [dueStartDate, setDueStartDate] = useState<Date | undefined>(undefined);
+  const [dueEndDate, setDueEndDate] = useState<Date | undefined>(undefined);
+
   const [paymentPayable, setPaymentPayable] = useState<Payable | null>(null);
   const [paymentPlanPayable, setPaymentPlanPayable] = useState<Payable | null>(null);
   const [increaseValuePayable, setIncreaseValuePayable] = useState<Payable | null>(
@@ -132,6 +148,33 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
     await loadInstallments(payable);
   };
 
+  const displayedPayables = useMemo(() => {
+    let result = filteredPayables;
+    if (statusFilter !== 'all')
+      result = result.filter((p) => p.status === statusFilter);
+    if (categoryFilter !== 'all')
+      result = result.filter((p) => p.category === categoryFilter);
+    if (dueStartDate)
+      result = result.filter((p) => p.due_date && new Date(p.due_date) >= dueStartDate);
+    if (dueEndDate)
+      result = result.filter((p) => p.due_date && new Date(p.due_date) <= dueEndDate);
+    return result;
+  }, [filteredPayables, statusFilter, categoryFilter, dueStartDate, dueEndDate]);
+
+  const hasExtraFilters =
+    statusFilter !== 'all' ||
+    categoryFilter !== 'all' ||
+    !!dueStartDate ||
+    !!dueEndDate;
+
+  const clearExtraFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setCategoryFilter('all');
+    setDueStartDate(undefined);
+    setDueEndDate(undefined);
+  };
+
   const { activeCount, overdueCount, paidCount, totalValue } = useMemo(() => {
     const active = payables.filter((p) => p.status === 'active');
     const overdue = payables.filter((p) => p.status === 'overdue');
@@ -156,12 +199,105 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
         </Button>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+      <FilterBar
+        hasActiveFilters={!!searchTerm || hasExtraFilters}
+        onClear={clearExtraFilters}
+        activeFilters={[
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${translate('payableStatus', statusFilter)}`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+          ...(categoryFilter !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('common.fields.category')}: ${EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === categoryFilter)?.label ?? categoryFilter}`,
+                  onRemove: () => setCategoryFilter('all'),
+                },
+              ]
+            : []),
+          ...(dueStartDate
+            ? [
+                {
+                  key: 'dueStartDate',
+                  label: `${t('common.fields.from')}: ${formatDate(dueStartDate)}`,
+                  onRemove: () => setDueStartDate(undefined),
+                },
+              ]
+            : []),
+          ...(dueEndDate
+            ? [
+                {
+                  key: 'dueEndDate',
+                  label: `${t('common.fields.to')}: ${formatDate(dueEndDate)}`,
+                  onRemove: () => setDueEndDate(undefined),
+                },
+              ]
+            : []),
+        ]}
+      >
         <SearchInput
           placeholder={t('pages.payables.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="w-52 sm:w-64"
+        />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger
+            className="w-40"
+            aria-label={t('pages.payables.allStatus')}
+            startIcon={<CircleDot className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.payables.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.payables.allStatus')}</SelectItem>
+            <SelectItem value="active">
+              {translate('payableStatus', 'active')}
+            </SelectItem>
+            <SelectItem value="paid">{translate('payableStatus', 'paid')}</SelectItem>
+            <SelectItem value="overdue">
+              {translate('payableStatus', 'overdue')}
+            </SelectItem>
+            <SelectItem value="cancelled">
+              {translate('payableStatus', 'cancelled')}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger
+            className="w-44"
+            aria-label={t('pages.payables.allCategories')}
+            startIcon={<Tag className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.payables.allCategories')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.payables.allCategories')}</SelectItem>
+            {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
+              const Icon = EXPENSE_CATEGORY_ICONS[key];
+              return (
+                <SelectItem
+                  key={key}
+                  value={key}
+                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                >
+                  {label}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        <DateRangeFilter
+          startDate={dueStartDate}
+          endDate={dueEndDate}
+          onStartChange={setDueStartDate}
+          onEndChange={setDueEndDate}
         />
       </FilterBar>
 
@@ -229,19 +365,19 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
         </Card>
       </div>
 
-      {filteredPayables.length === 0 ? (
+      {displayedPayables.length === 0 ? (
         <EmptyState
           icon={<Receipt className="text-muted-foreground h-12 w-12" />}
           title={
-            searchTerm
+            searchTerm || hasExtraFilters
               ? t('pages.payables.emptySearch')
               : t('pages.payables.emptyState')
           }
         />
       ) : (
         <PaginatedSlide
-          key={searchTerm}
-          items={filteredPayables}
+          key={`${searchTerm}-${statusFilter}-${categoryFilter}-${dueStartDate?.getTime()}-${dueEndDate?.getTime()}`}
+          items={displayedPayables}
           pageSize={GRID_PAGE_SIZE}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
         >

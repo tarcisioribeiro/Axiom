@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeftRight,
   Banknote,
+  CircleDot,
   CreditCard,
   Loader2,
   MoreHorizontal,
@@ -21,9 +22,11 @@ import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
@@ -184,7 +187,9 @@ function ConditionRow({
               return (
                 <SelectItem key={cat.key} value={cat.key}>
                   <span className="gap-sm flex items-center">
-                    {CatIcon && <CatIcon className="h-4 w-4" />}
+                    {CatIcon && (
+                      <CatIcon className="text-muted-foreground h-4 w-4 shrink-0" />
+                    )}
                     {translate('expenseCategories', cat.key)}
                   </span>
                 </SelectItem>
@@ -305,7 +310,9 @@ function ActionRow({
               return (
                 <SelectItem key={cat.key} value={cat.key}>
                   <span className="gap-sm flex items-center">
-                    {CatIcon && <CatIcon className="h-4 w-4" />}
+                    {CatIcon && (
+                      <CatIcon className="text-muted-foreground h-4 w-4 shrink-0" />
+                    )}
                     {translate('expenseCategories', cat.key)}
                   </span>
                 </SelectItem>
@@ -809,6 +816,8 @@ export default function AutomationRules({
   const [editingRule, setEditingRule] = useState<AutomationRule | undefined>();
   const [detailsRule, setDetailsRule] = useState<AutomationRule | undefined>();
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     if (newRuleRef) {
@@ -828,6 +837,21 @@ export default function AutomationRules({
   const rules: AutomationRule[] = Array.isArray(data)
     ? data
     : ((data as { results: AutomationRule[] } | undefined)?.results ?? []);
+
+  const filteredRules = rules.filter((rule) => {
+    if (searchTerm && !rule.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      return false;
+    if (statusFilter !== 'all' && rule.is_active !== (statusFilter === 'active'))
+      return false;
+    return true;
+  });
+
+  const hasActiveFilters = searchTerm !== '' || statusFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+  };
 
   const createMutation = useMutation({
     mutationFn: (d: AutomationRuleFormData) => automationRulesService.create(d),
@@ -925,21 +949,85 @@ export default function AutomationRules({
       {isLoading ? (
         <LoadingState />
       ) : rules.length === 0 ? (
-        <EmptyState title={t('pages.automationRules.empty')} />
+        <EmptyState
+          icon={<Zap className="h-6 w-6" />}
+          title={t('pages.automationRules.empty')}
+        />
       ) : (
-        <PaginatedSlide items={rules} pageSize={5} centerList className="space-y-sm">
-          {(pageItems) =>
-            pageItems.map((rule) => (
-              <RuleCard
-                key={rule.id}
-                rule={rule}
-                onEdit={handleEdit}
-                onDelete={(id) => void handleDelete(id)}
-                onOpenDetails={handleOpenDetails}
-              />
-            ))
-          }
-        </PaginatedSlide>
+        <>
+          <FilterBar
+            hasActiveFilters={hasActiveFilters}
+            onClear={clearFilters}
+            activeFilters={[
+              ...(statusFilter !== 'all'
+                ? [
+                    {
+                      key: 'status',
+                      label: `${t('common.fields.status')}: ${
+                        statusFilter === 'active'
+                          ? t('pages.automationRules.active')
+                          : t('pages.automationRules.inactive')
+                      }`,
+                      onRemove: () => setStatusFilter('all'),
+                    },
+                  ]
+                : []),
+            ]}
+          >
+            <SearchInput
+              placeholder={t('pages.automationRules.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="w-44"
+            />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger
+                className="w-36"
+                aria-label={t('pages.automationRules.allStatus')}
+                startIcon={<CircleDot className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.automationRules.allStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('pages.automationRules.allStatus')}
+                </SelectItem>
+                <SelectItem value="active">
+                  {t('pages.automationRules.active')}
+                </SelectItem>
+                <SelectItem value="inactive">
+                  {t('pages.automationRules.inactive')}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </FilterBar>
+
+          {filteredRules.length === 0 ? (
+            <EmptyState
+              icon={<Zap className="h-6 w-6" />}
+              title={t('pages.automationRules.empty')}
+            />
+          ) : (
+            <PaginatedSlide
+              items={filteredRules}
+              pageSize={5}
+              centerList
+              className="space-y-sm"
+            >
+              {(pageItems) =>
+                pageItems.map((rule) => (
+                  <RuleCard
+                    key={rule.id}
+                    rule={rule}
+                    onEdit={handleEdit}
+                    onDelete={(id) => void handleDelete(id)}
+                    onOpenDetails={handleOpenDetails}
+                  />
+                ))
+              }
+            </PaginatedSlide>
+          )}
+        </>
       )}
 
       <RuleFormDialog

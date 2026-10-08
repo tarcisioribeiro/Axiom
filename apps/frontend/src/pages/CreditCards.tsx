@@ -8,14 +8,18 @@ import {
   CreditCard as CreditCardIcon,
   Calendar,
   SlidersHorizontal,
+  CircleDot,
+  Tag,
 } from 'lucide-react';
 import { useState, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { CreditCardDeleteDialog } from '@/components/credit-cards/CreditCardDeleteDialog';
 import { CreditCardDetailSheet } from '@/components/credit-cards/CreditCardDetailSheet';
 import { CreditCardForm } from '@/components/credit-cards/CreditCardForm';
@@ -30,8 +34,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { translate } from '@/config/constants';
+import { translate, TRANSLATIONS } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
@@ -174,6 +185,9 @@ export default function CreditCards({
   const [deleteState, setDeleteState] = useState<
     { card: CreditCard; pendingBills: CreditCardBill[] } | undefined
   >();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [flagFilter, setFlagFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const setExtraLabel = useBreadcrumbExtraStore((s) => s.setExtraLabel);
 
   useEffect(() => {
@@ -271,16 +285,110 @@ export default function CreditCards({
     return <LoadingState />;
   }
 
+  const filteredCreditCards = creditCards.filter((card) => {
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      if (
+        !card.name.toLowerCase().includes(q) &&
+        !card.on_card_name.toLowerCase().includes(q)
+      )
+        return false;
+    }
+    if (flagFilter !== 'all' && card.flag !== flagFilter) return false;
+    if (statusFilter !== 'all' && (statusFilter === 'active') !== card.is_active)
+      return false;
+    return true;
+  });
+
+  const hasActiveFilters =
+    searchTerm !== '' || flagFilter !== 'all' || statusFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFlagFilter('all');
+    setStatusFilter('all');
+  };
+
   return (
     <Wrapper embedded={embedded}>
+      {creditCards.length > 0 && (
+        <FilterBar
+          hasActiveFilters={hasActiveFilters}
+          onClear={clearFilters}
+          activeFilters={[
+            ...(flagFilter !== 'all'
+              ? [
+                  {
+                    key: 'flag',
+                    label: `${t('pages.creditCards.form.flagLabel')}: ${translate('cardBrands', flagFilter)}`,
+                    onRemove: () => setFlagFilter('all'),
+                  },
+                ]
+              : []),
+            ...(statusFilter !== 'all'
+              ? [
+                  {
+                    key: 'status',
+                    label: `${t('common.fields.status')}: ${statusFilter === 'active' ? t('common.status.active') : t('common.status.inactive')}`,
+                    onRemove: () => setStatusFilter('all'),
+                  },
+                ]
+              : []),
+          ]}
+        >
+          <SearchInput
+            placeholder={t('pages.creditCards.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-44"
+          />
+          <Select value={flagFilter} onValueChange={setFlagFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.creditCards.form.flagLabel')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.creditCards.allFlags')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.creditCards.allFlags')}</SelectItem>
+              {Object.entries(TRANSLATIONS.cardBrands).map(([key, label]) => (
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.creditCards.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.creditCards.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.creditCards.allStatus')}</SelectItem>
+              <SelectItem value="active">{t('common.status.active')}</SelectItem>
+              <SelectItem value="inactive">{t('common.status.inactive')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterBar>
+      )}
+
       {creditCards.length === 0 ? (
+        <EmptyState
+          icon={<CreditCardIcon className="text-muted-foreground h-12 w-12" />}
+          title={t('pages.creditCards.emptyTitle')}
+        />
+      ) : filteredCreditCards.length === 0 ? (
         <EmptyState
           icon={<CreditCardIcon className="text-muted-foreground h-12 w-12" />}
           title={t('pages.creditCards.emptyTitle')}
         />
       ) : (
         <PaginatedSlide
-          items={creditCards}
+          items={filteredCreditCards}
           pageSize={cardsPageSize}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
         >

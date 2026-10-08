@@ -13,8 +13,9 @@ import {
   Star,
   Wallet,
   Building2,
+  CreditCard,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -36,8 +37,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate } from '@/config/constants';
+import { STORED_ACCOUNT_TYPE_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn, copyToClipboard } from '@/lib/utils';
@@ -50,6 +59,7 @@ import type {
   Account,
   Member,
 } from '@/types';
+import { ACCOUNT_TYPES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type AccountTypeConfig = { badge: string; avatar: string; border: string };
@@ -111,6 +121,8 @@ export default function StoredAccounts() {
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [accountTypeFilter, setAccountTypeFilter] = useState('all');
+  const [institutionFilter, setInstitutionFilter] = useState('all');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
@@ -295,8 +307,17 @@ export default function StoredAccounts() {
     }
   };
 
+  const institutionOptions = useMemo(
+    () => Array.from(new Set(accounts.map((acc) => acc.institution_name))).sort(),
+    [accounts]
+  );
+
   const filteredAccounts = accounts.filter((acc) => {
     if (showFavoritesOnly && !acc.is_favorite) return false;
+    if (accountTypeFilter !== 'all' && acc.account_type !== accountTypeFilter)
+      return false;
+    if (institutionFilter !== 'all' && acc.institution_name !== institutionFilter)
+      return false;
     return (
       acc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       acc.institution_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -315,11 +336,38 @@ export default function StoredAccounts() {
         </PageHeader>
 
         <FilterBar
-          hasActiveFilters={!!searchTerm || showFavoritesOnly}
+          hasActiveFilters={
+            !!searchTerm ||
+            showFavoritesOnly ||
+            accountTypeFilter !== 'all' ||
+            institutionFilter !== 'all'
+          }
           onClear={() => {
             setSearchTerm('');
             setShowFavoritesOnly(false);
+            setAccountTypeFilter('all');
+            setInstitutionFilter('all');
           }}
+          activeFilters={[
+            ...(accountTypeFilter !== 'all'
+              ? [
+                  {
+                    key: 'accountType',
+                    label: `${t('pages.storedAccounts.allTypes')}: ${t(`pages.storedAccounts.accountTypes.${accountTypeFilter}`)}`,
+                    onRemove: () => setAccountTypeFilter('all'),
+                  },
+                ]
+              : []),
+            ...(institutionFilter !== 'all'
+              ? [
+                  {
+                    key: 'institution',
+                    label: `${t('pages.storedAccounts.allInstitutions')}: ${translate('institutions', institutionFilter)}`,
+                    onRemove: () => setInstitutionFilter('all'),
+                  },
+                ]
+              : []),
+          ]}
         >
           <SearchInput
             placeholder={t('pages.storedAccounts.searchPlaceholder')}
@@ -327,6 +375,49 @@ export default function StoredAccounts() {
             onValueChange={setSearchTerm}
             className="w-52 sm:w-64"
           />
+          <Select value={accountTypeFilter} onValueChange={setAccountTypeFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.storedAccounts.allTypes')}
+              startIcon={<CreditCard className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.storedAccounts.allTypes')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.storedAccounts.allTypes')}</SelectItem>
+              {ACCOUNT_TYPES.map(({ value }) => {
+                const Icon = STORED_ACCOUNT_TYPE_ICONS[value] ?? Building2;
+                return (
+                  <SelectItem
+                    key={value}
+                    value={value}
+                    icon={<Icon className="h-4 w-4" />}
+                  >
+                    {t(`pages.storedAccounts.accountTypes.${value}`)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+          <Select value={institutionFilter} onValueChange={setInstitutionFilter}>
+            <SelectTrigger
+              className="w-48"
+              aria-label={t('pages.storedAccounts.allInstitutions')}
+              startIcon={<Building2 className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.storedAccounts.allInstitutions')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.storedAccounts.allInstitutions')}
+              </SelectItem>
+              {institutionOptions.map((institution) => (
+                <SelectItem key={institution} value={institution}>
+                  {translate('institutions', institution)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant={showFavoritesOnly ? 'default' : 'outline'}
             size="sm"
@@ -350,7 +441,7 @@ export default function StoredAccounts() {
           />
         ) : (
           <PaginatedSlide
-            key={searchTerm}
+            key={`${searchTerm}-${accountTypeFilter}-${institutionFilter}-${showFavoritesOnly}`}
             items={filteredAccounts}
             pageSize={GRID_PAGE_SIZE}
             className="gap-md grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3"

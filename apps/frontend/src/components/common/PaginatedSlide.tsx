@@ -15,14 +15,16 @@ interface PaginatedSlideProps<T> {
   /** Fixa a navegação no rodapé da área da página (padrão). Use `false` em
    * listas que são só uma seção dentro de outra tela. */
   pinNav?: boolean;
-  /** Centraliza a lista na vertical no espaço acima da navegação, só com mais de uma página. */
+  /** Centraliza a lista na vertical no espaço acima da navegação, só com mais
+   * de uma página. Padrão `true` — use `false` para manter a lista alinhada
+   * ao topo. */
   centerList?: boolean;
   children: (pageItems: T[]) => ReactNode;
 }
 
 /** Tamanhos padrão: grades de cards (divisível por 2, 3 e 4 colunas) e listas. */
 export const GRID_PAGE_SIZE = 12;
-export const LIST_PAGE_SIZE = 10;
+export const LIST_PAGE_SIZE = 5;
 
 const slideVariants = {
   enter: (dir: number) => ({ opacity: 0, x: dir * 24 }),
@@ -86,7 +88,7 @@ export function PageSlide({
   resetKey,
   className,
   pinNav = true,
-  centerList = false,
+  centerList = true,
   children,
 }: PageSlideProps) {
   // Direção derivada da página anterior (padrão "estado da renderização anterior").

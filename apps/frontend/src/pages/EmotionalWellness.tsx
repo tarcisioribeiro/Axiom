@@ -2,6 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { TFunction } from 'i18next';
 import {
   Heart,
   ListChecks,
@@ -24,9 +25,12 @@ import {
   X,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -43,12 +47,19 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import {
   type CrisisImpulseLog,
   type CrisisImpulseLogCreate,
@@ -68,52 +79,44 @@ type Tab = 'dashboard' | 'self-esteem' | 'checkin' | 'crisis' | 'library';
 
 // ─── Rosenberg questions ──────────────────────────────────────────────────────
 
-const ROSENBERG_QUESTIONS = [
-  'Sinto que sou uma pessoa de valor, pelo menos tanto quanto outras pessoas.',
-  'Sinto que tenho várias qualidades boas.',
-  'Ao todo, estou inclinado(a) a sentir que sou um(a) fracasso(a).',
-  'Sou capaz de fazer as coisas tão bem quanto outras pessoas.',
-  'Sinto que não tenho muito do que me orgulhar.',
-  'Tenho uma atitude positiva em relação a mim mesmo(a).',
-  'No geral, estou satisfeito(a) comigo mesmo(a).',
-  'Gostaria de poder ter mais respeito por mim mesmo(a).',
-  'Às vezes me sinto inútil.',
-  'Às vezes penso que não sirvo para nada.',
+const ROSENBERG_QUESTION_KEYS = [
+  'q1',
+  'q2',
+  'q3',
+  'q4',
+  'q5',
+  'q6',
+  'q7',
+  'q8',
+  'q9',
+  'q10',
+] as const;
+
+const ROSENBERG_OPTION_KEYS = [
+  { value: 0, labelKey: 'stronglyDisagree' },
+  { value: 1, labelKey: 'disagree' },
+  { value: 2, labelKey: 'agree' },
+  { value: 3, labelKey: 'stronglyAgree' },
+] as const;
+
+const EMOTIONAL_STATE_VALUES: EmotionalState[] = [
+  'loneliness',
+  'neediness',
+  'anxiety',
+  'boredom',
+  'frustration',
+  'anger',
+  'other',
 ];
 
-const ROSENBERG_OPTIONS = [
-  { value: 0, label: 'Discordo totalmente' },
-  { value: 1, label: 'Discordo' },
-  { value: 2, label: 'Concordo' },
-  { value: 3, label: 'Concordo totalmente' },
+const IMPULSE_TYPE_VALUES: ImpulseType[] = [
+  'pornography',
+  'alcohol',
+  'social_media',
+  'shopping',
+  'procrastination',
+  'other',
 ];
-
-const EMOTIONAL_STATES: { value: EmotionalState; label: string }[] = [
-  { value: 'loneliness', label: 'Solidão' },
-  { value: 'neediness', label: 'Carência' },
-  { value: 'anxiety', label: 'Ansiedade' },
-  { value: 'boredom', label: 'Tédio' },
-  { value: 'frustration', label: 'Frustração' },
-  { value: 'anger', label: 'Raiva' },
-  { value: 'other', label: 'Outro' },
-];
-
-const IMPULSE_TYPES: { value: ImpulseType; label: string }[] = [
-  { value: 'pornography', label: 'Pornografia' },
-  { value: 'alcohol', label: 'Álcool' },
-  { value: 'social_media', label: 'Redes Sociais' },
-  { value: 'shopping', label: 'Compras' },
-  { value: 'procrastination', label: 'Procrastinação' },
-  { value: 'other', label: 'Outro' },
-];
-
-const CATEGORY_LABELS: Record<InterventionCategory, string> = {
-  self_esteem: 'Autoestima',
-  loneliness: 'Solidão',
-  neediness: 'Carência',
-  anxiety: 'Ansiedade',
-  emotional_dependency: 'Dependência Emocional',
-};
 
 const CATEGORY_COLORS: Record<InterventionCategory, string> = {
   self_esteem: 'bg-primary/10 text-primary border-primary/20',
@@ -125,11 +128,22 @@ const CATEGORY_COLORS: Record<InterventionCategory, string> = {
 
 // ─── Score interpretation ─────────────────────────────────────────────────────
 
-function scoreLabel(score: number | null) {
+function scoreLabel(score: number | null, t: TFunction) {
   if (score === null) return { label: '—', color: 'text-muted-foreground' };
-  if (score >= 25) return { label: 'Alta', color: 'text-success' };
-  if (score >= 15) return { label: 'Média', color: 'text-warning' };
-  return { label: 'Baixa', color: 'text-destructive' };
+  if (score >= 25)
+    return {
+      label: t('pages.emotionalWellness.scoreLabel.high'),
+      color: 'text-success',
+    };
+  if (score >= 15)
+    return {
+      label: t('pages.emotionalWellness.scoreLabel.medium'),
+      color: 'text-warning',
+    };
+  return {
+    label: t('pages.emotionalWellness.scoreLabel.low'),
+    color: 'text-destructive',
+  };
 }
 
 // ─── Scale slider ─────────────────────────────────────────────────────────────
@@ -227,17 +241,18 @@ function WellnessStatCard({
 
 // ─── Tab nav ──────────────────────────────────────────────────────────────────
 
-const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
-  { id: 'dashboard', label: 'Visão Geral', icon: BarChart3 },
-  { id: 'self-esteem', label: 'Autoestima', icon: Star },
-  { id: 'checkin', label: 'Check-in', icon: Heart },
-  { id: 'crisis', label: 'Modo Crise', icon: Shield },
-  { id: 'library', label: 'Intervenções', icon: BookOpen },
+const TABS: { id: Tab; labelKey: string; icon: React.ElementType }[] = [
+  { id: 'dashboard', labelKey: 'dashboard', icon: BarChart3 },
+  { id: 'self-esteem', labelKey: 'selfEsteem', icon: Star },
+  { id: 'checkin', labelKey: 'checkin', icon: Heart },
+  { id: 'crisis', labelKey: 'crisis', icon: Shield },
+  { id: 'library', labelKey: 'library', icon: BookOpen },
 ];
 
 // ─── Dashboard tab ────────────────────────────────────────────────────────────
 
 function DashboardTab() {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery({
     queryKey: ['wellness', 'dashboard'],
     queryFn: () => wellnessService.getDashboard(),
@@ -252,7 +267,7 @@ function DashboardTab() {
   if (!data) return null;
 
   const d = data;
-  const sl = scoreLabel(d.self_esteem.current_score);
+  const sl = scoreLabel(d.self_esteem.current_score, t);
   const history = historyData?.results ?? [];
 
   return (
@@ -260,7 +275,7 @@ function DashboardTab() {
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <WellnessStatCard
-          title="Autoestima"
+          title={t('pages.emotionalWellness.dashboard.selfEsteemStat')}
           value={
             d.self_esteem.current_score !== null
               ? `${d.self_esteem.current_score}/30`
@@ -270,46 +285,46 @@ function DashboardTab() {
           icon={Star}
         />
         <WellnessStatCard
-          title="Solidão (média)"
+          title={t('pages.emotionalWellness.dashboard.lonelinessAvgStat')}
           value={
             d.emotional.avg_loneliness !== null ? d.emotional.avg_loneliness : null
           }
-          subtitle="esta semana"
+          subtitle={t('pages.emotionalWellness.dashboard.thisWeek')}
           icon={Heart}
         />
         <WellnessStatCard
-          title="Ansiedade (média)"
+          title={t('pages.emotionalWellness.dashboard.anxietyAvgStat')}
           value={d.emotional.avg_anxiety !== null ? d.emotional.avg_anxiety : null}
-          subtitle="esta semana"
+          subtitle={t('pages.emotionalWellness.dashboard.thisWeek')}
           icon={Brain}
         />
         <WellnessStatCard
-          title="Tarefas concluídas"
+          title={t('pages.emotionalWellness.dashboard.tasksCompletedStat')}
           value={d.interventions.completed_this_week}
-          subtitle="esta semana"
+          subtitle={t('pages.emotionalWellness.dashboard.thisWeek')}
           icon={CheckCircle2}
         />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <WellnessStatCard
-          title="Motivação (média)"
+          title={t('pages.emotionalWellness.dashboard.motivationAvgStat')}
           value={
             d.emotional.avg_motivation !== null ? d.emotional.avg_motivation : null
           }
-          subtitle="esta semana"
+          subtitle={t('pages.emotionalWellness.dashboard.thisWeek')}
           icon={Zap}
         />
         <WellnessStatCard
-          title="Check-ins"
+          title={t('pages.emotionalWellness.dashboard.checkinsStat')}
           value={d.emotional.checkins_this_week}
-          subtitle="esta semana"
+          subtitle={t('pages.emotionalWellness.dashboard.thisWeek')}
           icon={TrendingUp}
         />
         <WellnessStatCard
-          title="Impulsos superados"
+          title={t('pages.emotionalWellness.dashboard.impulsesOvercomeStat')}
           value={`${d.impulses.resolved_this_week}/${d.impulses.count_this_week}`}
-          subtitle="esta semana"
+          subtitle={t('pages.emotionalWellness.dashboard.thisWeek')}
           icon={Shield}
         />
       </div>
@@ -319,7 +334,7 @@ function DashboardTab() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">
-              Histórico de Autoestima
+              {t('pages.emotionalWellness.dashboard.historyTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -338,7 +353,7 @@ function DashboardTab() {
                   <span
                     className={cn(
                       'w-10 text-right text-xs font-bold',
-                      scoreLabel(a.score).color
+                      scoreLabel(a.score, t).color
                     )}
                   >
                     {a.score}/30
@@ -351,7 +366,10 @@ function DashboardTab() {
       )}
 
       {history.length === 0 && d.emotional.checkins_this_week === 0 && (
-        <EmptyState icon={<Heart />} title="Nenhum dado ainda" />
+        <EmptyState
+          icon={<Heart />}
+          title={t('pages.emotionalWellness.dashboard.emptyTitle')}
+        />
       )}
     </div>
   );
@@ -366,6 +384,7 @@ function SelfEsteemTab({
   showForm: boolean;
   setShowForm: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -415,15 +434,21 @@ function SelfEsteemTab({
         }
       }
       toast({
-        title: `Avaliação registrada com pontuação ${result.score}/30.`,
+        title: t('pages.emotionalWellness.selfEsteem.savedToast', {
+          score: result.score,
+        }),
       });
     },
-    onError: () => toast({ title: 'Erro ao salvar', variant: 'destructive' }),
+    onError: () =>
+      toast({
+        title: t('pages.emotionalWellness.selfEsteem.saveError'),
+        variant: 'destructive',
+      }),
   });
 
-  const allAnswered = ROSENBERG_QUESTIONS.every((_, i) => `q${i + 1}` in answers);
+  const allAnswered = ROSENBERG_QUESTION_KEYS.every((_, i) => `q${i + 1}` in answers);
   const stepKey = `q${step + 1}`;
-  const isLastStep = step === ROSENBERG_QUESTIONS.length - 1;
+  const isLastStep = step === ROSENBERG_QUESTION_KEYS.length - 1;
 
   function handleSubmit() {
     if (!allAnswered) return;
@@ -450,18 +475,25 @@ function SelfEsteemTab({
         {/* altura fixa: o modal não varia com o tamanho do texto da pergunta */}
         <DialogContent size="sm" className="flex h-[26rem] flex-col">
           <DialogHeader>
-            <DialogTitle>Responda com sinceridade</DialogTitle>
+            <DialogTitle>
+              {t('pages.emotionalWellness.selfEsteem.dialogTitle')}
+            </DialogTitle>
             <DialogDescription>
-              Pergunta {step + 1} de {ROSENBERG_QUESTIONS.length}
+              {t('pages.emotionalWellness.selfEsteem.questionOf', {
+                current: step + 1,
+                total: ROSENBERG_QUESTION_KEYS.length,
+              })}
             </DialogDescription>
           </DialogHeader>
 
           <div key={step} className="animate-fade-in space-y-md flex-1">
             <p className="text-sm leading-relaxed font-medium">
-              {ROSENBERG_QUESTIONS[step]}
+              {t(
+                `pages.emotionalWellness.selfEsteem.questions.${ROSENBERG_QUESTION_KEYS[step]}`
+              )}
             </p>
             <div className="gap-sm grid grid-cols-2">
-              {ROSENBERG_OPTIONS.map((opt) => (
+              {ROSENBERG_OPTION_KEYS.map((opt) => (
                 <button
                   key={opt.value}
                   type="button"
@@ -476,7 +508,7 @@ function SelfEsteemTab({
                       : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
                   )}
                 >
-                  {opt.label}
+                  {t(`pages.emotionalWellness.selfEsteem.options.${opt.labelKey}`)}
                 </button>
               ))}
             </div>
@@ -489,14 +521,16 @@ function SelfEsteemTab({
                 disabled={!allAnswered || mutation.isPending}
               >
                 <Send className="h-4 w-4" />
-                {mutation.isPending ? 'Analisando...' : 'Enviar'}
+                {mutation.isPending
+                  ? t('pages.emotionalWellness.selfEsteem.analyzing')
+                  : t('common.actions.send')}
               </Button>
             ) : (
               <Button
                 onClick={() => setStep((s) => s + 1)}
                 disabled={!(stepKey in answers)}
               >
-                Confirmar
+                {t('common.actions.confirm')}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             )}
@@ -510,25 +544,39 @@ function SelfEsteemTab({
             <>
               <DialogHeader>
                 <DialogTitle className="gap-sm flex items-center">
-                  Avaliação de {format(new Date(selected.assessed_at), 'dd/MM/yyyy')}
+                  {t('pages.emotionalWellness.selfEsteem.detailTitle', {
+                    date: format(new Date(selected.assessed_at), 'dd/MM/yyyy'),
+                  })}
                   <Badge variant="outline" className="text-xs">
-                    {scoreLabel(selected.score).label}
+                    {scoreLabel(selected.score, t).label}
                   </Badge>
                 </DialogTitle>
-                <DialogDescription>Pontuação: {selected.score}/30</DialogDescription>
+                <DialogDescription>
+                  {t('pages.emotionalWellness.selfEsteem.scoreOf', {
+                    score: selected.score,
+                  })}
+                </DialogDescription>
               </DialogHeader>
               <ol className="space-y-sm">
-                {ROSENBERG_QUESTIONS.map((q, i) => (
+                {ROSENBERG_QUESTION_KEYS.map((qKey, i) => (
                   <li key={i} className="text-sm">
                     <p className="text-muted-foreground">
-                      {i + 1}. {q}
+                      {i + 1}.{' '}
+                      {t(`pages.emotionalWellness.selfEsteem.questions.${qKey}`)}
                     </p>
                     <p className="text-foreground font-medium">
-                      {ROSENBERG_OPTIONS.find(
-                        (o) =>
-                          o.value ===
-                          selected[`q${i + 1}` as keyof SelfEsteemAssessment]
-                      )?.label ?? '—'}
+                      {(() => {
+                        const opt = ROSENBERG_OPTION_KEYS.find(
+                          (o) =>
+                            o.value ===
+                            selected[`q${i + 1}` as keyof SelfEsteemAssessment]
+                        );
+                        return opt
+                          ? t(
+                              `pages.emotionalWellness.selfEsteem.options.${opt.labelKey}`
+                            )
+                          : '—';
+                      })()}
                     </p>
                   </li>
                 ))}
@@ -548,13 +596,18 @@ function SelfEsteemTab({
           >
             <div className="space-y-xs py-md text-center">
               <div
-                className={cn('text-5xl font-black', scoreLabel(submitted.score).color)}
+                className={cn(
+                  'text-5xl font-black',
+                  scoreLabel(submitted.score, t).color
+                )}
               >
                 {submitted.score}
                 <span className="text-muted-foreground text-2xl font-light">/30</span>
               </div>
               <p className="text-muted-foreground text-sm">
-                Autoestima {scoreLabel(submitted.score).label}
+                {t('pages.emotionalWellness.selfEsteem.resultScoreLabel', {
+                  label: scoreLabel(submitted.score, t).label,
+                })}
               </p>
             </div>
 
@@ -570,7 +623,7 @@ function SelfEsteemTab({
               <Card>
                 <CardHeader className="px-md pb-sm pt-md">
                   <CardTitle className="text-success text-sm">
-                    Pontos fortes identificados
+                    {t('pages.emotionalWellness.selfEsteem.strengthsTitle')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-sm px-md pb-md">
@@ -588,7 +641,7 @@ function SelfEsteemTab({
               <Card>
                 <CardHeader className="px-md pb-sm pt-md">
                   <CardTitle className="text-warning text-sm">
-                    Crenças para trabalhar
+                    {t('pages.emotionalWellness.selfEsteem.limitingBeliefsTitle')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-sm px-md pb-md">
@@ -606,7 +659,7 @@ function SelfEsteemTab({
               <Card>
                 <CardHeader className="px-md pb-sm pt-md">
                   <CardTitle className="text-primary text-sm">
-                    Sugestões para esta semana
+                    {t('pages.emotionalWellness.selfEsteem.suggestionsTitle')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-sm px-md pb-md">
@@ -628,7 +681,7 @@ function SelfEsteemTab({
                 setAiParsed(null);
               }}
             >
-              Ver histórico
+              {t('pages.emotionalWellness.selfEsteem.viewHistoryBtn')}
             </Button>
           </motion.div>
         )}
@@ -641,7 +694,10 @@ function SelfEsteemTab({
             className="flex flex-1 flex-col"
           >
             {history?.results?.length === 0 ? (
-              <EmptyState icon={<Star />} title="Nenhuma avaliação ainda" />
+              <EmptyState
+                icon={<Star />}
+                title={t('pages.emotionalWellness.selfEsteem.emptyTitle')}
+              />
             ) : (
               <PaginatedSlide
                 items={history?.results ?? []}
@@ -651,7 +707,7 @@ function SelfEsteemTab({
               >
                 {(pageItems) =>
                   pageItems.map((a) => {
-                    const sl = scoreLabel(a.score);
+                    const sl = scoreLabel(a.score, t);
                     return (
                       <Card
                         key={a.id}
@@ -703,25 +759,17 @@ function SelfEsteemTab({
 // ─── Check-in tab ─────────────────────────────────────────────────────────────
 
 const CHECKIN_SCALES = [
-  { key: 'loneliness', label: 'Solidão', colorHigh: false },
-  { key: 'neediness', label: 'Carência', colorHigh: false },
-  { key: 'anxiety', label: 'Ansiedade', colorHigh: false },
-  { key: 'sadness', label: 'Tristeza', colorHigh: false },
-  { key: 'motivation', label: 'Motivação', colorHigh: true },
-  { key: 'energy', label: 'Energia', colorHigh: true },
+  { key: 'loneliness', colorHigh: false },
+  { key: 'neediness', colorHigh: false },
+  { key: 'anxiety', colorHigh: false },
+  { key: 'sadness', colorHigh: false },
+  { key: 'motivation', colorHigh: true },
+  { key: 'energy', colorHigh: true },
 ] as const;
 
 const CHECKIN_TEXTS = [
-  {
-    key: 'what_happened',
-    label: 'O que aconteceu hoje?',
-    placeholder: 'Pode ser algo simples ou complexo...',
-  },
-  {
-    key: 'occupying_thoughts',
-    label: 'Existe algo ocupando seus pensamentos? (opcional)',
-    placeholder: 'Uma preocupação, uma pessoa, um pensamento recorrente...',
-  },
+  { key: 'what_happened' },
+  { key: 'occupying_thoughts' },
 ] as const;
 
 const CHECKIN_STEPS = CHECKIN_SCALES.length + CHECKIN_TEXTS.length;
@@ -744,6 +792,7 @@ function CheckinTab({
   showForm: boolean;
   setShowForm: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [form, setForm] = useState(CHECKIN_INITIAL);
@@ -764,14 +813,28 @@ function CheckinTab({
     queryFn: () => wellnessService.getCheckins(30),
   });
 
+  const [checkinStartDate, setCheckinStartDate] = useState<Date | undefined>(undefined);
+  const [checkinEndDate, setCheckinEndDate] = useState<Date | undefined>(undefined);
+  const hasCheckinFilters = !!checkinStartDate || !!checkinEndDate;
+  const filteredHistory = (history?.results ?? []).filter((c) => {
+    const d = c.checked_at.slice(0, 10);
+    if (checkinStartDate && d < formatLocalDate(checkinStartDate)) return false;
+    if (checkinEndDate && d > formatLocalDate(checkinEndDate)) return false;
+    return true;
+  });
+
   const mutation = useMutation({
     mutationFn: wellnessService.createCheckin.bind(wellnessService),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['wellness'] });
       setShowForm(false);
-      toast({ title: 'Check-in registrado!' });
+      toast({ title: t('pages.emotionalWellness.checkin.savedToast') });
     },
-    onError: () => toast({ title: 'Erro ao salvar', variant: 'destructive' }),
+    onError: () =>
+      toast({
+        title: t('pages.emotionalWellness.checkin.saveError'),
+        variant: 'destructive',
+      }),
   });
 
   function handleSubmit() {
@@ -793,16 +856,21 @@ function CheckinTab({
         {/* altura fixa: o modal não varia entre os passos de escala e de texto */}
         <DialogContent size="sm" className="flex h-[22rem] flex-col">
           <DialogHeader>
-            <DialogTitle>Como você está agora?</DialogTitle>
+            <DialogTitle>
+              {t('pages.emotionalWellness.checkin.dialogTitle')}
+            </DialogTitle>
             <DialogDescription>
-              Pergunta {step + 1} de {CHECKIN_STEPS}
+              {t('pages.emotionalWellness.checkin.questionOf', {
+                current: step + 1,
+                total: CHECKIN_STEPS,
+              })}
             </DialogDescription>
           </DialogHeader>
 
           <div key={step} className="animate-fade-in flex-1">
             {scale ? (
               <ScaleInput
-                label={scale.label}
+                label={t(`pages.emotionalWellness.checkin.scales.${scale.key}`)}
                 value={form[scale.key]}
                 onChange={(v) => setForm((p) => ({ ...p, [scale.key]: v }))}
                 colorHigh={scale.colorHigh}
@@ -813,7 +881,7 @@ function CheckinTab({
                   htmlFor={text.key}
                   className="text-foreground block text-sm font-medium"
                 >
-                  {text.label}
+                  {t(`pages.emotionalWellness.checkin.texts.${text.key}.label`)}
                 </label>
                 <Textarea
                   id={text.key}
@@ -822,7 +890,9 @@ function CheckinTab({
                     setForm((p) => ({ ...p, [text.key]: e.target.value }))
                   }
                   className="flex-1 resize-none"
-                  placeholder={text.placeholder}
+                  placeholder={t(
+                    `pages.emotionalWellness.checkin.texts.${text.key}.placeholder`
+                  )}
                 />
               </div>
             )}
@@ -832,11 +902,13 @@ function CheckinTab({
             {isLastStep ? (
               <Button onClick={handleSubmit} disabled={mutation.isPending}>
                 <CheckCircle2 className="h-4 w-4" />
-                {mutation.isPending ? 'Salvando...' : 'Registrar'}
+                {mutation.isPending
+                  ? t('common.actions.saving')
+                  : t('pages.emotionalWellness.checkin.registerBtn')}
               </Button>
             ) : (
               <Button onClick={() => setStep((s) => s + 1)}>
-                Confirmar
+                {t('common.actions.confirm')}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             )}
@@ -850,28 +922,36 @@ function CheckinTab({
             <>
               <DialogHeader>
                 <DialogTitle>
-                  Check-in de {format(new Date(selected.checked_at), 'dd/MM/yyyy')}
+                  {t('pages.emotionalWellness.checkin.detailTitle', {
+                    date: format(new Date(selected.checked_at), 'dd/MM/yyyy'),
+                  })}
                 </DialogTitle>
                 <VisuallyHidden>
-                  <DialogDescription>Detalhes do check-in</DialogDescription>
+                  <DialogDescription>
+                    {t('pages.emotionalWellness.checkin.detailDesc')}
+                  </DialogDescription>
                 </VisuallyHidden>
               </DialogHeader>
               <div className="space-y-md text-sm">
                 <dl className="gap-sm grid grid-cols-2 sm:grid-cols-3">
                   {CHECKIN_SCALES.map((s) => (
                     <div key={s.key}>
-                      <dt className="text-muted-foreground">{s.label}</dt>
+                      <dt className="text-muted-foreground">
+                        {t(`pages.emotionalWellness.checkin.scales.${s.key}`)}
+                      </dt>
                       <dd className="text-foreground font-medium">
                         {selected[s.key]}/10
                       </dd>
                     </div>
                   ))}
                 </dl>
-                {CHECKIN_TEXTS.map((t) => (
-                  <div key={t.key}>
-                    <p className="text-muted-foreground">{t.label}</p>
+                {CHECKIN_TEXTS.map((txt) => (
+                  <div key={txt.key}>
+                    <p className="text-muted-foreground">
+                      {t(`pages.emotionalWellness.checkin.texts.${txt.key}.label`)}
+                    </p>
                     <p className="text-foreground font-medium whitespace-pre-wrap">
-                      {selected[t.key] || '—'}
+                      {selected[txt.key] || '—'}
                     </p>
                   </div>
                 ))}
@@ -882,54 +962,102 @@ function CheckinTab({
       </Dialog>
 
       {history?.results?.length === 0 ? (
-        <EmptyState icon={<Heart />} title="Nenhum check-in ainda" />
+        <EmptyState
+          icon={<Heart />}
+          title={t('pages.emotionalWellness.checkin.emptyTitle')}
+        />
       ) : (
-        <PaginatedSlide
-          items={history?.results ?? []}
-          pageSize={7}
-          centerList
-          className="space-y-3"
-        >
-          {(pageItems) =>
-            pageItems.map((c) => (
-              <Card
-                key={c.id}
-                role="button"
-                tabIndex={0}
-                className="hover:border-primary/50 cursor-pointer transition-colors"
-                onClick={() => setSelected(c)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelected(c);
-                  }
-                }}
-              >
-                <CardContent className="px-md py-md pt-md">
-                  <div className="gap-md flex items-center">
-                    <p className="text-muted-foreground text-xs">
-                      {format(new Date(c.checked_at), 'dd/MM/yyyy')}
-                    </p>
-                    <div className="text-muted-foreground flex flex-1 gap-3 text-xs">
-                      <span className="gap-xs flex items-center">
-                        <Heart className="text-info h-3 w-3" />
-                        {c.loneliness}
-                      </span>
-                      <span className="gap-xs flex items-center">
-                        <Brain className="text-warning h-3 w-3" />
-                        {c.anxiety}
-                      </span>
-                      <span className="gap-xs flex items-center">
-                        <Zap className="text-success h-3 w-3" />
-                        {c.motivation}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          }
-        </PaginatedSlide>
+        <>
+          <FilterBar
+            hasActiveFilters={hasCheckinFilters}
+            onClear={() => {
+              setCheckinStartDate(undefined);
+              setCheckinEndDate(undefined);
+            }}
+            activeFilters={[
+              ...(checkinStartDate
+                ? [
+                    {
+                      key: 'startDate',
+                      label: `${t('common.fields.from')}: ${format(checkinStartDate, 'dd/MM/yyyy')}`,
+                      onRemove: () => setCheckinStartDate(undefined),
+                    },
+                  ]
+                : []),
+              ...(checkinEndDate
+                ? [
+                    {
+                      key: 'endDate',
+                      label: `${t('common.fields.to')}: ${format(checkinEndDate, 'dd/MM/yyyy')}`,
+                      onRemove: () => setCheckinEndDate(undefined),
+                    },
+                  ]
+                : []),
+            ]}
+          >
+            <DateRangeFilter
+              startDate={checkinStartDate}
+              endDate={checkinEndDate}
+              onStartChange={setCheckinStartDate}
+              onEndChange={setCheckinEndDate}
+            />
+          </FilterBar>
+
+          {filteredHistory.length === 0 ? (
+            <EmptyState
+              icon={<Heart />}
+              title={t('pages.emotionalWellness.checkin.emptyFilteredTitle')}
+            />
+          ) : (
+            <PaginatedSlide
+              key={`${checkinStartDate ? formatLocalDate(checkinStartDate) : ''}|${checkinEndDate ? formatLocalDate(checkinEndDate) : ''}`}
+              items={filteredHistory}
+              pageSize={7}
+              centerList
+              className="space-y-3"
+            >
+              {(pageItems) =>
+                pageItems.map((c) => (
+                  <Card
+                    key={c.id}
+                    role="button"
+                    tabIndex={0}
+                    className="hover:border-primary/50 cursor-pointer transition-colors"
+                    onClick={() => setSelected(c)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelected(c);
+                      }
+                    }}
+                  >
+                    <CardContent className="px-md py-md pt-md">
+                      <div className="gap-md flex items-center">
+                        <p className="text-muted-foreground text-xs">
+                          {format(new Date(c.checked_at), 'dd/MM/yyyy')}
+                        </p>
+                        <div className="text-muted-foreground flex flex-1 gap-3 text-xs">
+                          <span className="gap-xs flex items-center">
+                            <Heart className="text-info h-3 w-3" />
+                            {c.loneliness}
+                          </span>
+                          <span className="gap-xs flex items-center">
+                            <Brain className="text-warning h-3 w-3" />
+                            {c.anxiety}
+                          </span>
+                          <span className="gap-xs flex items-center">
+                            <Zap className="text-success h-3 w-3" />
+                            {c.motivation}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              }
+            </PaginatedSlide>
+          )}
+        </>
       )}
     </div>
   );
@@ -984,6 +1112,7 @@ function CrisisTab({
   showForm: boolean;
   setShowForm: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [step, setStep] = useState(0);
@@ -1013,6 +1142,16 @@ function CrisisTab({
     queryFn: () => wellnessService.getCrisisLogs(),
   });
 
+  const [crisisStartDate, setCrisisStartDate] = useState<Date | undefined>(undefined);
+  const [crisisEndDate, setCrisisEndDate] = useState<Date | undefined>(undefined);
+  const hasCrisisFilters = !!crisisStartDate || !!crisisEndDate;
+  const filteredLogs = (logs?.results ?? []).filter((log) => {
+    const d = log.logged_at.slice(0, 10);
+    if (crisisStartDate && d < formatLocalDate(crisisStartDate)) return false;
+    if (crisisEndDate && d > formatLocalDate(crisisEndDate)) return false;
+    return true;
+  });
+
   const createMutation = useMutation({
     mutationFn: (data: CrisisImpulseLogCreate) => wellnessService.createCrisisLog(data),
     onSuccess: (r) => {
@@ -1027,14 +1166,18 @@ function CrisisTab({
       }
       setStep(2);
     },
-    onError: () => toast({ title: 'Erro ao processar', variant: 'destructive' }),
+    onError: () =>
+      toast({
+        title: t('pages.emotionalWellness.crisis.processError'),
+        variant: 'destructive',
+      }),
   });
 
   const resolveMutation = useMutation({
     mutationFn: (id: number) => wellnessService.resolveCrisisLog(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['wellness'] });
-      toast({ title: 'Impulso superado! Parabéns.' });
+      toast({ title: t('pages.emotionalWellness.crisis.overcameToast') });
       setShowForm(false);
     },
   });
@@ -1048,6 +1191,15 @@ function CrisisTab({
       impulse_type_other: otherImpulse,
     });
   }
+
+  const emotionalStateOptions = EMOTIONAL_STATE_VALUES.map((value) => ({
+    value,
+    label: t(`pages.emotionalWellness.crisis.emotions.${value}`),
+  }));
+  const impulseTypeOptions = IMPULSE_TYPE_VALUES.map((value) => ({
+    value,
+    label: t(`pages.emotionalWellness.crisis.impulses.${value}`),
+  }));
 
   if (isLoading) return <LoadingState />;
 
@@ -1064,13 +1216,16 @@ function CrisisTab({
                 />
               )}
               {step === 0
-                ? 'O que você está sentindo?'
+                ? t('pages.emotionalWellness.crisis.step0Title')
                 : step === 1
-                  ? 'Qual impulso você está tentando evitar?'
-                  : 'Seu plano de ação'}
+                  ? t('pages.emotionalWellness.crisis.step1Title')
+                  : t('pages.emotionalWellness.crisis.step2Title')}
             </DialogTitle>
             <DialogDescription>
-              Etapa {step + 1} de {CRISIS_STEPS}
+              {t('pages.emotionalWellness.crisis.stepOf', {
+                current: step + 1,
+                total: CRISIS_STEPS,
+              })}
             </DialogDescription>
           </DialogHeader>
 
@@ -1078,13 +1233,15 @@ function CrisisTab({
             {step === 0 && (
               <>
                 <ChoiceGrid
-                  options={EMOTIONAL_STATES}
+                  options={emotionalStateOptions}
                   value={emotionalState}
                   onChange={setEmotionalState}
                 />
                 {emotionalState === 'other' && (
                   <Input
-                    placeholder="Descreva o que está sentindo"
+                    placeholder={t(
+                      'pages.emotionalWellness.crisis.otherEmotionPlaceholder'
+                    )}
                     value={otherEmotion}
                     onChange={(e) => setOtherEmotion(e.target.value)}
                   />
@@ -1095,13 +1252,15 @@ function CrisisTab({
             {step === 1 && (
               <>
                 <ChoiceGrid
-                  options={IMPULSE_TYPES}
+                  options={impulseTypeOptions}
                   value={impulseType}
                   onChange={setImpulseType}
                 />
                 {impulseType === 'other' && (
                   <Input
-                    placeholder="Descreva o impulso"
+                    placeholder={t(
+                      'pages.emotionalWellness.crisis.otherImpulsePlaceholder'
+                    )}
                     value={otherImpulse}
                     onChange={(e) => setOtherImpulse(e.target.value)}
                   />
@@ -1114,19 +1273,19 @@ function CrisisTab({
                 <>
                   <div className="space-y-xs">
                     <p className="text-primary text-xs font-medium tracking-wider uppercase">
-                      Validação
+                      {t('pages.emotionalWellness.crisis.validationTitle')}
                     </p>
                     <p className="text-sm leading-relaxed">{aiParsed.validation}</p>
                   </div>
                   <div className="space-y-xs">
                     <p className="text-warning text-xs font-medium tracking-wider uppercase">
-                      Contexto
+                      {t('pages.emotionalWellness.crisis.contextTitle')}
                     </p>
                     <p className="text-sm leading-relaxed">{aiParsed.explanation}</p>
                   </div>
                   <div className="space-y-sm">
                     <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-                      Plano de ação imediato
+                      {t('pages.emotionalWellness.crisis.actionPlanTitle')}
                     </p>
                     {(['5min', '10min', '20min'] as const).map((duration) => (
                       <Card key={duration}>
@@ -1160,7 +1319,7 @@ function CrisisTab({
           <DialogFooter>
             {step === 0 && (
               <Button onClick={() => setStep(1)} disabled={!emotionalState}>
-                Confirmar
+                {t('common.actions.confirm')}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             )}
@@ -1170,14 +1329,16 @@ function CrisisTab({
                 disabled={!impulseType || createMutation.isPending}
               >
                 <Send className="h-4 w-4" />
-                {createMutation.isPending ? 'Buscando suporte...' : 'Quero ajuda agora'}
+                {createMutation.isPending
+                  ? t('pages.emotionalWellness.crisis.sending')
+                  : t('pages.emotionalWellness.crisis.requestHelpBtn')}
               </Button>
             )}
             {step === 2 && (
               <>
                 <Button variant="outline" onClick={() => setShowForm(false)}>
                   <X className="h-4 w-4" />
-                  Fechar
+                  {t('common.actions.close')}
                 </Button>
                 {result && !result.resolved && (
                   <Button
@@ -1185,7 +1346,7 @@ function CrisisTab({
                     disabled={resolveMutation.isPending}
                   >
                     <CheckCircle2 className="h-4 w-4" />
-                    Superei o impulso
+                    {t('pages.emotionalWellness.crisis.overcameBtn')}
                   </Button>
                 )}
               </>
@@ -1195,39 +1356,89 @@ function CrisisTab({
       </Dialog>
 
       {logs?.results?.length === 0 ? (
-        <EmptyState icon={<Shield />} title="Nenhum registro ainda" />
+        <EmptyState
+          icon={<Shield />}
+          title={t('pages.emotionalWellness.crisis.emptyTitle')}
+        />
       ) : (
-        <PaginatedSlide
-          items={logs?.results ?? []}
-          pageSize={6}
-          centerList
-          className="space-y-3"
-        >
-          {(pageItems) =>
-            pageItems.map((log) => (
-              <Card key={log.id}>
-                <CardContent className="flex items-center justify-between p-3 pt-3">
-                  <div>
-                    <p className="text-sm font-medium">{log.impulse_type_display}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {log.emotional_state_display} ·{' '}
-                      {format(new Date(log.logged_at), 'dd/MM HH:mm')}
-                    </p>
-                  </div>
-                  {log.resolved ? (
-                    <Badge className="border-success/20 bg-success/10 text-success text-xs">
-                      Superado
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-xs">
-                      Registrado
-                    </Badge>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-          }
-        </PaginatedSlide>
+        <>
+          <FilterBar
+            hasActiveFilters={hasCrisisFilters}
+            onClear={() => {
+              setCrisisStartDate(undefined);
+              setCrisisEndDate(undefined);
+            }}
+            activeFilters={[
+              ...(crisisStartDate
+                ? [
+                    {
+                      key: 'startDate',
+                      label: `${t('common.fields.from')}: ${format(crisisStartDate, 'dd/MM/yyyy')}`,
+                      onRemove: () => setCrisisStartDate(undefined),
+                    },
+                  ]
+                : []),
+              ...(crisisEndDate
+                ? [
+                    {
+                      key: 'endDate',
+                      label: `${t('common.fields.to')}: ${format(crisisEndDate, 'dd/MM/yyyy')}`,
+                      onRemove: () => setCrisisEndDate(undefined),
+                    },
+                  ]
+                : []),
+            ]}
+          >
+            <DateRangeFilter
+              startDate={crisisStartDate}
+              endDate={crisisEndDate}
+              onStartChange={setCrisisStartDate}
+              onEndChange={setCrisisEndDate}
+            />
+          </FilterBar>
+
+          {filteredLogs.length === 0 ? (
+            <EmptyState
+              icon={<Shield />}
+              title={t('pages.emotionalWellness.crisis.emptyFilteredTitle')}
+            />
+          ) : (
+            <PaginatedSlide
+              key={`${crisisStartDate ? formatLocalDate(crisisStartDate) : ''}|${crisisEndDate ? formatLocalDate(crisisEndDate) : ''}`}
+              items={filteredLogs}
+              pageSize={6}
+              centerList
+              className="space-y-3"
+            >
+              {(pageItems) =>
+                pageItems.map((log) => (
+                  <Card key={log.id}>
+                    <CardContent className="flex items-center justify-between p-3 pt-3">
+                      <div>
+                        <p className="text-sm font-medium">
+                          {log.impulse_type_display}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          {log.emotional_state_display} ·{' '}
+                          {format(new Date(log.logged_at), 'dd/MM HH:mm')}
+                        </p>
+                      </div>
+                      {log.resolved ? (
+                        <Badge className="border-success/20 bg-success/10 text-success text-xs">
+                          {t('pages.emotionalWellness.crisis.resolvedBadge')}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs">
+                          {t('pages.emotionalWellness.crisis.registeredBadge')}
+                        </Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              }
+            </PaginatedSlide>
+          )}
+        </>
       )}
     </div>
   );
@@ -1236,6 +1447,7 @@ function CrisisTab({
 // ─── Library tab ──────────────────────────────────────────────────────────────
 
 function LibraryTab() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState<
@@ -1262,21 +1474,39 @@ function LibraryTab() {
       setCompletedIds((prev) => new Set(prev).add(id));
       setCompletingId(null);
       void queryClient.invalidateQueries({ queryKey: ['wellness'] });
-      toast({ title: 'Intervenção concluída!' });
+      toast({ title: t('pages.emotionalWellness.library.completedToast') });
     },
     onError: () => {
       setCompletingId(null);
-      toast({ title: 'Erro ao registrar', variant: 'destructive' });
+      toast({
+        title: t('pages.emotionalWellness.library.registerError'),
+        variant: 'destructive',
+      });
     },
   });
 
   const categories: Array<{ value: InterventionCategory | 'all'; label: string }> = [
-    { value: 'all', label: 'Todas' },
-    { value: 'self_esteem', label: 'Autoestima' },
-    { value: 'loneliness', label: 'Solidão' },
-    { value: 'neediness', label: 'Carência' },
-    { value: 'anxiety', label: 'Ansiedade' },
-    { value: 'emotional_dependency', label: 'Dep. Emocional' },
+    { value: 'all', label: t('pages.emotionalWellness.library.categoryOptions.all') },
+    {
+      value: 'self_esteem',
+      label: t('pages.emotionalWellness.library.categoryOptions.self_esteem'),
+    },
+    {
+      value: 'loneliness',
+      label: t('pages.emotionalWellness.library.categoryOptions.loneliness'),
+    },
+    {
+      value: 'neediness',
+      label: t('pages.emotionalWellness.library.categoryOptions.neediness'),
+    },
+    {
+      value: 'anxiety',
+      label: t('pages.emotionalWellness.library.categoryOptions.anxiety'),
+    },
+    {
+      value: 'emotional_dependency',
+      label: t('pages.emotionalWellness.library.categoryOptions.emotional_dependency'),
+    },
   ];
 
   const difficultyColor: Record<string, string> = {
@@ -1287,27 +1517,51 @@ function LibraryTab() {
 
   return (
     <div className="space-y-md">
-      <div className="-mx-xs gap-sm px-xs pb-xs flex overflow-x-auto">
-        {categories.map((c) => (
-          <button
-            key={c.value}
-            onClick={() => setSelectedCategory(c.value)}
-            className={cn(
-              'py-xs.5 rounded-full border px-3 text-xs font-medium whitespace-nowrap transition',
-              selectedCategory === c.value
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border text-muted-foreground hover:border-primary/50'
-            )}
+      <FilterBar
+        hasActiveFilters={selectedCategory !== 'all'}
+        onClear={() => setSelectedCategory('all')}
+        activeFilters={[
+          ...(selectedCategory !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('pages.emotionalWellness.library.categoryLabel')}: ${categories.find((c) => c.value === selectedCategory)?.label ?? selectedCategory}`,
+                  onRemove: () => setSelectedCategory('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <Select
+          value={selectedCategory}
+          onValueChange={(v) => setSelectedCategory(v as InterventionCategory | 'all')}
+        >
+          <SelectTrigger
+            className="w-48"
+            aria-label={t('pages.emotionalWellness.library.categoryLabel')}
+            startIcon={<BookOpen className="h-3.5 w-3.5" />}
           >
-            {c.label}
-          </button>
-        ))}
-      </div>
+            <SelectValue
+              placeholder={t('pages.emotionalWellness.library.categoryLabel')}
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((c) => (
+              <SelectItem key={c.value} value={c.value}>
+                {c.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </FilterBar>
 
       {isLoading ? (
         <LoadingState />
       ) : data?.results?.length === 0 ? (
-        <EmptyState icon={<BookOpen />} title="Nenhuma intervenção" />
+        <EmptyState
+          icon={<BookOpen />}
+          title={t('pages.emotionalWellness.library.emptyTitle')}
+        />
       ) : (
         <PaginatedSlide
           key={String(selectedCategory)}
@@ -1331,7 +1585,9 @@ function LibraryTab() {
                               CATEGORY_COLORS[item.category]
                             )}
                           >
-                            {CATEGORY_LABELS[item.category]}
+                            {t(
+                              `pages.emotionalWellness.library.categories.${item.category}`
+                            )}
                           </span>
                           <span className="gap-xs text-muted-foreground flex items-center text-xs">
                             <Clock className="h-3 w-3" /> {item.duration_minutes}min
@@ -1370,14 +1626,15 @@ function LibraryTab() {
                       >
                         {done ? (
                           <>
-                            <CheckCircle2 className="text-success h-3 w-3" /> Feito
+                            <CheckCircle2 className="text-success h-3 w-3" />{' '}
+                            {t('pages.emotionalWellness.library.doneBtn')}
                           </>
                         ) : completeMutation.isPending && completingId === item.id ? (
-                          'Salvando...'
+                          t('pages.emotionalWellness.library.savingLabel')
                         ) : (
                           <>
                             <Play className="h-3 w-3" />
-                            Fazer agora
+                            {t('pages.emotionalWellness.library.doNowBtn')}
                           </>
                         )}
                       </Button>
@@ -1396,6 +1653,7 @@ function LibraryTab() {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function EmotionalWellness() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<string>('dashboard');
   const [selfEsteemFormOpen, setSelfEsteemFormOpen] = useState(false);
   const [checkinFormOpen, setCheckinFormOpen] = useState(false);
@@ -1404,24 +1662,24 @@ export default function EmotionalWellness() {
     <AnimatedPage>
       <PageContainer>
         <PageHeader
-          title="Bem-Estar Emocional"
+          title={t('pages.emotionalWellness.title')}
           icon={<Heart />}
           actions={
             tab === 'self-esteem' ? (
               <Button onClick={() => setSelfEsteemFormOpen(true)}>
                 <Plus className="h-4 w-4" />
-                Nova avaliação
+                {t('pages.emotionalWellness.selfEsteem.newAssessmentBtn')}
               </Button>
             ) : tab === 'checkin' ? (
               <Button onClick={() => setCheckinFormOpen(true)}>
                 <Plus className="h-4 w-4" />
-                Registrar
+                {t('pages.emotionalWellness.checkin.registerBtn')}
               </Button>
             ) : (
               tab === 'crisis' && (
                 <Button onClick={() => setCrisisFormOpen(true)}>
                   <Shield className="h-4 w-4" />
-                  Modo Crise
+                  {t('pages.emotionalWellness.crisis.modeBtn')}
                 </Button>
               )
             )
@@ -1435,7 +1693,7 @@ export default function EmotionalWellness() {
               return (
                 <TabsTrigger key={tab.id} value={tab.id} className="gap-xs flex-1">
                   <Icon className="h-3.5 w-3.5" />
-                  {tab.label}
+                  {t(`pages.emotionalWellness.tabs.${tab.labelKey}`)}
                 </TabsTrigger>
               );
             })}

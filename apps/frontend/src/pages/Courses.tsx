@@ -13,6 +13,7 @@ import {
   Trash2,
   Edit,
   Brain,
+  Tag,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -65,7 +66,13 @@ import { useChartColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { coursesService, courseSessionsService } from '@/services/courses-service';
 import { membersService } from '@/services/members-service';
-import type { Course, CourseFormData, CourseStatus } from '@/types';
+import type {
+  Course,
+  CourseFormData,
+  CoursePlatform,
+  CourseStatus,
+  IntellectCategory,
+} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 const STATUS_FILTER_KEYS: (CourseStatus | 'all')[] = [
@@ -74,6 +81,28 @@ const STATUS_FILTER_KEYS: (CourseStatus | 'all')[] = [
   'not_started',
   'completed',
   'paused',
+];
+
+const CATEGORY_FILTER_KEYS: (IntellectCategory | 'all')[] = [
+  'all',
+  'technology',
+  'languages',
+  'design',
+  'business',
+  'science',
+  'arts',
+  'other',
+];
+
+const PLATFORM_FILTER_KEYS: (CoursePlatform | 'all')[] = [
+  'all',
+  'udemy',
+  'coursera',
+  'youtube',
+  'linkedin',
+  'alura',
+  'pluralsight',
+  'other',
 ];
 
 const STATUS_BADGE: Record<
@@ -222,6 +251,10 @@ export default function Courses() {
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<CourseStatus | 'all'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<IntellectCategory | 'all'>(
+    'all'
+  );
+  const [platformFilter, setPlatformFilter] = useState<CoursePlatform | 'all'>('all');
   const [formOpen, setFormOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [detailCourse, setDetailCourse] = useState<Course | null>(null);
@@ -235,10 +268,12 @@ export default function Courses() {
 
   const params: Record<string, unknown> = { page_size: 200 };
   if (statusFilter !== 'all') params.status = statusFilter;
+  if (categoryFilter !== 'all') params.category = categoryFilter;
+  if (platformFilter !== 'all') params.platform = platformFilter;
   if (search) params.search = search;
 
   const { data: courses = [], isLoading } = useQuery({
-    queryKey: ['courses', statusFilter, search],
+    queryKey: ['courses', statusFilter, categoryFilter, platformFilter, search],
     queryFn: () => coursesService.getAll(params),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
@@ -454,11 +489,47 @@ export default function Courses() {
 
         {/* Filters */}
         <FilterBar
-          hasActiveFilters={!!search || statusFilter !== 'all'}
+          hasActiveFilters={
+            !!search ||
+            statusFilter !== 'all' ||
+            categoryFilter !== 'all' ||
+            platformFilter !== 'all'
+          }
           onClear={() => {
             setSearch('');
             setStatusFilter('all');
+            setCategoryFilter('all');
+            setPlatformFilter('all');
           }}
+          activeFilters={[
+            ...(statusFilter !== 'all'
+              ? [
+                  {
+                    key: 'status',
+                    label: `${t('common.fields.status')}: ${t(`pages.courses.filters.${statusFilter}`)}`,
+                    onRemove: () => setStatusFilter('all'),
+                  },
+                ]
+              : []),
+            ...(categoryFilter !== 'all'
+              ? [
+                  {
+                    key: 'category',
+                    label: `${t('common.fields.category')}: ${t(`pages.courses.category.${categoryFilter}`)}`,
+                    onRemove: () => setCategoryFilter('all'),
+                  },
+                ]
+              : []),
+            ...(platformFilter !== 'all'
+              ? [
+                  {
+                    key: 'platform',
+                    label: `${t('pages.courses.form.platformLabel')}: ${t(`pages.courses.platform.${platformFilter}`)}`,
+                    onRemove: () => setPlatformFilter('all'),
+                  },
+                ]
+              : []),
+          ]}
         >
           <SearchInput
             placeholder={t('pages.courses.searchPlaceholder')}
@@ -483,6 +554,53 @@ export default function Courses() {
               ))}
             </SelectContent>
           </Select>
+          <Select
+            value={categoryFilter}
+            onValueChange={(v) => setCategoryFilter(v as IntellectCategory | 'all')}
+          >
+            <SelectTrigger
+              aria-label={t('pages.courses.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.courses.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.courses.allCategories')}</SelectItem>
+              {CATEGORY_FILTER_KEYS.filter((c) => c !== 'all').map((c) => (
+                <SelectItem key={c} value={c}>
+                  {t(`pages.courses.category.${c}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={platformFilter}
+            onValueChange={(v) => setPlatformFilter(v as CoursePlatform | 'all')}
+          >
+            <SelectTrigger
+              aria-label={t('pages.courses.allPlatforms')}
+              startIcon={<BookOpen className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.courses.allPlatforms')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.courses.allPlatforms')}</SelectItem>
+              {PLATFORM_FILTER_KEYS.filter((p) => p !== 'all').map((p) => {
+                const PlatformIcon = PLATFORM_ICONS[p];
+                return (
+                  <SelectItem
+                    key={p}
+                    value={p}
+                    icon={
+                      PlatformIcon ? <PlatformIcon className="h-4 w-4" /> : undefined
+                    }
+                  >
+                    {t(`pages.courses.platform.${p}`)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </FilterBar>
 
         {/* Grid */}
@@ -498,7 +616,7 @@ export default function Courses() {
         ) : (
           <AnimatePresence>
             <PaginatedSlide
-              key={`${statusFilter}-${search}`}
+              key={`${statusFilter}-${categoryFilter}-${platformFilter}-${search}`}
               items={courses}
               pageSize={GRID_PAGE_SIZE}
               className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"

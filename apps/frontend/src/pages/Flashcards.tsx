@@ -12,16 +12,20 @@ import {
   Loader2,
   Save,
   X,
+  CircleDot,
+  BookOpen,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,6 +37,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -121,6 +132,9 @@ export default function Flashcards() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newFront, setNewFront] = useState('');
   const [newBack, setNewBack] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [bookFilter, setBookFilter] = useState('all');
 
   const { data: allCards, isLoading } = useQuery({
     queryKey: ['flashcards'],
@@ -163,6 +177,33 @@ export default function Flashcards() {
   const newCount = cards.filter((c) => c.status === 'new').length;
 
   const currentCard = due[reviewIndex] ?? null;
+
+  const bookTitles = Array.from(
+    new Set(cards.map((c) => c.book_title).filter((b): b is string => !!b))
+  );
+
+  const matchesFilters = (card: FlashCard) => {
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      if (!card.front.toLowerCase().includes(q) && !card.back.toLowerCase().includes(q))
+        return false;
+    }
+    if (statusFilter !== 'all' && card.status !== statusFilter) return false;
+    if (bookFilter !== 'all' && card.book_title !== bookFilter) return false;
+    return true;
+  };
+
+  const filteredCards = cards.filter(matchesFilters);
+  const filteredDue = due.filter(matchesFilters);
+
+  const hasActiveFilters =
+    searchTerm !== '' || statusFilter !== 'all' || bookFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setBookFilter('all');
+  };
 
   const handleRating = (rating: number) => {
     if (!currentCard) return;
@@ -328,6 +369,82 @@ export default function Flashcards() {
           </AnimatePresence>
         ) : (
           <Tabs defaultValue="all">
+            <FilterBar
+              hasActiveFilters={hasActiveFilters}
+              onClear={clearFilters}
+              activeFilters={[
+                ...(statusFilter !== 'all'
+                  ? [
+                      {
+                        key: 'status',
+                        label: `${t('common.fields.status')}: ${t(`pages.flashcards.status.${statusFilter}`)}`,
+                        onRemove: () => setStatusFilter('all'),
+                      },
+                    ]
+                  : []),
+                ...(bookFilter !== 'all'
+                  ? [
+                      {
+                        key: 'book',
+                        label: `${t('pages.flashcards.allBooks')}: ${bookFilter}`,
+                        onRemove: () => setBookFilter('all'),
+                      },
+                    ]
+                  : []),
+              ]}
+            >
+              <SearchInput
+                placeholder={t('pages.flashcards.searchPlaceholder')}
+                value={searchTerm}
+                onValueChange={setSearchTerm}
+                className="w-44"
+              />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger
+                  className="w-40"
+                  aria-label={t('pages.flashcards.allStatus')}
+                  startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('pages.flashcards.allStatus')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('pages.flashcards.allStatus')}</SelectItem>
+                  <SelectItem value="new">
+                    {t('pages.flashcards.status.new')}
+                  </SelectItem>
+                  <SelectItem value="learning">
+                    {t('pages.flashcards.status.learning')}
+                  </SelectItem>
+                  <SelectItem value="review">
+                    {t('pages.flashcards.status.review')}
+                  </SelectItem>
+                  <SelectItem value="mastered">
+                    {t('pages.flashcards.status.mastered')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {bookTitles.length > 0 && (
+                <Select value={bookFilter} onValueChange={setBookFilter}>
+                  <SelectTrigger
+                    className="w-44"
+                    aria-label={t('pages.flashcards.allBooks')}
+                    startIcon={<BookOpen className="h-3.5 w-3.5" />}
+                  >
+                    <SelectValue placeholder={t('pages.flashcards.allBooks')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t('pages.flashcards.allBooks')}
+                    </SelectItem>
+                    {bookTitles.map((title) => (
+                      <SelectItem key={title} value={title}>
+                        {title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </FilterBar>
             <TabsList className="w-full">
               <TabsTrigger value="all" className="gap-xs flex-1">
                 <Layers className="h-4 w-4" />
@@ -340,14 +457,14 @@ export default function Flashcards() {
             </TabsList>
 
             <TabsContent value="all" className="mt-md">
-              {cards.length === 0 ? (
+              {filteredCards.length === 0 ? (
                 <EmptyState
                   title={t('pages.flashcards.empty.title')}
                   icon={<Brain className="text-muted-foreground h-10 w-10" />}
                 />
               ) : (
                 <PaginatedSlide
-                  items={cards}
+                  items={filteredCards}
                   pageSize={GRID_PAGE_SIZE}
                   className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3"
                 >
@@ -397,14 +514,14 @@ export default function Flashcards() {
             </TabsContent>
 
             <TabsContent value="due" className="mt-md">
-              {due.length === 0 ? (
+              {filteredDue.length === 0 ? (
                 <EmptyState
                   title={t('pages.flashcards.emptyReview.title')}
                   icon={<Star className="text-muted-foreground h-10 w-10" />}
                 />
               ) : (
                 <PaginatedSlide
-                  items={due}
+                  items={filteredDue}
                   pageSize={GRID_PAGE_SIZE}
                   className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3"
                 >

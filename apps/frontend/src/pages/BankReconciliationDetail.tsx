@@ -1,19 +1,23 @@
 /* eslint-disable max-lines */
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  ArrowDownUp,
   ArrowLeft,
   ArrowLeftRight,
+  CircleDot,
   Link2,
   Plus,
   RefreshCw,
   Unlink,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -29,9 +33,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { cn } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import { bankReconciliationService } from '@/services/bank-reconciliation-service';
 import { expensesService } from '@/services/expenses-service';
 import { revenuesService } from '@/services/revenues-service';
@@ -121,6 +132,49 @@ export default function BankReconciliationDetail() {
   const [loading, setLoading] = useState(true);
   const [matchLoading, setMatchLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+
+  // Filtros da tabela principal — 100% client-side sobre `entries`.
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<
+    BankStatementEntry['status'] | 'all'
+  >('all');
+  const [transactionTypeFilter, setTransactionTypeFilter] = useState<
+    BankStatementEntry['transaction_type'] | 'all'
+  >('all');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+
+  const hasActiveFilters =
+    !!searchTerm ||
+    statusFilter !== 'all' ||
+    transactionTypeFilter !== 'all' ||
+    !!startDate ||
+    !!endDate;
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setTransactionTypeFilter('all');
+    setStartDate(undefined);
+    setEndDate(undefined);
+  };
+
+  const filteredEntries = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return entries.filter((entry) => {
+      if (term && !entry.description.toLowerCase().includes(term)) return false;
+      if (statusFilter !== 'all' && entry.status !== statusFilter) return false;
+      if (
+        transactionTypeFilter !== 'all' &&
+        entry.transaction_type !== transactionTypeFilter
+      )
+        return false;
+      const entryDate = entry.date.slice(0, 10);
+      if (startDate && entryDate < formatLocalDate(startDate)) return false;
+      if (endDate && entryDate > formatLocalDate(endDate)) return false;
+      return true;
+    });
+  }, [entries, searchTerm, statusFilter, transactionTypeFilter, startDate, endDate]);
 
   // Manual match modal state
   const [matchingEntry, setMatchingEntry] = useState<BankStatementEntry | null>(null);
@@ -565,8 +619,119 @@ export default function BankReconciliationDetail() {
         </span>
       </div>
 
+      <FilterBar
+        className="mb-md"
+        hasActiveFilters={hasActiveFilters}
+        onClear={clearFilters}
+        activeFilters={[
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${t(`pages.bankReconciliation.detail.status${statusFilter.charAt(0).toUpperCase()}${statusFilter.slice(1)}`)}`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+          ...(transactionTypeFilter !== 'all'
+            ? [
+                {
+                  key: 'type',
+                  label: `${t('pages.bankReconciliation.detail.allTypes')}: ${t(`pages.bankReconciliation.detail.${transactionTypeFilter}`)}`,
+                  onRemove: () => setTransactionTypeFilter('all'),
+                },
+              ]
+            : []),
+          ...(startDate
+            ? [
+                {
+                  key: 'startDate',
+                  label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
+                  onRemove: () => setStartDate(undefined),
+                },
+              ]
+            : []),
+          ...(endDate
+            ? [
+                {
+                  key: 'endDate',
+                  label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
+                  onRemove: () => setEndDate(undefined),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <SearchInput
+          placeholder={t('pages.bankReconciliation.detail.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-44"
+        />
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+        >
+          <SelectTrigger
+            className="w-36"
+            aria-label={t('pages.bankReconciliation.detail.allStatus')}
+            startIcon={<CircleDot className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.bankReconciliation.detail.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {t('pages.bankReconciliation.detail.allStatus')}
+            </SelectItem>
+            <SelectItem value="matched">
+              {t('pages.bankReconciliation.detail.statusMatched')}
+            </SelectItem>
+            <SelectItem value="unmatched">
+              {t('pages.bankReconciliation.detail.statusUnmatched')}
+            </SelectItem>
+            <SelectItem value="ignored">
+              {t('pages.bankReconciliation.detail.statusIgnored')}
+            </SelectItem>
+            <SelectItem value="pending">
+              {t('pages.bankReconciliation.detail.statusPending')}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={transactionTypeFilter}
+          onValueChange={(v) =>
+            setTransactionTypeFilter(v as typeof transactionTypeFilter)
+          }
+        >
+          <SelectTrigger
+            className="w-36"
+            aria-label={t('pages.bankReconciliation.detail.allTypes')}
+            startIcon={<ArrowDownUp className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.bankReconciliation.detail.allTypes')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {t('pages.bankReconciliation.detail.allTypes')}
+            </SelectItem>
+            <SelectItem value="debit">
+              {t('pages.bankReconciliation.detail.debit')}
+            </SelectItem>
+            <SelectItem value="credit">
+              {t('pages.bankReconciliation.detail.credit')}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartChange={setStartDate}
+          onEndChange={setEndDate}
+        />
+      </FilterBar>
+
       <DataTable
-        data={entries}
+        data={filteredEntries}
         columns={columns}
         keyExtractor={(entry) => entry.id}
         emptyState={{
@@ -639,6 +804,7 @@ export default function BankReconciliationDetail() {
               </p>
             ) : candidates.length === 0 ? (
               <EmptyState
+                icon={<Link2 className="h-6 w-6" />}
                 title={
                   candidateLabel === 'despesas'
                     ? t('pages.bankReconciliation.detail.noExpensesFound')

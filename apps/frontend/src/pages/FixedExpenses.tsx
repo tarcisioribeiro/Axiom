@@ -1,12 +1,22 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Trash2, TrendingDown, History } from 'lucide-react';
+import {
+  Pencil,
+  Trash2,
+  TrendingDown,
+  History,
+  Tag,
+  Wallet,
+  CircleDot,
+} from 'lucide-react';
 import { useEffect, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { FixedExpenseForm } from '@/components/expenses/FixedExpenseForm';
 import { LaunchExpensesDialog } from '@/components/expenses/LaunchExpensesDialog';
 import { Badge } from '@/components/ui/badge';
@@ -19,8 +29,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { translate } from '@/config/constants';
+import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -68,6 +86,10 @@ export default function FixedExpenses({
   const [historyItem, setHistoryItem] = useState<FixedExpense | null>(null);
   const [historyExpenses, setHistoryExpenses] = useState<Expense[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [accountFilter, setAccountFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -231,13 +253,138 @@ export default function FixedExpenses({
     },
   ];
 
+  const filteredExpenses = fixedExpenses.filter((item) => {
+    if (
+      searchTerm &&
+      !item.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+      return false;
+    if (categoryFilter !== 'all' && item.category !== categoryFilter) return false;
+    if (accountFilter !== 'all' && String(item.account ?? '') !== accountFilter)
+      return false;
+    if (statusFilter !== 'all' && (statusFilter === 'active') !== item.is_active)
+      return false;
+    return true;
+  });
+
+  const hasActiveFilters =
+    searchTerm !== '' ||
+    categoryFilter !== 'all' ||
+    accountFilter !== 'all' ||
+    statusFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('all');
+    setAccountFilter('all');
+    setStatusFilter('all');
+  };
+
   return (
     <Wrapper embedded={embedded}>
+      <FilterBar
+        hasActiveFilters={hasActiveFilters}
+        onClear={clearFilters}
+        activeFilters={[
+          ...(categoryFilter !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('pages.fixedExpenses.allCategories')}: ${EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === categoryFilter)?.label ?? categoryFilter}`,
+                  onRemove: () => setCategoryFilter('all'),
+                },
+              ]
+            : []),
+          ...(accountFilter !== 'all'
+            ? [
+                {
+                  key: 'account',
+                  label: `${t('pages.fixedExpenses.allAccounts')}: ${accounts.find((a) => String(a.id) === accountFilter)?.account_name ?? accountFilter}`,
+                  onRemove: () => setAccountFilter('all'),
+                },
+              ]
+            : []),
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${statusFilter === 'active' ? t('common.status.active') : t('common.status.inactive')}`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <SearchInput
+          placeholder={t('pages.fixedExpenses.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-44"
+        />
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger
+            className="w-40"
+            aria-label={t('pages.fixedExpenses.allCategories')}
+            startIcon={<Tag className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.fixedExpenses.allCategories')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {t('pages.fixedExpenses.allCategories')}
+            </SelectItem>
+            {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
+              const Icon = EXPENSE_CATEGORY_ICONS[key];
+              return (
+                <SelectItem
+                  key={key}
+                  value={key}
+                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                >
+                  {label}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        <Select value={accountFilter} onValueChange={setAccountFilter}>
+          <SelectTrigger
+            className="w-40"
+            aria-label={t('pages.fixedExpenses.allAccounts')}
+            startIcon={<Wallet className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.fixedExpenses.allAccounts')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.fixedExpenses.allAccounts')}</SelectItem>
+            {accounts.map((account) => (
+              <SelectItem key={account.id} value={String(account.id)}>
+                {account.account_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger
+            className="w-36"
+            aria-label={t('pages.fixedExpenses.allStatus')}
+            startIcon={<CircleDot className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.fixedExpenses.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.fixedExpenses.allStatus')}</SelectItem>
+            <SelectItem value="active">{t('common.status.active')}</SelectItem>
+            <SelectItem value="inactive">{t('common.status.inactive')}</SelectItem>
+          </SelectContent>
+        </Select>
+      </FilterBar>
+
       {/* Table */}
       <DataTable
         centerList
         pageSize={7}
-        data={fixedExpenses}
+        data={filteredExpenses}
         columns={columns}
         keyExtractor={(item) => item.id}
         isLoading={isLoading}

@@ -601,11 +601,20 @@ export default function FinancialGoals() {
             <SelectItem value="all">
               {t('pages.financialGoals.allCategories')}
             </SelectItem>
-            {CATEGORIES.map((cat) => (
-              <SelectItem key={cat.value} value={cat.value}>
-                {t(`pages.financialGoals.categories.${cat.value}`)}
-              </SelectItem>
-            ))}
+            {CATEGORIES.map((cat) => {
+              const CatIcon =
+                FINANCIAL_GOAL_CATEGORY_ICONS[cat.value] ??
+                FINANCIAL_GOAL_CATEGORY_ICONS['other'];
+              return (
+                <SelectItem
+                  key={cat.value}
+                  value={cat.value}
+                  icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                >
+                  {t(`pages.financialGoals.categories.${cat.value}`)}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
         <Select

@@ -23,6 +23,8 @@ import {
   Clock,
   Save,
   X,
+  CircleDot,
+  Layers,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -30,6 +32,7 @@ import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -49,6 +52,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -439,6 +449,8 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
   const [isRegisteringFailure, setIsRegisteringFailure] = useState(false);
   const [viewingFailuresGoal, setViewingFailuresGoal] = useState<Goal | undefined>();
   const [detailsGoal, setDetailsGoal] = useState<Goal | undefined>();
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const detailsTypeMeta = detailsGoal
     ? (GOAL_TYPE_META[detailsGoal.goal_type] ?? GOAL_TYPE_META.custom)
     : undefined;
@@ -603,6 +615,19 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
     g.status === 'active' ? 0 : g.status === 'completed' ? 1 : 2;
   const sortedGoals = [...goals].sort((a, b) => statusRank(a) - statusRank(b));
 
+  const filteredGoals = sortedGoals.filter((g) => {
+    if (statusFilter !== 'all' && g.status !== statusFilter) return false;
+    if (typeFilter !== 'all' && g.goal_type !== typeFilter) return false;
+    return true;
+  });
+
+  const hasActiveFilters = statusFilter !== 'all' || typeFilter !== 'all';
+
+  const clearFilters = () => {
+    setStatusFilter('all');
+    setTypeFilter('all');
+  };
+
   const cardProps = {
     onEdit: handleEdit,
     onDelete: (id: number) => void handleDelete(id),
@@ -628,14 +653,89 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
     <Wrapper embedded={embedded}>
       {headerTarget ? createPortal(header, headerTarget) : header}
 
+      {goals.length > 0 && (
+        <FilterBar
+          hasActiveFilters={hasActiveFilters}
+          onClear={clearFilters}
+          activeFilters={[
+            ...(statusFilter !== 'all'
+              ? [
+                  {
+                    key: 'status',
+                    label: `${t('common.fields.status')}: ${t(`pages.goals.form.statusOptions.${statusFilter}`)}`,
+                    onRemove: () => setStatusFilter('all'),
+                  },
+                ]
+              : []),
+            ...(typeFilter !== 'all'
+              ? [
+                  {
+                    key: 'type',
+                    label: `${t('pages.goals.allTypes')}: ${t(`pages.goals.goalTypes.${typeFilter}`)}`,
+                    onRemove: () => setTypeFilter('all'),
+                  },
+                ]
+              : []),
+          ]}
+        >
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.goals.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.goals.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.goals.allStatus')}</SelectItem>
+              <SelectItem value="active">
+                {t('pages.goals.form.statusOptions.active')}
+              </SelectItem>
+              <SelectItem value="completed">
+                {t('pages.goals.form.statusOptions.completed')}
+              </SelectItem>
+              <SelectItem value="failed">
+                {t('pages.goals.form.statusOptions.failed')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.goals.allTypes')}
+              startIcon={<Layers className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.goals.allTypes')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.goals.allTypes')}</SelectItem>
+              {Object.entries(GOAL_TYPE_META).map(([key, meta]) => (
+                <SelectItem
+                  key={key}
+                  value={key}
+                  icon={<meta.icon className="h-4 w-4" />}
+                >
+                  {t(`pages.goals.goalTypes.${key}`, { defaultValue: meta.label })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterBar>
+      )}
+
       {goals.length === 0 ? (
+        <EmptyState
+          icon={<Trophy className="h-12 w-12" />}
+          title={t('pages.goals.emptyState')}
+        />
+      ) : filteredGoals.length === 0 ? (
         <EmptyState
           icon={<Trophy className="h-12 w-12" />}
           title={t('pages.goals.emptyState')}
         />
       ) : (
         <PaginatedSlide
-          items={sortedGoals}
+          items={filteredGoals}
           pageSize={GOALS_PAGE_SIZE}
           centerList
           className="gap-md grid sm:grid-cols-2 lg:grid-cols-3"

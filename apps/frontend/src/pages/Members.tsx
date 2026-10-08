@@ -10,6 +10,7 @@ import {
   HandCoins,
   Phone,
   Mail,
+  CircleDot,
 } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -32,6 +33,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -98,6 +106,8 @@ export default function Members() {
   const [selectedMember, setSelectedMember] = useState<Member | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState('all');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -184,16 +194,30 @@ export default function Members() {
   };
 
   const filteredMembers = useMemo(() => {
-    if (!searchTerm) return members;
-    const q = searchTerm.toLowerCase();
-    return members.filter(
-      (m) =>
-        m.name.toLowerCase().includes(q) ||
-        m.document.toLowerCase().includes(q) ||
-        m.phone.toLowerCase().includes(q) ||
-        (m.email ?? '').toLowerCase().includes(q)
-    );
-  }, [members, searchTerm]);
+    let result = members;
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter(
+        (m) =>
+          m.name.toLowerCase().includes(q) ||
+          m.document.toLowerCase().includes(q) ||
+          m.phone.toLowerCase().includes(q) ||
+          (m.email ?? '').toLowerCase().includes(q)
+      );
+    }
+    if (statusFilter !== 'all')
+      result = result.filter((m) => m.active === (statusFilter === 'active'));
+    if (roleFilter === 'creditor') result = result.filter((m) => m.is_creditor);
+    if (roleFilter === 'benefited') result = result.filter((m) => m.is_benefited);
+    return result;
+  }, [members, searchTerm, statusFilter, roleFilter]);
+
+  const hasExtraFilters = statusFilter !== 'all' || roleFilter !== 'all';
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setRoleFilter('all');
+  };
 
   if (isLoading) return <LoadingState />;
 
@@ -212,25 +236,89 @@ export default function Members() {
         </Button>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+      <FilterBar
+        hasActiveFilters={!!searchTerm || hasExtraFilters}
+        onClear={clearAllFilters}
+        activeFilters={[
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${
+                    statusFilter === 'active'
+                      ? t('common.status.active')
+                      : t('common.status.inactive')
+                  }`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+          ...(roleFilter !== 'all'
+            ? [
+                {
+                  key: 'role',
+                  label:
+                    roleFilter === 'creditor'
+                      ? t('common.fields.is_creditor')
+                      : t('common.fields.is_benefited'),
+                  onRemove: () => setRoleFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
         <SearchInput
           placeholder={t('pages.members.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="w-52 sm:w-64"
         />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger
+            className="w-36"
+            aria-label={t('pages.members.allStatus')}
+            startIcon={<CircleDot className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.members.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.members.allStatus')}</SelectItem>
+            <SelectItem value="active">{t('common.status.active')}</SelectItem>
+            <SelectItem value="inactive">{t('common.status.inactive')}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <SelectTrigger
+            className="w-40"
+            aria-label={t('pages.members.allRoles')}
+            startIcon={<Users className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.members.allRoles')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.members.allRoles')}</SelectItem>
+            <SelectItem value="creditor" icon={<Banknote className="h-4 w-4" />}>
+              {t('common.fields.is_creditor')}
+            </SelectItem>
+            <SelectItem value="benefited" icon={<HandCoins className="h-4 w-4" />}>
+              {t('common.fields.is_benefited')}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </FilterBar>
 
       {filteredMembers.length === 0 ? (
         <EmptyState
           icon={<Users className="text-muted-foreground h-12 w-12" />}
           title={
-            searchTerm ? t('pages.members.emptySearch') : t('pages.members.emptyState')
+            searchTerm || hasExtraFilters
+              ? t('pages.members.emptySearch')
+              : t('pages.members.emptyState')
           }
         />
       ) : (
         <PaginatedSlide
-          key={searchTerm}
+          key={`${searchTerm}-${statusFilter}-${roleFilter}`}
           items={filteredMembers}
           pageSize={membersPageSize}
           centerList

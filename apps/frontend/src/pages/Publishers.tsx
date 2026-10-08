@@ -29,11 +29,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { publishersService } from '@/services/publishers-service';
 import type { Publisher, PublisherFormData } from '@/types';
+import { COUNTRIES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 function PublisherInitials({ name }: { name: string }) {
@@ -67,6 +75,7 @@ const EMPTY_PUBLISHERS: Publisher[] = [];
 
 export default function Publishers() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [countryFilter, setCountryFilter] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPublisher, setSelectedPublisher] = useState<Publisher | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -155,8 +164,9 @@ export default function Publishers() {
 
   const filteredPublishers = publishers.filter(
     (publisher) =>
-      publisher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (publisher.country?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+      (countryFilter === 'all' || publisher.country === countryFilter) &&
+      (publisher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (publisher.country?.toLowerCase() || '').includes(searchTerm.toLowerCase()))
   );
 
   if (loading) {
@@ -172,13 +182,47 @@ export default function Publishers() {
         </Button>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+      <FilterBar
+        hasActiveFilters={!!searchTerm || countryFilter !== 'all'}
+        onClear={() => {
+          setSearchTerm('');
+          setCountryFilter('all');
+        }}
+        activeFilters={[
+          ...(countryFilter !== 'all'
+            ? [
+                {
+                  key: 'country',
+                  label: `${t('pages.publishers.allCountries')}: ${t(`pages.publishers.countries.${countryFilter}`)}`,
+                  onRemove: () => setCountryFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
         <SearchInput
           placeholder={t('pages.publishers.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="w-52 sm:w-64"
         />
+        <Select value={countryFilter} onValueChange={setCountryFilter}>
+          <SelectTrigger
+            className="w-44"
+            aria-label={t('pages.publishers.allCountries')}
+            startIcon={<Globe className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.publishers.allCountries')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.publishers.allCountries')}</SelectItem>
+            {COUNTRIES.map((country) => (
+              <SelectItem key={country.value} value={country.value}>
+                {t(`pages.publishers.countries.${country.value}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </FilterBar>
 
       {filteredPublishers.length === 0 ? (
@@ -192,7 +236,7 @@ export default function Publishers() {
         />
       ) : (
         <PaginatedSlide
-          key={searchTerm}
+          key={`${searchTerm}-${countryFilter}`}
           items={filteredPublishers}
           pageSize={GRID_PAGE_SIZE}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"

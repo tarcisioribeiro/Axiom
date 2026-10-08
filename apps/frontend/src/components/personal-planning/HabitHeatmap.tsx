@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TooltipBubble } from '@/components/ui/tooltip-bubble';
+import { TASK_CATEGORY_ICONS } from '@/config/icons';
 import { habitHeatmapService } from '@/services/habit-heatmap-service';
 import type { HeatmapDay } from '@/types';
 
@@ -230,11 +231,18 @@ export function HabitHeatmap({ taskId, taskName, recentDays }: HabitHeatmapProps
                   defaultValue: 'Todas as categorias',
                 })}
               </SelectItem>
-              {TASK_CATEGORIES.map((cat) => (
-                <SelectItem key={cat.value} value={cat.value}>
-                  {cat.label}
-                </SelectItem>
-              ))}
+              {TASK_CATEGORIES.map((cat) => {
+                const CatIcon = TASK_CATEGORY_ICONS[cat.value];
+                return (
+                  <SelectItem
+                    key={cat.value}
+                    value={cat.value}
+                    icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                  >
+                    {cat.label}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         )}

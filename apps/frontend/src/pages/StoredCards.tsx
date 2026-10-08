@@ -34,6 +34,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -47,6 +54,7 @@ import type {
   CreditCard,
   Member,
 } from '@/types';
+import { CARD_FLAGS } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type FlagConfig = { bg: string; badge: string };
@@ -101,6 +109,7 @@ export default function StoredCards() {
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [flagFilter, setFlagFilter] = useState('all');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
@@ -272,6 +281,7 @@ export default function StoredCards() {
 
   const filteredCards = cards.filter((card) => {
     if (showFavoritesOnly && !card.is_favorite) return false;
+    if (flagFilter !== 'all' && card.flag !== flagFilter) return false;
     return (
       card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       card.cardholder_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -290,11 +300,28 @@ export default function StoredCards() {
         </PageHeader>
 
         <FilterBar
-          hasActiveFilters={!!searchTerm || showFavoritesOnly}
+          hasActiveFilters={!!searchTerm || showFavoritesOnly || flagFilter !== 'all'}
           onClear={() => {
             setSearchTerm('');
             setShowFavoritesOnly(false);
+            setFlagFilter('all');
           }}
+          activeFilters={[
+            ...(flagFilter !== 'all'
+              ? [
+                  {
+                    key: 'flag',
+                    label: `${t('pages.storedCards.allFlags')}: ${
+                      flagFilter === 'OTHER'
+                        ? t('pages.storedCards.otherBrand')
+                        : (CARD_FLAGS.find((f) => f.value === flagFilter)?.label ??
+                          flagFilter)
+                    }`,
+                    onRemove: () => setFlagFilter('all'),
+                  },
+                ]
+              : []),
+          ]}
         >
           <SearchInput
             placeholder={t('pages.storedCards.searchPlaceholder')}
@@ -302,6 +329,25 @@ export default function StoredCards() {
             onValueChange={setSearchTerm}
             className="w-52 sm:w-64"
           />
+          <Select value={flagFilter} onValueChange={setFlagFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.storedCards.allFlags')}
+              startIcon={<CreditCardIcon className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.storedCards.allFlags')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.storedCards.allFlags')}</SelectItem>
+              {CARD_FLAGS.map((flag) => (
+                <SelectItem key={flag.value} value={flag.value}>
+                  {flag.value === 'OTHER'
+                    ? t('pages.storedCards.otherBrand')
+                    : flag.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant={showFavoritesOnly ? 'default' : 'outline'}
             size="sm"
@@ -325,7 +371,7 @@ export default function StoredCards() {
           />
         ) : (
           <PaginatedSlide
-            key={searchTerm}
+            key={`${searchTerm}-${flagFilter}-${showFavoritesOnly}`}
             items={filteredCards}
             pageSize={GRID_PAGE_SIZE}
             className="gap-lg grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"

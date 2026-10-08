@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  CircleDot,
   Clock,
   Edit,
   Flame,
@@ -50,6 +51,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -180,6 +188,8 @@ export default function NutritionPage() {
   const [dialog, setDialog] = useState<DialogMode>(null);
   const [optionsMealTypeId, setOptionsMealTypeId] = useState<number | null>(null);
   const [foodSearch, setFoodSearch] = useState('');
+  const [mealTypeSearch, setMealTypeSearch] = useState('');
+  const [mealTypeStatusFilter, setMealTypeStatusFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('log');
   const today = formatLocalDate(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(today);
@@ -231,6 +241,13 @@ export default function NutritionPage() {
   const filteredFoods = foods.filter((f) =>
     f.name.toLowerCase().includes(foodSearch.toLowerCase())
   );
+
+  const filteredMealTypes = mealTypes.filter((mt) => {
+    if (mealTypeStatusFilter === 'active' && !mt.is_active) return false;
+    if (mealTypeStatusFilter === 'inactive' && mt.is_active) return false;
+    return mt.name.toLowerCase().includes(mealTypeSearch.toLowerCase());
+  });
+  const hasMealTypeFilters = !!mealTypeSearch || mealTypeStatusFilter !== 'all';
 
   // ── Mutations ─────────────────────────────────────────────────────────────
 
@@ -744,16 +761,71 @@ export default function NutritionPage() {
             <div className="gap-lg grid items-start lg:grid-cols-2">
               <HydrationGoalCard />
               <div>
+                <FilterBar
+                  className="mb-md"
+                  hasActiveFilters={hasMealTypeFilters}
+                  onClear={() => {
+                    setMealTypeSearch('');
+                    setMealTypeStatusFilter('all');
+                  }}
+                  activeFilters={[
+                    ...(mealTypeStatusFilter !== 'all'
+                      ? [
+                          {
+                            key: 'status',
+                            label: `${t('common.fields.status')}: ${
+                              mealTypeStatusFilter === 'active'
+                                ? t('pages.nutritionMealTypes.active')
+                                : t('pages.nutritionMealTypes.inactive')
+                            }`,
+                            onRemove: () => setMealTypeStatusFilter('all'),
+                          },
+                        ]
+                      : []),
+                  ]}
+                >
+                  <SearchInput
+                    placeholder={t('pages.nutritionMealTypes.searchPlaceholder')}
+                    value={mealTypeSearch}
+                    onValueChange={setMealTypeSearch}
+                  />
+                  <Select
+                    value={mealTypeStatusFilter}
+                    onValueChange={setMealTypeStatusFilter}
+                  >
+                    <SelectTrigger
+                      className="w-36"
+                      aria-label={t('pages.nutritionMealTypes.allStatus')}
+                      startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue
+                        placeholder={t('pages.nutritionMealTypes.allStatus')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.nutritionMealTypes.allStatus')}
+                      </SelectItem>
+                      <SelectItem value="active">
+                        {t('pages.nutritionMealTypes.active')}
+                      </SelectItem>
+                      <SelectItem value="inactive">
+                        {t('pages.nutritionMealTypes.inactive')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FilterBar>
+
                 {mealTypesLoading ? (
                   <LoadingState />
-                ) : mealTypes.length === 0 ? (
+                ) : filteredMealTypes.length === 0 ? (
                   <EmptyState
                     title={t('pages.nutritionMealTypes.emptyMealTypes')}
                     icon={<UtensilsCrossed className="h-8 w-8" />}
                   />
                 ) : (
                   <div className="space-y-sm">
-                    {mealTypes.map((mt) => (
+                    {filteredMealTypes.map((mt) => (
                       <MealTypeCard
                         key={mt.id}
                         mealType={mt}

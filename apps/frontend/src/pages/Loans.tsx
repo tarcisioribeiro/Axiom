@@ -13,12 +13,14 @@ import {
   Clock,
   Banknote,
   Users,
-  Building2,
   CalendarRange,
+  Tag,
+  CircleDot,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -44,8 +46,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { getLoanStatusLabel, translate } from '@/config/constants';
+import {
+  EXPENSE_CATEGORIES_CANONICAL,
+  getLoanStatusLabel,
+  translate,
+} from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useLoansPage } from '@/hooks/use-loans-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
@@ -53,7 +67,6 @@ import { cn } from '@/lib/utils';
 import { loanInstallmentsService } from '@/services/loan-installments-service';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AmortizationSchedule, LoanInstallment, Loan } from '@/types';
-import type { IconComponent } from '@/types/icon';
 
 const STATUS_VARIANTS: Record<
   string,
@@ -92,6 +105,10 @@ export default function Loans() {
   } = useLoansPage();
 
   const [roleFilter, setRoleFilter] = useState<LoanRole>('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [dueStartDate, setDueStartDate] = useState<Date | undefined>(undefined);
+  const [dueEndDate, setDueEndDate] = useState<Date | undefined>(undefined);
   const [paymentLoan, setPaymentLoan] = useState<Loan | null>(null);
   const [receiptLoan, setReceiptLoan] = useState<Loan | null>(null);
 
@@ -145,12 +162,45 @@ export default function Loans() {
   };
 
   const roleFilteredLoans = useMemo(() => {
+    let result = filteredLoans;
     if (roleFilter === 'benefited' && currentUserMemberId !== null)
-      return filteredLoans.filter((l) => l.benefited === currentUserMemberId);
+      result = result.filter((l) => l.benefited === currentUserMemberId);
     if (roleFilter === 'creditor' && currentUserMemberId !== null)
-      return filteredLoans.filter((l) => l.creditor === currentUserMemberId);
-    return filteredLoans;
-  }, [filteredLoans, roleFilter, currentUserMemberId]);
+      result = result.filter((l) => l.creditor === currentUserMemberId);
+    if (statusFilter !== 'all')
+      result = result.filter((l) => l.status === statusFilter);
+    if (categoryFilter !== 'all')
+      result = result.filter((l) => l.category === categoryFilter);
+    if (dueStartDate)
+      result = result.filter((l) => l.due_date && new Date(l.due_date) >= dueStartDate);
+    if (dueEndDate)
+      result = result.filter((l) => l.due_date && new Date(l.due_date) <= dueEndDate);
+    return result;
+  }, [
+    filteredLoans,
+    roleFilter,
+    currentUserMemberId,
+    statusFilter,
+    categoryFilter,
+    dueStartDate,
+    dueEndDate,
+  ]);
+
+  const hasExtraFilters =
+    roleFilter !== 'all' ||
+    statusFilter !== 'all' ||
+    categoryFilter !== 'all' ||
+    !!dueStartDate ||
+    !!dueEndDate;
+
+  const clearExtraFilters = () => {
+    setSearchTerm('');
+    setRoleFilter('all');
+    setStatusFilter('all');
+    setCategoryFilter('all');
+    setDueStartDate(undefined);
+    setDueEndDate(undefined);
+  };
 
   const { activeCount, paidCount, totalDebt } = useMemo(() => {
     const active = loans.filter((l) => l.status === 'active');
@@ -173,12 +223,135 @@ export default function Loans() {
         </Button>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+      <FilterBar
+        hasActiveFilters={!!searchTerm || hasExtraFilters}
+        onClear={clearExtraFilters}
+        activeFilters={[
+          ...(roleFilter !== 'all'
+            ? [
+                {
+                  key: 'role',
+                  label: t(`pages.loans.filter.${roleFilter}`),
+                  onRemove: () => setRoleFilter('all'),
+                },
+              ]
+            : []),
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${translate('loanStatus', statusFilter)}`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+          ...(categoryFilter !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('common.fields.category')}: ${EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === categoryFilter)?.label ?? categoryFilter}`,
+                  onRemove: () => setCategoryFilter('all'),
+                },
+              ]
+            : []),
+          ...(dueStartDate
+            ? [
+                {
+                  key: 'dueStartDate',
+                  label: `${t('common.fields.from')}: ${formatDate(dueStartDate)}`,
+                  onRemove: () => setDueStartDate(undefined),
+                },
+              ]
+            : []),
+          ...(dueEndDate
+            ? [
+                {
+                  key: 'dueEndDate',
+                  label: `${t('common.fields.to')}: ${formatDate(dueEndDate)}`,
+                  onRemove: () => setDueEndDate(undefined),
+                },
+              ]
+            : []),
+        ]}
+      >
         <SearchInput
           placeholder={t('pages.loans.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="w-52 sm:w-64"
+        />
+        {currentUserMemberId !== null && (
+          <Select
+            value={roleFilter}
+            onValueChange={(v) => setRoleFilter(v as LoanRole)}
+          >
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.loans.allRoles')}
+              startIcon={<Users className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.loans.allRoles')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.loans.filter.all')}</SelectItem>
+              <SelectItem value="benefited">
+                {t('pages.loans.filter.benefited')}
+              </SelectItem>
+              <SelectItem value="creditor">
+                {t('pages.loans.filter.creditor')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger
+            className="w-40"
+            aria-label={t('pages.loans.allStatus')}
+            startIcon={<CircleDot className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.loans.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.loans.allStatus')}</SelectItem>
+            <SelectItem value="active">{translate('loanStatus', 'active')}</SelectItem>
+            <SelectItem value="paid">{translate('loanStatus', 'paid')}</SelectItem>
+            <SelectItem value="defaulted">
+              {translate('loanStatus', 'defaulted')}
+            </SelectItem>
+            <SelectItem value="cancelled">
+              {translate('loanStatus', 'cancelled')}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger
+            className="w-44"
+            aria-label={t('pages.loans.allCategories')}
+            startIcon={<Tag className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.loans.allCategories')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.loans.allCategories')}</SelectItem>
+            {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
+              const Icon = EXPENSE_CATEGORY_ICONS[key];
+              return (
+                <SelectItem
+                  key={key}
+                  value={key}
+                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                >
+                  {label}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        <DateRangeFilter
+          startDate={dueStartDate}
+          endDate={dueEndDate}
+          onStartChange={setDueStartDate}
+          onEndChange={setDueEndDate}
         />
       </FilterBar>
 
@@ -246,45 +419,18 @@ export default function Loans() {
         </Card>
       </div>
 
-      <div className="gap-md flex flex-wrap items-center">
-        {currentUserMemberId !== null && (
-          <div className="flex overflow-hidden rounded-lg border">
-            {(
-              [
-                { key: 'all', icon: List },
-                { key: 'benefited', icon: Users },
-                { key: 'creditor', icon: Building2 },
-              ] as { key: LoanRole; icon: IconComponent }[]
-            ).map(({ key, icon: Icon }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setRoleFilter(key)}
-                className={cn(
-                  'gap-sm py-sm flex items-center border-r px-3 text-sm transition-colors last:border-r-0',
-                  roleFilter === key
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-background text-muted-foreground hover:bg-muted'
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {t(`pages.loans.filter.${key}`)}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
       {roleFilteredLoans.length === 0 ? (
         <EmptyState
           icon={<HandCoins className="text-muted-foreground h-12 w-12" />}
           title={
-            searchTerm ? t('pages.loans.emptySearch') : t('pages.loans.emptyState')
+            searchTerm || hasExtraFilters
+              ? t('pages.loans.emptySearch')
+              : t('pages.loans.emptyState')
           }
         />
       ) : (
         <PaginatedSlide
-          key={`${roleFilter}-${searchTerm}`}
+          key={`${roleFilter}-${statusFilter}-${categoryFilter}-${dueStartDate?.getTime()}-${dueEndDate?.getTime()}-${searchTerm}`}
           items={roleFilteredLoans}
           pageSize={GRID_PAGE_SIZE}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"

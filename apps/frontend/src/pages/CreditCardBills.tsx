@@ -14,6 +14,7 @@ import { useState, useEffect, useMemo, type ReactNode, type RefObject } from 're
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
@@ -94,6 +95,8 @@ export default function CreditCardBills({
   const [cardFilter, setCardFilter] = useState<string>(initialCardFilter);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
+  const [dueDateStart, setDueDateStart] = useState<Date | undefined>();
+  const [dueDateEnd, setDueDateEnd] = useState<Date | undefined>();
   const { toast } = useToast();
   const { showConfirm, showAlert } = useAlertDialog();
   const { user } = useAuthStore();
@@ -148,9 +151,19 @@ export default function CreditCardBills({
     if (yearFilter !== 'all') {
       filtered = filtered.filter((b) => b.year === yearFilter);
     }
+    if (dueDateStart) {
+      filtered = filtered.filter(
+        (b) => b.due_date && new Date(b.due_date) >= dueDateStart
+      );
+    }
+    if (dueDateEnd) {
+      filtered = filtered.filter(
+        (b) => b.due_date && new Date(b.due_date) <= dueDateEnd
+      );
+    }
 
     return sortCreditCardBills(filtered);
-  }, [bills, cardFilter, statusFilter, yearFilter]);
+  }, [bills, cardFilter, statusFilter, yearFilter, dueDateStart, dueDateEnd]);
 
   const handleSubmit = async (data: CreditCardBillFormData) => {
     try {
@@ -450,13 +463,39 @@ export default function CreditCardBills({
     <Wrapper embedded={embedded}>
       <FilterBar
         hasActiveFilters={
-          cardFilter !== 'all' || statusFilter !== 'all' || yearFilter !== 'all'
+          cardFilter !== 'all' ||
+          statusFilter !== 'all' ||
+          yearFilter !== 'all' ||
+          !!dueDateStart ||
+          !!dueDateEnd
         }
         onClear={() => {
           setCardFilter('all');
           setStatusFilter('all');
           setYearFilter('all');
+          setDueDateStart(undefined);
+          setDueDateEnd(undefined);
         }}
+        activeFilters={[
+          ...(dueDateStart
+            ? [
+                {
+                  key: 'dueDateStart',
+                  label: `${t('common.fields.from')}: ${formatDate(dueDateStart)}`,
+                  onRemove: () => setDueDateStart(undefined),
+                },
+              ]
+            : []),
+          ...(dueDateEnd
+            ? [
+                {
+                  key: 'dueDateEnd',
+                  label: `${t('common.fields.to')}: ${formatDate(dueDateEnd)}`,
+                  onRemove: () => setDueDateEnd(undefined),
+                },
+              ]
+            : []),
+        ]}
       >
         <Select value={cardFilter} onValueChange={setCardFilter}>
           <SelectTrigger className="w-52">
@@ -508,6 +547,12 @@ export default function CreditCardBills({
             ))}
           </SelectContent>
         </Select>
+        <DateRangeFilter
+          startDate={dueDateStart}
+          endDate={dueDateEnd}
+          onStartChange={setDueDateStart}
+          onEndChange={setDueDateEnd}
+        />
       </FilterBar>
 
       <DataTable

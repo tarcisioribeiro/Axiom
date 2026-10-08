@@ -12,13 +12,16 @@ import {
   Loader2,
   Save,
   X,
+  CircleDot,
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { LaunchRevenuesDialog } from '@/components/revenues/LaunchRevenuesDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -91,6 +94,10 @@ export default function FixedRevenues({
   const [historyItem, setHistoryItem] = useState<FixedRevenue | null>(null);
   const [historyRevenues, setHistoryRevenues] = useState<Revenue[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [accountFilter, setAccountFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -295,13 +302,137 @@ export default function FixedRevenues({
 
   const activeRevenues = fixedRevenues.filter((r) => r.is_active);
 
+  const filteredRevenues = fixedRevenues.filter((item) => {
+    if (
+      searchTerm &&
+      !item.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+      return false;
+    if (categoryFilter !== 'all' && item.category !== categoryFilter) return false;
+    if (accountFilter !== 'all' && String(item.account) !== accountFilter) return false;
+    if (statusFilter !== 'all' && (statusFilter === 'active') !== item.is_active)
+      return false;
+    return true;
+  });
+
+  const hasActiveFilters =
+    searchTerm !== '' ||
+    categoryFilter !== 'all' ||
+    accountFilter !== 'all' ||
+    statusFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('all');
+    setAccountFilter('all');
+    setStatusFilter('all');
+  };
+
   return (
     <Wrapper embedded={embedded}>
+      <FilterBar
+        hasActiveFilters={hasActiveFilters}
+        onClear={clearFilters}
+        activeFilters={[
+          ...(categoryFilter !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('pages.fixedRevenues.allCategories')}: ${REVENUE_CATEGORIES_CANONICAL.find((c) => c.key === categoryFilter)?.label ?? categoryFilter}`,
+                  onRemove: () => setCategoryFilter('all'),
+                },
+              ]
+            : []),
+          ...(accountFilter !== 'all'
+            ? [
+                {
+                  key: 'account',
+                  label: `${t('pages.fixedRevenues.allAccounts')}: ${accounts.find((a) => String(a.id) === accountFilter)?.account_name ?? accountFilter}`,
+                  onRemove: () => setAccountFilter('all'),
+                },
+              ]
+            : []),
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${statusFilter === 'active' ? t('common.status.active') : t('common.status.inactive')}`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <SearchInput
+          placeholder={t('pages.fixedRevenues.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-44"
+        />
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger
+            className="w-40"
+            aria-label={t('pages.fixedRevenues.allCategories')}
+            startIcon={<Tag className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.fixedRevenues.allCategories')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {t('pages.fixedRevenues.allCategories')}
+            </SelectItem>
+            {REVENUE_CATEGORIES_CANONICAL.map(({ key, label }) => {
+              const Icon = REVENUE_CATEGORY_ICONS[key];
+              return (
+                <SelectItem
+                  key={key}
+                  value={key}
+                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                >
+                  {label}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        <Select value={accountFilter} onValueChange={setAccountFilter}>
+          <SelectTrigger
+            className="w-40"
+            aria-label={t('pages.fixedRevenues.allAccounts')}
+            startIcon={<Wallet className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.fixedRevenues.allAccounts')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.fixedRevenues.allAccounts')}</SelectItem>
+            {accounts.map((account) => (
+              <SelectItem key={account.id} value={String(account.id)}>
+                {account.account_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger
+            className="w-36"
+            aria-label={t('pages.fixedRevenues.allStatus')}
+            startIcon={<CircleDot className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.fixedRevenues.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.fixedRevenues.allStatus')}</SelectItem>
+            <SelectItem value="active">{t('common.status.active')}</SelectItem>
+            <SelectItem value="inactive">{t('common.status.inactive')}</SelectItem>
+          </SelectContent>
+        </Select>
+      </FilterBar>
+
       {/* Table */}
       <DataTable
         centerList
         pageSize={7}
-        data={fixedRevenues}
+        data={filteredRevenues}
         columns={columns}
         keyExtractor={(item) => item.id}
         isLoading={isLoading}

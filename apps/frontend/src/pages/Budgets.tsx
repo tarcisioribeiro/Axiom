@@ -13,6 +13,7 @@ import {
   ShoppingCart,
   Save,
   X,
+  User,
 } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -58,6 +59,7 @@ import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { budgetsService } from '@/services/budgets-service';
+import { membersService } from '@/services/members-service';
 import type { Budget, BudgetFormData, BudgetStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -113,6 +115,8 @@ export default function Budgets() {
     String(new Date().getMonth() + 1)
   );
   const [filterYear, setFilterYear] = useState<string>(String(currentYear));
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [memberFilter, setMemberFilter] = useState<string>('all');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -132,6 +136,12 @@ export default function Budgets() {
   const { data: budgetStatuses = [] } = useQuery({
     queryKey: ['budgets', 'status'],
     queryFn: () => budgetsService.getStatus().catch(() => [] as BudgetStatus[]),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: members = [] } = useQuery({
+    queryKey: ['members'],
+    queryFn: () => membersService.getAll(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -242,7 +252,13 @@ export default function Budgets() {
       budget.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesMonth = !filterMonth || budget.month === parseInt(filterMonth);
     const matchesYear = !filterYear || budget.year === parseInt(filterYear);
-    return matchesSearch && matchesMonth && matchesYear;
+    const matchesCategory =
+      categoryFilter === 'all' || budget.category === categoryFilter;
+    const matchesMember =
+      memberFilter === 'all' || String(budget.member ?? '') === memberFilter;
+    return (
+      matchesSearch && matchesMonth && matchesYear && matchesCategory && matchesMember
+    );
   });
 
   if (isLoading) {
@@ -258,13 +274,86 @@ export default function Budgets() {
         </Button>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+      <FilterBar
+        hasActiveFilters={
+          !!searchTerm || categoryFilter !== 'all' || memberFilter !== 'all'
+        }
+        onClear={() => {
+          setSearchTerm('');
+          setCategoryFilter('all');
+          setMemberFilter('all');
+        }}
+        activeFilters={[
+          ...(categoryFilter !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('common.fields.category')}: ${translate('expenseCategories', categoryFilter)}`,
+                  onRemove: () => setCategoryFilter('all'),
+                },
+              ]
+            : []),
+          ...(memberFilter !== 'all'
+            ? [
+                {
+                  key: 'member',
+                  label: `${t('pages.budgets.member')} ${
+                    members.find((m) => String(m.id) === memberFilter)?.name ??
+                    memberFilter
+                  }`,
+                  onRemove: () => setMemberFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
         <SearchInput
           placeholder={t('pages.budgets.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="w-44 flex-none"
         />
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger
+            className="w-44"
+            aria-label={t('pages.budgets.allCategories')}
+            startIcon={<Tag className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.budgets.allCategories')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.budgets.allCategories')}</SelectItem>
+            {EXPENSE_CATEGORIES_CANONICAL.map((cat) => {
+              const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
+              return (
+                <SelectItem
+                  key={cat.key}
+                  value={cat.key}
+                  icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                >
+                  {translate('expenseCategories', cat.key)}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        <Select value={memberFilter} onValueChange={setMemberFilter}>
+          <SelectTrigger
+            className="w-40"
+            aria-label={t('pages.budgets.allMembers')}
+            startIcon={<User className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.budgets.allMembers')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.budgets.allMembers')}</SelectItem>
+            {members.map((m) => (
+              <SelectItem key={m.id} value={String(m.id)}>
+                {m.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select value={filterMonth} onValueChange={setFilterMonth}>
           <SelectTrigger
             className="w-40"
@@ -316,7 +405,7 @@ export default function Budgets() {
             }));
             return (
               <PaginatedSlide
-                key={`${searchTerm}-${filterMonth}-${filterYear}`}
+                key={`${searchTerm}-${filterMonth}-${filterYear}-${categoryFilter}-${memberFilter}`}
                 items={enriched}
                 pageSize={pageSize}
                 centerList
@@ -381,7 +470,9 @@ export default function Budgets() {
                       return (
                         <SelectItem key={cat.key} value={cat.key}>
                           <span className="gap-sm flex items-center">
-                            {CatIcon && <CatIcon className="h-4 w-4" />}
+                            {CatIcon && (
+                              <CatIcon className="text-muted-foreground h-4 w-4 shrink-0" />
+                            )}
                             {translate('expenseCategories', cat.key)}
                           </span>
                         </SelectItem>

@@ -159,7 +159,10 @@ export default function AdminLogs() {
                 ) : data?.results.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="text-muted-foreground py-12 text-center">
-                      <EmptyState title={t('pages.adminLogs.noLogs')} />
+                      <EmptyState
+                        icon={<ScrollText className="h-6 w-6" />}
+                        title={t('pages.adminLogs.noLogs')}
+                      />
                     </td>
                   </tr>
                 ) : (

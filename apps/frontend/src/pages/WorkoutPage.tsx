@@ -19,6 +19,7 @@ import {
   Activity,
   CalendarDays,
   Check,
+  CircleDot,
   ClipboardList,
   Clock,
   Dumbbell,
@@ -49,6 +50,7 @@ import React, {
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -88,10 +90,12 @@ import { WorkoutDayForm } from '@/components/workout/WorkoutDayForm';
 import { WorkoutExerciseModal } from '@/components/workout/WorkoutExerciseModal';
 import { WorkoutPlanForm } from '@/components/workout/WorkoutPlanForm';
 import { WorkoutSessionForm } from '@/components/workout/WorkoutSessionForm';
+import { WORKOUT_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
-import { cn } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import {
   bodyMetricService,
@@ -222,6 +226,14 @@ export default function WorkoutPage() {
   const [exerciseTypeFilter, setExerciseTypeFilter] = useState('all');
   const [exerciseMuscleFilter, setExerciseMuscleFilter] = useState('all');
   const [exerciseCategoryFilter, setExerciseCategoryFilter] = useState('all');
+  const [sessionStartDate, setSessionStartDate] = useState<Date | undefined>(undefined);
+  const [sessionEndDate, setSessionEndDate] = useState<Date | undefined>(undefined);
+  const [planCategoryFilter, setPlanCategoryFilter] = useState<WorkoutCategory | 'all'>(
+    'all'
+  );
+  const [planStatusFilter, setPlanStatusFilter] = useState<
+    'all' | 'active' | 'inactive'
+  >('all');
   const catalogColumns = useSyncExternalStore(subscribeResize, getCatalogColumns);
   const planColumns = useSyncExternalStore(subscribeResize, getPlanColumns);
 
@@ -316,6 +328,38 @@ export default function WorkoutPage() {
 
   const activePlans = plans.filter((p) => p.is_active);
   const inactivePlans = plans.filter((p) => !p.is_active);
+
+  const hasSessionFilters = !!sessionStartDate || !!sessionEndDate;
+  const clearSessionFilters = () => {
+    setSessionStartDate(undefined);
+    setSessionEndDate(undefined);
+  };
+  const filteredSessions = useMemo(() => {
+    return (sessionsData ?? []).filter((s) => {
+      const d = s.date.slice(0, 10);
+      if (sessionStartDate && d < formatLocalDate(sessionStartDate)) return false;
+      if (sessionEndDate && d > formatLocalDate(sessionEndDate)) return false;
+      return true;
+    });
+  }, [sessionsData, sessionStartDate, sessionEndDate]);
+
+  const hasPlanFilters = planCategoryFilter !== 'all' || planStatusFilter !== 'all';
+  const clearPlanFilters = () => {
+    setPlanCategoryFilter('all');
+    setPlanStatusFilter('all');
+  };
+  const filteredPlans = useMemo(() => {
+    return [...activePlans, ...inactivePlans].filter((plan) => {
+      if (planCategoryFilter !== 'all' && plan.category !== planCategoryFilter)
+        return false;
+      if (
+        planStatusFilter !== 'all' &&
+        plan.is_active !== (planStatusFilter === 'active')
+      )
+        return false;
+      return true;
+    });
+  }, [activePlans, inactivePlans, planCategoryFilter, planStatusFilter]);
   // Lido da query (não guardado no estado) para refletir edições de divisões/exercícios
   const viewedPlan = plans.find((p) => p.id === viewPlanId);
   // Também lido da query: some (e o modal fecha) quando a divisão é excluída
@@ -925,25 +969,68 @@ export default function WorkoutPage() {
                 icon={<Dumbbell className="h-8 w-8" />}
               />
             ) : (
-              <PaginatedSlide
-                items={sessions}
-                pageSize={SESSIONS_PAGE_SIZE}
-                centerList
-                className="space-y-sm"
-              >
-                {(pageSessions) =>
-                  pageSessions.map((session) => (
-                    <SessionCard
-                      key={session.id}
-                      session={session}
-                      onView={() => setDialog({ type: 'view-session', session })}
-                      onEdit={() => setDialog({ type: 'edit-session', session })}
-                      onDelete={() => void handleDeleteSession(session)}
-                      t={t}
-                    />
-                  ))
-                }
-              </PaginatedSlide>
+              <>
+                <FilterBar
+                  className="mb-md"
+                  hasActiveFilters={hasSessionFilters}
+                  onClear={clearSessionFilters}
+                  activeFilters={[
+                    ...(sessionStartDate
+                      ? [
+                          {
+                            key: 'startDate',
+                            label: `${t('pages.workoutSessions.filterDateFrom')}: ${formatDate(sessionStartDate)}`,
+                            onRemove: () => setSessionStartDate(undefined),
+                          },
+                        ]
+                      : []),
+                    ...(sessionEndDate
+                      ? [
+                          {
+                            key: 'endDate',
+                            label: `${t('pages.workoutSessions.filterDateTo')}: ${formatDate(sessionEndDate)}`,
+                            onRemove: () => setSessionEndDate(undefined),
+                          },
+                        ]
+                      : []),
+                  ]}
+                >
+                  <DateRangeFilter
+                    startDate={sessionStartDate}
+                    endDate={sessionEndDate}
+                    onStartChange={setSessionStartDate}
+                    onEndChange={setSessionEndDate}
+                  />
+                </FilterBar>
+
+                {filteredSessions.length === 0 ? (
+                  <EmptyState
+                    title={t('pages.workoutSessions.emptySessions')}
+                    icon={<Dumbbell className="h-8 w-8" />}
+                  />
+                ) : (
+                  <PaginatedSlide
+                    key={`${sessionStartDate ? formatLocalDate(sessionStartDate) : ''}|${sessionEndDate ? formatLocalDate(sessionEndDate) : ''}`}
+                    items={filteredSessions}
+                    pageSize={SESSIONS_PAGE_SIZE}
+                    centerList
+                    className="space-y-sm"
+                  >
+                    {(pageSessions) =>
+                      pageSessions.map((session) => (
+                        <SessionCard
+                          key={session.id}
+                          session={session}
+                          onView={() => setDialog({ type: 'view-session', session })}
+                          onEdit={() => setDialog({ type: 'edit-session', session })}
+                          onDelete={() => void handleDeleteSession(session)}
+                          t={t}
+                        />
+                      ))
+                    }
+                  </PaginatedSlide>
+                )}
+              </>
             )}
           </TabsContent>
 
@@ -965,25 +1052,124 @@ export default function WorkoutPage() {
                 icon={<Dumbbell className="h-8 w-8" />}
               />
             ) : (
-              <PaginatedSlide
-                items={[...activePlans, ...inactivePlans]}
-                pageSize={planColumns * PLANS_ROWS_PER_PAGE}
-                centerList
-                className="gap-md grid sm:grid-cols-2 lg:grid-cols-3"
-              >
-                {(pagePlans) =>
-                  pagePlans.map((plan) => (
-                    <PlanCard
-                      key={plan.id}
-                      plan={plan}
-                      onOpen={() => setViewPlanId(plan.id)}
-                      onEdit={() => setDialog({ type: 'edit-plan', plan })}
-                      onDelete={() => handleDeletePlan(plan)}
-                      t={t}
-                    />
-                  ))
-                }
-              </PaginatedSlide>
+              <>
+                <FilterBar
+                  className="mb-md"
+                  hasActiveFilters={hasPlanFilters}
+                  onClear={clearPlanFilters}
+                  activeFilters={[
+                    ...(planCategoryFilter !== 'all'
+                      ? [
+                          {
+                            key: 'category',
+                            label: `${t('pages.workoutPlans.category')}: ${t(`pages.workoutPlans.categories.${planCategoryFilter}`)}`,
+                            onRemove: () => setPlanCategoryFilter('all'),
+                          },
+                        ]
+                      : []),
+                    ...(planStatusFilter !== 'all'
+                      ? [
+                          {
+                            key: 'status',
+                            label: `${t('common.fields.status')}: ${
+                              planStatusFilter === 'active'
+                                ? t('pages.workoutPlans.active')
+                                : t('pages.workoutPlans.inactive')
+                            }`,
+                            onRemove: () => setPlanStatusFilter('all'),
+                          },
+                        ]
+                      : []),
+                  ]}
+                >
+                  <Select
+                    value={planCategoryFilter}
+                    onValueChange={(v) =>
+                      setPlanCategoryFilter(v as WorkoutCategory | 'all')
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-44"
+                      aria-label={t('pages.workoutPlans.allCategories')}
+                      startIcon={<Activity className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue
+                        placeholder={t('pages.workoutPlans.allCategories')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.workoutPlans.allCategories')}
+                      </SelectItem>
+                      {WORKOUT_CATEGORIES.map((key) => {
+                        const CatIcon = WORKOUT_CATEGORY_ICONS[key];
+                        return (
+                          <SelectItem
+                            key={key}
+                            value={key}
+                            icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                          >
+                            {t(`pages.workoutPlans.categories.${key}`)}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={planStatusFilter}
+                    onValueChange={(v) =>
+                      setPlanStatusFilter(v as 'all' | 'active' | 'inactive')
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-36"
+                      aria-label={t('pages.workoutPlans.allStatus')}
+                      startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.workoutPlans.allStatus')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.workoutPlans.allStatus')}
+                      </SelectItem>
+                      <SelectItem value="active">
+                        {t('pages.workoutPlans.active')}
+                      </SelectItem>
+                      <SelectItem value="inactive">
+                        {t('pages.workoutPlans.inactive')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FilterBar>
+
+                {filteredPlans.length === 0 ? (
+                  <EmptyState
+                    title={t('pages.workoutPlans.emptyPlans')}
+                    icon={<Dumbbell className="h-8 w-8" />}
+                  />
+                ) : (
+                  <PaginatedSlide
+                    key={`${planCategoryFilter}|${planStatusFilter}`}
+                    items={filteredPlans}
+                    pageSize={planColumns * PLANS_ROWS_PER_PAGE}
+                    centerList
+                    className="gap-md grid sm:grid-cols-2 lg:grid-cols-3"
+                  >
+                    {(pagePlans) =>
+                      pagePlans.map((plan) => (
+                        <PlanCard
+                          key={plan.id}
+                          plan={plan}
+                          onOpen={() => setViewPlanId(plan.id)}
+                          onEdit={() => setDialog({ type: 'edit-plan', plan })}
+                          onDelete={() => handleDeletePlan(plan)}
+                          t={t}
+                        />
+                      ))
+                    }
+                  </PaginatedSlide>
+                )}
+              </>
             )}
           </TabsContent>
 
@@ -1061,11 +1247,18 @@ export default function WorkoutPage() {
                       <SelectItem value="all">
                         {t('pages.exercises.allCategories')}
                       </SelectItem>
-                      {WORKOUT_CATEGORIES.map((key) => (
-                        <SelectItem key={key} value={key}>
-                          {t(`pages.workoutPlans.categories.${key}`)}
-                        </SelectItem>
-                      ))}
+                      {WORKOUT_CATEGORIES.map((key) => {
+                        const CatIcon = WORKOUT_CATEGORY_ICONS[key];
+                        return (
+                          <SelectItem
+                            key={key}
+                            value={key}
+                            icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                          >
+                            {t(`pages.workoutPlans.categories.${key}`)}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                   <Select
