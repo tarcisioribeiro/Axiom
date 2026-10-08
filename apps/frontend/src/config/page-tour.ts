@@ -74,9 +74,18 @@ const PATTERNS: [RegExp, string][] = [
   [/^\/bank-reconciliation\/[^/]+$/, 'bankReconciliationDetail'],
 ];
 
+/** Páginas com abas (ex.: `/transactions/expenses`) não têm entrada própria em
+ * `EXACT` — sobe um nível de cada vez até achar a página "pai". */
 export function getTourKey(pathname: string): string | undefined {
   const path = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
-  return EXACT[path] ?? PATTERNS.find(([re]) => re.test(path))?.[1];
+  let current = path;
+  while (current) {
+    if (EXACT[current]) return EXACT[current];
+    const lastSlash = current.lastIndexOf('/');
+    if (lastSlash <= 0) break;
+    current = current.slice(0, lastSlash);
+  }
+  return PATTERNS.find(([re]) => re.test(path))?.[1];
 }
 
 const hiddenKey = (tourKey: string) => `axiom-tour-hidden:${tourKey}`;

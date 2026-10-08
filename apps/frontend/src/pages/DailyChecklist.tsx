@@ -18,10 +18,12 @@ import { motion } from 'framer-motion';
 import {
   CheckCircle2,
   Circle,
+  CircleDot,
   RefreshCw,
   AlertCircle,
   Flame,
   LayoutList,
+  Tag,
   Zap,
   Moon,
   Sun,
@@ -44,6 +46,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -58,8 +61,16 @@ import { Button } from '@/components/ui/button';
 import { CircularProgress } from '@/components/ui/circular-progress';
 import { DatePicker } from '@/components/ui/date-picker';
 import { PlainButton } from '@/components/ui/plain-button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { SuccessAnimation } from '@/components/ui/success-animation';
 import { translate } from '@/config/constants';
+import { TASK_CATEGORY_ICONS } from '@/config/icons';
 import { useTaskReminders } from '@/hooks/use-task-reminders';
 import { useToast } from '@/hooks/use-toast';
 import { cn, formatLocalDate, parseLocalDate } from '@/lib/utils';
@@ -69,6 +80,7 @@ import { membersService } from '@/services/members-service';
 import { taskInstancesService } from '@/services/task-instances-service';
 import { useNotificationsStore } from '@/stores/notifications-store';
 import {
+  TASK_CATEGORIES,
   type TaskInstance,
   type TaskCard,
   type KanbanStatus,
@@ -267,6 +279,8 @@ export default function DailyChecklist({
   );
   const [showCelebration, setShowCelebration] = useState(false);
   const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const prevDayRateRef = useRef<number>(0);
   const xp = useXPTrigger();
   useTaskReminders(cards);
@@ -605,6 +619,22 @@ export default function DailyChecklist({
 
   const completedTasks = cardsByStatus.done.length;
 
+  const filteredInstances = instances.filter((instance) => {
+    if (categoryFilter !== 'all' && instance.category !== categoryFilter) return false;
+    if (statusFilter !== 'all') {
+      const isCompleted = instance.status === 'completed';
+      if (statusFilter === 'completed' ? !isCompleted : isCompleted) return false;
+    }
+    return true;
+  });
+
+  const hasActiveFilters = categoryFilter !== 'all' || statusFilter !== 'all';
+
+  const clearFilters = () => {
+    setCategoryFilter('all');
+    setStatusFilter('all');
+  };
+
   const dateLabel = selectedDate
     ? new Date(selectedDate + 'T00:00:00').toLocaleDateString(i18n.language, {
         weekday: 'long',
@@ -694,8 +724,111 @@ export default function DailyChecklist({
 
   const GreetIcon = greeting.Icon;
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
+  const toolbar = (
+    <div className="gap-md flex flex-wrap items-center">
+      <PomodoroBar />
+
+      {/* Saudação + progresso do dia */}
+      <div className="gap-lg bg-card px-lg py-md flex items-center rounded-lg border">
+        <CircularProgress value={dayRate} size={64} strokeWidth={5} color={dayRingColor}>
+          <span className="text-sm font-bold">{completedTasks}</span>
+        </CircularProgress>
+        <div className="flex-1">
+          <div className="gap-sm flex items-center">
+            <GreetIcon className="text-muted-foreground h-5 w-5" />
+            <span className="text-lg font-semibold">{greeting.label}</span>
+          </div>
+          <p className="text-muted-foreground mt-0.5 capitalize">{dateLabel}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-bold">
+            {completedTasks}
+            <span className="text-muted-foreground text-base font-normal">
+              /{cards.length}
+            </span>
+          </p>
+          <p className="text-muted-foreground text-xs">
+            {t('pages.todayTasks.tasksLabel')}
+          </p>
+        </div>
+      </div>
+
+      {gamification && (
+        <div className="gap-md bg-muted/30 px-md py-sm flex items-center rounded-lg border">
+          <div className="gap-sm flex items-center">
+            <div className="bg-primary/15 text-primary flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold">
+              {gamification.current_level}
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-xs font-medium">
+                {t('pages.dailyChecklist.level', {
+                  level: gamification.current_level,
+                })}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {gamification.total_xp} XP
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-1 flex-col gap-0.5">
+            <div className="text-muted-foreground flex justify-between text-xs">
+              <span className="gap-xs flex items-center">
+                <Zap className="text-warning h-3 w-3" />
+                {gamification.xp_in_level}/{gamification.xp_needed_for_next_level} XP
+              </span>
+              <span>{gamification.level_progress_pct}%</span>
+            </div>
+            <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+              <div
+                className="bg-primary h-full rounded-full transition-[width]"
+                style={{
+                  width: `${Math.min(gamification.level_progress_pct, 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+          {gamification.current_streak > 0 && (
+            <div className="gap-xs px-sm py-xs flex items-center rounded-full bg-orange-500/10">
+              <Flame className="h-3.5 w-3.5 text-orange-500" />
+              <span className="text-sm font-bold text-orange-500">
+                {gamification.current_streak}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="gap-sm flex items-center">
+        <div role="group" aria-label={t('common.fields.date')}>
+          <DatePicker
+            value={selectedDate ? parseLocalDate(selectedDate) : undefined}
+            onChange={(date) => {
+              setSelectedDate(date ? formatLocalDate(date) : '');
+            }}
+            placeholder={t('pages.dailyChecklist.datePlaceholder')}
+            maxDate={new Date()}
+            className="max-w-xs"
+          />
+        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleSync}
+          disabled={isSyncing || isLoading}
+          aria-label={t('pages.dailyChecklist.syncBtn')}
+        >
+          <RefreshCw
+            className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
+            aria-hidden="true"
+          />
+        </Button>
+      </div>
+    </div>
+  );
+
   const header = (
     <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />}>
+      {toolbar}
       {viewToggle}
     </PageHeader>
   );
@@ -712,118 +845,6 @@ export default function DailyChecklist({
       />
 
       {headerTarget ? createPortal(header, headerTarget) : header}
-
-      {/* Modo Foco + saudação + nível/XP + controles lado a lado em telas largas */}
-      <div className="gap-lg flex flex-col 2xl:flex-row 2xl:items-center">
-        <div className="gap-lg grid 2xl:flex-1 2xl:auto-cols-fr 2xl:grid-flow-col">
-          <PomodoroBar />
-
-          {/* Saudação + progresso do dia */}
-          <div className="gap-lg bg-card px-lg py-md flex items-center rounded-lg border">
-            <CircularProgress
-              value={dayRate}
-              size={64}
-              strokeWidth={5}
-              color={dayRingColor}
-            >
-              <span className="text-sm font-bold">{completedTasks}</span>
-            </CircularProgress>
-            <div className="flex-1">
-              <div className="gap-sm flex items-center">
-                <GreetIcon className="text-muted-foreground h-5 w-5" />
-                <span className="text-lg font-semibold">{greeting.label}</span>
-              </div>
-              <p className="text-muted-foreground mt-0.5 capitalize">{dateLabel}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold">
-                {completedTasks}
-                <span className="text-muted-foreground text-base font-normal">
-                  /{cards.length}
-                </span>
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {t('pages.todayTasks.tasksLabel')}
-              </p>
-            </div>
-          </div>
-
-          {gamification && (
-            <div className="gap-md bg-muted/30 px-md py-sm flex items-center rounded-lg border">
-              <div className="gap-sm flex items-center">
-                <div className="bg-primary/15 text-primary flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold">
-                  {gamification.current_level}
-                </div>
-                <div className="hidden sm:block">
-                  <p className="text-xs font-medium">
-                    {t('pages.dailyChecklist.level', {
-                      level: gamification.current_level,
-                    })}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {gamification.total_xp} XP
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-1 flex-col gap-0.5">
-                <div className="text-muted-foreground flex justify-between text-xs">
-                  <span className="gap-xs flex items-center">
-                    <Zap className="text-warning h-3 w-3" />
-                    {gamification.xp_in_level}/{gamification.xp_needed_for_next_level}{' '}
-                    XP
-                  </span>
-                  <span>{gamification.level_progress_pct}%</span>
-                </div>
-                <div className="bg-muted h-1.5 overflow-hidden rounded-full">
-                  <div
-                    className="bg-primary h-full rounded-full transition-[width]"
-                    style={{
-                      width: `${Math.min(gamification.level_progress_pct, 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-              {gamification.current_streak > 0 && (
-                <div className="gap-xs px-sm py-xs flex items-center rounded-full bg-orange-500/10">
-                  <Flame className="h-3.5 w-3.5 text-orange-500" />
-                  <span className="text-sm font-bold text-orange-500">
-                    {gamification.current_streak}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Toolbar */}
-        <div className="gap-md flex shrink-0 flex-wrap items-center">
-          <div className="gap-sm flex items-center">
-            <div role="group" aria-label={t('common.fields.date')}>
-              <DatePicker
-                value={selectedDate ? parseLocalDate(selectedDate) : undefined}
-                onChange={(date) => {
-                  setSelectedDate(date ? formatLocalDate(date) : '');
-                }}
-                placeholder={t('pages.dailyChecklist.datePlaceholder')}
-                maxDate={new Date()}
-                className="max-w-xs"
-              />
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleSync}
-              disabled={isSyncing || isLoading}
-              aria-label={t('pages.dailyChecklist.syncBtn')}
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
-                aria-hidden="true"
-              />
-            </Button>
-          </div>
-        </div>
-      </div>
 
       {overdueTaskNotifications.length > 0 && (
         <div className="gap-sm border-destructive/30 bg-destructive/10 px-md py-sm text-destructive flex items-center rounded-lg border text-sm">
@@ -863,76 +884,163 @@ export default function DailyChecklist({
                 title={t('pages.dailyChecklist.noTasks')}
               />
             ) : (
-              <PaginatedSlide
-                key={selectedDate}
-                items={instances}
-                pageSize={LIST_PAGE_SIZE}
-                centerList
-                className="space-y-sm"
-              >
-                {(pageTasks) =>
-                  pageTasks.map((task) => {
-                    const isCompleted = task.status === 'completed';
-                    const isUpdating = updatingTaskId === task.id;
-                    return (
-                      <div
-                        key={task.id}
-                        className={cn(
-                          'gap-md p-md flex items-center rounded-lg border transition-opacity',
-                          isCompleted && 'opacity-60'
-                        )}
-                      >
-                        <PlainButton
-                          type="button"
-                          disabled={isUpdating}
-                          onClick={() => void handleToggleTaskComplete(task)}
-                          className="text-muted-foreground hover:text-primary shrink-0 transition-colors disabled:opacity-50"
-                          title={
-                            isCompleted
-                              ? t('pages.todayTasks.markPending')
-                              : t('pages.todayTasks.markCompleted')
-                          }
-                        >
-                          {isCompleted ? (
-                            <CheckCircle2 className="text-success h-6 w-6" />
-                          ) : (
-                            <Circle className="h-6 w-6" />
-                          )}
-                        </PlainButton>
-                        <div className="flex-1">
-                          <h3
+              <>
+                <FilterBar
+                  hasActiveFilters={hasActiveFilters}
+                  onClear={clearFilters}
+                  activeFilters={[
+                    ...(categoryFilter !== 'all'
+                      ? [
+                          {
+                            key: 'category',
+                            label: `${t('pages.dailyChecklist.allCategories')}: ${translate('taskCategories', categoryFilter)}`,
+                            onRemove: () => setCategoryFilter('all'),
+                          },
+                        ]
+                      : []),
+                    ...(statusFilter !== 'all'
+                      ? [
+                          {
+                            key: 'status',
+                            label: `${t('common.fields.status')}: ${
+                              statusFilter === 'completed'
+                                ? t('pages.dailyChecklist.done')
+                                : t('common.status.pending')
+                            }`,
+                            onRemove: () => setStatusFilter('all'),
+                          },
+                        ]
+                      : []),
+                  ]}
+                >
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger
+                      className="w-44"
+                      aria-label={t('pages.dailyChecklist.allCategories')}
+                      startIcon={<Tag className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue
+                        placeholder={t('pages.dailyChecklist.allCategories')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.dailyChecklist.allCategories')}
+                      </SelectItem>
+                      {TASK_CATEGORIES.map(({ value }) => {
+                        const CatIcon = TASK_CATEGORY_ICONS[value];
+                        return (
+                          <SelectItem
+                            key={value}
+                            value={value}
+                            icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                          >
+                            {translate('taskCategories', value)}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger
+                      className="w-36"
+                      aria-label={t('pages.dailyChecklist.allStatus')}
+                      startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.dailyChecklist.allStatus')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.dailyChecklist.allStatus')}
+                      </SelectItem>
+                      <SelectItem value="completed">
+                        {t('pages.dailyChecklist.done')}
+                      </SelectItem>
+                      <SelectItem value="pending">
+                        {t('common.status.pending')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FilterBar>
+
+                {filteredInstances.length === 0 ? (
+                  <EmptyState
+                    icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
+                    title={t('pages.dailyChecklist.noTasks')}
+                  />
+                ) : (
+                  <PaginatedSlide
+                    key={selectedDate}
+                    items={filteredInstances}
+                    pageSize={LIST_PAGE_SIZE}
+                    centerList
+                    className="space-y-sm"
+                  >
+                    {(pageTasks) =>
+                      pageTasks.map((task) => {
+                        const isCompleted = task.status === 'completed';
+                        const isUpdating = updatingTaskId === task.id;
+                        return (
+                          <div
+                            key={task.id}
                             className={cn(
-                              'gap-sm flex items-center font-semibold',
-                              isCompleted && 'line-through'
+                              'gap-md p-md flex items-center rounded-lg border transition-opacity',
+                              isCompleted && 'opacity-60'
                             )}
                           >
-                            {task.task_name}
-                            {task.is_optional && (
-                              <Badge variant="outline" className="text-xs">
-                                {t('pages.dailyChecklist.optionalBadge')}
-                              </Badge>
+                            <PlainButton
+                              type="button"
+                              disabled={isUpdating}
+                              onClick={() => void handleToggleTaskComplete(task)}
+                              className="text-muted-foreground hover:text-primary shrink-0 transition-colors disabled:opacity-50"
+                              title={
+                                isCompleted
+                                  ? t('pages.todayTasks.markPending')
+                                  : t('pages.todayTasks.markCompleted')
+                              }
+                            >
+                              {isCompleted ? (
+                                <CheckCircle2 className="text-success h-6 w-6" />
+                              ) : (
+                                <Circle className="h-6 w-6" />
+                              )}
+                            </PlainButton>
+                            <div className="flex-1">
+                              <h3
+                                className={cn(
+                                  'gap-sm flex items-center font-semibold',
+                                  isCompleted && 'line-through'
+                                )}
+                              >
+                                {task.task_name}
+                                {task.is_optional && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {t('pages.dailyChecklist.optionalBadge')}
+                                  </Badge>
+                                )}
+                              </h3>
+                              {task.time_display && (
+                                <p className="text-muted-foreground text-sm">
+                                  {t('pages.todayTasks.timeLabel', {
+                                    time: task.time_display,
+                                  })}
+                                </p>
+                              )}
+                            </div>
+                            {task.category && (
+                              <TaskCategoryBadge
+                                icon={task.icon}
+                                label={translate('taskCategories', task.category)}
+                                category={task.category}
+                              />
                             )}
-                          </h3>
-                          {task.time_display && (
-                            <p className="text-muted-foreground text-sm">
-                              {t('pages.todayTasks.timeLabel', {
-                                time: task.time_display,
-                              })}
-                            </p>
-                          )}
-                        </div>
-                        {task.category && (
-                          <TaskCategoryBadge
-                            icon={task.icon}
-                            label={translate('taskCategories', task.category)}
-                            category={task.category}
-                          />
-                        )}
-                      </div>
-                    );
-                  })
-                }
-              </PaginatedSlide>
+                          </div>
+                        );
+                      })
+                    }
+                  </PaginatedSlide>
+                )}
+              </>
             )}
           </>
         )}

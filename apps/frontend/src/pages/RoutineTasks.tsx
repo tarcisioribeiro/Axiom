@@ -1,6 +1,16 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, CheckSquare, Edit, Trash2, BarChart2, LayoutList } from 'lucide-react';
+import {
+  Plus,
+  CheckSquare,
+  CircleDot,
+  Edit,
+  Flag,
+  Tag,
+  Trash2,
+  BarChart2,
+  LayoutList,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -8,9 +18,11 @@ import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
 import {
   RoutineFocusBlocksSection,
@@ -28,22 +40,32 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { getIconByName } from '@/components/ui/icon-picker';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate } from '@/config/constants';
+import { TASK_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useTabRoute } from '@/hooks/use-tab-route';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { type routineTaskSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import { routineTasksService } from '@/services/routine-tasks-service';
-import type { RoutineTask } from '@/types';
+import { TASK_CATEGORIES, type RoutineTask } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
 
 const LIST_PAGE_SIZE = 5;
+const ROUTINE_TABS = ['tasks', 'focus-blocks'] as const;
 
 interface RoutineTasksProps {
   embedded?: boolean;
@@ -69,7 +91,16 @@ export default function RoutineTasks({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [heatmapTask, setHeatmapTask] = useState<RoutineTask | null>(null);
-  const [activeTab, setActiveTab] = useState<'tasks' | 'focusBlocks'>('tasks');
+  const [activeTab, setActiveTab] = useTabRoute(
+    '/planning/tasks-goals/routine',
+    ROUTINE_TABS,
+    'tasks',
+    'subtab'
+  );
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
   const focusBlocksRef = useRef<RoutineFocusBlocksSectionHandle>(null);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -235,6 +266,29 @@ export default function RoutineTasks({
     return colors[category] || 'bg-muted text-muted-foreground border-transparent';
   };
 
+  const filteredTasks = tasks.filter((task) => {
+    if (searchTerm && !task.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      return false;
+    if (categoryFilter !== 'all' && task.category !== categoryFilter) return false;
+    if (statusFilter !== 'all' && task.is_active !== (statusFilter === 'active'))
+      return false;
+    if (priorityFilter !== 'all' && task.priority !== priorityFilter) return false;
+    return true;
+  });
+
+  const hasActiveFilters =
+    searchTerm !== '' ||
+    categoryFilter !== 'all' ||
+    statusFilter !== 'all' ||
+    priorityFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('all');
+    setStatusFilter('all');
+    setPriorityFilter('all');
+  };
+
   // Define table columns
   const columns: Column<RoutineTask>[] = [
     {
@@ -323,43 +377,39 @@ export default function RoutineTasks({
         </Badge>
       ),
     },
-    {
-      key: 'actions',
-      label: t('common.table.actions'),
-      align: 'center',
-      render: (task) => (
-        <div className="gap-sm flex justify-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setHeatmapTask(task)}
-            aria-label={t('pages.routineTasks.viewHeatmap')}
-            title={t('pages.routineTasks.viewConsistency')}
-          >
-            <BarChart2 className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleEdit(task)}
-            aria-label={t('common.actions.edit')}
-            title={t('common.actions.edit')}
-          >
-            <Edit className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleDelete(task.id)}
-            aria-label={t('common.actions.delete')}
-            title={t('common.actions.delete')}
-          >
-            <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
-          </Button>
-        </div>
-      ),
-    },
   ];
+
+  const renderActions = (task: RoutineTask) => (
+    <div className="gap-sm flex justify-end">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setHeatmapTask(task)}
+        aria-label={t('pages.routineTasks.viewHeatmap')}
+        title={t('pages.routineTasks.viewConsistency')}
+      >
+        <BarChart2 className="h-4 w-4" aria-hidden="true" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => handleEdit(task)}
+        aria-label={t('common.actions.edit')}
+        title={t('common.actions.edit')}
+      >
+        <Edit className="h-4 w-4" aria-hidden="true" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => handleDelete(task.id)}
+        aria-label={t('common.actions.delete')}
+        title={t('common.actions.delete')}
+      >
+        <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
+      </Button>
+    </div>
+  );
 
   if (isLoading) {
     return <LoadingState />;
@@ -387,25 +437,142 @@ export default function RoutineTasks({
 
       <Tabs
         value={activeTab}
-        onValueChange={(v) => setActiveTab(v as 'tasks' | 'focusBlocks')}
+        onValueChange={(v) => setActiveTab(v as (typeof ROUTINE_TABS)[number])}
       >
         <TabsList className="mb-lg w-full">
           <TabsTrigger value="tasks" className="gap-xs flex-1">
             <CheckSquare className="h-4 w-4" />
             {t('pages.routineTasks.tasksTab')}
           </TabsTrigger>
-          <TabsTrigger value="focusBlocks" className="gap-xs flex-1">
+          <TabsTrigger value="focus-blocks" className="gap-xs flex-1">
             <LayoutList className="h-4 w-4" />
             {t('pages.routineTasks.focusBlocks.title')}
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="tasks" className="mt-0">
+        <TabsContent value="tasks" className="space-y-lg mt-0">
+          <FilterBar
+            hasActiveFilters={hasActiveFilters}
+            onClear={clearFilters}
+            activeFilters={[
+              ...(categoryFilter !== 'all'
+                ? [
+                    {
+                      key: 'category',
+                      label: `${t('pages.routineTasks.columns.category')}: ${translate('taskCategories', categoryFilter)}`,
+                      onRemove: () => setCategoryFilter('all'),
+                    },
+                  ]
+                : []),
+              ...(statusFilter !== 'all'
+                ? [
+                    {
+                      key: 'status',
+                      label: `${t('pages.routineTasks.columns.status')}: ${
+                        statusFilter === 'active'
+                          ? t('pages.routineTasks.statusActive')
+                          : t('pages.routineTasks.statusInactive')
+                      }`,
+                      onRemove: () => setStatusFilter('all'),
+                    },
+                  ]
+                : []),
+              ...(priorityFilter !== 'all'
+                ? [
+                    {
+                      key: 'priority',
+                      label: `${t('pages.routineTasks.columns.priority')}: ${t(`pages.routineTasks.form.priorityOptions.${priorityFilter}`)}`,
+                      onRemove: () => setPriorityFilter('all'),
+                    },
+                  ]
+                : []),
+            ]}
+          >
+            <SearchInput
+              placeholder={t('pages.routineTasks.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="w-44"
+            />
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger
+                className="w-44"
+                aria-label={t('pages.routineTasks.columns.category')}
+                startIcon={<Tag className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.routineTasks.allCategories')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('pages.routineTasks.allCategories')}
+                </SelectItem>
+                {TASK_CATEGORIES.map(({ value }) => {
+                  const CatIcon = TASK_CATEGORY_ICONS[value];
+                  return (
+                    <SelectItem
+                      key={value}
+                      value={value}
+                      icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                    >
+                      {translate('taskCategories', value)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger
+                className="w-36"
+                aria-label={t('pages.routineTasks.allStatus')}
+                startIcon={<CircleDot className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.routineTasks.allStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.routineTasks.allStatus')}</SelectItem>
+                <SelectItem value="active">
+                  {t('pages.routineTasks.statusActive')}
+                </SelectItem>
+                <SelectItem value="inactive">
+                  {t('pages.routineTasks.statusInactive')}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger
+                className="w-36"
+                aria-label={t('pages.routineTasks.allPriorities')}
+                startIcon={<Flag className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.routineTasks.allPriorities')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('pages.routineTasks.allPriorities')}
+                </SelectItem>
+                <SelectItem value="low">
+                  {t('pages.routineTasks.form.priorityOptions.low')}
+                </SelectItem>
+                <SelectItem value="medium">
+                  {t('pages.routineTasks.form.priorityOptions.medium')}
+                </SelectItem>
+                <SelectItem value="high">
+                  {t('pages.routineTasks.form.priorityOptions.high')}
+                </SelectItem>
+                <SelectItem value="critical">
+                  {t('pages.routineTasks.form.priorityOptions.critical')}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </FilterBar>
+
           <DataTable
-            data={tasks}
+            data={filteredTasks}
             pageSize={LIST_PAGE_SIZE}
             centerList
+            density="compact"
             columns={columns}
+            actions={renderActions}
             keyExtractor={(task) => task.id}
             isLoading={isLoading}
             emptyState={{
@@ -415,7 +582,7 @@ export default function RoutineTasks({
           />
         </TabsContent>
 
-        <TabsContent value="focusBlocks" className="mt-0">
+        <TabsContent value="focus-blocks" className="mt-0">
           <RoutineFocusBlocksSection
             ref={focusBlocksRef}
             routineTasks={tasks}

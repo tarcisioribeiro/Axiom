@@ -3,26 +3,22 @@ import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTabRoute } from '@/hooks/use-tab-route';
 
 import FinancialCalendar from './FinancialCalendar';
 import MonthlyPlanner from './MonthlyPlanner';
 
-const TAB_KEY = 'financeAgenda.activeTab';
+const TABS = ['calendar', 'monthly-planner'] as const;
 
 export default function FinanceAgendaPage() {
   const { t } = useTranslation();
-
-  const defaultTab = localStorage.getItem(TAB_KEY) ?? 'calendar';
-
-  const handleTabChange = (value: string) => {
-    localStorage.setItem(TAB_KEY, value);
-  };
+  const [activeTab, setActiveTab] = useTabRoute('/finance/agenda', TABS, 'calendar');
 
   return (
     <PageContainer className="flex flex-1 flex-col">
       <Tabs
-        defaultValue={defaultTab}
-        onValueChange={handleTabChange}
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">
@@ -30,7 +26,7 @@ export default function FinanceAgendaPage() {
             <CalendarDays className="h-4 w-4" />
             {t('nav.items.financialCalendar')}
           </TabsTrigger>
-          <TabsTrigger value="planner" className="gap-xs flex-1">
+          <TabsTrigger value="monthly-planner" className="gap-xs flex-1">
             <CalendarCheck className="h-4 w-4" />
             {t('nav.items.monthlyPlanner')}
           </TabsTrigger>
@@ -40,7 +36,7 @@ export default function FinanceAgendaPage() {
           <FinancialCalendar embedded />
         </TabsContent>
 
-        <TabsContent value="planner" className="mt-0 flex-1">
+        <TabsContent value="monthly-planner" className="mt-0 flex-1">
           <MonthlyPlanner embedded />
         </TabsContent>
       </Tabs>

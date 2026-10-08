@@ -118,7 +118,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ptBR from '@/i18n/locales/pt-BR.json';
@@ -143,11 +143,13 @@ beforeAll(async () => {
   }
 });
 
-function renderCreditCards() {
+function renderCreditCards(initialTab: 'cards' | 'bills' = 'cards') {
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <CreditCardManagement />
+      <MemoryRouter initialEntries={[`/credit-cards/${initialTab}`]}>
+        <Routes>
+          <Route path="/credit-cards/:tab" element={<CreditCardManagement />} />
+        </Routes>
       </MemoryRouter>
     </QueryClientProvider>
   );
@@ -324,7 +326,6 @@ describe('CreditCards page', () => {
   });
 
   it('abre as compras ao clicar na linha da fatura, mas não ao clicar em botão', async () => {
-    localStorage.setItem('creditCardManagement.activeTab', 'bills');
     vi.mocked(creditCardsService.getAll).mockResolvedValue([makeCard()]);
     vi.mocked(creditCardBillsService.getAll).mockResolvedValue([
       {
@@ -339,7 +340,7 @@ describe('CreditCards page', () => {
       } as unknown as CreditCardBill,
     ]);
 
-    renderCreditCards();
+    renderCreditCards('bills');
     await waitFor(() => {
       expect(screen.getAllByRole('button', { name: /pagar/i }).length).toBeGreaterThan(
         0
@@ -355,11 +356,9 @@ describe('CreditCards page', () => {
       /compras da fatura - .*\/2026/i
     );
     expect(creditCardInstallmentsService.getByBill).toHaveBeenCalledWith(7);
-    localStorage.removeItem('creditCardManagement.activeTab');
   });
 
   it('pagina as compras da fatura em 10 por página e soma o total de todas', async () => {
-    localStorage.setItem('creditCardManagement.activeTab', 'bills');
     vi.mocked(creditCardsService.getAll).mockResolvedValue([makeCard()]);
     vi.mocked(creditCardBillsService.getAll).mockResolvedValue([
       {
@@ -385,7 +384,7 @@ describe('CreditCards page', () => {
       })) as never
     );
 
-    renderCreditCards();
+    renderCreditCards('bills');
     await waitFor(() => {
       expect(screen.getAllByRole('button', { name: /pagar/i }).length).toBeGreaterThan(
         0
@@ -404,6 +403,5 @@ describe('CreditCards page', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: /próxima|próximo/i }));
     expect(await within(dialog).findByText('Compra 11')).toBeInTheDocument();
     expect(within(dialog).queryByText('Compra 1')).not.toBeInTheDocument();
-    localStorage.removeItem('creditCardManagement.activeTab');
   });
 });

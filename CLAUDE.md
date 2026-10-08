@@ -62,6 +62,8 @@ Axiom/
 
 ### Frontend (React + TypeScript)
 
+**Mudanças visuais**: antes de implementar qualquer mudança visual (layout, espaçamento, posição de elementos, cores, animação, tabelas, modais, etc.), leia `documentation/frontend/design-patterns.md` e descreva como a tela vai ficar (antes → depois) para o usuário confirmar, antes de editar o código. Isso vale mesmo quando o pedido já parece específico — o documento registra decisões anteriores do product owner que a mudança pode contradizer sem querer. Depois de aplicar uma mudança visual nova e confirmada, atualize esse documento com o padrão resultante.
+
 **Stack**: React 19, Vite 7, TypeScript 5.9, TailwindCSS 3, Radix UI, Zustand, React Router v7, Recharts, Framer Motion, React Hook Form + Zod, TanStack Query v5
 
 **Data fetching**: use `useQuery` + `useMutation` (TanStack Query) — not the older `use-crud-page.ts`. Client in `src/lib/query-client.ts`.

@@ -169,8 +169,7 @@
       "dateTo": "Data final",
       "format": "Formato",
       "from": "De...",
-      "to": "Até...",
-      "activeFiltersNote": "Nota: os filtros ativos da página serão aplicados na exportação."
+      "to": "Até..."
     },
     "fileInput": {
       "selectFile": "Escolher arquivo",
@@ -379,6 +378,8 @@
   },
   "breadcrumb": {
     "home": "Início",
+    "profile": "Meu Perfil",
+    "bankReconciliation": "Conciliação Bancária",
     "dashboard": "Dashboard",
     "planningDashboard": "Planejamento Pessoal",
     "todayTasks": "Tarefas de Hoje",
@@ -606,6 +607,7 @@
       "deletedDesc": "A conta foi excluída com sucesso.",
       "emptyState": "Nenhuma conta cadastrada. Clique em \"Nova Conta\" para começar.",
       "searchPlaceholder": "Buscar por nome ou instituição...",
+      "allTypes": "Todos os Tipos",
       "columns": {
         "name": "Conta",
         "type": "Tipo",
@@ -699,13 +701,6 @@
         "date": "Data"
       },
       "exportTitle": "Exportar Despesas",
-      "exportDesc": "Selecione o período e formato para exportar as despesas filtradas.",
-      "stats": {
-        "totalAmount": "Total de Despesas",
-        "paid": "Pagas",
-        "pending": "Pendentes",
-        "entriesCount": "{{count}} lançamentos"
-      },
       "form": {
         "descriptionLabel": "Descrição *",
         "descriptionPlaceholder": "Ex: Compra no supermercado",
@@ -722,14 +717,12 @@
         "pending": "Pendente",
         "paid": "Pago",
         "accountLabel": "Conta *",
-        "relatedLoanLabel": "Empréstimo Relacionado (Opcional)",
+        "relatedLoanLabel": "Empréstimo Relacionado",
         "relatedLoanPlaceholder": "Selecione (opcional)",
-        "relatedPayableLabel": "Valor a Pagar Relacionado (Opcional)",
+        "relatedPayableLabel": "Valor a Pagar Relacionado",
         "relatedPayablePlaceholder": "Selecione (opcional)",
-        "relatedFixedExpenseLabel": "Despesa Fixa Relacionada (Opcional)",
+        "relatedFixedExpenseLabel": "Despesa Fixa Relacionada",
         "none": "Nenhum",
-        "balanceInfo": "Saldo: {{value}}",
-        "splitToggle": "Dividir despesa",
         "redistributeDesc": "Esta dívida já tem um plano de pagamento. O valor lançado abate o saldo em aberto e as parcelas pendentes serão redistribuídas."
       },
       "splits": {
@@ -745,8 +738,7 @@
         "deleted": "Divisão excluída",
         "deleteTitle": "Excluir divisão",
         "deleteDesc": "Tem certeza que deseja excluir esta divisão?"
-      },
-      "byCategory": "Por categoria"
+      }
     },
     "revenues": {
       "title": "Receitas",
@@ -783,7 +775,6 @@
         "date": "Data"
       },
       "exportTitle": "Exportar Receitas",
-      "exportDesc": "Selecione o período e formato para exportar as receitas filtradas.",
       "stats": {
         "totalAmount": "Total de Receitas",
         "received": "Recebidas",
@@ -1070,7 +1061,10 @@
         "receiptInstallments": "Parcelas de Recebimento",
         "received": "Recebida",
         "pending": "A receber"
-      }
+      },
+      "allRoles": "Todos os papéis",
+      "allStatus": "Todos os status",
+      "allCategories": "Todas as categorias"
     },
     "members": {
       "title": "Membros",
@@ -1125,7 +1119,9 @@
       },
       "noRole": "Sem papel definido",
       "emptySearch": "Nenhum membro encontrado.",
-      "searchPlaceholder": "Buscar por nome, CPF ou telefone..."
+      "searchPlaceholder": "Buscar por nome, CPF ou telefone...",
+      "allStatus": "Todos os status",
+      "allRoles": "Todos os papéis"
     },
     "fixedExpenses": {
       "title": "Gastos Fixos Mensais",
@@ -1227,7 +1223,11 @@
         "generatedBy": "Gerado por",
         "generatedAt": "Gerado em",
         "viewLog": "Ver histórico"
-      }
+      },
+      "searchPlaceholder": "Buscar por descrição...",
+      "allCategories": "Todas Categorias",
+      "allAccounts": "Todas as Contas",
+      "allStatus": "Todos Status"
     },
     "creditCards": {
       "title": "Cartões de Crédito",
@@ -1318,7 +1318,10 @@
         "credentialsDesc": "Para excluir, informe o número completo e o CVV do cartão.",
         "finalTitle": "Excluir o cartão definitivamente?",
         "finalDesc": "O cartão \"{{name}}\" deixará de aparecer na lista. Faturas, compras e despesas vinculadas serão mantidas."
-      }
+      },
+      "searchPlaceholder": "Buscar por nome do cartão...",
+      "allFlags": "Todas as Bandeiras",
+      "allStatus": "Todos Status"
     },
     "creditCardHub": {
       "openHub": "Ver detalhes do cartão",
@@ -1703,7 +1706,9 @@
         "valueIncreasedDesc": "O valor foi atualizado e as parcelas foram recalculadas.",
         "firstInstallmentLabel": "Vencimento da 1ª parcela",
         "firstInstallmentHint": "As demais parcelas seguem a frequência escolhida."
-      }
+      },
+      "allStatus": "Todos os status",
+      "allCategories": "Todas as categorias"
     },
     "budgets": {
       "purchases": {
@@ -1734,6 +1739,8 @@
       "emptySearch": "Nenhum orçamento encontrado para a pesquisa atual.",
       "emptyState": "Nenhum orçamento cadastrado para este período. Clique em \"Novo Orçamento\" para começar.",
       "searchPlaceholder": "Buscar categoria...",
+      "allCategories": "Todas as Categorias",
+      "allMembers": "Todos os Membros",
       "month": "Mês",
       "year": "Ano",
       "months": [
@@ -1872,7 +1879,11 @@
         "skippedNotice_other": "{{count}} já haviam sido lançadas neste mês e foram ignoradas.",
         "error": "Não foi possível lançar as receitas. {{reason}}",
         "allGenerated": "Todos os lançamentos deste período já foram feitos."
-      }
+      },
+      "searchPlaceholder": "Buscar por descrição...",
+      "allCategories": "Todas Categorias",
+      "allAccounts": "Todas as Contas",
+      "allStatus": "Todos Status"
     },
     "fixedTransfers": {
       "title": "Transferências Fixas",
@@ -1920,10 +1931,13 @@
       "name": "Nome",
       "color": "Cor",
       "expenseCount": "{{count}} despesa(s)",
-      "noExpenses": "Sem uso"
+      "noExpenses": "Sem uso",
+      "allColors": "Todas as cores"
     },
     "vaults": {
       "title": "Cofres",
+      "searchPlaceholder": "Buscar por nome...",
+      "allAccounts": "Todas as contas",
       "newBtn": "Novo Cofre",
       "editTitle": "Editar Cofre",
       "newTitle": "Novo Cofre",
@@ -2542,7 +2556,8 @@
       },
       "autoClassify": "Classificar automaticamente",
       "classifySuccess": "Categoria classificada: {{category}}",
-      "classifyError": "Erro ao classificar categoria"
+      "classifyError": "Erro ao classificar categoria",
+      "allCategories": "Todas as categorias"
     },
     "sharePassword": {
       "title": "Compartilhar Credencial",
@@ -2680,6 +2695,7 @@
       "revealedDesc": "Os dados do cartão foram descriptografados com sucesso.",
       "emptySearch": "Nenhum cartão armazenado encontrado.",
       "searchPlaceholder": "Buscar cartões...",
+      "allFlags": "Todas as bandeiras",
       "noFinanceCard": "Nenhum",
       "cardNumberLabel": "Número do cartão",
       "columns": {
@@ -2742,6 +2758,8 @@
       "revealError": "Não foi possível revelar as senhas. {{reason}}",
       "emptySearch": "Nenhuma conta armazenada encontrada.",
       "searchPlaceholder": "Buscar contas...",
+      "allTypes": "Todos os tipos",
+      "allInstitutions": "Todas as instituições",
       "noFinanceAccount": "Nenhuma",
       "copyAccountNumber": "Copiar número da conta",
       "password1": "Senha 1",
@@ -2827,6 +2845,8 @@
       "emptySearch": "Nenhum arquivo encontrado para a pesquisa atual.",
       "emptyState": "Nenhum arquivo cadastrado. Clique em \"Novo Arquivo\" para começar.",
       "searchPlaceholder": "Buscar arquivos...",
+      "allCategories": "Todas as Categorias",
+      "allTypes": "Todos os Tipos",
       "viewContent": "Ver conteúdo",
       "downloadFile": "Baixar arquivo",
       "preview": "Pré-visualizar",
@@ -3322,6 +3342,8 @@
       "emptySearch": "Nenhum autor encontrado para a pesquisa atual.",
       "emptyState": "Nenhum autor cadastrado. Clique em \"Novo Autor\" para começar.",
       "searchPlaceholder": "Buscar autores...",
+      "allNationalities": "Todas as Nacionalidades",
+      "nationalityFilterLabel": "Nacionalidade",
       "form": {
         "photoAlt": "Foto do autor",
         "removePhoto": "Remover foto",
@@ -3412,6 +3434,7 @@
       "emptySearch": "Nenhuma editora encontrada para a pesquisa atual.",
       "emptyState": "Nenhuma editora cadastrada. Clique em \"Nova Editora\" para começar.",
       "searchPlaceholder": "Buscar editoras...",
+      "allCountries": "Todos os países",
       "foundedYear": "Fundada em {{year}}",
       "form": {
         "nameLabel": "Nome *",
@@ -3608,6 +3631,8 @@
       "title": "Cursos",
       "newBtn": "Novo Curso",
       "searchPlaceholder": "Buscar cursos...",
+      "allCategories": "Todas as Categorias",
+      "allPlatforms": "Todas as Plataformas",
       "emptyState": "Nenhum curso cadastrado",
       "emptyStateDesc": "Registre seus cursos online (Udemy, Coursera, YouTube e outros) para acompanhar seu progresso de aprendizado.",
       "emptySearch": "Nenhum curso encontrado para a pesquisa atual.",
@@ -3763,6 +3788,8 @@
       "title": "Habilidades",
       "newBtn": "Nova Habilidade",
       "searchPlaceholder": "Buscar habilidades...",
+      "allStatus": "Todos os status",
+      "allCategories": "Todas as categorias",
       "emptyState": "Nenhuma habilidade cadastrada. Clique em \"Nova Habilidade\" para começar.",
       "emptySearch": "Nenhuma habilidade encontrada para a pesquisa atual.",
       "newTitle": "Nova Habilidade",
@@ -3944,6 +3971,10 @@
     "routineTasks": {
       "title": "Tarefas Rotineiras",
       "tasksTab": "Tarefas",
+      "searchPlaceholder": "Buscar por nome...",
+      "allCategories": "Todas as categorias",
+      "allStatus": "Todos os status",
+      "allPriorities": "Todas as prioridades",
       "newBtn": "Nova Tarefa",
       "editTitle": "Editar Tarefa",
       "newTitle": "Nova Tarefa",
@@ -4220,11 +4251,15 @@
       },
       "daysRemaining": "{{count}} dia restante",
       "daysRemaining_plural": "{{count}} dias restantes",
-      "overdue": "Prazo expirado"
+      "overdue": "Prazo expirado",
+      "allStatus": "Todos Status",
+      "allTypes": "Todos os Tipos"
     },
     "dailyChecklist": {
       "title": "Checklist Diário",
       "optionalBadge": "Opcional",
+      "allCategories": "Todas as categorias",
+      "allStatus": "Todos os status",
       "datePlaceholder": "Selecione a data",
       "syncBtn": "Sincronizar tarefas com dados atuais",
       "addReflection": "Adicionar reflexão do dia",
@@ -4260,6 +4295,8 @@
       "dateGroupFormat": "EEEE, dd 'de' MMMM 'de' yyyy",
       "exportBtn": "Exportar CSV",
       "exportSuccess": "Log exportado com sucesso",
+      "searchPlaceholder": "Buscar na descrição...",
+      "allActions": "Todas as ações",
       "columns": {
         "dateTime": "Data/Hora",
         "action": "Ação",
@@ -4354,7 +4391,8 @@
         "saving": "Salvando...",
         "sectionReflection": "Reflexão & Data",
         "reflectionPlaceholder": "Escreva sua reflexão do dia, pensamentos, aprendizados..."
-      }
+      },
+      "searchPlaceholder": "Buscar por texto da reflexão..."
     },
     "journey": {
       "title": "Minha Jornada",
@@ -4506,7 +4544,12 @@
         "statusPending": "Pendente",
         "statusMatched": "Conciliado",
         "statusUnmatched": "Divergente",
-        "statusIgnored": "Ignorado"
+        "statusIgnored": "Ignorado",
+        "searchPlaceholder": "Buscar por descrição...",
+        "allStatus": "Todos os status",
+        "allTypes": "Todos os tipos",
+        "debit": "Débito",
+        "credit": "Crédito"
       }
     },
     "agents": {
@@ -5160,6 +5203,8 @@
       "emptySearch": "Nenhum valor a receber encontrado para a pesquisa atual.",
       "emptyState": "Nenhum valor a receber cadastrado. Clique em \"Novo Valor a Receber\" para começar.",
       "searchPlaceholder": "Buscar valores a receber...",
+      "allStatus": "Todos os status",
+      "allCategories": "Todas as categorias",
       "totalValue": "Valor Total:",
       "receivedValue": "Valor Recebido:",
       "remainingBalance": "Saldo Restante:",
@@ -5340,6 +5385,8 @@
         "resistance": "Resistência",
         "mobility": "Mobilidade"
       },
+      "allCategories": "Todas as categorias",
+      "allStatus": "Todos os status",
       "bodyweight": "Peso corporal",
       "perSetTitle": "Carga e repetições por série",
       "setLabel": "Série",
@@ -5552,7 +5599,9 @@
       "suggestedTimeMorning": "Manhã",
       "suggestedTimeLunch": "Almoço",
       "suggestedTimeAfternoon": "Tarde",
-      "suggestedTimeNight": "Noite"
+      "suggestedTimeNight": "Noite",
+      "searchPlaceholder": "Buscar refeição...",
+      "allStatus": "Todos os status"
     },
     "nutritionLog": {
       "title": "Diário Alimentar",
@@ -5785,7 +5834,10 @@
       },
       "front": "Frente (pergunta)",
       "back": "Verso (resposta)",
-      "selectBook": "Selecionar livro (opcional)"
+      "selectBook": "Selecionar livro (opcional)",
+      "searchPlaceholder": "Buscar por frente ou verso...",
+      "allStatus": "Todos Status",
+      "allBooks": "Todos os Livros"
     },
     "intellectToday": {
       "title": "Hoje no Intelecto",
@@ -5907,6 +5959,8 @@
     "automationRules": {
       "title": "Regras de Automação",
       "subtitle": "Crie regras SE → ENTÃO para classificar despesas automaticamente",
+      "searchPlaceholder": "Buscar por nome...",
+      "allStatus": "Todos os status",
       "newRule": "Nova Regra",
       "editRule": "Editar Regra",
       "empty": "Nenhuma regra criada",
@@ -6014,6 +6068,159 @@
         "high": "Alta",
         "medium": "Média",
         "low": "Baixa"
+      }
+    },
+    "emotionalWellness": {
+      "title": "Bem-Estar Emocional",
+      "tabs": {
+        "dashboard": "Visão Geral",
+        "selfEsteem": "Autoestima",
+        "checkin": "Check-in",
+        "crisis": "Modo Crise",
+        "library": "Intervenções"
+      },
+      "scoreLabel": {
+        "high": "Alta",
+        "medium": "Média",
+        "low": "Baixa"
+      },
+      "dashboard": {
+        "selfEsteemStat": "Autoestima",
+        "lonelinessAvgStat": "Solidão (média)",
+        "anxietyAvgStat": "Ansiedade (média)",
+        "tasksCompletedStat": "Tarefas concluídas",
+        "thisWeek": "esta semana",
+        "motivationAvgStat": "Motivação (média)",
+        "checkinsStat": "Check-ins",
+        "impulsesOvercomeStat": "Impulsos superados",
+        "historyTitle": "Histórico de Autoestima",
+        "emptyTitle": "Nenhum dado ainda"
+      },
+      "selfEsteem": {
+        "newAssessmentBtn": "Nova avaliação",
+        "dialogTitle": "Responda com sinceridade",
+        "questionOf": "Pergunta {{current}} de {{total}}",
+        "questions": {
+          "q1": "Sinto que sou uma pessoa de valor, pelo menos tanto quanto outras pessoas.",
+          "q2": "Sinto que tenho várias qualidades boas.",
+          "q3": "Ao todo, estou inclinado(a) a sentir que sou um(a) fracasso(a).",
+          "q4": "Sou capaz de fazer as coisas tão bem quanto outras pessoas.",
+          "q5": "Sinto que não tenho muito do que me orgulhar.",
+          "q6": "Tenho uma atitude positiva em relação a mim mesmo(a).",
+          "q7": "No geral, estou satisfeito(a) comigo mesmo(a).",
+          "q8": "Gostaria de poder ter mais respeito por mim mesmo(a).",
+          "q9": "Às vezes me sinto inútil.",
+          "q10": "Às vezes penso que não sirvo para nada."
+        },
+        "options": {
+          "stronglyDisagree": "Discordo totalmente",
+          "disagree": "Discordo",
+          "agree": "Concordo",
+          "stronglyAgree": "Concordo totalmente"
+        },
+        "analyzing": "Analisando...",
+        "detailTitle": "Avaliação de {{date}}",
+        "scoreOf": "Pontuação: {{score}}/30",
+        "resultScoreLabel": "Autoestima {{label}}",
+        "strengthsTitle": "Pontos fortes identificados",
+        "limitingBeliefsTitle": "Crenças para trabalhar",
+        "suggestionsTitle": "Sugestões para esta semana",
+        "viewHistoryBtn": "Ver histórico",
+        "emptyTitle": "Nenhuma avaliação ainda",
+        "saveError": "Erro ao salvar",
+        "savedToast": "Avaliação registrada com pontuação {{score}}/30."
+      },
+      "checkin": {
+        "registerBtn": "Registrar",
+        "dialogTitle": "Como você está agora?",
+        "questionOf": "Pergunta {{current}} de {{total}}",
+        "scales": {
+          "loneliness": "Solidão",
+          "neediness": "Carência",
+          "anxiety": "Ansiedade",
+          "sadness": "Tristeza",
+          "motivation": "Motivação",
+          "energy": "Energia"
+        },
+        "texts": {
+          "what_happened": {
+            "label": "O que aconteceu hoje?",
+            "placeholder": "Pode ser algo simples ou complexo..."
+          },
+          "occupying_thoughts": {
+            "label": "Existe algo ocupando seus pensamentos? (opcional)",
+            "placeholder": "Uma preocupação, uma pessoa, um pensamento recorrente..."
+          }
+        },
+        "detailTitle": "Check-in de {{date}}",
+        "detailDesc": "Detalhes do check-in",
+        "emptyTitle": "Nenhum check-in ainda",
+        "emptyFilteredTitle": "Nenhum check-in no período",
+        "savedToast": "Check-in registrado!",
+        "saveError": "Erro ao salvar"
+      },
+      "crisis": {
+        "modeBtn": "Modo Crise",
+        "step0Title": "O que você está sentindo?",
+        "step1Title": "Qual impulso você está tentando evitar?",
+        "step2Title": "Seu plano de ação",
+        "stepOf": "Etapa {{current}} de {{total}}",
+        "emotions": {
+          "loneliness": "Solidão",
+          "neediness": "Carência",
+          "anxiety": "Ansiedade",
+          "boredom": "Tédio",
+          "frustration": "Frustração",
+          "anger": "Raiva",
+          "other": "Outro"
+        },
+        "impulses": {
+          "pornography": "Pornografia",
+          "alcohol": "Álcool",
+          "social_media": "Redes Sociais",
+          "shopping": "Compras",
+          "procrastination": "Procrastinação",
+          "other": "Outro"
+        },
+        "otherEmotionPlaceholder": "Descreva o que está sentindo",
+        "otherImpulsePlaceholder": "Descreva o impulso",
+        "validationTitle": "Validação",
+        "contextTitle": "Contexto",
+        "actionPlanTitle": "Plano de ação imediato",
+        "pendingAnalysis": "Impulso registrado. A análise da IA estará disponível em breve.",
+        "sending": "Buscando suporte...",
+        "requestHelpBtn": "Quero ajuda agora",
+        "overcameBtn": "Superei o impulso",
+        "overcameToast": "Impulso superado! Parabéns.",
+        "processError": "Erro ao processar",
+        "emptyTitle": "Nenhum registro ainda",
+        "emptyFilteredTitle": "Nenhum registro no período",
+        "resolvedBadge": "Superado",
+        "registeredBadge": "Registrado"
+      },
+      "library": {
+        "categories": {
+          "self_esteem": "Autoestima",
+          "loneliness": "Solidão",
+          "neediness": "Carência",
+          "anxiety": "Ansiedade",
+          "emotional_dependency": "Dependência Emocional"
+        },
+        "categoryOptions": {
+          "all": "Todas",
+          "self_esteem": "Autoestima",
+          "loneliness": "Solidão",
+          "neediness": "Carência",
+          "anxiety": "Ansiedade",
+          "emotional_dependency": "Dep. Emocional"
+        },
+        "categoryLabel": "Categoria",
+        "emptyTitle": "Nenhuma intervenção",
+        "doneBtn": "Feito",
+        "doNowBtn": "Fazer agora",
+        "savingLabel": "Salvando...",
+        "completedToast": "Intervenção concluída!",
+        "registerError": "Erro ao registrar"
       }
     }
   },
@@ -6817,6 +7024,9 @@
     "deleteError": "Erro ao remover webhook.",
     "testSuccess": "Teste enfileirado com sucesso.",
     "testError": "Erro ao enfileirar teste.",
+    "searchPlaceholder": "Buscar por nome...",
+    "allStatus": "Todos os status",
+    "allEvents": "Todos os eventos",
     "status": {
       "success": "Sucesso",
       "failed": "Falhou",

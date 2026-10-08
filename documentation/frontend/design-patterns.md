@@ -46,7 +46,7 @@ Legenda: **[regra]** = padrão global, aplica-se a todas as telas e módulos. **
 - **[regra]** Botão só com ícone tem tooltip do app. Status: `tooltipSide` aplicado.
 - **[regra]** Botões de um mesmo grupo têm o mesmo estilo, tamanho e largura.
 - **[regra]** Botões de ação ficam visíveis sem depender de hover.
-- **[regra]** A ação do cabeçalho muda conforme a aba ativa e fica na linha do header, acima das abas (ex.: "Nova Tarefa" / "Novo Bloco").
+- **[regra]** A ação do cabeçalho muda conforme a aba ativa e fica na linha do header, acima das abas (ex.: "Nova Tarefa" / "Novo Bloco"). Vale também para outros controles de contexto (cards de progresso, calendário, toggle de visualização): todos ficam na mesma linha do título da página, não numa linha própria entre o título e as abas. Status: aplicado em Checklist Diário (`DailyChecklist.tsx`, cards de Modo Foco/progresso/nível + calendário movidos para dentro do `PageHeader`).
 - **[regra]** Títulos de abas e páginas têm ícone à esquerda.
 - **[pontual]** Sem ícone duplicado no botão. Botão de salvar só com ícone quando indicado. Sem botões "Gerar com IA".
 - **[pontual]** Botão de revelar senha ou documento é só ícone, com tooltip.
@@ -67,6 +67,11 @@ Legenda: **[regra]** = padrão global, aplica-se a todas as telas e módulos. **
 - **[regra]** Nenhuma tela tem rolagem de página.
 - **[regra]** Telas com filtro e busca usam o mesmo componente do módulo Controle Financeiro. Status: `SearchInput` em 30 arquivos.
 - **[regra]** Filtros ocupam toda a largura disponível, com rótulo acima de cada um.
+
+## Tabelas
+
+- **[regra]** Coluna de ações de uma linha de tabela usa a prop nativa `actions` do `DataTable` (alinhada à direita), nunca uma coluna customizada com `align: 'center'`/`justify-center` — isso deixa os botões soltos no meio de um espaço maior do que precisam, já que colunas sem largura fixa esticam para preencher a tabela. Status: aplicado em Tarefas Rotineiras (`RoutineTasks.tsx`).
+- **[regra]** Tabelas dentro de telas com mais de um nível de abas usam `density="compact"` no `DataTable`, para não empurrar a página para além da viewport (ver "Nenhuma tela tem rolagem de página" em Paginação e filtros). Status: aplicado em Tarefas Rotineiras.
 
 ## Animação
 
@@ -104,6 +109,11 @@ Legenda: **[regra]** = padrão global, aplica-se a todas as telas e módulos. **
 - **[regra]** Datas futuras desabilitadas no próprio calendário.
 - **[regra]** Conteúdo centralizado na vertical entre componentes (filtro e paginação, abas e paginação, dentro de cards).
 - **[pontual]** Tour guiado no estilo do tour do módulo Segurança, em todas as telas. Exibido no primeiro acesso, ocultável por checkbox, com botão na sidebar.
+
+## Navegação
+
+- **[regra]** O indicador de localização (breadcrumb) nunca fica vazio nem é parcial: toda rota resolve módulo > submódulo > página, e cada nível — exceto a página atual — é clicável. Status: `use-breadcrumb.ts` deriva módulo/submódulo/página a partir do `nav-config.ts` (mesma fonte da Sidebar), em vez de um dicionário próprio mantido à mão.
+- **[regra]** Toda tela com abas tem uma rota própria por aba, refletida na URL (ex.: `/transactions/expenses`), nunca só em estado local/`localStorage`. Nomes de rota em inglês. Acessar a rota "pai" sem aba redireciona para a aba padrão. Status: aplicado via hook `useTabRoute` em Transações, Recorrentes, Regras & Etiquetas, Contas a Pagar/Receber, Cartões de Crédito, Agenda Financeira, Análises, Saúde Financeira e Tarefas e Objetivos (com sub-abas de Rotina Diária).
 
 ## Fora de escopo
 

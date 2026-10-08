@@ -3,26 +3,22 @@ import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTabRoute } from '@/hooks/use-tab-route';
 
 import Payables from './Payables';
 import Receivables from './Receivables';
 
-const TAB_KEY = 'payablesReceivables.activeTab';
+const TABS = ['payables', 'receivables'] as const;
 
 export default function PayablesReceivables() {
   const { t } = useTranslation();
-
-  const defaultTab = localStorage.getItem(TAB_KEY) ?? 'payables';
-
-  const handleTabChange = (value: string) => {
-    localStorage.setItem(TAB_KEY, value);
-  };
+  const [activeTab, setActiveTab] = useTabRoute('/bills', TABS, 'payables');
 
   return (
     <PageContainer className="flex flex-1 flex-col">
       <Tabs
-        defaultValue={defaultTab}
-        onValueChange={handleTabChange}
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">

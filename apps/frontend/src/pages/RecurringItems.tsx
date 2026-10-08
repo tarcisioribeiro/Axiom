@@ -1,36 +1,26 @@
 import { Calendar, CalendarClock, Plus, TrendingDown, TrendingUp } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTabRoute } from '@/hooks/use-tab-route';
 
 import FixedExpenses from './FixedExpenses';
 import FixedRevenues from './FixedRevenues';
 
-const TAB_KEY = 'recurringItems.activeTab';
-const VALID_TABS = new Set(['fixed-expenses', 'fixed-revenues']);
+const TABS = ['fixed-expenses', 'fixed-revenues'] as const;
 
 export default function RecurringItems() {
   const { t } = useTranslation();
-
-  // Guarda contra valor obsoleto no localStorage (ex.: a antiga aba "subscriptions").
-  const storedTab = localStorage.getItem(TAB_KEY);
-  const defaultTab =
-    storedTab && VALID_TABS.has(storedTab) ? storedTab : 'fixed-expenses';
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [activeTab, setActiveTab] = useTabRoute('/recurring', TABS, 'fixed-expenses');
 
   const newExpenseRef = useRef<() => void>(undefined);
   const launchExpensesRef = useRef<() => void>(undefined);
   const newRevenueRef = useRef<() => void>(undefined);
   const launchRevenuesRef = useRef<() => void>(undefined);
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    localStorage.setItem(TAB_KEY, value);
-  };
 
   return (
     <PageContainer className="flex flex-1 flex-col">
@@ -72,7 +62,7 @@ export default function RecurringItems() {
 
       <Tabs
         value={activeTab}
-        onValueChange={handleTabChange}
+        onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">

@@ -4,30 +4,26 @@ import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTabRoute } from '@/hooks/use-tab-route';
 
 import DailyChecklist from './DailyChecklist';
 import Goals from './Goals';
 import RoutineTasks from './RoutineTasks';
 
-const TAB_KEY = 'tasksGoals.activeTab';
+const TABS = ['daily', 'routine', 'goals'] as const;
 
 export default function TasksAndGoals() {
   const { t } = useTranslation();
 
   // Cada aba renderiza seu cabeçalho (título + ações) aqui, acima das abas.
   const [headerTarget, setHeaderTarget] = useState<HTMLDivElement | null>(null);
-
-  const defaultTab = localStorage.getItem(TAB_KEY) ?? 'daily';
-
-  const handleTabChange = (value: string) => {
-    localStorage.setItem(TAB_KEY, value);
-  };
+  const [activeTab, setActiveTab] = useTabRoute('/planning/tasks-goals', TABS, 'daily');
 
   return (
     <PageContainer className="flex flex-1 flex-col">
       <Tabs
-        defaultValue={defaultTab}
-        onValueChange={handleTabChange}
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
         className="flex flex-1 flex-col"
       >
         <div ref={setHeaderTarget} className="mb-lg empty:hidden" />
