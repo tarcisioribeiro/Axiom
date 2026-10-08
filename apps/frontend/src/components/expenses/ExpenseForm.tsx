@@ -4,10 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   AlertCircle,
   CalendarDays,
-  ChevronDown,
-  ChevronUp,
   Clock,
-  GitFork,
   Link2,
   Loader2,
   Sparkles,
@@ -22,10 +19,6 @@ import { useForm, useWatch } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import {
-  ExpenseOCRUpload,
-  type OCRResult,
-} from '@/components/expenses/ExpenseOCRUpload';
 import { RecalculationPreviewDialog } from '@/components/payables/RecalculationPreviewDialog';
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
@@ -84,7 +77,7 @@ interface ExpenseFormProps {
   loans?: Loan[];
   payables?: Payable[];
   fixedExpenses?: FixedExpense[];
-  onSubmit: (data: ExpenseFormData, splitOnCreate?: boolean) => void;
+  onSubmit: (data: ExpenseFormData) => void;
   /** Called when the redistribution flow (requirement 7) commits the
    * Expense itself via the atomic redistribute-after-payment endpoint —
    * the parent should treat this the same as a successful onSubmit
@@ -126,8 +119,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const { toast } = useToast();
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
   const [categorizationRules, setCategorizationRules] = useState<AutomationRule[]>([]);
-  const [linksOpen, setLinksOpen] = useState(false);
-  const [splitOnCreate, setSplitOnCreate] = useState(false);
   const [redistributePreview, setRedistributePreview] =
     useState<RecalculationPreview | null>(null);
   const [pendingRedistributeData, setPendingRedistributeData] =
@@ -451,25 +442,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       }
     }
 
-    onSubmit(data, !expense && splitOnCreate);
+    onSubmit(data);
   };
 
-  const selectedAccount = accounts.find((a) => a.id === watchedAccount);
   const eligibleFixedExpenses = fixedExpenses ?? [];
   const hasEligibleLinks =
     eligibleLoans.length > 0 ||
     eligiblePayables.length > 0 ||
     eligibleFixedExpenses.length > 0;
-
-  const handleOCRResult = (result: OCRResult) => {
-    if (result.merchant) setValue('description', result.merchant);
-    if (result.value) {
-      const num = parseFloat(result.value.replace(',', '.'));
-      if (!isNaN(num)) setValue('value', num);
-    }
-    if (result.date) setValue('date', result.date);
-    if (result.merchant) handleMerchantChange(result.merchant);
-  };
 
   return (
     <form
@@ -477,15 +457,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       className="space-y-lg"
       noValidate
     >
-      {!expense && (
-        <div className="flex items-center justify-end">
-          <ExpenseOCRUpload onResult={handleOCRResult} />
-        </div>
-      )}
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm md:col-span-2">
+          <div className="space-y-sm">
             <Label htmlFor="description" className="gap-xs flex items-center">
               <Store className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.descriptionLabel')}
@@ -499,13 +474,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             />
           </div>
 
-          <div className="space-y-sm md:col-span-2">
+          <div className="space-y-sm">
             <Label htmlFor="merchant" className="gap-xs flex items-center">
               <Store className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.merchantLabel')}
-              <span className="text-muted-foreground/70 ml-1 text-xs">
-                ({t('common.actions.none').toLowerCase()})
-              </span>
             </Label>
             <Input
               id="merchant"
@@ -520,7 +492,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       {/* Seção: Valores & Data */}
       <FormSection title={t('common.form.sections.values')} icon={Wallet}>
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-sm">
             <Label htmlFor="value" className="gap-xs flex items-center">
               <Wallet className="text-muted-foreground h-3.5 w-3.5" />
@@ -682,145 +654,119 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {selectedAccount && (
-              <p className="text-muted-foreground text-xs">
-                {t('pages.expenses.form.balanceInfo', {
-                  value: formatCurrency(selectedAccount.available_balance),
-                })}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
 
-      {/* Seção: Vínculos (colapsável) */}
+      {/* Seção: Vínculos */}
       {hasEligibleLinks && (
-        <div className="space-y-md">
-          <button
-            type="button"
-            onClick={() => setLinksOpen((o) => !o)}
-            className="gap-xs flex w-full items-center text-left"
-          >
-            <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-            <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-              {t('common.form.sections.links')}
-            </span>
-            <div className="bg-border/50 h-px flex-1" />
-            {linksOpen ? (
-              <ChevronUp className="text-muted-foreground h-3.5 w-3.5" />
-            ) : (
-              <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
+        <FormSection title={t('common.form.sections.links')} icon={Link2}>
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+            {eligibleLoans.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.expenses.form.relatedLoanLabel')}
+                </Label>
+                <Select
+                  value={watchedRelatedLoan?.toString() || 'none'}
+                  onValueChange={(v) => {
+                    setValue('related_loan', v === 'none' ? null : parseInt(v));
+                    if (v !== 'none') {
+                      setValue('related_payable', null);
+                      setValue('fixed_expense_template', null);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.fields.select_optional')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {eligibleLoans.map((loan) => (
+                      <SelectItem key={loan.id} value={loan.id.toString()}>
+                        {loan.description} — {formatCurrency(loan.remaining_balance)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
-          </button>
 
-          {linksOpen && (
-            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-              {eligibleLoans.length > 0 && (
-                <div className="space-y-sm">
-                  <Label className="gap-xs flex items-center">
-                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.expenses.form.relatedLoanLabel')}
-                  </Label>
-                  <Select
-                    value={watchedRelatedLoan?.toString() || 'none'}
-                    onValueChange={(v) => {
-                      setValue('related_loan', v === 'none' ? null : parseInt(v));
-                      if (v !== 'none') {
-                        setValue('related_payable', null);
-                        setValue('fixed_expense_template', null);
-                      }
-                    }}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('common.fields.select_optional')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{t('common.actions.none')}</SelectItem>
-                      {eligibleLoans.map((loan) => (
-                        <SelectItem key={loan.id} value={loan.id.toString()}>
-                          {loan.description} — {formatCurrency(loan.remaining_balance)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+            {eligiblePayables.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.expenses.form.relatedPayableLabel')}
+                </Label>
+                <Select
+                  value={watchedRelatedPayable?.toString() || 'none'}
+                  onValueChange={(v) => {
+                    setValue('related_payable', v === 'none' ? null : parseInt(v));
+                    if (v !== 'none') {
+                      setValue('related_loan', null);
+                      setValue('fixed_expense_template', null);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.fields.select_optional')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {eligiblePayables.map((payable) => (
+                      <SelectItem key={payable.id} value={payable.id.toString()}>
+                        {payable.description} —{' '}
+                        {formatCurrency(payable.remaining_value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-              {eligiblePayables.length > 0 && (
-                <div className="space-y-sm">
-                  <Label className="gap-xs flex items-center">
-                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.expenses.form.relatedPayableLabel')}
-                  </Label>
-                  <Select
-                    value={watchedRelatedPayable?.toString() || 'none'}
-                    onValueChange={(v) => {
-                      setValue('related_payable', v === 'none' ? null : parseInt(v));
-                      if (v !== 'none') {
-                        setValue('related_loan', null);
-                        setValue('fixed_expense_template', null);
-                      }
-                    }}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('common.fields.select_optional')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{t('common.actions.none')}</SelectItem>
-                      {eligiblePayables.map((payable) => (
-                        <SelectItem key={payable.id} value={payable.id.toString()}>
-                          {payable.description} —{' '}
-                          {formatCurrency(payable.remaining_value)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {eligibleFixedExpenses.length > 0 && (
-                <div className="space-y-sm">
-                  <Label className="gap-xs flex items-center">
-                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.expenses.form.relatedFixedExpenseLabel')}
-                  </Label>
-                  <Select
-                    value={watchedFixedExpenseTemplate?.toString() || 'none'}
-                    onValueChange={(v) => {
-                      setValue(
-                        'fixed_expense_template',
-                        v === 'none' ? null : parseInt(v)
-                      );
-                      if (v !== 'none') {
-                        setValue('related_loan', null);
-                        setValue('related_payable', null);
-                      }
-                    }}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('common.fields.select_optional')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{t('common.actions.none')}</SelectItem>
-                      {eligibleFixedExpenses.map((fixedExpense) => (
-                        <SelectItem
-                          key={fixedExpense.id}
-                          value={fixedExpense.id.toString()}
-                        >
-                          {fixedExpense.description} —{' '}
-                          {formatCurrency(fixedExpense.default_value)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+            {eligibleFixedExpenses.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.expenses.form.relatedFixedExpenseLabel')}
+                </Label>
+                <Select
+                  value={watchedFixedExpenseTemplate?.toString() || 'none'}
+                  onValueChange={(v) => {
+                    setValue(
+                      'fixed_expense_template',
+                      v === 'none' ? null : parseInt(v)
+                    );
+                    if (v !== 'none') {
+                      setValue('related_loan', null);
+                      setValue('related_payable', null);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.fields.select_optional')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {eligibleFixedExpenses.map((fixedExpense) => (
+                      <SelectItem
+                        key={fixedExpense.id}
+                        value={fixedExpense.id.toString()}
+                      >
+                        {fixedExpense.description} —{' '}
+                        {formatCurrency(fixedExpense.default_value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+        </FormSection>
       )}
 
       {/* Alertas de saldo */}
@@ -877,31 +823,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   total: formatCurrency(balanceInfo.available.toFixed(2)),
                 })}
           </p>
-        </div>
-      )}
-
-      {/* Toggle: Dividir despesa — only for new expenses */}
-      {!expense && (
-        <div className="gap-sm border-border px-md py-sm flex items-center rounded-md border border-dashed">
-          <GitFork className="text-muted-foreground h-4 w-4 shrink-0" />
-          <span className="flex-1 text-sm font-medium">
-            {t('pages.expenses.form.splitToggle')}
-          </span>
-          <PlainButton
-            type="button"
-            role="switch"
-            aria-checked={splitOnCreate}
-            onClick={() => setSplitOnCreate((v) => !v)}
-            className={`focus-visible:ring-ring relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none ${
-              splitOnCreate ? 'bg-primary' : 'bg-input'
-            }`}
-          >
-            <span
-              className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${
-                splitOnCreate ? 'translate-x-[18px]' : 'translate-x-[3px]'
-              }`}
-            />
-          </PlainButton>
         </div>
       )}
 
