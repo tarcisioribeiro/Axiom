@@ -34,7 +34,7 @@ import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { CourseDetailModal } from '@/components/library/CourseDetailModal';
 import { CourseForm } from '@/components/library/CourseForm';
@@ -616,7 +616,7 @@ export default function Courses() {
             <PaginatedSlide
               key={`${statusFilter}-${categoryFilter}-${platformFilter}-${search}`}
               items={courses}
-              pageSize={LIST_PAGE_SIZE}
+              pageSize={GRID_PAGE_SIZE}
               className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             >
               {(pageItems) =>

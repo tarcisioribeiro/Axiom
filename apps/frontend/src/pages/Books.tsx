@@ -90,7 +90,9 @@ import type { Book, BookFormData, Author, Publisher } from '@/types';
 import { BOOK_GENRES, READ_STATUS } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const PAGE_SIZE = 5;
+/** Grade de capas: 20 por página; tabela (uma linha por livro): 5. */
+const GRID_PAGE_SIZE = 20;
+const TABLE_PAGE_SIZE = 5;
 
 type DetailTab = 'info' | 'highlights' | 'readings' | 'summaries';
 type ViewMode = 'table' | 'grid';
@@ -759,7 +761,7 @@ export default function Books() {
                 <PaginatedSlide
                   key={`${searchTerm}-${filterStatus}-${filterGenre}-${viewMode}`}
                   items={filteredBooks}
-                  pageSize={PAGE_SIZE}
+                  pageSize={viewMode === 'grid' ? GRID_PAGE_SIZE : TABLE_PAGE_SIZE}
                 >
                   {(pagedBooks) =>
                     viewMode === 'grid' ? (

@@ -40,7 +40,13 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import React, { type ReactNode, useMemo, useState, useCallback } from 'react';
+import React, {
+  type ReactNode,
+  useMemo,
+  useState,
+  useCallback,
+  useSyncExternalStore,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -50,7 +56,7 @@ import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -138,6 +144,30 @@ interface ExerciseCatalogFormValues {
 }
 
 const SESSIONS_PAGE_SIZE = 5;
+const CATALOG_ROWS_PER_PAGE = 2;
+const PLANS_ROWS_PER_PAGE = 3;
+
+/** Colunas atuais de um grid responsivo: [min-width em px, colunas], da maior
+ * para a menor largura; abaixo de todas, 1 coluna. */
+const gridColumns = (breakpoints: [number, number][]) =>
+  breakpoints.find(([px]) => window.matchMedia(`(min-width: ${px}px)`).matches)?.[1] ??
+  1;
+// Espelham as classes sm:/lg:/xl:grid-cols-* dos grids correspondentes
+const getCatalogColumns = () =>
+  gridColumns([
+    [1280, 4],
+    [1024, 3],
+    [640, 2],
+  ]);
+const getPlanColumns = () =>
+  gridColumns([
+    [1024, 3],
+    [640, 2],
+  ]);
+const subscribeResize = (onChange: () => void) => {
+  window.addEventListener('resize', onChange);
+  return () => window.removeEventListener('resize', onChange);
+};
 
 /** "Peso corporal", "20 kg" ou null — carga padrão de um exercício do plano. */
 function formatExerciseLoad(
@@ -197,6 +227,8 @@ const TAB_HEADERS: Record<
 };
 
 export default function WorkoutPage() {
+  const catalogColumns = useSyncExternalStore(subscribeResize, getCatalogColumns);
+  const planColumns = useSyncExternalStore(subscribeResize, getPlanColumns);
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -1147,7 +1179,7 @@ export default function WorkoutPage() {
                   <PaginatedSlide
                     key={`${planCategoryFilter}|${planStatusFilter}`}
                     items={filteredPlans}
-                    pageSize={LIST_PAGE_SIZE}
+                    pageSize={planColumns * PLANS_ROWS_PER_PAGE}
                     centerList
                     className="gap-md grid sm:grid-cols-2 lg:grid-cols-3"
                   >
@@ -1323,7 +1355,7 @@ export default function WorkoutPage() {
                     // Filtro novo → remonta e volta à página 1
                     key={`${exerciseSearch}|${exerciseCategoryFilter}|${exerciseTypeFilter}|${exerciseMuscleFilter}`}
                     items={filteredCatalogExercises}
-                    pageSize={LIST_PAGE_SIZE}
+                    pageSize={catalogColumns * CATALOG_ROWS_PER_PAGE}
                     centerList
                     className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                   >

@@ -27,8 +27,9 @@ interface FocusBlockTasksEditorProps {
   /** Todos os blocos — uma tarefa (ou ocorrência) só pode estar em um. */
   allBlocks: FocusBlock[];
   routineTasks: RoutineTask[];
-  onAddTask: (routineTaskId: number, occurrenceIndex: number | null) => void;
-  onRemoveTask: (focusBlockTaskId: number) => void;
+  /** Sem `onAddTask`/`onRemoveTask` a lista é só leitura: sem busca, remover nem adicionar. */
+  onAddTask?: (routineTaskId: number, occurrenceIndex: number | null) => void;
+  onRemoveTask?: (focusBlockTaskId: number) => void;
 }
 
 export function FocusBlockTasksEditor({
@@ -40,6 +41,7 @@ export function FocusBlockTasksEditor({
 }: FocusBlockTasksEditorProps) {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
+  const readOnly = !onAddTask || !onRemoveTask;
 
   const takenByTask = new Map<number, Set<number | null>>();
   for (const bt of block.block_tasks) {
@@ -120,12 +122,14 @@ export function FocusBlockTasksEditor({
         </p>
       ) : (
         <div className="space-y-xs">
-          <SearchInput
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            placeholder={t('pages.routineTasks.searchPlaceholder')}
-            className="w-full"
-          />
+          {!readOnly && (
+            <SearchInput
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              placeholder={t('pages.routineTasks.searchPlaceholder')}
+              className="w-full"
+            />
+          )}
           {visibleBlockTasks.length === 0 && (
             <p className="text-muted-foreground py-xs text-xs">
               {t('common.noResults')}
@@ -137,7 +141,10 @@ export function FocusBlockTasksEditor({
             return (
               <div
                 key={bt.id}
-                className="group gap-sm px-sm py-xs hover:bg-muted/40 flex items-center rounded-md transition-colors"
+                className={cn(
+                  'group gap-sm px-sm py-xs flex items-center rounded-md transition-colors',
+                  !readOnly && 'hover:bg-muted/40'
+                )}
               >
                 {CategoryIcon && (
                   <CategoryIcon
@@ -163,24 +170,26 @@ export function FocusBlockTasksEditor({
                     })}
                   </span>
                 )}
-                <PlainButton
-                  type="button"
-                  onClick={() => onRemoveTask(bt.id)}
-                  title={t('pages.routineTasks.focusBlocks.removeTask')}
-                  className={cn(
-                    'group-hover:text-muted-foreground/50 text-transparent transition-colors',
-                    'hover:!text-destructive shrink-0'
-                  )}
-                >
-                  <X className="h-3.5 w-3.5" aria-hidden="true" />
-                </PlainButton>
+                {!readOnly && (
+                  <PlainButton
+                    type="button"
+                    onClick={() => onRemoveTask(bt.id)}
+                    title={t('pages.routineTasks.focusBlocks.removeTask')}
+                    className={cn(
+                      'group-hover:text-muted-foreground/50 text-transparent transition-colors',
+                      'hover:!text-destructive shrink-0'
+                    )}
+                  >
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                  </PlainButton>
+                )}
               </div>
             );
           })}
         </div>
       )}
 
-      {addableTasks.length > 0 && (
+      {!readOnly && addableTasks.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

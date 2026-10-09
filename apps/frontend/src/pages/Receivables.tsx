@@ -11,7 +11,7 @@ import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { ReceivableForm } from '@/components/receivables/ReceivableForm';
 import { ReceivableReceiptDialog } from '@/components/receivables/ReceivableReceiptDialog';
@@ -364,7 +364,7 @@ export default function Receivables({
         <PaginatedSlide
           key={`${searchTerm}-${statusFilter}-${categoryFilter}-${String(startDate)}-${String(endDate)}`}
           items={filteredReceivables}
-          pageSize={LIST_PAGE_SIZE}
+          pageSize={GRID_PAGE_SIZE}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
         >
           {(pageItems) =>

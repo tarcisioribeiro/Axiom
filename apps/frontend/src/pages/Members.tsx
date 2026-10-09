@@ -12,7 +12,7 @@ import {
   Mail,
   CircleDot,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -20,7 +20,7 @@ import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { MemberForm } from '@/components/members/MemberForm';
 import { Badge } from '@/components/ui/badge';
@@ -79,7 +79,28 @@ function MemberInitials({ name, sex }: { name: string; sex: string }) {
 
 const EMPTY_MEMBERS: Member[] = [];
 
+/** Desktop (lg+): 8 cards por página; demais telas mantêm o padrão da grade. */
+const DESKTOP_QUERY = '(min-width: 1024px)';
+const DESKTOP_PAGE_SIZE = 8;
+
+function useMembersPageSize() {
+  const [pageSize, setPageSize] = useState(() =>
+    window.matchMedia(DESKTOP_QUERY).matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const handler = (e: MediaQueryListEvent) =>
+      setPageSize(e.matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  return pageSize;
+}
+
 export default function Members() {
+  const membersPageSize = useMembersPageSize();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -316,7 +337,7 @@ export default function Members() {
         <PaginatedSlide
           key={`${searchTerm}-${statusFilter}-${roleFilter}`}
           items={filteredMembers}
-          pageSize={LIST_PAGE_SIZE}
+          pageSize={membersPageSize}
           centerList
           className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >

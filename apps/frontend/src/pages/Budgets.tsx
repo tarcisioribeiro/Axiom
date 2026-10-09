@@ -15,7 +15,7 @@ import {
   X,
   User,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { BudgetPurchasesDialog } from '@/components/budgets/BudgetPurchasesDialog';
@@ -25,7 +25,7 @@ import { IconButton } from '@/components/common/IconButton';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -79,7 +79,27 @@ function getDefaultFormData(): BudgetFormData {
   };
 }
 
+const DESKTOP_QUERY = '(min-width: 1024px)';
+const DESKTOP_PAGE_SIZE = 9;
+
+function useBudgetsPageSize() {
+  const [pageSize, setPageSize] = useState(() =>
+    window.matchMedia(DESKTOP_QUERY).matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const handler = (e: MediaQueryListEvent) =>
+      setPageSize(e.matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  return pageSize;
+}
+
 export default function Budgets() {
+  const pageSize = useBudgetsPageSize();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const MONTHS = useMemo(
@@ -397,7 +417,7 @@ export default function Budgets() {
               <PaginatedSlide
                 key={`${searchTerm}-${filterMonth}-${filterYear}-${categoryFilter}-${memberFilter}`}
                 items={enriched}
-                pageSize={LIST_PAGE_SIZE}
+                pageSize={pageSize}
                 centerList
                 className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
               >

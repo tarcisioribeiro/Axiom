@@ -23,7 +23,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { StoredAccountForm } from '@/components/security/StoredAccountForm';
 import { VaultGuard } from '@/components/security/VaultGuard';
@@ -446,7 +446,7 @@ export default function StoredAccounts() {
           <PaginatedSlide
             key={`${searchTerm}-${accountTypeFilter}-${institutionFilter}-${showFavoritesOnly}`}
             items={filteredAccounts}
-            pageSize={LIST_PAGE_SIZE}
+            pageSize={GRID_PAGE_SIZE}
             className="gap-md grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
           >
             {(pageItems) =>

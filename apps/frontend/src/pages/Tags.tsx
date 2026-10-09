@@ -28,7 +28,7 @@ import type { Tag, TagFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 const DEFAULT_TAG_COLOR = 'primary';
-const TAGS_PAGE_SIZE = 5;
+const TAGS_PAGE_SIZE = 36;
 
 function getDefaultForm(): TagFormData {
   return { name: '', color: DEFAULT_TAG_COLOR };

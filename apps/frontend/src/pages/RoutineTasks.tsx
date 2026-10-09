@@ -102,6 +102,8 @@ export default function RoutineTasks({
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [blockSearchTerm, setBlockSearchTerm] = useState('');
+  const [blockStatusFilter, setBlockStatusFilter] = useState('all');
   const focusBlocksRef = useRef<RoutineFocusBlocksSectionHandle>(null);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -605,11 +607,73 @@ export default function RoutineTasks({
           />
         </TabsContent>
 
-        <TabsContent value="focus-blocks" className="mt-0">
+        <TabsContent value="focus-blocks" className="space-y-lg mt-0">
+          <FilterBar
+            hasActiveFilters={blockSearchTerm !== '' || blockStatusFilter !== 'all'}
+            onClear={() => {
+              setBlockSearchTerm('');
+              setBlockStatusFilter('all');
+            }}
+            activeFilters={
+              blockStatusFilter !== 'all'
+                ? [
+                    {
+                      key: 'status',
+                      label: `${t('pages.routineTasks.columns.status')}: ${
+                        blockStatusFilter === 'active'
+                          ? t('common.status.active')
+                          : t('common.status.inactive')
+                      }`,
+                      onRemove: () => setBlockStatusFilter('all'),
+                    },
+                  ]
+                : []
+            }
+          >
+            <FilterField label={t('common.filterLabels.search')}>
+              <SearchInput
+                placeholder={t('pages.routineTasks.focusBlocks.searchPlaceholder')}
+                value={blockSearchTerm}
+                onValueChange={setBlockSearchTerm}
+                className="w-44"
+              />
+            </FilterField>
+            <FilterField label={t('common.fields.status')}>
+              <Select value={blockStatusFilter} onValueChange={setBlockStatusFilter}>
+                <SelectTrigger
+                  className="w-36"
+                  aria-label={t('pages.routineTasks.allStatus')}
+                  startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('pages.routineTasks.allStatus')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {t('pages.routineTasks.allStatus')}
+                  </SelectItem>
+                  <SelectItem
+                    value="active"
+                    icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                  >
+                    {t('common.status.active')}
+                  </SelectItem>
+                  <SelectItem
+                    value="inactive"
+                    icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                  >
+                    {t('common.status.inactive')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
+          </FilterBar>
+
           <RoutineFocusBlocksSection
             ref={focusBlocksRef}
             routineTasks={tasks}
             ownerId={ownerId}
+            searchTerm={blockSearchTerm}
+            statusFilter={blockStatusFilter}
           />
         </TabsContent>
       </Tabs>

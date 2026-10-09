@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { differenceInDays, parseISO } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Plus,
   Trophy,
@@ -280,19 +280,6 @@ function GoalCard({
       }}
       className="focus-visible:ring-ring relative cursor-pointer overflow-hidden focus-visible:ring-2 focus-visible:outline-none"
     >
-      {/* Completion glow animation */}
-      <AnimatePresence>
-        {isCompleted && (
-          <motion.div
-            key="completion-glow"
-            className="bg-success/8 pointer-events-none absolute inset-0 rounded-lg"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: DURATION.medium }}
-          />
-        )}
-      </AnimatePresence>
       <CardContent className="p-5 pt-5">
         <div className="mb-md flex items-start gap-3">
           <div
@@ -428,7 +415,7 @@ interface GoalsProps {
 
 const EMPTY_GOALS: Goal[] = [];
 // Duas linhas do grid (3 colunas em lg+).
-const GOALS_PAGE_SIZE = 5;
+const GOALS_PAGE_SIZE = 6;
 const EMPTY_TASKS: RoutineTask[] = [];
 
 function Wrapper({

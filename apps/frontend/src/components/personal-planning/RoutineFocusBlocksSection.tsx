@@ -1,14 +1,16 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { LayoutList } from 'lucide-react';
+import { LayoutList, X } from 'lucide-react';
 import { useImperativeHandle, useState, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -22,10 +24,10 @@ import type { FocusBlock, FocusBlockFormData, RoutineTask } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 import { FocusBlockTasksEditor } from './FocusBlockTasksEditor';
-import { RoutineFocusBlockCard } from './RoutineFocusBlockCard';
+import { BlockIcon, RoutineFocusBlockCard } from './RoutineFocusBlockCard';
 import { RoutineFocusBlockForm } from './RoutineFocusBlockForm';
 
-const LIST_PAGE_SIZE = 5;
+const LIST_PAGE_SIZE = 20;
 
 export interface RoutineFocusBlocksSectionHandle {
   create: () => void;
@@ -34,12 +36,17 @@ export interface RoutineFocusBlocksSectionHandle {
 interface RoutineFocusBlocksSectionProps {
   routineTasks: RoutineTask[];
   ownerId: number;
+  searchTerm?: string;
+  /** 'all' | 'active' | 'inactive' */
+  statusFilter?: string;
   ref?: Ref<RoutineFocusBlocksSectionHandle>;
 }
 
 export function RoutineFocusBlocksSection({
   routineTasks,
   ownerId,
+  searchTerm = '',
+  statusFilter = 'all',
   ref,
 }: RoutineFocusBlocksSectionProps) {
   const { t } = useTranslation();
@@ -56,6 +63,15 @@ export function RoutineFocusBlocksSection({
     queryFn: () => focusBlocksService.getAll(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
+  // Guarda o id para o modal refletir o bloco atualizado após invalidações.
+  const [viewingBlockId, setViewingBlockId] = useState<number | null>(null);
+  const viewingBlock = blocks.find((b) => b.id === viewingBlockId);
+  const term = searchTerm.trim().toLowerCase();
+  const visibleBlocks = blocks.filter(
+    (b) =>
+      b.name.toLowerCase().includes(term) &&
+      (statusFilter === 'all' || b.is_active === (statusFilter === 'active'))
+  );
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ['focus-blocks'] });
@@ -172,31 +188,29 @@ export function RoutineFocusBlocksSection({
 
   return (
     <div className="space-y-sm">
-      {blocks.length === 0 ? (
+      {visibleBlocks.length === 0 ? (
         <EmptyState
-          title={t('pages.routineTasks.focusBlocks.emptyStateDesc')}
+          title={
+            blocks.length === 0
+              ? t('pages.routineTasks.focusBlocks.emptyStateDesc')
+              : t('common.noResults')
+          }
           icon={<LayoutList />}
         />
       ) : (
         <PaginatedSlide
-          items={blocks}
+          items={visibleBlocks}
           pageSize={LIST_PAGE_SIZE}
-          className="gap-sm grid md:grid-cols-2"
-          pinNav={false}
+          className="gap-sm grid md:grid-cols-2 lg:grid-cols-4"
         >
           {(pageBlocks) =>
             pageBlocks.map((block) => (
               <RoutineFocusBlockCard
                 key={block.id}
                 block={block}
-                allBlocks={blocks}
-                routineTasks={routineTasks}
+                onOpen={() => setViewingBlockId(block.id)}
                 onEdit={() => handleEdit(block)}
                 onDelete={() => void handleDelete(block)}
-                onAddTask={(routineTaskId, occurrenceIndex) =>
-                  void handleAddTask(block.id, routineTaskId, occurrenceIndex)
-                }
-                onRemoveTask={(id) => void handleRemoveTask(block.id, id)}
               />
             ))
           }
@@ -239,6 +253,41 @@ export function RoutineFocusBlocksSection({
               )
             }
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Tarefas do bloco (só leitura) */}
+      <Dialog
+        open={!!viewingBlock}
+        onOpenChange={(open) => {
+          if (!open) setViewingBlockId(null);
+        }}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader sticky>
+            <DialogTitle className="gap-sm flex items-center">
+              <BlockIcon name={viewingBlock?.icon} className="h-4 w-4 shrink-0" />
+              {viewingBlock?.name}
+            </DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.routineTasks.focusBlocks.blockTasksDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
+          </DialogHeader>
+          {viewingBlock && (
+            <FocusBlockTasksEditor
+              block={viewingBlock}
+              allBlocks={blocks}
+              routineTasks={routineTasks}
+            />
+          )}
+          <DialogFooter className="sm:justify-start">
+            <Button variant="outline" onClick={() => setViewingBlockId(null)}>
+              <X className="h-4 w-4" />
+              {t('common.actions.close')}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -78,7 +78,7 @@ function ImportStatusBadge({ status }: { status: BankStatementImport['status'] }
 }
 
 /** 4 cards por linha × 2 linhas por página. */
-const ACCOUNTS_PAGE_SIZE = 5;
+const ACCOUNTS_PAGE_SIZE = 8;
 
 export default function Accounts() {
   const { t } = useTranslation();

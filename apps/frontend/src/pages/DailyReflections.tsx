@@ -107,18 +107,10 @@ function ReflectionCard({
     <Card className="group">
       <CardContent className="p-5 pt-5">
         <div className="gap-md flex items-start">
-          {/* Data estilo calendário */}
-          <div className="bg-muted/40 py-sm flex w-14 shrink-0 flex-col items-center rounded-lg border text-center">
-            <span className="text-muted-foreground text-2xs font-semibold uppercase">
-              {format(date, 'MMM', { locale: ptBR })}
-            </span>
-            <span className="text-2xl leading-tight font-bold">
-              {format(date, 'dd')}
-            </span>
-            <span className="text-muted-foreground text-2xs">
-              {format(date, 'yyyy')}
-            </span>
-          </div>
+          {/* Data (dd/mm/aaaa) */}
+          <span className="bg-muted/40 px-sm py-xs shrink-0 rounded-lg border text-sm font-bold tabular-nums">
+            {format(date, 'dd/MM/yyyy')}
+          </span>
 
           {/* Conteúdo */}
           <div className="min-w-0 flex-1">

@@ -4057,6 +4057,8 @@
       },
       "focusBlocks": {
         "title": "Focus Blocks",
+        "blockTasksDesc": "Focus block tasks",
+        "searchPlaceholder": "Search by block name...",
         "newBlock": "New Block",
         "editBlock": "Edit Block",
         "newBlockTitle": "New Focus Block",

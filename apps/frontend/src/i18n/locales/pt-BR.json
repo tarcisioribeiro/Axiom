@@ -4125,6 +4125,8 @@
       },
       "focusBlocks": {
         "title": "Blocos de Foco",
+        "blockTasksDesc": "Tarefas do bloco de foco",
+        "searchPlaceholder": "Buscar por nome do bloco...",
         "newBlock": "Novo Bloco",
         "editBlock": "Editar Bloco",
         "newBlockTitle": "Novo Bloco de Foco",

@@ -18,7 +18,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
-import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { CreditCardDeleteDialog } from '@/components/credit-cards/CreditCardDeleteDialog';
 import { CreditCardDetailSheet } from '@/components/credit-cards/CreditCardDetailSheet';
@@ -57,6 +57,24 @@ import { creditCardsService } from '@/services/credit-cards-service';
 import { useBreadcrumbExtraStore } from '@/stores/breadcrumb-extra-store';
 import type { CreditCard, CreditCardFormData, Account, CreditCardBill } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+/** Duas linhas da grade de cards: 4 no tablet (2 colunas), 6 no desktop (3 colunas). */
+const DESKTOP_QUERY = '(min-width: 1024px)';
+
+function useCardsPageSize() {
+  const [pageSize, setPageSize] = useState(() =>
+    window.matchMedia(DESKTOP_QUERY).matches ? 6 : 4
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const handler = (e: MediaQueryListEvent) => setPageSize(e.matches ? 6 : 4);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  return pageSize;
+}
 
 function UsageArc({ pct, size = 48 }: { pct: number; size?: number }) {
   const r = (size - 6) / 2;
@@ -156,6 +174,7 @@ export default function CreditCards({
   isCreateOpen: boolean;
   onCreateOpenChange: (open: boolean) => void;
 }) {
+  const cardsPageSize = useCardsPageSize();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -387,7 +406,7 @@ export default function CreditCards({
       ) : (
         <PaginatedSlide
           items={filteredCreditCards}
-          pageSize={LIST_PAGE_SIZE}
+          pageSize={cardsPageSize}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
         >
           {(pageItems) =>

@@ -32,15 +32,9 @@ export function DailyFocusBlockCard({
   const total = tasks.length;
   const progressPct = total > 0 ? (doneCount / total) * 100 : 0;
   const isAllDone = total > 0 && doneCount === total;
-  const hasProgress = progressPct > 0 && !isAllDone;
 
   return (
-    <div
-      className={cn(
-        'overflow-hidden rounded-lg border',
-        isAllDone ? 'bg-success/5' : hasProgress ? 'bg-primary/[0.03]' : 'bg-card'
-      )}
-    >
+    <div className="bg-card overflow-hidden rounded-lg border">
       <div className="gap-sm px-md py-sm flex items-center">
         <BlockIcon
           name={block.icon}
@@ -88,7 +82,7 @@ export function DailyFocusBlockCard({
             key={task.id}
             className={cn(
               'gap-sm px-sm py-xs flex items-center rounded-md transition-colors',
-              task.status === 'completed' ? 'bg-success/5' : 'hover:bg-muted/40'
+              task.status !== 'completed' && 'hover:bg-muted/40'
             )}
           >
             <PlainButton

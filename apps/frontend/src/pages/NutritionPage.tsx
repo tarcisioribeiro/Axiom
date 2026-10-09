@@ -87,7 +87,7 @@ import type {
 import { getErrorMessage } from '@/utils/error-utils';
 
 // 5 cards por linha × 5 linhas
-const FOODS_PAGE_SIZE = 5;
+const FOODS_PAGE_SIZE = 25;
 // Limite de tipos de refeição por usuário (validado também no backend)
 const MAX_MEAL_TYPES = 6;
 

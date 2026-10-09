@@ -66,23 +66,21 @@ export default function Home() {
             <motion.div key={module.href} variants={itemVariants}>
               <Link
                 to={module.href}
-                className="group block h-full"
+                className="block h-full"
                 aria-label={t('pages.home.modules.navigateTo', {
                   module: module.title,
                 })}
               >
-                <Card className="hover:border-primary/40 hoverable:hover:scale-[1.02] h-full transition">
+                <Card className="h-full">
                   <CardHeader>
-                    <motion.div
+                    <div
                       className={cn(
                         'mb-md flex h-16 w-16 items-center justify-center rounded-lg',
                         module.badgeClass
                       )}
-                      whileHover={{ scale: 1.15, rotate: 5 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                     >
                       {module.icon}
-                    </motion.div>
+                    </div>
                     <CardTitle className="text-xl">{module.title}</CardTitle>
                   </CardHeader>
                   <CardContent>

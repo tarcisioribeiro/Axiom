@@ -29,7 +29,7 @@ import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -667,7 +667,7 @@ export default function FinancialGoals() {
       ) : (
         <PaginatedSlide
           items={filteredGoals}
-          pageSize={LIST_PAGE_SIZE}
+          pageSize={6}
           centerList
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
         >

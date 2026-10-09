@@ -800,6 +800,7 @@ export default function PersonalPlanningDashboard() {
                         items={stats.active_goals_progress}
                         pageSize={LIST_PAGE_SIZE}
                         className="space-y-3"
+                        pinNav={false}
                       >
                         {(pageGoals) =>
                           pageGoals.map((goal, index) => {

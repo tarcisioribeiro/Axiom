@@ -986,10 +986,7 @@ export default function DailyChecklist({
                         return (
                           <div
                             key={task.id}
-                            className={cn(
-                              'gap-md p-md flex items-center rounded-lg border transition-opacity',
-                              isCompleted && 'opacity-60'
-                            )}
+                            className="gap-md p-md bg-card flex items-center rounded-lg border"
                           >
                             <PlainButton
                               type="button"
