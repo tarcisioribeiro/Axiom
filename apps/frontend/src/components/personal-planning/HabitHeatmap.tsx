@@ -1,9 +1,7 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Maximize2, Minimize2, X } from 'lucide-react';
-import { useState, useCallback, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -111,7 +109,6 @@ export function HabitHeatmap({ taskId, taskName, recentDays }: HabitHeatmapProps
   const [year, setYear] = useState(currentYear);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const { data: heatmapData, isLoading } = useQuery({
     queryKey: ['habit-heatmap', year, taskId, selectedCategory],
@@ -178,9 +175,9 @@ export function HabitHeatmap({ taskId, taskName, recentDays }: HabitHeatmapProps
   const CELL = 13; // px per cell
   const GAP = 2; // px gap
 
-  const heatmapContent = (
+  return (
     <div className="space-y-3">
-      {/* Header: year selector + filters + expand */}
+      {/* Header: year selector + filters */}
       <div className="gap-sm flex flex-wrap items-center justify-between">
         {recentDays ? (
           <span className="text-muted-foreground text-sm font-semibold">
@@ -265,23 +262,6 @@ export function HabitHeatmap({ taskId, taskName, recentDays }: HabitHeatmapProps
               </span>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0"
-            onClick={() => setIsExpanded((v) => !v)}
-            title={
-              isExpanded
-                ? t('common.actions.hide')
-                : t('pages.planningDashboard.expand', { defaultValue: 'Expandir' })
-            }
-          >
-            {isExpanded ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
-          </Button>
         </div>
       </div>
 
@@ -392,62 +372,5 @@ export function HabitHeatmap({ taskId, taskName, recentDays }: HabitHeatmapProps
         <span>{t('pages.planningDashboard.heatmapMore')}</span>
       </div>
     </div>
-  );
-
-  return (
-    <>
-      {!isExpanded && heatmapContent}
-      <AnimatePresence>
-        {isExpanded && (
-          <HeatmapExpanded
-            key="heatmap-expanded"
-            title={t('pages.planningDashboard.habitHeatmapTitle', {
-              defaultValue: 'Mapa de Hábitos',
-            })}
-            closeLabel={t('common.actions.close')}
-            onClose={() => setIsExpanded(false)}
-          >
-            {heatmapContent}
-          </HeatmapExpanded>
-        )}
-      </AnimatePresence>
-    </>
-  );
-}
-
-// Overlay em portal: fica montado durante o fade-out (AnimatePresence)
-function HeatmapExpanded({
-  title,
-  closeLabel,
-  onClose,
-  children,
-}: {
-  title: string;
-  closeLabel: string;
-  onClose: () => void;
-  children: ReactNode;
-}) {
-  return createPortal(
-    <motion.div
-      exit={{ opacity: 0 }}
-      className="bg-background/95 p-lg fixed inset-0 z-50 flex items-start justify-center overflow-y-auto backdrop-blur-sm"
-    >
-      <div className="border-border bg-card p-lg w-full max-w-5xl rounded-lg border shadow-2xl">
-        <div className="mb-md flex items-center justify-between">
-          <span className="text-foreground text-sm font-semibold">{title}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={onClose}
-            title={closeLabel}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        {children}
-      </div>
-    </motion.div>,
-    document.body
   );
 }

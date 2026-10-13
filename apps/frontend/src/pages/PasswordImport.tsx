@@ -1,14 +1,20 @@
 /* eslint-disable max-lines */
 import {
   AlertCircle,
+  ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   CheckSquare,
   Download,
   FileType,
   FileUp,
+  Import,
   Info,
+  RotateCcw,
+  SkipForward,
   Square,
   Upload,
+  X,
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -426,6 +432,7 @@ export default function PasswordImport() {
 
             <div className="flex items-center justify-between">
               <Button variant="outline" onClick={handleReset}>
+                <X aria-hidden="true" />
                 {t('common.actions.cancel')}
               </Button>
               <div className="flex items-center gap-3">
@@ -436,6 +443,7 @@ export default function PasswordImport() {
                   disabled={selected.size === 0 || isLoading}
                   onClick={handleGoToMapping}
                 >
+                  <ArrowRight aria-hidden="true" />
                   {t('pages.passwordImport.importBtn')}
                 </Button>
               </div>
@@ -499,6 +507,7 @@ export default function PasswordImport() {
               </div>
               <div className="mt-md flex justify-between">
                 <Button variant="outline" onClick={() => setStep('preview')}>
+                  <ArrowLeft aria-hidden="true" />
                   {t('common.actions.back')}
                 </Button>
                 <div className="gap-sm flex">
@@ -518,9 +527,11 @@ export default function PasswordImport() {
                     }
                     disabled={isLoading}
                   >
+                    <SkipForward aria-hidden="true" />
                     {t('pages.passwordImport.skipMapping')}
                   </Button>
-                  <Button onClick={() => void handleImport()} disabled={isLoading}>
+                  <Button onClick={() => void handleImport()} loading={isLoading}>
+                    {!isLoading && <Import aria-hidden="true" />}
                     {isLoading
                       ? t('pages.passwordImport.importing')
                       : t('pages.passwordImport.importBtn')}
@@ -579,6 +590,7 @@ export default function PasswordImport() {
               )}
 
               <Button className="w-full" onClick={handleReset}>
+                <RotateCcw aria-hidden="true" />
                 {t('pages.passwordImport.importAnother')}
               </Button>
             </CardContent>

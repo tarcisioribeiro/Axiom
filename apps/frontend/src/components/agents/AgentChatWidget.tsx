@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { BotMessageSquare, Send, Square, X } from 'lucide-react';
+import { BotMessageSquare, Maximize2, Send, Square, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -175,6 +175,7 @@ export function AgentChatWidget() {
                 onClick={handleOpenFullAgent}
                 className="px-sm text-muted-foreground hover:text-foreground h-7 text-xs"
               >
+                <Maximize2 aria-hidden="true" />
                 {t('agentWidget.openFull')}
               </Button>
             </div>

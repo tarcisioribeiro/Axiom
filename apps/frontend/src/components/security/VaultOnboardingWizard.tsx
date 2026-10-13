@@ -144,6 +144,7 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
                 ))}
               </div>
               <Button className="w-full" onClick={() => handleAction('/security')}>
+                <Lock aria-hidden="true" />
                 {t('vaultOnboarding.step2ConfigureBtn')}
               </Button>
             </>

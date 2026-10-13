@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { slideVariants } from '@/lib/animations';
 import { cn } from '@/lib/utils';
 import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 
@@ -25,12 +26,6 @@ interface PaginatedSlideProps<T> {
 /** Tamanhos padrão: grades de cards (divisível por 2, 3 e 4 colunas) e listas. */
 export const GRID_PAGE_SIZE = 12;
 export const LIST_PAGE_SIZE = 5;
-
-const slideVariants = {
-  enter: (dir: number) => ({ opacity: 0, x: dir * 24 }),
-  center: { opacity: 1, x: 0 },
-  exit: (dir: number) => ({ opacity: 0, x: dir * -24 }),
-};
 
 /**
  * Lista paginada no cliente com navegação ‹ › centralizada e transição de

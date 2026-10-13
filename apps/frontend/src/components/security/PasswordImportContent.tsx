@@ -1,14 +1,19 @@
 /* eslint-disable max-lines */
 import {
   AlertCircle,
+  ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   CheckSquare,
   Download,
   FileType,
   FileUp,
+  Import,
   Info,
+  RotateCcw,
   Square,
   Upload,
+  X,
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -391,6 +396,7 @@ export function PasswordImportContent() {
 
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={handleReset}>
+              <X aria-hidden="true" />
               {t('common.actions.cancel')}
             </Button>
             <div className="flex items-center gap-3">
@@ -398,6 +404,7 @@ export function PasswordImportContent() {
                 {t('pages.passwordImport.selectedCount', { count: selected.size })}
               </span>
               <Button disabled={selected.size === 0} onClick={handleGoToMapping}>
+                <ArrowRight aria-hidden="true" />
                 {t('pages.passwordImport.nextMappingBtn')}
               </Button>
             </div>
@@ -456,9 +463,11 @@ export function PasswordImportContent() {
 
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={() => setStep('preview')}>
+              <ArrowLeft aria-hidden="true" />
               {t('common.actions.back')}
             </Button>
-            <Button disabled={isLoading} onClick={() => void handleImport()}>
+            <Button loading={isLoading} onClick={() => void handleImport()}>
+              {!isLoading && <Import aria-hidden="true" />}
               {isLoading
                 ? t('pages.passwordImport.importing')
                 : t('pages.passwordImport.importBtn')}
@@ -515,6 +524,7 @@ export function PasswordImportContent() {
             )}
 
             <Button className="w-full" onClick={handleReset}>
+              <RotateCcw aria-hidden="true" />
               {t('pages.passwordImport.importAnother')}
             </Button>
           </CardContent>

@@ -5,14 +5,17 @@ import {
   ArrowLeft,
   ArrowLeftRight,
   CalendarDays,
+  Check,
   CheckCircle2,
   CircleDot,
   Link2,
+  Minus,
   Plus,
   RefreshCw,
   Search,
   Shapes,
   Unlink,
+  X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -437,6 +440,7 @@ export default function BankReconciliationDetail() {
                 variant="outline"
                 className="border-success/50 text-success hover:bg-success/10"
                 disabled={isUpdating}
+                aria-label={t('common.actions.confirm')}
                 onClick={() =>
                   handleUpdateEntry(
                     entry,
@@ -446,7 +450,7 @@ export default function BankReconciliationDetail() {
                   )
                 }
               >
-                ✓
+                <Check aria-hidden="true" />
               </Button>
             )}
             {(entry.status === 'pending' || entry.status === 'unmatched') && (
@@ -457,19 +461,20 @@ export default function BankReconciliationDetail() {
                     variant="outline"
                     className="border-destructive/50 text-destructive hover:bg-destructive/10"
                     disabled={isUpdating}
+                    aria-label={t('pages.bankReconciliation.detail.unmatchBtn')}
                     onClick={() => handleUpdateEntry(entry, 'unmatched')}
                   >
-                    ✗
+                    <X aria-hidden="true" />
                   </Button>
                 )}
                 <Button
                   size="sm"
                   variant="outline"
                   disabled={isUpdating}
-                  title={t('pages.bankReconciliation.detail.ignoreBtn')}
+                  aria-label={t('pages.bankReconciliation.detail.ignoreBtn')}
                   onClick={() => handleUpdateEntry(entry, 'ignored')}
                 >
-                  —
+                  <Minus aria-hidden="true" />
                 </Button>
               </>
             )}

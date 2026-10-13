@@ -60,7 +60,7 @@ import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -2263,11 +2263,7 @@ interface SessionCardProps {
 
 function SessionCard({ session, onView, onEdit, onDelete, t }: SessionCardProps) {
   const exerciseCount = session.session_exercises?.length ?? 0;
-  const date = new Date(session.date + 'T12:00:00');
-  const dayNum = date.getDate();
-  const monthLabel = t(
-    `pages.planningDashboard.monthShort.${date.getMonth()}`
-  ).toUpperCase();
+  const dateLabel = formatDate(session.date);
 
   return (
     // Card inteiro abre os detalhes; editar/excluir param a propagação
@@ -2284,11 +2280,8 @@ function SessionCard({ session, onView, onEdit, onDelete, t }: SessionCardProps)
       className="group gap-md border-border bg-card p-md focus-visible:ring-ring flex cursor-pointer rounded-lg border focus-visible:ring-2 focus-visible:outline-none"
     >
       {/* Date block */}
-      <div className="bg-primary/10 py-sm flex w-14 shrink-0 flex-col items-center justify-center rounded-lg text-center">
-        <span className="text-primary text-2xl leading-none font-bold">{dayNum}</span>
-        <span className="text-primary/70 text-2xs mt-0.5 font-semibold tracking-wide uppercase">
-          {monthLabel}
-        </span>
+      <div className="bg-primary/10 px-sm flex shrink-0 items-center justify-center rounded-lg">
+        <span className="text-primary text-sm font-bold tabular-nums">{dateLabel}</span>
       </div>
 
       {/* Content */}
@@ -2332,7 +2325,7 @@ function SessionCard({ session, onView, onEdit, onDelete, t }: SessionCardProps)
           </div>
         </div>
 
-        <div className="mt-sm gap-xs flex flex-wrap items-center">
+        <div className="mt-sm gap-xs flex flex-wrap items-center justify-center">
           {session.session_exercises && session.session_exercises.length > 0 && (
             <div className="-space-x-sm flex">
               {session.session_exercises.slice(0, 4).map((se) => (
@@ -2524,16 +2517,8 @@ function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
   if (plansLoading) return <LoadingState />;
 
   return (
-    <div className="page-fill space-y-lg flex flex-1 flex-col justify-center">
-      {/* Plano ativo */}
+    <div className="page-fill flex flex-1 flex-col">
       {(() => {
-        const plansForToday = activePlans.filter((plan) =>
-          plan.days.some(
-            (day) =>
-              day.days_of_week.length === 0 || day.days_of_week.includes(todayWeekday)
-          )
-        );
-
         if (activePlans.length === 0) {
           return (
             <EmptyState
@@ -2543,7 +2528,17 @@ function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
           );
         }
 
-        if (plansForToday.length === 0) {
+        // Divisões de hoje de todos os planos ativos, numa lista paginada única
+        const todayDays = activePlans.flatMap((plan) =>
+          plan.days
+            .filter(
+              (day) =>
+                day.days_of_week.length === 0 || day.days_of_week.includes(todayWeekday)
+            )
+            .map((day) => ({ plan, day }))
+        );
+
+        if (todayDays.length === 0) {
           return (
             <EmptyState
               title={t('pages.workoutHub.noTrainingToday')}
@@ -2552,59 +2547,58 @@ function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
           );
         }
 
-        return plansForToday.map((plan) => (
-          <div key={plan.id} className="space-y-sm">
-            <div className="gap-sm flex items-center">
-              <div className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
-                <ClipboardList className="text-primary h-4 w-4" />
-              </div>
-              <p className="text-foreground text-sm font-semibold">{plan.name}</p>
-            </div>
-
-            {plan.days.length === 0 ? (
-              <EmptyState title={t('pages.workoutPlans.emptyDays')} />
-            ) : (
-              <div className="space-y-sm">
-                {plan.days
-                  .filter(
-                    (day) =>
-                      day.days_of_week.length === 0 ||
-                      day.days_of_week.includes(todayWeekday)
-                  )
-                  .map((day) => (
-                    <button
-                      type="button"
-                      key={day.id}
-                      onClick={() => setOpenDay(day)}
-                      className="border-border bg-card w-full overflow-hidden rounded-lg border text-left"
-                    >
-                      <div className="px-md py-sm flex items-center justify-between">
-                        <div className="gap-sm flex items-center">
-                          <span className="text-primary">
-                            {getMuscleIcon(day.muscle_groups)}
-                          </span>
-                          <div>
-                            <p className="text-sm font-semibold">{day.name}</p>
-                            {day.muscle_groups && (
-                              <p className="text-muted-foreground text-xs">
-                                {day.muscle_groups}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {day.exercises.length}{' '}
-                          {day.exercises.length === 1
-                            ? t('pages.workoutPlans.exerciseSingular')
-                            : t('pages.workoutPlans.exercisePlural')}
-                        </Badge>
+        return (
+          <PaginatedSlide
+            items={todayDays}
+            pageSize={LIST_PAGE_SIZE}
+            className="space-y-sm"
+          >
+            {(pageDays) =>
+              pageDays.map(({ plan, day }, i) => (
+                <React.Fragment key={day.id}>
+                  {/* Nome do plano antes da primeira divisão dele na página */}
+                  {pageDays[i - 1]?.plan.id !== plan.id && (
+                    <div className="gap-sm flex items-center">
+                      <div className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
+                        <ClipboardList className="text-primary h-4 w-4" />
                       </div>
-                    </button>
-                  ))}
-              </div>
-            )}
-          </div>
-        ));
+                      <p className="text-foreground text-sm font-semibold">
+                        {plan.name}
+                      </p>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setOpenDay(day)}
+                    className="border-border bg-card w-full overflow-hidden rounded-lg border text-left"
+                  >
+                    <div className="px-md py-sm flex items-center justify-between">
+                      <div className="gap-sm flex items-center">
+                        <span className="text-primary">
+                          {getMuscleIcon(day.muscle_groups)}
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold">{day.name}</p>
+                          {day.muscle_groups && (
+                            <p className="text-muted-foreground text-xs">
+                              {day.muscle_groups}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {day.exercises.length}{' '}
+                        {day.exercises.length === 1
+                          ? t('pages.workoutPlans.exerciseSingular')
+                          : t('pages.workoutPlans.exercisePlural')}
+                      </Badge>
+                    </div>
+                  </button>
+                </React.Fragment>
+              ))
+            }
+          </PaginatedSlide>
+        );
       })()}
 
       {/* Modal exercícios da divisão */}

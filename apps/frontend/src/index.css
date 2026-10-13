@@ -1337,10 +1337,6 @@
 
 @layer utilities {
   /* Gradientes adaptáveis */
-  .gradient-primary {
-    @apply from-primary to-accent bg-gradient-to-br;
-  }
-
   .gradient-secondary {
     @apply from-info to-success bg-gradient-to-br;
   }

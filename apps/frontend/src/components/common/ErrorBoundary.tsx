@@ -97,6 +97,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   Tentar novamente
                 </Button>
                 <Button onClick={() => window.location.reload()} variant="outline">
+                  <RefreshCw aria-hidden="true" />
                   Recarregar pagina
                 </Button>
               </div>

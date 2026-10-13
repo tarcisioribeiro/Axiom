@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { CalendarDays, RefreshCw, ScrollText, User, Zap } from 'lucide-react';
+import { CalendarDays, Filter, RefreshCw, ScrollText, User, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -124,6 +124,7 @@ export default function AdminLogs() {
           />
         </FilterField>
         <Button size="sm" onClick={applyFilters}>
+          <Filter aria-hidden="true" />
           {t('pages.adminLogs.applyFilters')}
         </Button>
       </FilterBar>

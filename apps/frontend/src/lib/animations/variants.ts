@@ -121,3 +121,10 @@ export const pulseRingVariants: Variants = {
     },
   },
 };
+
+/** Deslize lateral entre páginas/etapas; `custom` = direção (1 avança, -1 volta). */
+export const slideVariants: Variants = {
+  enter: (dir: number) => ({ opacity: 0, x: dir * 24 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: dir * -24 }),
+};

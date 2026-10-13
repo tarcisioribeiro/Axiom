@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeftRight,
+  Eye,
   FileUp,
   Loader2,
   Pencil,
@@ -626,6 +627,7 @@ export default function Accounts() {
                             void navigate(`/bank-reconciliation/${imp.id}`);
                           }}
                         >
+                          <Eye aria-hidden="true" />
                           {t('pages.bankReconciliation.viewBtn')}
                         </Button>
                       </td>

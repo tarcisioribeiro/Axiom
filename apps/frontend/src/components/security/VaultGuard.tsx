@@ -1,5 +1,4 @@
 /* eslint-disable max-lines */
-import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertTriangle,
   Clock,
@@ -9,29 +8,26 @@ import {
   Keyboard,
   Loader2,
   Lock,
+  LockOpen,
   RefreshCw,
   Shield,
   ShieldAlert,
+  ShieldCheck,
   X,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
 import { LoadingState } from '@/components/common/LoadingState';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogCloseFooter,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -70,9 +66,16 @@ function CapsLockWarning() {
     };
   }, []);
 
-  if (!capsLockOn) return null;
+  // Espaço sempre reservado para o aviso não alterar a altura do card
   return (
-    <p role="status" className="text-warning gap-xs flex items-center text-sm">
+    <p
+      role="status"
+      aria-hidden={!capsLockOn}
+      className={cn(
+        'text-warning gap-xs flex h-5 items-center text-sm',
+        !capsLockOn && 'invisible'
+      )}
+    >
       <AlertTriangle className="h-4 w-4" />
       {t('auth.login.capsLockOn')}
     </p>
@@ -350,14 +353,16 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
 }
 
 // ============================================================================
-// VaultSetupScreen
+// VaultSetupDialog
 // ============================================================================
 
-interface VaultSetupScreenProps {
+interface VaultDialogProps {
   onSuccess: () => Promise<void>;
+  /** Fechar sem concluir: sai da tela do cofre. */
+  onCancel: () => void;
 }
 
-function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
+function VaultSetupDialog({ onSuccess, onCancel }: VaultDialogProps) {
   const { t } = useTranslation();
   const [masterPassword, setMasterPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -368,7 +373,7 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
 
   const strengthScorer = useStrengthScorer();
   const strength = getStrength(masterPassword, strengthScorer, t);
-  const isWeakPassword = masterPassword.length > 0 && strength.score < 3;
+  const mismatch = !!confirmPassword && masterPassword !== confirmPassword;
 
   const handleSetup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -400,125 +405,112 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
   };
 
   return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mb-md bg-primary/10 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
-            <Shield className="text-primary h-8 w-8" />
+    <Dialog open onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle icon={Shield}>{t('pages.vaultGuard.setup.title')}</DialogTitle>
+          <DialogDescription>{t('pages.vaultGuard.setup.desc')}</DialogDescription>
+        </DialogHeader>
+        <form id="vault-setup-form" onSubmit={handleSetup} className="space-y-md">
+          <div className="bg-warning/10 p-sm text-warning rounded-lg text-xs">
+            <div className="gap-sm flex items-start">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>{t('pages.vaultGuard.setup.irreversibleWarning')}</span>
+            </div>
+            <label className="mt-sm gap-sm flex cursor-pointer items-start">
+              <Checkbox
+                checked={acknowledged}
+                onCheckedChange={(v) => setAcknowledged(v === true)}
+                className="border-warning data-[state=checked]:bg-warning data-[state=checked]:text-warning-foreground mt-0.5"
+              />
+              <span className="gap-xs flex items-start select-none">
+                <ShieldAlert className="text-muted-foreground mt-0.5 h-3.5 w-3.5 shrink-0" />
+                {t('pages.vaultGuard.setup.irreversibleAck')}
+              </span>
+            </label>
           </div>
-          <CardTitle className="text-2xl">
-            {t('pages.vaultGuard.setup.title')}
-          </CardTitle>
-          <CardDescription>{t('pages.vaultGuard.setup.desc')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSetup} className="space-y-md">
-            <div className="bg-warning/10 p-sm text-warning rounded-lg text-xs">
-              <div className="gap-sm flex items-start">
-                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                <span>{t('pages.vaultGuard.setup.irreversibleWarning')}</span>
-              </div>
-              <label className="mt-sm gap-sm flex cursor-pointer items-start">
-                <Checkbox
-                  checked={acknowledged}
-                  onCheckedChange={(v) => setAcknowledged(v === true)}
-                  className="border-warning data-[state=checked]:bg-warning data-[state=checked]:text-warning-foreground mt-0.5"
-                />
-                <span className="gap-xs flex items-start select-none">
-                  <ShieldAlert className="text-muted-foreground mt-0.5 h-3.5 w-3.5 shrink-0" />
-                  {t('pages.vaultGuard.setup.irreversibleAck')}
-                </span>
-              </label>
-            </div>
 
-            <div className="space-y-xs">
-              <Label className="gap-xs flex items-center" htmlFor="master-password">
-                <Lock className="text-muted-foreground h-3.5 w-3.5" />
-                {t('pages.vaultGuard.setup.passwordLabel')}
-              </Label>
-              <div className="relative">
-                <Input
-                  id="master-password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={masterPassword}
-                  onChange={(e) => setMasterPassword(e.target.value)}
-                  placeholder={t('pages.vaultGuard.setup.passwordPlaceholder')}
-                  required
-                  minLength={8}
-                  className="pr-10"
-                />
-                <PlainButton
-                  aria-label={t(
-                    showPassword ? 'auth.login.hidePassword' : 'auth.login.showPassword'
-                  )}
-                  type="button"
-                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </PlainButton>
-              </div>
-              {masterPassword && <PasswordStrengthIndicator strength={strength} />}
-              {isWeakPassword && (
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.vaultGuard.setup.passwordHint')}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-xs">
-              <Label className="gap-xs flex items-center" htmlFor="confirm-password">
-                <Lock className="text-muted-foreground h-3.5 w-3.5" />
-                {t('pages.vaultGuard.setup.confirmLabel')}
-              </Label>
+          <div className="space-y-xs">
+            <Label className="gap-xs flex items-center" htmlFor="master-password">
+              <Lock className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.vaultGuard.setup.passwordLabel')}
+            </Label>
+            <div className="relative">
               <Input
-                id="confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder={t('pages.vaultGuard.setup.confirmPlaceholder')}
+                id="master-password"
+                type={showPassword ? 'text' : 'password'}
+                value={masterPassword}
+                onChange={(e) => setMasterPassword(e.target.value)}
+                placeholder={t('pages.vaultGuard.setup.passwordPlaceholder')}
                 required
                 minLength={8}
+                className="pr-10"
               />
-              {confirmPassword && masterPassword !== confirmPassword && (
-                <p className="text-destructive text-xs">
-                  {t('pages.vaultGuard.setup.passwordsMismatchShort')}
-                </p>
-              )}
-              <CapsLockWarning />
+              <PlainButton
+                aria-label={t(
+                  showPassword ? 'auth.login.hidePassword' : 'auth.login.showPassword'
+                )}
+                type="button"
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </PlainButton>
             </div>
+            {masterPassword && <PasswordStrengthIndicator strength={strength} />}
+          </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting || !acknowledged}
-            >
-              {isSubmitting
-                ? t('pages.vaultGuard.setup.configuring')
-                : t('pages.vaultGuard.setup.setupBtn')}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="space-y-xs">
+            <Label className="gap-xs flex items-center" htmlFor="confirm-password">
+              <Lock className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.vaultGuard.setup.confirmLabel')}
+            </Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder={t('pages.vaultGuard.setup.confirmPlaceholder')}
+              aria-invalid={mismatch}
+              required
+              minLength={8}
+            />
+            <CapsLockWarning />
+          </div>
+        </form>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onCancel}>
+            <X aria-hidden="true" />
+            {t('common.actions.cancel')}
+          </Button>
+          <Button
+            type="submit"
+            form="vault-setup-form"
+            disabled={!acknowledged}
+            loading={isSubmitting}
+          >
+            {!isSubmitting && <ShieldCheck aria-hidden="true" />}
+            {isSubmitting
+              ? t('pages.vaultGuard.setup.configuring')
+              : t('pages.vaultGuard.setup.setupBtn')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 // ============================================================================
-// VaultUnlockScreen
+// VaultUnlockDialog
 // ============================================================================
-
-interface VaultUnlockScreenProps {
-  onSuccess: () => Promise<void>;
-}
 
 const MAX_ATTEMPTS = 5;
 
-function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
+function VaultUnlockDialog({ onSuccess, onCancel }: VaultDialogProps) {
   const { t } = useTranslation();
   const [masterPassword, setMasterPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -556,19 +548,14 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
   };
 
   return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <div className="mb-md bg-muted mx-auto flex h-16 w-16 items-center justify-center rounded-full">
-            <Lock className="text-muted-foreground h-8 w-8" />
-          </div>
-          <CardTitle className="text-2xl">
-            {t('pages.vaultGuard.locked.title')}
-          </CardTitle>
-          <CardDescription>{t('pages.vaultGuard.locked.desc')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleUnlock} className="space-y-md">
+    <>
+      <Dialog open onOpenChange={(open) => !open && onCancel()}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle icon={Lock}>{t('pages.vaultGuard.locked.title')}</DialogTitle>
+            <DialogDescription>{t('pages.vaultGuard.locked.desc')}</DialogDescription>
+          </DialogHeader>
+          <form id="vault-unlock-form" onSubmit={handleUnlock} className="space-y-md">
             <div className="space-y-xs">
               <Label className="gap-xs flex items-center" htmlFor="unlock-password">
                 <Lock className="text-muted-foreground h-3.5 w-3.5" />
@@ -615,16 +602,6 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
               </div>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting || isLocked}
-            >
-              {isSubmitting
-                ? t('pages.vaultGuard.locked.unlocking')
-                : t('pages.vaultGuard.locked.unlockBtn')}
-            </Button>
-
             <button
               type="button"
               onClick={() => setShowRecovery(true)}
@@ -634,25 +611,41 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
               {t('pages.vaultGuard.locked.useRecoveryKey')}
             </button>
           </form>
-        </CardContent>
-      </Card>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onCancel}>
+              <X aria-hidden="true" />
+              {t('common.actions.cancel')}
+            </Button>
+            <Button
+              type="submit"
+              form="vault-unlock-form"
+              disabled={isLocked}
+              loading={isSubmitting}
+            >
+              {!isSubmitting && <LockOpen aria-hidden="true" />}
+              {isSubmitting
+                ? t('pages.vaultGuard.locked.unlocking')
+                : t('pages.vaultGuard.locked.unlockBtn')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <AnimatePresence>
-        {showRecovery && (
-          <VaultRecoveryKeyModalInline
-            onClose={() => setShowRecovery(false)}
-            onSuccess={onSuccess}
-          />
-        )}
-      </AnimatePresence>
-    </div>
+      <VaultRecoveryKeyDialog
+        open={showRecovery}
+        onClose={() => setShowRecovery(false)}
+        onSuccess={onSuccess}
+      />
+    </>
   );
 }
 
-function VaultRecoveryKeyModalInline({
+function VaultRecoveryKeyDialog({
+  open,
   onClose,
   onSuccess,
 }: {
+  open: boolean;
   onClose: () => void;
   onSuccess: () => Promise<void>;
 }) {
@@ -661,7 +654,8 @@ function VaultRecoveryKeyModalInline({
   const [recoveryKey, setRecoveryKey] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleUnlock = async () => {
+  const handleUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!recoveryKey.trim()) return;
     setLoading(true);
     try {
@@ -684,45 +678,48 @@ function VaultRecoveryKeyModalInline({
   };
 
   return (
-    <motion.div
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-    >
-      <Card className="mx-md w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="gap-sm flex items-center text-base">
-            <Key className="h-4 w-4" />
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle icon={Key}>
             {t('pages.vaultGuard.recoveryKey.useTitle')}
-          </CardTitle>
-          <CardDescription>{t('pages.vaultGuard.recoveryKey.useDesc')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-md">
+          </DialogTitle>
+          <DialogDescription>
+            {t('pages.vaultGuard.recoveryKey.useDesc')}
+          </DialogDescription>
+        </DialogHeader>
+        <form id="vault-recovery-form" onSubmit={handleUnlock} className="space-y-xs">
+          <Label className="gap-xs flex items-center" htmlFor="recovery-key">
+            <Key className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.vaultGuard.recoveryKey.label')}
+          </Label>
           <Input
+            id="recovery-key"
             value={recoveryKey}
             onChange={(e) => setRecoveryKey(e.target.value)}
             placeholder="XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX"
             className="text-sm"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') void handleUnlock();
-            }}
           />
-          <div className="gap-sm flex">
-            <Button variant="outline" className="flex-1" onClick={onClose}>
-              {t('common.actions.cancel')}
-            </Button>
-            <Button
-              className="flex-1"
-              disabled={loading || !recoveryKey.trim()}
-              onClick={() => void handleUnlock()}
-            >
-              {loading
-                ? t('common.actions.loading')
-                : t('pages.vaultGuard.recoveryKey.unlockBtn')}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+        </form>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onClose}>
+            <X aria-hidden="true" />
+            {t('common.actions.cancel')}
+          </Button>
+          <Button
+            type="submit"
+            form="vault-recovery-form"
+            disabled={!recoveryKey.trim()}
+            loading={loading}
+          >
+            {!loading && <LockOpen aria-hidden="true" />}
+            {loading
+              ? t('common.actions.loading')
+              : t('pages.vaultGuard.recoveryKey.unlockBtn')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -791,25 +788,34 @@ interface VaultGuardProps {
 /**
  * Guarda de acesso ao cofre de segurança.
  *
- * - Não configurado → mostra tela de configuração de senha mestre
- * - Configurado, bloqueado → mostra tela de desbloqueio
+ * - Não configurado → modal de configuração de senha mestre
+ * - Configurado, bloqueado → modal de desbloqueio
  * - Desbloqueado → renderiza children + atalhos de teclado
+ *
+ * Cancelar um dos modais volta à página anterior (ou ao Dashboard, se não houver).
  */
 export function VaultGuard({ children }: VaultGuardProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { status, isLoading, refresh } = useVaultStatus();
   const { showShortcuts, setShowShortcuts } = useVaultKeyboardShortcuts(refresh);
+
+  const leave = () => {
+    // idx do React Router: 0 = primeira página da sessão (acesso direto pela URL)
+    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+    void (idx > 0 ? navigate(-1) : navigate('/'));
+  };
 
   if (isLoading) {
     return <LoadingState message={t('pages.vaultGuard.verifying')} />;
   }
 
   if (!status?.is_configured) {
-    return <VaultSetupScreen onSuccess={refresh} />;
+    return <VaultSetupDialog onSuccess={refresh} onCancel={leave} />;
   }
 
   if (!status.is_unlocked) {
-    return <VaultUnlockScreen onSuccess={refresh} />;
+    return <VaultUnlockDialog onSuccess={refresh} onCancel={leave} />;
   }
 
   return (

@@ -1,5 +1,14 @@
 /* eslint-disable max-lines */
-import { Hash, ListOrdered, Loader2, Pencil, Save, X } from 'lucide-react';
+import {
+  Calculator,
+  Check,
+  Hash,
+  ListOrdered,
+  Loader2,
+  Pencil,
+  Save,
+  X,
+} from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -291,6 +300,7 @@ export function InstallmentsPlanDialog({
                       onClick={() => void handleRecalcPreview()}
                       disabled={isRecalculating}
                     >
+                      <Calculator aria-hidden="true" />
                       {tr('recalcApply')}
                     </Button>
                   </div>
@@ -316,6 +326,7 @@ export function InstallmentsPlanDialog({
                       onClick={() => void handleRecalcApply()}
                       disabled={isRecalculating}
                     >
+                      <Check aria-hidden="true" />
                       {t('common.actions.confirm')}
                     </Button>
                   </div>

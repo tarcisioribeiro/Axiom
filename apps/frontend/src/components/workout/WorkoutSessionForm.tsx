@@ -484,8 +484,8 @@ export function WorkoutSessionForm({
                 {t('pages.workoutSessions.skip')}
               </Button>
               <Button type="button" variant="outline" size="sm" onClick={() => goTo(1)}>
-                {t('common.actions.next')}
                 <ChevronRight className="h-4 w-4" />
+                {t('common.actions.next')}
               </Button>
             </div>
           )}

@@ -519,9 +519,11 @@ function CreateLinkModal({
 
         <div className="gap-sm flex justify-end">
           <Button variant="ghost" size="sm" onClick={onCancel}>
+            <X aria-hidden="true" />
             {t('pages.knowledgeGraph.createLinkModal.cancel')}
           </Button>
-          <Button size="sm" onClick={() => onConfirm(relation)} disabled={isLoading}>
+          <Button size="sm" onClick={() => onConfirm(relation)} loading={isLoading}>
+            {!isLoading && <Link2 aria-hidden="true" />}
             {isLoading
               ? t('pages.knowledgeGraph.createLinkModal.creating')
               : t('pages.knowledgeGraph.createLinkModal.confirm')}

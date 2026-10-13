@@ -249,9 +249,11 @@ function HighlightInlineForm({
       </div>
       <div className="gap-sm flex justify-end">
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+          <X aria-hidden="true" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" size="sm" disabled={isSaving || !text.trim()}>
+        <Button type="submit" size="sm" disabled={!text.trim()} loading={isSaving}>
+          {!isSaving && <Save aria-hidden="true" />}
           {isSaving ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>

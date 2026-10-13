@@ -729,7 +729,6 @@ export default function BodyMetrics() {
                             colors={pieData.map((d) => d.color)}
                             formatter={(v) => `${Number(v).toFixed(1)}%`}
                             showLegend={false}
-                            showSliceLabels
                             height={250}
                           />
                         </>

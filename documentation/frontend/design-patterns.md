@@ -60,6 +60,8 @@ Há três tipos de modal:
 
 - **[regra]** Segue a estrutura comum (header fixo com ícone + texto, sem subtítulo).
 - **[regra]** Botões **Cancelar** e **Salvar** (ou o verbo da ação: Registrar, Confirmar, Depositar…) com ícones. Fluxos em etapas mantêm Cancelar em todas as etapas. Na tela final de resultado, o rodapé vira o de detalhe (Fechar à esquerda).
+- **[regra]** Configuração e desbloqueio do cofre (módulo Segurança, `VaultGuard`) são modais de ação abertos sobre a página vazia, não cards no lugar da página. Rodapé com Cancelar + ação (Configurar / Desbloquear). Cancelar, Esc ou clique fora voltam à página anterior (ou ao Dashboard em acesso direto). A chave de recuperação abre um modal por cima do de desbloqueio.
+- **[regra]** Fluxo de perguntas em etapas (ex.: avaliação de autoestima): rodapé com Cancelar, **Voltar** (`ChevronLeft`, a partir da 2ª etapa, mantendo as respostas) e Confirmar/Enviar. A troca de etapa usa deslize lateral (`slideVariants` de `lib/animations`, `custom` = direção: avança para a esquerda, volta para a direita), a mesma animação do `PaginatedSlide`.
 
 ### 2.5 Sem rolagem em desktop
 
@@ -84,12 +86,13 @@ Há três tipos de modal:
 - **[regra]** Erro do servidor ligado a um campo: `setError` para a borda e toast com a mensagem.
 - **[regra]** Formulário com validação manual (sem react-hook-form) mostra um toast por mensagem no submit.
 - **[regra]** O botão Salvar não fica desabilitado por erro de validação. O clique mostra os toasts. Status: vale para dados pessoais; demais formulários a verificar.
-- **[regra]** Campo de nova senha (perfil e cadastro): `PasswordField` + `FieldRow` de `components/user-profile/PasswordSection.tsx`. À direita ficam a força (`PasswordStrength`) e as regras (mín. 8, não só números, senhas iguais). No cadastro, o botão não é desabilitado: as regras viram `rules` do `Controller` e falhas vão para toast no envio (§3), e `warnCapsLock` mostra o aviso de Caps Lock do login (`hooks/use-caps-lock.ts`).
+- **[regra]** Campo de nova senha (perfil e cadastro): `PasswordField` + `FieldRow` de `components/user-profile/PasswordSection.tsx`. À direita ficam a força (`PasswordStrength`) e as regras (mín. 8, não só números, senhas iguais). No cadastro, o botão não é desabilitado: as regras viram `rules` do `Controller` e falhas vão para toast no envio (§3), e `warnCapsLock` mostra o aviso de Caps Lock do login (`hooks/use-caps-lock.ts`). O aviso de Caps Lock (login, cadastro, perfil, cofre) sempre reserva sua linha (`h-5` + `invisible` quando desligado) para não alterar a altura da tela.
 - **Status:** aplicado nos 23 arquivos de formulário que tinham mensagem inline. A verificar: `Register.tsx` (usa `FormField` com `error` dentro de `Controller`, borda via `aria-invalid` direto no `Input`) e `PersonalDataSection.tsx` (validação manual).
 
 ## 4. Botões e ícones
 
-- **[regra]** Todo botão de ação tem ícone à esquerda do texto. Status: ainda há botões sem ícone fora dos modais.
+- **[regra]** Todo botão com texto tem ícone **à esquerda** do texto, em todas as telas (inclusive login, cadastro e fluxos públicos). Setas de avanço ("Próximo", "Começar", "Confirmar") também ficam à esquerda. Botão com carregamento usa a prop `loading` do `Button` e esconde o ícone enquanto carrega (`{!isLoading && <Icone />}`), para o spinner ocupar o lugar dele. Exceções: gatilhos com cara de select (chevron à direita indica o dropdown), seletores segmentados de opção (ex.: Price/SAC) e itens de lista com avatar. Glifos de texto (✓ ✗ —) não servem de ícone: use o ícone do lucide com `aria-label`.
+- **[regra]** Botão principal usa a variante padrão do `Button`, sem degradê nem cor de texto própria (`gradient-primary`, `text-white`, `font-semibold`). Vale também para as telas públicas (login, cadastro, esqueci/redefinir senha, verificação de e-mail).
 - **[regra]** Botão só com ícone tem tooltip do app (`tooltipSide`) e `aria-label`.
 - **[regra]** Botões de um mesmo grupo têm o mesmo estilo, tamanho e largura.
 - **[regra]** Botões de ação ficam visíveis sem depender de hover.
@@ -109,6 +112,9 @@ Há três tipos de modal:
 - **[regra]** Cards alinhados em linha e com o mesmo tamanho. Rótulos não mudam de posição.
 - **[regra]** Toggles em accordion: o primeiro aberto por padrão, os demais recolhidos, só um aberto por vez. Toggles de detalhe começam recolhidos (`Collapse`).
 - **[pontual]** Cards redundantes ou que só funcionam como hiperlink são removidos.
+- **[regra]** Data em card de registro é texto dd/mm/aaaa (`formatDate`), não bloco com dia em cima e mês embaixo. Ex.: card de sessão de treino, com a data num chip `bg-primary/10` à esquerda.
+- **[pontual]** Linha de métricas/chips abaixo do título do card de sessão de treino fica centralizada na horizontal.
+- **[pontual]** Card de intervenção (Bem-Estar Emocional): linha 1 com categoria, duração, dificuldade e título à esquerda, benefício esperado centralizado no card e botão de ação à direita (`grid-cols-[1fr_auto_1fr]` a partir de `sm`); linha 2 só com a descrição. Assim 5 cards cabem na página sem rolagem. Sem rodapé com borda.
 
 ## 6. Paginação e filtros
 
@@ -147,6 +153,8 @@ Há três tipos de modal:
 
 - **[regra]** Tooltip só em botões de ícone. Botões com texto não têm tooltip.
 - **[regra]** Tooltip não fica oculto nem sai da tela, inclusive nos gráficos Recharts.
+- **[regra]** Gráficos de pizza não escrevem o percentual sobre as fatias; o valor aparece só no tooltip.
+- **[pontual]** O mapa de consistência de hábitos (`HabitHeatmap`) não tem botão de expandir.
 - **[regra]** Tooltips do menu superior aparecem abaixo do botão.
 
 ## 11. Textos, formatação e tradução

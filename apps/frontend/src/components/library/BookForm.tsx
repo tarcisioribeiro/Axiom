@@ -267,6 +267,7 @@ export function BookForm({
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isLoading}
                 >
+                  <Upload aria-hidden="true" />
                   {coverPreview
                     ? t('pages.books.form.coverChangeBtn')
                     : t('pages.books.form.coverSelectBtn')}

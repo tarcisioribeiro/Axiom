@@ -3,6 +3,8 @@ import {
   CheckCircle,
   Copy,
   ExternalLink,
+  Eye,
+  EyeOff,
   KeyRound,
   Loader2,
 } from 'lucide-react';
@@ -158,6 +160,11 @@ export default function ShareCredential() {
                     variant="ghost"
                     onClick={() => setShowPassword((v) => !v)}
                   >
+                    {showPassword ? (
+                      <EyeOff aria-hidden="true" />
+                    ) : (
+                      <Eye aria-hidden="true" />
+                    )}
                     {showPassword
                       ? t('common.actions.hide')
                       : t('common.actions.reveal')}

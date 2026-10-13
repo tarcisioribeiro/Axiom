@@ -3903,8 +3903,6 @@
       "heatmapLess": "Less",
       "heatmapMore": "More",
       "allCategories": "All categories",
-      "expand": "Expand",
-      "habitHeatmapTitle": "Habit Map",
       "heatmapTooltipNotScheduled": "{{date}} — not scheduled",
       "heatmapTooltipScheduled": "{{date}} — {{completed}} of {{expected}} completed",
       "workoutsTitle": "Workouts — last 30 days",
@@ -4691,7 +4689,8 @@
         "useDesc": "Enter your recovery key to unlock the vault.",
         "unlockBtn": "Unlock",
         "unlockSuccess": "Vault unlocked with recovery key.",
-        "unlockError": "Could not unlock with the recovery key. {{reason}}"
+        "unlockError": "Could not unlock with the recovery key. {{reason}}",
+        "label": "Recovery key"
       },
       "setup": {
         "title": "Protect Your Vault",

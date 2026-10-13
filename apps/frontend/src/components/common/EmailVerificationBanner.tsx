@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { MailWarning, X } from 'lucide-react';
+import { MailWarning, Send, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -75,9 +75,10 @@ export function EmailVerificationBanner() {
         variant="outline"
         size="sm"
         onClick={handleResend}
-        disabled={isSending}
+        loading={isSending}
         className="border-warning/40 hover:bg-warning/10 shrink-0 text-xs"
       >
+        {!isSending && <Send aria-hidden="true" />}
         {isSending
           ? t('common.emailVerificationBanner.sending')
           : t('common.emailVerificationBanner.resend')}

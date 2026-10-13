@@ -1,6 +1,15 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { Award, BookOpen, Brain, Clock, Flame, PlayCircle, Zap } from 'lucide-react';
+import {
+  Award,
+  BookOpen,
+  Brain,
+  Clock,
+  Eye,
+  Flame,
+  PlayCircle,
+  Zap,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -320,6 +329,7 @@ export default function IntellectToday() {
                   className="text-xs"
                   onClick={() => void navigate('/intellect/library-dashboard')}
                 >
+                  <Eye aria-hidden="true" />
                   {t('pages.intellectToday.viewAll')}
                 </Button>
               </div>

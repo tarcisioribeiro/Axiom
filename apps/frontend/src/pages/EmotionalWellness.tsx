@@ -10,10 +10,13 @@ import {
   Brain,
   CalendarDays,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Heart,
+  History,
   ListChecks,
+  Loader2,
   MessageSquare,
   Minus,
   Play,
@@ -65,6 +68,7 @@ import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { INTERVENTION_CATEGORY_ICONS } from '@/config/icons';
 import { useTabRoute } from '@/hooks/use-tab-route';
 import { useToast } from '@/hooks/use-toast';
+import { slideVariants } from '@/lib/animations';
 import { cn, formatLocalDate } from '@/lib/utils';
 import {
   type CrisisImpulseLog,
@@ -396,6 +400,12 @@ function SelfEsteemTab({
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState<SelfEsteemAssessment | null>(null);
   const [step, setStep] = useState(0);
+  // Direção do deslize entre perguntas: 1 avança, -1 volta
+  const [direction, setDirection] = useState(1);
+  const goToStep = (next: number) => {
+    setDirection(next > step ? 1 : -1);
+    setStep(next);
+  };
   const [selected, setSelected] = useState<SelfEsteemAssessment | null>(null);
   // Reinicia o questionário a cada abertura (padrão "estado da renderização anterior").
   const [wasOpen, setWasOpen] = useState(showForm);
@@ -490,38 +500,50 @@ function SelfEsteemTab({
             </DialogDescription>
           </DialogHeader>
 
-          <div key={step} className="animate-fade-in space-y-md min-h-56">
-            <p className="text-muted-foreground text-xs">
-              {t('pages.emotionalWellness.selfEsteem.questionOf', {
-                current: step + 1,
-                total: ROSENBERG_QUESTION_KEYS.length,
-              })}
-            </p>
-            <p className="text-sm leading-relaxed font-medium">
-              {t(
-                `pages.emotionalWellness.selfEsteem.questions.${ROSENBERG_QUESTION_KEYS[step]}`
-              )}
-            </p>
-            <div className="gap-sm grid grid-cols-2">
-              {ROSENBERG_OPTION_KEYS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  aria-pressed={answers[stepKey] === opt.value}
-                  onClick={() =>
-                    setAnswers((prev) => ({ ...prev, [stepKey]: opt.value }))
-                  }
-                  className={cn(
-                    'py-sm rounded-lg border px-3 text-center text-xs font-medium transition',
-                    answers[stepKey] === opt.value
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+          <div className="overflow-hidden">
+            <AnimatePresence mode="wait" initial={false} custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="space-y-md min-h-56"
+              >
+                <p className="text-muted-foreground text-xs">
+                  {t('pages.emotionalWellness.selfEsteem.questionOf', {
+                    current: step + 1,
+                    total: ROSENBERG_QUESTION_KEYS.length,
+                  })}
+                </p>
+                <p className="text-sm leading-relaxed font-medium">
+                  {t(
+                    `pages.emotionalWellness.selfEsteem.questions.${ROSENBERG_QUESTION_KEYS[step]}`
                   )}
-                >
-                  {t(`pages.emotionalWellness.selfEsteem.options.${opt.labelKey}`)}
-                </button>
-              ))}
-            </div>
+                </p>
+                <div className="gap-sm grid grid-cols-2">
+                  {ROSENBERG_OPTION_KEYS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      aria-pressed={answers[stepKey] === opt.value}
+                      onClick={() =>
+                        setAnswers((prev) => ({ ...prev, [stepKey]: opt.value }))
+                      }
+                      className={cn(
+                        'py-sm rounded-lg border px-3 text-center text-xs font-medium transition',
+                        answers[stepKey] === opt.value
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                      )}
+                    >
+                      {t(`pages.emotionalWellness.selfEsteem.options.${opt.labelKey}`)}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           <DialogFooter className="gap-sm">
@@ -529,6 +551,12 @@ function SelfEsteemTab({
               <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
+            {step > 0 && (
+              <Button variant="outline" onClick={() => goToStep(step - 1)}>
+                <ChevronLeft className="h-4 w-4" />
+                {t('common.actions.back')}
+              </Button>
+            )}
             {isLastStep ? (
               <Button
                 onClick={handleSubmit}
@@ -541,11 +569,11 @@ function SelfEsteemTab({
               </Button>
             ) : (
               <Button
-                onClick={() => setStep((s) => s + 1)}
+                onClick={() => goToStep(step + 1)}
                 disabled={!(stepKey in answers)}
               >
-                {t('common.actions.confirm')}
                 <ChevronRight className="h-4 w-4" />
+                {t('common.actions.confirm')}
               </Button>
             )}
           </DialogFooter>
@@ -702,6 +730,7 @@ function SelfEsteemTab({
                 setAiParsed(null);
               }}
             >
+              <History aria-hidden="true" />
               {t('pages.emotionalWellness.selfEsteem.viewHistoryBtn')}
             </Button>
           </motion.div>
@@ -938,8 +967,8 @@ function CheckinTab({
               </Button>
             ) : (
               <Button onClick={() => setStep((s) => s + 1)}>
-                {t('common.actions.confirm')}
                 <ChevronRight className="h-4 w-4" />
+                {t('common.actions.confirm')}
               </Button>
             )}
           </DialogFooter>
@@ -1238,7 +1267,7 @@ function CrisisTab({
   if (isLoading) return <LoadingState />;
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col space-y-5">
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent size="md">
           <DialogHeader>
@@ -1368,8 +1397,8 @@ function CrisisTab({
               </Button>
               {step === 0 && (
                 <Button onClick={() => setStep(1)} disabled={!emotionalState}>
-                  {t('common.actions.confirm')}
                   <ChevronRight className="h-4 w-4" />
+                  {t('common.actions.confirm')}
                 </Button>
               )}
               {step === 1 && (
@@ -1636,70 +1665,73 @@ function LibraryTab() {
               const done = completedIds.has(item.id);
               return (
                 <Card key={item.id} className={cn('transition', done && 'opacity-70')}>
-                  <CardContent className="px-md py-md pt-md space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-xs flex-1">
-                        <div className="gap-sm flex flex-wrap items-center">
-                          <span
-                            className={cn(
-                              'px-sm rounded-full border py-0.5 text-xs font-medium',
-                              CATEGORY_COLORS[item.category]
-                            )}
-                          >
-                            {t(
-                              `pages.emotionalWellness.library.categories.${item.category}`
-                            )}
-                          </span>
-                          <span className="gap-xs text-muted-foreground flex items-center text-xs">
-                            <Clock className="h-3 w-3" /> {item.duration_minutes}min
-                          </span>
-                          <span
-                            className={cn(
-                              'text-xs font-medium',
-                              difficultyColor[item.difficulty]
-                            )}
-                          >
-                            {item.difficulty_display}
-                          </span>
-                        </div>
+                  <CardContent className="px-md py-md pt-md space-y-xs">
+                    {/* Categoria, tempo, dificuldade e título à esquerda; benefício no centro; ação à direita */}
+                    <div className="gap-xs sm:gap-md grid items-center sm:grid-cols-[1fr_auto_1fr]">
+                      <div className="gap-sm flex flex-wrap items-center">
+                        <span
+                          className={cn(
+                            'px-sm rounded-full border py-0.5 text-xs font-medium',
+                            CATEGORY_COLORS[item.category]
+                          )}
+                        >
+                          {t(
+                            `pages.emotionalWellness.library.categories.${item.category}`
+                          )}
+                        </span>
+                        <span className="gap-xs text-muted-foreground flex items-center text-xs">
+                          <Clock className="h-3 w-3" /> {item.duration_minutes}min
+                        </span>
+                        <span
+                          className={cn(
+                            'text-xs font-medium',
+                            difficultyColor[item.difficulty]
+                          )}
+                        >
+                          {item.difficulty_display}
+                        </span>
                         <h3 className="text-foreground font-medium">{item.title}</h3>
-                        <p className="text-muted-foreground text-xs leading-relaxed">
-                          {item.description}
-                        </p>
+                      </div>
+                      <p className="gap-xs text-muted-foreground flex items-center justify-center text-center text-xs">
+                        <TrendingUp className="h-3 w-3 shrink-0" />
+                        {item.expected_benefit}
+                      </p>
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          variant={done ? 'outline' : 'default'}
+                          className="h-7 shrink-0 text-xs"
+                          disabled={
+                            completeMutation.isPending && completingId === item.id
+                          }
+                          onClick={() => {
+                            if (done) return;
+                            setCompletingId(item.id);
+                            completeMutation.mutate(item.id);
+                          }}
+                        >
+                          {done ? (
+                            <>
+                              <CheckCircle2 className="text-success h-3 w-3" />{' '}
+                              {t('pages.emotionalWellness.library.doneBtn')}
+                            </>
+                          ) : completeMutation.isPending && completingId === item.id ? (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              {t('pages.emotionalWellness.library.savingLabel')}
+                            </>
+                          ) : (
+                            <>
+                              <Play className="h-3 w-3" />
+                              {t('pages.emotionalWellness.library.doNowBtn')}
+                            </>
+                          )}
+                        </Button>
                       </div>
                     </div>
-                    <div className="border-border/50 pt-xs flex items-center justify-between border-t">
-                      <p className="gap-xs text-muted-foreground flex items-center text-xs">
-                        <TrendingUp className="h-3 w-3" /> {item.expected_benefit}
-                      </p>
-                      <Button
-                        size="sm"
-                        variant={done ? 'outline' : 'default'}
-                        className="h-7 text-xs"
-                        disabled={
-                          completeMutation.isPending && completingId === item.id
-                        }
-                        onClick={() => {
-                          if (done) return;
-                          setCompletingId(item.id);
-                          completeMutation.mutate(item.id);
-                        }}
-                      >
-                        {done ? (
-                          <>
-                            <CheckCircle2 className="text-success h-3 w-3" />{' '}
-                            {t('pages.emotionalWellness.library.doneBtn')}
-                          </>
-                        ) : completeMutation.isPending && completingId === item.id ? (
-                          t('pages.emotionalWellness.library.savingLabel')
-                        ) : (
-                          <>
-                            <Play className="h-3 w-3" />
-                            {t('pages.emotionalWellness.library.doNowBtn')}
-                          </>
-                        )}
-                      </Button>
-                    </div>
+                    <p className="text-muted-foreground text-xs leading-relaxed">
+                      {item.description}
+                    </p>
                   </CardContent>
                 </Card>
               );

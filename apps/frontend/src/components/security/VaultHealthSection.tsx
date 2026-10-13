@@ -175,8 +175,8 @@ function PasswordRow({ pw, onNavigate }: PasswordRowProps) {
           className="gap-xs h-7 text-xs"
           onClick={() => onNavigate(pw.id)}
         >
-          {t('common.actions.update')}
           <ArrowRight className="h-3 w-3" />
+          {t('common.actions.update')}
         </Button>
       </div>
     </div>

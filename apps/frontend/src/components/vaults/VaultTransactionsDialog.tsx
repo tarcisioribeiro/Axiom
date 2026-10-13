@@ -4,8 +4,10 @@ import {
   ArrowUpRight,
   History,
   Pencil,
+  Save,
   Shapes,
   Trash2,
+  X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -348,6 +350,7 @@ export function VaultTransactionsDialog({
                                       onClick={() => void handleUpdate()}
                                       disabled={isSubmitting}
                                     >
+                                      <Save aria-hidden="true" />
                                       {t('common.actions.save')}
                                     </Button>
                                     <Button
@@ -355,6 +358,7 @@ export function VaultTransactionsDialog({
                                       size="sm"
                                       onClick={cancelEdit}
                                     >
+                                      <X aria-hidden="true" />
                                       {t('common.actions.cancel')}
                                     </Button>
                                   </>

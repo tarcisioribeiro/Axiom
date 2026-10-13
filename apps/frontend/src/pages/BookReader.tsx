@@ -312,6 +312,7 @@ function AnnotationForm({
       </div>
       <div className="gap-sm flex justify-end">
         <Button variant="ghost" size="sm" onClick={onCancel}>
+          <X aria-hidden="true" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -806,6 +807,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
           {t('pages.bookReader.fileNotFound')}
         </p>
         <Button variant="outline" onClick={handleClose}>
+          <X aria-hidden="true" />
           Fechar
         </Button>
       </div>

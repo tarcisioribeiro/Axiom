@@ -1,4 +1,4 @@
-import { Mail } from 'lucide-react';
+import { Mail, Send } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -94,9 +94,11 @@ export default function ForgotPassword() {
 
               <Button
                 type="submit"
-                className="gradient-primary w-full font-semibold text-white"
-                disabled={isLoading || !email}
+                className="w-full"
+                disabled={!email}
+                loading={isLoading}
               >
+                {!isLoading && <Send aria-hidden="true" />}
                 {isLoading
                   ? t('auth.forgotPassword.loading')
                   : t('auth.forgotPassword.submit')}

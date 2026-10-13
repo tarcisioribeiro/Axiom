@@ -23,16 +23,17 @@ import { ptBR, enUS } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import {
   Activity,
-  Wallet,
-  TrendingDown,
-  TrendingUp,
-  CreditCard,
-  LayoutDashboard,
+  AlertTriangle,
+  BotMessageSquare,
   Calculator,
   CalendarDays,
+  CreditCard,
+  LayoutDashboard,
   PiggyBank,
-  AlertTriangle,
   Sparkles,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
 } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -583,6 +584,7 @@ export default function Dashboard() {
                   onClick={() => navigate('/agents')}
                   className="gap-xs text-primary hover:text-primary text-xs"
                 >
+                  <BotMessageSquare aria-hidden="true" />
                   {t('pages.dashboard.weeklyInsight.openAssistant')}
                 </Button>
               </div>

@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { AtSign, IdCard, Loader2, Mail, Phone, User } from 'lucide-react';
+import { AtSign, IdCard, Mail, Phone, User, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -320,15 +320,9 @@ export default function Register() {
               }
             />
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {t('auth.register.loading')}
-                </>
-              ) : (
-                t('auth.register.submit')
-              )}
+            <Button type="submit" className="w-full" loading={isLoading}>
+              {!isLoading && <UserPlus aria-hidden="true" />}
+              {isLoading ? t('auth.register.loading') : t('auth.register.submit')}
             </Button>
           </form>
 

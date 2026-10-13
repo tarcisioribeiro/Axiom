@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { Loader2, Shield, Users, Check, X } from 'lucide-react';
+import { Check, Loader2, Shield, Users, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -247,6 +247,7 @@ export default function Permissions() {
 
                   <div className="gap-sm pt-md flex justify-end border-t">
                     <Button variant="outline" onClick={() => setSelectedMember(null)}>
+                      <X aria-hidden="true" />
                       {t('common.actions.cancel')}
                     </Button>
                     <Button
