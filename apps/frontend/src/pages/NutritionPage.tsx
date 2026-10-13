@@ -14,6 +14,7 @@ import {
   Moon,
   Plus,
   Salad,
+  Search,
   Sun,
   Sunrise,
   Trash2,
@@ -800,14 +801,14 @@ export default function NutritionPage() {
                       : []),
                   ]}
                 >
-                  <FilterField label={t('common.filterLabels.search')}>
+                  <FilterField label={t('common.filterLabels.search')} icon={Search}>
                     <SearchInput
                       placeholder={t('pages.nutritionMealTypes.searchPlaceholder')}
                       value={mealTypeSearch}
                       onValueChange={setMealTypeSearch}
                     />
                   </FilterField>
-                  <FilterField label={t('common.fields.status')}>
+                  <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
                     <Select
                       value={mealTypeStatusFilter}
                       onValueChange={setMealTypeStatusFilter}
@@ -891,7 +892,7 @@ export default function NutritionPage() {
               hasActiveFilters={!!foodSearch}
               onClear={() => setFoodSearch('')}
             >
-              <FilterField label={t('common.filterLabels.search')}>
+              <FilterField label={t('common.filterLabels.search')} icon={Search}>
                 <SearchInput
                   placeholder={t('pages.nutritionFoods.searchPlaceholder')}
                   value={foodSearch}

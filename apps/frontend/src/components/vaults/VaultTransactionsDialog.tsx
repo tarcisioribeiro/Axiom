@@ -1,5 +1,12 @@
 /* eslint-disable max-lines */
-import { History, Pencil, Trash2 } from 'lucide-react';
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  History,
+  Pencil,
+  Shapes,
+  Trash2,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -205,7 +212,7 @@ export function VaultTransactionsDialog({
               setEndDate(undefined);
             }}
           >
-            <FilterField label={t('common.fields.type')}>
+            <FilterField label={t('common.fields.type')} icon={Shapes}>
               <Select value={filter} onValueChange={setFilter}>
                 <SelectTrigger aria-label={t('pages.vaults.filterByType')}>
                   <SelectValue />
@@ -224,10 +231,10 @@ export function VaultTransactionsDialog({
                 </SelectContent>
               </Select>
             </FilterField>
-            <FilterField label={t('common.fields.from')}>
+            <FilterField label={t('common.fields.from')} icon={ArrowUpRight}>
               <DatePicker value={startDate} onChange={setStartDate} />
             </FilterField>
-            <FilterField label={t('common.fields.to')}>
+            <FilterField label={t('common.fields.to')} icon={ArrowDownLeft}>
               <DatePicker value={endDate} onChange={setEndDate} />
             </FilterField>
           </FilterBar>
@@ -305,6 +312,7 @@ export function VaultTransactionsDialog({
                             {editingTx?.id === tx.id ? (
                               <Input
                                 value={editDesc}
+                                placeholder={t('pages.vaults.depositPlaceholder')}
                                 onChange={(e) => setEditDesc(e.target.value)}
                                 className="w-40"
                               />

@@ -2,16 +2,20 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  ShoppingCart,
-  DollarSign,
-  Link2,
-  Tag,
+  CheckCircle2,
   CircleDot,
+  CreditCardIcon,
+  DollarSign,
+  LayoutGrid,
+  Link2,
+  Pencil,
+  Plus,
   Receipt,
+  CalendarDays,
   ShoppingBag,
+  ShoppingCart,
+  Tag,
+  Trash2,
   X,
 } from 'lucide-react';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
@@ -777,7 +781,7 @@ export default function CreditCardExpenses({
             setPurchaseDateTo(undefined);
           }}
         >
-          <FilterField label={t('pages.creditCardExpenses.viewMode')}>
+          <FilterField label={t('pages.creditCardExpenses.viewMode')} icon={LayoutGrid}>
             <Select
               value={viewMode}
               onValueChange={(v) => setViewMode(v as 'bills' | 'purchases')}
@@ -806,7 +810,7 @@ export default function CreditCardExpenses({
               </SelectContent>
             </Select>
           </FilterField>
-          <FilterField label={t('common.filterLabels.card')}>
+          <FilterField label={t('common.filterLabels.card')} icon={CreditCardIcon}>
             <Select value={cardFilter} onValueChange={setCardFilter}>
               <SelectTrigger aria-label={t('pages.creditCardExpenses.columns.card')}>
                 <SelectValue placeholder={t('pages.creditCardExpenses.allCards')} />
@@ -829,6 +833,7 @@ export default function CreditCardExpenses({
                 ? t('common.filterLabels.bill')
                 : t('common.filterLabels.period')
             }
+            icon={viewMode === 'bills' ? Receipt : CalendarDays}
           >
             {viewMode === 'bills' ? (
               <Select
@@ -875,7 +880,7 @@ export default function CreditCardExpenses({
               </div>
             )}
           </FilterField>
-          <FilterField label={t('common.fields.category')}>
+          <FilterField label={t('common.fields.category')} icon={Tag}>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger
                 aria-label={t('pages.creditCardExpenses.columns.category')}
@@ -904,7 +909,7 @@ export default function CreditCardExpenses({
               </SelectContent>
             </Select>
           </FilterField>
-          <FilterField label={t('common.fields.status')}>
+          <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger
                 aria-label={t('pages.creditCardExpenses.columns.status')}

@@ -1,4 +1,4 @@
-import { Calculator } from 'lucide-react';
+import { Calculator, Percent, Wallet } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -89,7 +89,8 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
         <div className="space-y-md">
           <div className="gap-md grid grid-cols-2">
             <div className="space-y-xs">
-              <Label htmlFor="sim-principal">
+              <Label className="gap-xs flex items-center" htmlFor="sim-principal">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('components.installmentSimulator.purchaseValue')}
               </Label>
               <CurrencyInput
@@ -100,7 +101,8 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
             </div>
 
             <div className="space-y-xs">
-              <Label htmlFor="sim-rate">
+              <Label className="gap-xs flex items-center" htmlFor="sim-rate">
+                <Percent className="text-muted-foreground h-3.5 w-3.5" />
                 {t('components.installmentSimulator.annualRate')}
               </Label>
               <div className="relative">

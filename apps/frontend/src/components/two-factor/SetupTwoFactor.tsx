@@ -87,7 +87,10 @@ export function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
         {setupData.manual_entry_key}
       </code>
       <div className="space-y-xs">
-        <Label htmlFor="totp-code">{t('pages.twoFactor.confirmCode')}</Label>
+        <Label className="gap-xs flex items-center" htmlFor="totp-code">
+          <ShieldCheck className="text-muted-foreground h-3.5 w-3.5" />
+          {t('pages.twoFactor.confirmCode')}
+        </Label>
         <Input
           id="totp-code"
           type="text"

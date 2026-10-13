@@ -2,21 +2,24 @@
 import {
   AlertCircle,
   ArrowDownToLine,
+  ArrowLeft,
   ArrowRight,
   ArrowUpFromLine,
   BadgePercent,
   CalendarDays,
   Check,
+  CheckCircle2,
   Clock,
   FileText,
   Loader2,
+  Save,
   Shield,
   Tag,
+  TrendingDown,
+  TrendingUp,
   Users,
   Wallet,
-  ArrowLeft,
   X,
-  Save,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -298,6 +301,7 @@ export function LoanForm({
               </Label>
               <Input
                 id="description"
+                placeholder={t('common.placeholders.loanDescription')}
                 value={formData.description}
                 onChange={(e) => set({ description: e.target.value })}
                 required
@@ -631,6 +635,7 @@ export function LoanForm({
               </Label>
               <Textarea
                 id="notes"
+                placeholder={t('common.placeholders.notes')}
                 value={formData.notes ?? ''}
                 onChange={(e) => set({ notes: e.target.value })}
                 rows={1}
@@ -654,7 +659,11 @@ export function LoanForm({
                 checked={formData.payed}
                 onCheckedChange={(v) => set({ payed: v === true })}
               />
-              <Label htmlFor="payed" className="cursor-pointer">
+              <Label
+                htmlFor="payed"
+                className="gap-xs flex cursor-pointer items-center"
+              >
+                <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.loanPaidLabel')}
               </Label>
             </div>
@@ -667,7 +676,11 @@ export function LoanForm({
                     checked={formData.generate_revenue ?? false}
                     onCheckedChange={(v) => set({ generate_revenue: v === true })}
                   />
-                  <Label htmlFor="generate_revenue" className="cursor-pointer">
+                  <Label
+                    htmlFor="generate_revenue"
+                    className="gap-xs flex cursor-pointer items-center"
+                  >
+                    <TrendingUp className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.loans.form.generateRevenueLabel')}
                   </Label>
                 </div>
@@ -682,7 +695,11 @@ export function LoanForm({
                     checked={formData.generate_expense ?? false}
                     onCheckedChange={(v) => set({ generate_expense: v === true })}
                   />
-                  <Label htmlFor="generate_expense" className="cursor-pointer">
+                  <Label
+                    htmlFor="generate_expense"
+                    className="gap-xs flex cursor-pointer items-center"
+                  >
+                    <TrendingDown className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.loans.form.generateExpenseLabel')}
                   </Label>
                 </div>

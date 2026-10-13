@@ -1,5 +1,16 @@
+/* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, CheckCircle2, XCircle, Split, Save, X } from 'lucide-react';
+import {
+  CheckCircle2,
+  FileText,
+  Plus,
+  Save,
+  Split,
+  Trash2,
+  Wallet,
+  X,
+  XCircle,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -202,7 +213,8 @@ export function ExpenseSplitsModal({
           {addingNew ? (
             <div className="space-y-sm border-border p-sm rounded-md border">
               <div className="space-y-xs">
-                <Label htmlFor="split-desc">
+                <Label className="gap-xs flex items-center" htmlFor="split-desc">
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.expenses.splits.description')}
                 </Label>
                 <Input
@@ -215,7 +227,10 @@ export function ExpenseSplitsModal({
                 />
               </div>
               <div className="space-y-xs">
-                <Label htmlFor="split-value">{t('common.fields.value')}</Label>
+                <Label className="gap-xs flex items-center" htmlFor="split-value">
+                  <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('common.fields.value')}
+                </Label>
                 <CurrencyInput
                   id="split-value"
                   min="0"
@@ -231,7 +246,8 @@ export function ExpenseSplitsModal({
                   checked={form.payed}
                   onCheckedChange={(v) => setForm((p) => ({ ...p, payed: !!v }))}
                 />
-                <Label htmlFor="split-payed">
+                <Label className="gap-xs flex items-center" htmlFor="split-payed">
+                  <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.expenses.splits.markPaid')}
                 </Label>
               </div>

@@ -4,25 +4,28 @@ import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { TFunction } from 'i18next';
 import {
+  AlertCircle,
+  BarChart3,
+  BookOpen,
+  Brain,
+  CalendarDays,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
   Heart,
   ListChecks,
-  Zap,
-  Brain,
-  Shield,
-  BookOpen,
-  BarChart3,
-  ChevronRight,
-  CheckCircle2,
-  Send,
-  AlertCircle,
-  Clock,
-  TrendingUp,
-  TrendingDown,
+  MessageSquare,
   Minus,
   Play,
   Plus,
+  Send,
+  Shield,
   Star,
+  Tag,
+  TrendingDown,
+  TrendingUp,
   X,
+  Zap,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -786,8 +789,8 @@ const CHECKIN_SCALES = [
 ] as const;
 
 const CHECKIN_TEXTS = [
-  { key: 'what_happened' },
-  { key: 'occupying_thoughts' },
+  { key: 'what_happened', icon: MessageSquare },
+  { key: 'occupying_thoughts', icon: Brain },
 ] as const;
 
 const CHECKIN_STEPS = CHECKIN_SCALES.length + CHECKIN_TEXTS.length;
@@ -901,8 +904,9 @@ function CheckinTab({
               <div className="space-y-sm flex h-full flex-col">
                 <label
                   htmlFor={text.key}
-                  className="text-foreground block text-sm font-medium"
+                  className="gap-xs text-foreground flex items-center text-sm font-medium"
                 >
+                  <text.icon className="text-muted-foreground h-3.5 w-3.5" />
                   {t(`pages.emotionalWellness.checkin.texts.${text.key}.label`)}
                 </label>
                 <Textarea
@@ -1023,7 +1027,7 @@ function CheckinTab({
                 : []),
             ]}
           >
-            <FilterField label={t('common.filterLabels.period')}>
+            <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
               <DateRangeFilter
                 startDate={checkinStartDate}
                 endDate={checkinEndDate}
@@ -1431,7 +1435,7 @@ function CrisisTab({
                 : []),
             ]}
           >
-            <FilterField label={t('common.filterLabels.period')}>
+            <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
               <DateRangeFilter
                 startDate={crisisStartDate}
                 endDate={crisisEndDate}
@@ -1576,7 +1580,7 @@ function LibraryTab() {
             : []),
         ]}
       >
-        <FilterField label={t('common.fields.category')}>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
           <Select
             value={selectedCategory}
             onValueChange={(v) =>

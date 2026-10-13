@@ -1,13 +1,16 @@
 /* eslint-disable max-lines */
 import {
-  Plus,
+  CalendarDays,
+  CheckCircle2,
+  CircleDot,
+  Download,
+  GitFork,
   Pencil,
+  Plus,
+  Search,
+  Tag,
   Trash2,
   TrendingDown,
-  Download,
-  Tag,
-  CircleDot,
-  GitFork,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -163,7 +166,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.expenses.searchPlaceholder')}
             value={searchTerm}
@@ -171,7 +174,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
             className="w-44"
           />
         </FilterField>
-        <FilterField label={t('common.fields.category')}>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger
               className="w-40"
@@ -197,7 +200,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.fields.status')}>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger
               className="w-36"
@@ -223,7 +226,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.period')}>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
           <DateRangeFilter
             startDate={startDate}
             endDate={endDate}

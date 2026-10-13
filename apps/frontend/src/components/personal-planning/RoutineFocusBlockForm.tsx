@@ -1,4 +1,4 @@
-import { Save, X } from 'lucide-react';
+import { FileText, Power, Repeat, Save, Smile, Type, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -59,7 +59,8 @@ export function RoutineFocusBlockForm({
     <form onSubmit={handleSubmit} className="space-y-md">
       <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
         <div className="space-y-sm">
-          <Label htmlFor="focus-block-name">
+          <Label className="gap-xs flex items-center" htmlFor="focus-block-name">
+            <Type className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.routineTasks.focusBlocks.nameLabel')}
           </Label>
           <Input
@@ -72,11 +73,13 @@ export function RoutineFocusBlockForm({
         </div>
 
         <div className="space-y-sm">
-          <Label htmlFor="focus-block-description">
+          <Label className="gap-xs flex items-center" htmlFor="focus-block-description">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.routineTasks.focusBlocks.descriptionLabel')}
           </Label>
           <Textarea
             id="focus-block-description"
+            placeholder={t('common.placeholders.focusBlockDescription')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={1}
@@ -85,13 +88,19 @@ export function RoutineFocusBlockForm({
         </div>
 
         <div className="space-y-sm">
-          <Label>{t('pages.routineTasks.focusBlocks.iconLabel')}</Label>
+          <Label className="gap-xs flex items-center">
+            <Smile className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.routineTasks.focusBlocks.iconLabel')}
+          </Label>
           <IconPicker value={icon} onChange={setIcon} />
         </div>
       </div>
 
       <div className="space-y-sm">
-        <Label>{t('pages.routineTasks.focusBlocks.weekdaysLabel')}</Label>
+        <Label className="gap-xs flex items-center">
+          <Repeat className="text-muted-foreground h-3.5 w-3.5" />
+          {t('pages.routineTasks.focusBlocks.weekdaysLabel')}
+        </Label>
         <div className="gap-sm grid grid-cols-7">
           {WEEKDAY_CHOICES.map((day) => (
             <div key={day.value} className="gap-xs flex flex-col items-center">
@@ -126,7 +135,10 @@ export function RoutineFocusBlockForm({
       </div>
 
       <div className="space-y-sm">
-        <Label>{t('pages.routineTasks.focusBlocks.activeLabel')}</Label>
+        <Label className="gap-xs flex items-center">
+          <Power className="text-muted-foreground h-3.5 w-3.5" />
+          {t('pages.routineTasks.focusBlocks.activeLabel')}
+        </Label>
         <StatusToggle
           value={isActive ? 'true' : 'false'}
           onChange={(v) => setIsActive(v === 'true')}

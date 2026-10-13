@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { Pencil, Loader2, Save, X, ListOrdered } from 'lucide-react';
+import { Hash, ListOrdered, Loader2, Pencil, Save, X } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -270,7 +270,10 @@ export function InstallmentsPlanDialog({
               <div className="space-y-sm pt-md border-t">
                 <p className="text-muted-foreground text-xs">{tr('editHint')}</p>
                 <div className="space-y-xs">
-                  <Label>{tr('recalcCountLabel')}</Label>
+                  <Label className="gap-xs flex items-center">
+                    <Hash className="text-muted-foreground h-3.5 w-3.5" />
+                    {tr('recalcCountLabel')}
+                  </Label>
                   <div className="gap-sm flex items-center">
                     <NumberStepper
                       min={1}

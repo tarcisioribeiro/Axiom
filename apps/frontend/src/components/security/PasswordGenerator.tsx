@@ -1,4 +1,16 @@
-import { Copy, RefreshCw, Loader2, Check } from 'lucide-react';
+/* eslint-disable max-lines */
+import {
+  Asterisk,
+  CaseLower,
+  CaseUpper,
+  Check,
+  Copy,
+  EyeOff,
+  Hash,
+  Loader2,
+  RefreshCw,
+  Ruler,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -108,7 +120,8 @@ export function PasswordGenerator({
     <div className={cn('space-y-md', compact && 'space-y-3')}>
       {/* Length */}
       <div className="space-y-sm">
-        <Label htmlFor="gen-length">
+        <Label className="gap-xs flex items-center" htmlFor="gen-length">
+          <Ruler className="text-muted-foreground h-3.5 w-3.5" />
           {t('pages.passwords.generator.length', { count: length })}
         </Label>
         <div className="flex items-center gap-3">
@@ -143,7 +156,11 @@ export function PasswordGenerator({
             checked={uppercase}
             onCheckedChange={(checked) => setUppercase(checked === true)}
           />
-          <Label htmlFor="gen-upper" className="cursor-pointer text-sm">
+          <Label
+            htmlFor="gen-upper"
+            className="gap-xs flex cursor-pointer items-center text-sm"
+          >
+            <CaseUpper className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.passwords.generator.uppercase')}
           </Label>
         </div>
@@ -153,7 +170,11 @@ export function PasswordGenerator({
             checked={lowercase}
             onCheckedChange={(checked) => setLowercase(checked === true)}
           />
-          <Label htmlFor="gen-lower" className="cursor-pointer text-sm">
+          <Label
+            htmlFor="gen-lower"
+            className="gap-xs flex cursor-pointer items-center text-sm"
+          >
+            <CaseLower className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.passwords.generator.lowercase')}
           </Label>
         </div>
@@ -163,7 +184,11 @@ export function PasswordGenerator({
             checked={numbers}
             onCheckedChange={(checked) => setNumbers(checked === true)}
           />
-          <Label htmlFor="gen-numbers" className="cursor-pointer text-sm">
+          <Label
+            htmlFor="gen-numbers"
+            className="gap-xs flex cursor-pointer items-center text-sm"
+          >
+            <Hash className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.passwords.generator.numbers')}
           </Label>
         </div>
@@ -173,7 +198,11 @@ export function PasswordGenerator({
             checked={specialCharacters}
             onCheckedChange={(checked) => setSpecialCharacters(checked === true)}
           />
-          <Label htmlFor="gen-special" className="cursor-pointer text-sm">
+          <Label
+            htmlFor="gen-special"
+            className="gap-xs flex cursor-pointer items-center text-sm"
+          >
+            <Asterisk className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.passwords.generator.special')}
           </Label>
         </div>
@@ -183,7 +212,11 @@ export function PasswordGenerator({
             checked={excludeAmbiguous}
             onCheckedChange={(checked) => setExcludeAmbiguous(checked === true)}
           />
-          <Label htmlFor="gen-ambiguous" className="cursor-pointer text-sm">
+          <Label
+            htmlFor="gen-ambiguous"
+            className="gap-xs flex cursor-pointer items-center text-sm"
+          >
+            <EyeOff className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.passwords.generator.excludeAmbiguous')}
           </Label>
         </div>

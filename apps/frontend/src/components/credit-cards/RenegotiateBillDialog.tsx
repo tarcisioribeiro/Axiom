@@ -1,4 +1,4 @@
-import { AlertCircle, RefreshCw, X, Handshake } from 'lucide-react';
+import { AlertCircle, Handshake, Hash, RefreshCw, Wallet, X } from 'lucide-react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -123,7 +123,8 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
           {/* Campos */}
           <div className="space-y-md">
             <div className="space-y-sm">
-              <Label htmlFor="total_with_interest">
+              <Label className="gap-xs flex items-center" htmlFor="total_with_interest">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCardBills.renegotiateForm.totalWithInterestLabel')}
               </Label>
               <Controller
@@ -154,7 +155,8 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
             </div>
 
             <div className="space-y-sm">
-              <Label htmlFor="installments">
+              <Label className="gap-xs flex items-center" htmlFor="installments">
+                <Hash className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCardBills.renegotiateForm.installmentsLabel')}
               </Label>
               <Controller

@@ -95,7 +95,6 @@ export function DailyReflectionForm({
               aria-invalid={!!errors.date}
               value={watch('date')}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
-              placeholder={t('pages.dailyReflections.form.date')}
               disabled={isLoading}
             />
           </div>

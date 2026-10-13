@@ -1,4 +1,12 @@
-import { X, ArrowDownToLine, Loader2, ArrowUpFromLine } from 'lucide-react';
+/* eslint-disable max-lines */
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  FileText,
+  Loader2,
+  Wallet,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -89,7 +97,8 @@ export function VaultDepositDialog({
         </DialogHeader>
         <div className="space-y-md">
           <div>
-            <Label htmlFor="deposit_amount">
+            <Label className="gap-xs flex items-center" htmlFor="deposit_amount">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.vaults.depositAmountLabel')}
             </Label>
             <CurrencyInput
@@ -101,7 +110,8 @@ export function VaultDepositDialog({
             />
           </div>
           <div>
-            <Label htmlFor="deposit_description">
+            <Label className="gap-xs flex items-center" htmlFor="deposit_description">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('common.fields.description')}
             </Label>
             <Input
@@ -204,7 +214,8 @@ export function VaultWithdrawDialog({
         </DialogHeader>
         <div className="space-y-md">
           <div>
-            <Label htmlFor="withdraw_amount">
+            <Label className="gap-xs flex items-center" htmlFor="withdraw_amount">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.vaults.withdrawAmountLabel')}
             </Label>
             <CurrencyInput
@@ -216,7 +227,8 @@ export function VaultWithdrawDialog({
             />
           </div>
           <div>
-            <Label htmlFor="withdraw_description">
+            <Label className="gap-xs flex items-center" htmlFor="withdraw_description">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('common.fields.description')}
             </Label>
             <Input

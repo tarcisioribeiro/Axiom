@@ -1,11 +1,13 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
-  CreditCard,
-  Calendar,
-  Wallet,
-  Building2,
   AlertCircle,
+  Building2,
+  Calendar,
   CalendarClock,
+  CalendarDays,
+  CreditCard,
+  FileText,
+  Wallet,
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -278,7 +280,8 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
         <div className="space-y-md">
           <div className="gap-md grid grid-cols-2">
             <div className="space-y-sm">
-              <Label htmlFor="amount">
+              <Label className="gap-xs flex items-center" htmlFor="amount">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCardBills.payForm.paymentAmountLabel')}
               </Label>
               <Controller
@@ -314,7 +317,8 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
             </div>
 
             <div className="space-y-sm">
-              <Label htmlFor="payment_date">
+              <Label className="gap-xs flex items-center" htmlFor="payment_date">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {scheduled
                   ? t('pages.payables.payment.scheduledDate')
                   : t('pages.creditCardBills.payForm.paymentDateLabel')}
@@ -331,7 +335,8 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="notes">
+            <Label className="gap-xs flex items-center" htmlFor="notes">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardBills.payForm.notesLabel')}
             </Label>
             <Textarea

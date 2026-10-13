@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, Mail, BellRing, Save, X, Zap } from 'lucide-react';
+import { Bell, BellRing, Mail, Save, X, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -172,7 +172,8 @@ export function NotificationPreferencesContent({
       <div className={cn('gap-x-xl gap-y-sm grid sm:grid-cols-2', bodyClassName)}>
         {NOTIFICATION_TYPE_KEYS.map((key) => (
           <div key={key} className="gap-md flex items-center justify-between">
-            <Label htmlFor={key} className="text-sm">
+            <Label htmlFor={key} className="gap-xs flex items-center text-sm">
+              <Bell className="text-muted-foreground h-3.5 w-3.5" />
               {t(`pages.notificationPreferences.types.${key}_label`)}
             </Label>
             <Select

@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { Percent, PiggyBank, Timer, Trash2, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -67,7 +67,10 @@ export function ScenarioCard({
       </CardHeader>
       <CardContent className="gap-md grid sm:grid-cols-2">
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.vaultSimulator.initialAmount')}</Label>
+          <Label className="gap-xs flex items-center text-xs">
+            <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.vaultSimulator.initialAmount')}
+          </Label>
           <CurrencyInput
             min="0"
             value={scenario.initial_amount}
@@ -75,7 +78,10 @@ export function ScenarioCard({
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.vaultSimulator.monthlyDeposit')}</Label>
+          <Label className="gap-xs flex items-center text-xs">
+            <PiggyBank className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.vaultSimulator.monthlyDeposit')}
+          </Label>
           <CurrencyInput
             min="0"
             value={scenario.monthly_deposit}
@@ -83,7 +89,10 @@ export function ScenarioCard({
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.vaultSimulator.annualRate')}</Label>
+          <Label className="gap-xs flex items-center text-xs">
+            <Percent className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.vaultSimulator.annualRate')}
+          </Label>
           <DecimalInput
             max={10000}
             unit="%"
@@ -96,7 +105,10 @@ export function ScenarioCard({
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.vaultSimulator.termMonths')}</Label>
+          <Label className="gap-xs flex items-center text-xs">
+            <Timer className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.vaultSimulator.termMonths')}
+          </Label>
           <NumberStepper
             min={1}
             max={600}

@@ -8,10 +8,11 @@ import {
   Flame,
   Layers,
   Loader2,
-  Target,
-  Zap,
   Save,
+  Target,
+  Timer,
   X,
+  Zap,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -277,14 +278,20 @@ export function WorkoutDayForm({
         >
           <div className="gap-sm grid grid-cols-2">
             <div className="space-y-sm">
-              <Label>{t('pages.workoutPlans.defaultStartTime')}</Label>
+              <Label className="gap-xs flex items-center">
+                <Clock className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.workoutPlans.defaultStartTime')}
+              </Label>
               <TimePicker
                 value={watch('default_start_time') || undefined}
                 onChange={(v) => setValue('default_start_time', v ?? '')}
               />
             </div>
             <div className="space-y-sm">
-              <Label>{t('pages.workoutPlans.defaultDurationMinutes')}</Label>
+              <Label className="gap-xs flex items-center">
+                <Timer className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.workoutPlans.defaultDurationMinutes')}
+              </Label>
               <Controller
                 control={control}
                 name="default_duration_minutes"

@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { RefreshCw, ScrollText } from 'lucide-react';
+import { CalendarDays, RefreshCw, ScrollText, User, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -90,14 +90,14 @@ export default function AdminLogs() {
       />
 
       <FilterBar hasActiveFilters={hasFilters} onClear={clearFilters}>
-        <FilterField label={t('common.filterLabels.user')}>
+        <FilterField label={t('common.filterLabels.user')} icon={User}>
           <SearchInput
             placeholder={t('pages.adminLogs.userPlaceholder')}
             value={username}
             onValueChange={setUsername}
           />
         </FilterField>
-        <FilterField label={t('common.filterLabels.action')}>
+        <FilterField label={t('common.filterLabels.action')} icon={Zap}>
           <Select
             value={action || 'all'}
             onValueChange={(v) => setAction(v === 'all' ? '' : v)}
@@ -115,7 +115,7 @@ export default function AdminLogs() {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.period')}>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
           <DateRangeFilter
             startDate={dateFrom}
             endDate={dateTo}

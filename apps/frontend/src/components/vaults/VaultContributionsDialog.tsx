@@ -1,5 +1,18 @@
 /* eslint-disable max-lines */
-import { CalendarClock, Loader2, Pencil, Plus, Save, Trash2, X } from 'lucide-react';
+import {
+  CalendarClock,
+  CalendarDays,
+  FileText,
+  Loader2,
+  Pencil,
+  Plus,
+  Power,
+  Repeat,
+  Save,
+  Trash2,
+  Wallet,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -199,7 +212,11 @@ export function VaultContributionsDialog({
               </h4>
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <Label htmlFor="contrib_description">
+                  <Label
+                    className="gap-xs flex items-center"
+                    htmlFor="contrib_description"
+                  >
+                    <FileText className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.description')}
                   </Label>
                   <Input
@@ -214,7 +231,8 @@ export function VaultContributionsDialog({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="contrib_amount">
+                  <Label className="gap-xs flex items-center" htmlFor="contrib_amount">
+                    <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.amount')}
                   </Label>
                   <CurrencyInput
@@ -230,7 +248,8 @@ export function VaultContributionsDialog({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="contrib_day">
+                  <Label className="gap-xs flex items-center" htmlFor="contrib_day">
+                    <Repeat className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.dayOfMonth')}
                   </Label>
                   <NumberStepper
@@ -242,7 +261,8 @@ export function VaultContributionsDialog({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="contrib_start">
+                  <Label className="gap-xs flex items-center" htmlFor="contrib_start">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.startDate')}
                   </Label>
                   <DatePicker
@@ -256,7 +276,8 @@ export function VaultContributionsDialog({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="contrib_end">
+                  <Label className="gap-xs flex items-center" htmlFor="contrib_end">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.endDate')}
                   </Label>
                   <DatePicker
@@ -277,7 +298,11 @@ export function VaultContributionsDialog({
                       setFormData({ ...formData, is_active: checked === true })
                     }
                   />
-                  <Label htmlFor="contrib_active" className="cursor-pointer">
+                  <Label
+                    htmlFor="contrib_active"
+                    className="gap-xs flex cursor-pointer items-center"
+                  >
+                    <Power className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.isActive')}
                   </Label>
                 </div>

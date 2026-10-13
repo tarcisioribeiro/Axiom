@@ -1,13 +1,14 @@
 /* eslint-disable max-lines */
 import {
-  Upload,
-  FileUp,
-  CheckSquare,
-  Square,
-  CheckCircle2,
   AlertCircle,
-  Info,
+  CheckCircle2,
+  CheckSquare,
   Download,
+  FileType,
+  FileUp,
+  Info,
+  Square,
+  Upload,
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -235,7 +236,8 @@ export default function PasswordImport() {
             <CardContent className="space-y-md">
               {/* Format selector */}
               <div className="space-y-xs">
-                <Label htmlFor="format-select">
+                <Label className="gap-xs flex items-center" htmlFor="format-select">
+                  <FileType className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.passwordImport.formatLabel')}
                 </Label>
                 <Select
@@ -260,7 +262,8 @@ export default function PasswordImport() {
 
               {/* Drop zone */}
               <div className="space-y-xs">
-                <Label htmlFor="file-input">
+                <Label className="gap-xs flex items-center" htmlFor="file-input">
+                  <Upload className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.passwordImport.uploadLabel')}
                 </Label>
                 <div

@@ -5,15 +5,20 @@ import {
   Atom,
   Brain,
   Briefcase,
+  CheckCircle2,
   Code2,
-  GraduationCap,
+  FileText,
+  Gauge,
   Globe,
+  GraduationCap,
   Layers,
   MoreHorizontal,
   Paintbrush,
   Palette,
-  X,
   Save,
+  Tag,
+  Type,
+  X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -241,7 +246,10 @@ export function SkillForm({
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       <FormSection title={t('pages.skills.form.sectionInfo')} icon={Brain}>
         <div className="space-y-sm">
-          <Label htmlFor="name">{t('pages.skills.form.nameLabel')}</Label>
+          <Label className="gap-xs flex items-center" htmlFor="name">
+            <Type className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.skills.form.nameLabel')}
+          </Label>
           <Input
             id="name"
             placeholder={t('pages.skills.form.namePlaceholder')}
@@ -250,7 +258,10 @@ export function SkillForm({
         </div>
 
         <div className="space-y-sm">
-          <Label>{t('pages.skills.form.categoryLabel')}</Label>
+          <Label className="gap-xs flex items-center">
+            <Tag className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.skills.form.categoryLabel')}
+          </Label>
           <Select
             value={watch('category')}
             onValueChange={(v) => setValue('category', v)}
@@ -277,7 +288,10 @@ export function SkillForm({
 
       <FormSection title={t('pages.skills.form.sectionProgress')} icon={Layers}>
         <div className="space-y-sm">
-          <Label>{t('pages.skills.form.proficiencyLabel')}</Label>
+          <Label className="gap-xs flex items-center">
+            <Gauge className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.skills.form.proficiencyLabel')}
+          </Label>
           <ProficiencySelector
             value={watch('proficiency')}
             onChange={(v) => setValue('proficiency', v)}
@@ -285,7 +299,10 @@ export function SkillForm({
         </div>
 
         <div className="space-y-sm">
-          <Label>{t('pages.skills.form.statusLabel')}</Label>
+          <Label className="gap-xs flex items-center">
+            <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.skills.form.statusLabel')}
+          </Label>
           <div className="gap-sm flex">
             {STATUSES.map((s) => (
               <button
@@ -306,7 +323,10 @@ export function SkillForm({
         </div>
 
         <div className="space-y-sm">
-          <Label htmlFor="notes">{t('pages.skills.form.notesLabel')}</Label>
+          <Label className="gap-xs flex items-center" htmlFor="notes">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.skills.form.notesLabel')}
+          </Label>
           <Textarea
             id="notes"
             rows={1}
@@ -318,7 +338,10 @@ export function SkillForm({
 
       <FormSection title={t('pages.skills.form.sectionCourses')} icon={GraduationCap}>
         <div className="space-y-sm">
-          <Label>{t('pages.skills.form.coursesLabel')}</Label>
+          <Label className="gap-xs flex items-center">
+            <GraduationCap className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.skills.form.coursesLabel')}
+          </Label>
           <Select onValueChange={(v) => handleCourseToggle(parseInt(v, 10))}>
             <SelectTrigger>
               <SelectValue placeholder={t('pages.skills.form.coursesPlaceholder')} />

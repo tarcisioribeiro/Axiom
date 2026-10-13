@@ -1,19 +1,22 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  CalendarDays,
+  Loader2,
+  Pencil,
   PiggyBank,
   Plus,
-  Pencil,
-  Trash2,
-  Loader2,
-  Tag,
-  Wallet,
-  CalendarDays,
+  RefreshCw,
   RotateCcw,
-  ShoppingCart,
   Save,
-  X,
+  Search,
+  ShoppingCart,
+  Tag,
+  Trash2,
   User,
+  Users,
+  Wallet,
+  X,
 } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -307,7 +310,7 @@ export default function Budgets() {
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.budgets.searchPlaceholder')}
             value={searchTerm}
@@ -315,7 +318,7 @@ export default function Budgets() {
             className="w-44 flex-none"
           />
         </FilterField>
-        <FilterField label={t('common.fields.category')}>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger
               className="w-44"
@@ -341,7 +344,7 @@ export default function Budgets() {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.member')}>
+        <FilterField label={t('common.filterLabels.member')} icon={Users}>
           <Select value={memberFilter} onValueChange={setMemberFilter}>
             <SelectTrigger
               className="w-40"
@@ -360,7 +363,7 @@ export default function Budgets() {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.month')}>
+        <FilterField label={t('common.filterLabels.month')} icon={CalendarDays}>
           <Select value={filterMonth} onValueChange={setFilterMonth}>
             <SelectTrigger
               className="w-40"
@@ -377,7 +380,7 @@ export default function Budgets() {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.year')}>
+        <FilterField label={t('common.filterLabels.year')} icon={CalendarDays}>
           <Select value={filterYear} onValueChange={setFilterYear}>
             <SelectTrigger
               className="w-28"
@@ -582,8 +585,9 @@ export default function Budgets() {
                   <div>
                     <Label
                       htmlFor="rollover_enabled"
-                      className="cursor-pointer text-sm font-medium"
+                      className="gap-xs flex cursor-pointer items-center text-sm font-medium"
                     >
+                      <RefreshCw className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.budgets.rollover.enabled')}
                     </Label>
                   </div>

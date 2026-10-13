@@ -1,18 +1,20 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Eye,
-  Download,
-  Star,
-  FileText,
-  File,
   ArchiveIcon,
   Calendar,
-  Tag,
   Copy,
+  Download,
+  Eye,
+  File,
+  FileText,
+  Pencil,
+  Plus,
+  Search,
+  Shapes,
+  Star,
+  Tag,
+  Trash2,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -382,7 +384,7 @@ export default function Archives() {
               : []),
           ]}
         >
-          <FilterField label={t('common.filterLabels.search')}>
+          <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput
               placeholder={t('pages.archives.searchPlaceholder')}
               value={searchTerm}
@@ -390,7 +392,7 @@ export default function Archives() {
               className="w-52 sm:w-64"
             />
           </FilterField>
-          <FilterField label={t('common.fields.category')}>
+          <FilterField label={t('common.fields.category')} icon={Tag}>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger
                 className="w-40"
@@ -416,7 +418,7 @@ export default function Archives() {
               </SelectContent>
             </Select>
           </FilterField>
-          <FilterField label={t('common.fields.type')}>
+          <FilterField label={t('common.fields.type')} icon={Shapes}>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger
                 className="w-36"

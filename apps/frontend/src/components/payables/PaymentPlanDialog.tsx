@@ -1,4 +1,13 @@
-import { Loader2, Save, X, CalendarClock } from 'lucide-react';
+import {
+  CalendarClock,
+  CalendarDays,
+  Hash,
+  Loader2,
+  RefreshCw,
+  Save,
+  Wallet,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -110,7 +119,10 @@ export function PaymentPlanDialog({
         </DialogHeader>
         <div className="space-y-md">
           <div className="space-y-xs">
-            <Label>{t('pages.payables.form.installmentsCountLabel')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Hash className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.form.installmentsCountLabel')} *
+            </Label>
             <NumberStepper
               min={2}
               optional
@@ -120,7 +132,10 @@ export function PaymentPlanDialog({
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.payables.form.accountLabel')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.form.accountLabel')} *
+            </Label>
             <Select value={account} onValueChange={setAccount}>
               <SelectTrigger>
                 <SelectValue placeholder={t('common.fields.selectAccount')} />
@@ -135,7 +150,10 @@ export function PaymentPlanDialog({
             </Select>
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.payables.form.paymentFrequencyLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <RefreshCw className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.form.paymentFrequencyLabel')}
+            </Label>
             <Select value={frequency} onValueChange={setFrequency}>
               <SelectTrigger>
                 <SelectValue />
@@ -150,7 +168,10 @@ export function PaymentPlanDialog({
             </Select>
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.payables.form.firstInstallmentLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.form.firstInstallmentLabel')}
+            </Label>
             <DatePicker
               value={firstDueDate}
               onChange={(date) => setFirstDueDate(date ? formatLocalDate(date) : '')}

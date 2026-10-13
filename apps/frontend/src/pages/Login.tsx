@@ -1,6 +1,14 @@
 /* eslint-disable max-lines */
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
-import { Eye, EyeOff, ShieldCheck, AlertTriangle, LogIn } from 'lucide-react';
+import {
+  AlertTriangle,
+  AtSign,
+  Eye,
+  EyeOff,
+  Lock,
+  LogIn,
+  ShieldCheck,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router';
@@ -12,13 +20,12 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PlainButton } from '@/components/ui/plain-button';
+import { useCapsLock } from '@/hooks/use-caps-lock';
 import { useThemeAssets } from '@/hooks/use-theme-assets';
 import { toast } from '@/hooks/use-toast';
 import { transitions } from '@/lib/animations';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
-
-const IS_MAC = /Mac/i.test(navigator.platform);
 
 // Troca entre senha e 2FA: entra pelo lado da navegação, sai pelo oposto
 const stepVariants: Variants = {
@@ -35,7 +42,7 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [capsLockOn, setCapsLockOn] = useState(false);
+  const { capsLockOn, inputProps: capsLockProps } = useCapsLock();
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const { login, verify2FA, isLoading, requires2FA } = useAuthStore();
   const { logo } = useThemeAssets();
@@ -75,18 +82,6 @@ export default function Login() {
     }
   };
 
-  const handleCapsLock = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== 'CapsLock') {
-      setCapsLockOn(e.getModifierState('CapsLock'));
-      return;
-    }
-    // No próprio CapsLock, getModifierState é inconsistente (Chrome/Linux ainda
-    // reporta "ligado" ao desligar): alterna uma vez por toque. No macOS o
-    // desligar só dispara keyup, e lá o valor do keyup é confiável.
-    if (e.type === 'keydown') setCapsLockOn((on) => !on);
-    else if (IS_MAC) setCapsLockOn(e.getModifierState('CapsLock'));
-  };
-
   // Avança (1) ao entrar no 2FA, recua (-1) ao voltar para a senha
   const direction = requires2FA ? 1 : -1;
 
@@ -113,7 +108,8 @@ export default function Login() {
       <CardContent>
         <form onSubmit={handleVerify2FA} className="space-y-md">
           <div className="space-y-sm">
-            <Label htmlFor="twoFactorCode">
+            <Label className="gap-xs flex items-center" htmlFor="twoFactorCode">
+              <ShieldCheck className="text-muted-foreground h-3.5 w-3.5" />
               {t('auth.twoFactor.codeLabel', {
                 defaultValue: 'Código de verificação',
               })}
@@ -190,7 +186,10 @@ export default function Login() {
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-md">
                   <div className="space-y-sm">
-                    <Label htmlFor="username">{t('auth.login.username')}</Label>
+                    <Label className="gap-xs flex items-center" htmlFor="username">
+                      <AtSign className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('auth.login.username')}
+                    </Label>
                     <Input
                       id="username"
                       type="text"
@@ -203,16 +202,17 @@ export default function Login() {
                   </div>
 
                   <div className="space-y-sm">
-                    <Label htmlFor="password">{t('auth.login.password')}</Label>
+                    <Label className="gap-xs flex items-center" htmlFor="password">
+                      <Lock className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('auth.login.password')}
+                    </Label>
                     <div className="relative">
                       <Input
                         id="password"
                         type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        onKeyDown={handleCapsLock}
-                        onKeyUp={handleCapsLock}
-                        onBlur={() => setCapsLockOn(false)}
+                        {...capsLockProps}
                         aria-describedby={capsLockOn ? 'caps-lock-warning' : undefined}
                         placeholder={t('auth.login.passwordPlaceholder')}
                         required

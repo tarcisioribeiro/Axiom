@@ -1,4 +1,4 @@
-import { Loader2, Save, X } from 'lucide-react';
+import { Loader2, Palette, Save, Type, X } from 'lucide-react';
 import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -53,17 +53,23 @@ export function TagFormDialog({
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-md">
           <div className="space-y-sm">
-            <Label htmlFor="tag-name">{t('pages.tags.name')}</Label>
+            <Label className="gap-xs flex items-center" htmlFor="tag-name">
+              <Type className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.tags.name')}
+            </Label>
             <Input
               id="tag-name"
               value={form.name}
               onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-              placeholder={t('pages.tags.name')}
+              placeholder={t('common.placeholders.tagName')}
               required
             />
           </div>
           <div className="space-y-sm">
-            <Label htmlFor="tag-color">{t('pages.tags.color')}</Label>
+            <Label className="gap-xs flex items-center" htmlFor="tag-color">
+              <Palette className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.tags.color')}
+            </Label>
             <ColorPicker
               id="tag-color"
               value={form.color}

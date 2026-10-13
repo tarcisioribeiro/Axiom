@@ -122,7 +122,7 @@ export function DecimalInput({
         aria-invalid={ariaInvalid}
         disabled={disabled}
         required={required}
-        placeholder={placeholder}
+        placeholder={placeholder ?? '0'}
         value={draft ?? format(current, decimals)}
         onFocus={(e) => {
           setDraft(e.currentTarget.value);

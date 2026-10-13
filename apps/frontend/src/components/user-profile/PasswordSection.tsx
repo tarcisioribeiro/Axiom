@@ -1,5 +1,6 @@
+/* eslint-disable max-lines */
 import { useMutation } from '@tanstack/react-query';
-import { Check, Eye, EyeOff, KeyRound, X } from 'lucide-react';
+import { AlertTriangle, Check, Eye, EyeOff, KeyRound, Lock, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -13,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PlainButton } from '@/components/ui/plain-button';
+import { useCapsLock } from '@/hooks/use-caps-lock';
 import { useToast } from '@/hooks/use-toast';
 import { getPasswordScore, useStrengthScorer } from '@/lib/password-strength';
 import { cn } from '@/lib/utils';
@@ -22,13 +24,17 @@ import { getErrorMessage } from '@/utils/error-utils';
 
 import { PasswordStrength } from './PasswordStrength';
 
-function PasswordField({
+export function PasswordField({
   id,
   label,
   value,
   onChange,
   autoComplete,
   error,
+  warnCapsLock,
+  invalid,
+  placeholder,
+  disabled,
 }: {
   id: string;
   label: string;
@@ -36,13 +42,28 @@ function PasswordField({
   onChange: (value: string) => void;
   autoComplete: string;
   error?: string;
+  /** Mostra o aviso de Caps Lock do login abaixo do campo. */
+  warnCapsLock?: boolean;
+  /** Borda vermelha sem texto abaixo (erro já vai para toast). */
+  invalid?: boolean;
+  placeholder?: string;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const [show, setShow] = useState(false);
+  const { capsLockOn, inputProps: capsLockProps } = useCapsLock();
+  const describedBy = error
+    ? `${id}-error`
+    : warnCapsLock && capsLockOn
+      ? `${id}-caps`
+      : undefined;
 
   return (
     <div className="space-y-sm">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} className="gap-xs flex items-center">
+        <Lock className="text-muted-foreground h-3.5 w-3.5" />
+        {label}
+      </Label>
       <div className="relative">
         <Input
           id={id}
@@ -50,8 +71,11 @@ function PasswordField({
           autoComplete={autoComplete}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? `${id}-error` : undefined}
+          {...(warnCapsLock ? capsLockProps : {})}
+          aria-invalid={error || invalid ? true : undefined}
+          placeholder={placeholder ?? t('common.placeholders.password')}
+          disabled={disabled}
+          aria-describedby={describedBy}
           className="pr-9"
         />
         <PlainButton
@@ -68,12 +92,27 @@ function PasswordField({
           {error}
         </p>
       )}
+      {/* Espaço sempre reservado para o aviso não alterar a altura do formulário */}
+      {warnCapsLock && (
+        <p
+          id={`${id}-caps`}
+          role="status"
+          aria-hidden={!capsLockOn}
+          className={cn(
+            'text-warning gap-xs flex h-5 items-center text-sm',
+            !capsLockOn && 'invisible'
+          )}
+        >
+          <AlertTriangle className="h-4 w-4" />
+          {t('auth.login.capsLockOn')}
+        </p>
+      )}
     </div>
   );
 }
 
 /** Linha do formulário: campo à esquerda, avisos à direita (centralizados). */
-function FieldRow({
+export function FieldRow({
   field,
   aside,
 }: {
@@ -90,7 +129,7 @@ function FieldRow({
   );
 }
 
-function Rule({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+export function Rule({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   return (
     <li
       className={cn(

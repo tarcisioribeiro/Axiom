@@ -4,22 +4,25 @@ import {
   Award,
   BookOpen,
   Calendar,
+  CalendarDays,
   Check,
   CheckCircle2,
   CheckSquare,
   Circle,
   Edit,
   ExternalLink,
+  FileText,
   GraduationCap,
   Layers,
   Loader2,
+  PlayCircle,
   Plus,
+  Save,
   Square,
   Timer,
   Trash2,
   Upload,
   X,
-  Save,
 } from 'lucide-react';
 // Configure PDF.js worker via Vite ?url import for reliable asset bundling
 // (same setup as BookReader.tsx — safe to register more than once).
@@ -216,6 +219,7 @@ function ModuleItem({
               <Input
                 value={editingTitle}
                 onChange={(e) => setEditingTitle(e.target.value)}
+                placeholder={t('pages.courses.modules.titlePlaceholder')}
                 className="h-7 text-sm"
               />
               <Button
@@ -580,7 +584,10 @@ export function AddSessionForm({
     >
       <div className="gap-md grid grid-cols-2">
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.courses.sessions.dateLabel')}</Label>
+          <Label className="gap-xs flex items-center text-xs">
+            <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.courses.sessions.dateLabel')}
+          </Label>
           <DatePicker
             value={parseLocalDate(watch('session_date'))}
             onChange={(d) =>
@@ -592,7 +599,11 @@ export function AddSessionForm({
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-xs" htmlFor="duration_minutes">
+          <Label
+            className="gap-xs flex items-center text-xs"
+            htmlFor="duration_minutes"
+          >
+            <Timer className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.courses.sessions.durationLabel')}
           </Label>
           <Controller
@@ -611,7 +622,8 @@ export function AddSessionForm({
         </div>
       </div>
       <div className="space-y-xs">
-        <Label className="text-xs" htmlFor="session_notes">
+        <Label className="gap-xs flex items-center text-xs" htmlFor="session_notes">
+          <FileText className="text-muted-foreground h-3.5 w-3.5" />
           {t('pages.courses.sessions.notesLabel')}
         </Label>
         <Textarea
@@ -623,7 +635,10 @@ export function AddSessionForm({
       </div>
       <div className="gap-md grid grid-cols-2">
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.courses.sessions.moduleLabel')}</Label>
+          <Label className="gap-xs flex items-center text-xs">
+            <Layers className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.courses.sessions.moduleLabel')}
+          </Label>
           <Select
             value={moduleId}
             onValueChange={(v) => {
@@ -646,7 +661,10 @@ export function AddSessionForm({
           </Select>
         </div>
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.courses.sessions.lessonLabel')}</Label>
+          <Label className="gap-xs flex items-center text-xs">
+            <PlayCircle className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.courses.sessions.lessonLabel')}
+          </Label>
           <Select
             value={lessonId}
             onValueChange={setLessonId}

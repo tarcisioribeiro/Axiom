@@ -13,6 +13,7 @@ import {
   PanelRight,
   Plus,
   Save,
+  Shapes,
   Sun,
   X,
 } from 'lucide-react';
@@ -272,7 +273,8 @@ function AnnotationForm({
       />
       <div className="gap-sm flex">
         <div className="flex-1">
-          <Label className="mb-xs block text-xs">
+          <Label className="gap-xs mb-xs flex items-center text-xs">
+            <Shapes className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.bookReader.typeLabel')}
           </Label>
           <Select value={type} onValueChange={setType}>
@@ -287,7 +289,8 @@ function AnnotationForm({
           </Select>
         </div>
         <div className="flex-1">
-          <Label className="mb-xs block text-xs">
+          <Label className="gap-xs mb-xs flex items-center text-xs">
+            <Palette className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.bookReader.colorLabel')}
           </Label>
           <Select value={color} onValueChange={setColor}>
@@ -857,6 +860,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
               <Input
                 className="h-7 w-14 text-center text-sm"
                 value={pageInput}
+                placeholder="1"
                 onChange={(e) => setPageInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') goToPdfPage(parseInt(pageInput) || 1);

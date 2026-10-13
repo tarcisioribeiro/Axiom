@@ -6,16 +6,22 @@ import {
   CircleDot,
   Clock,
   Globe,
+  KeyRound,
   Loader2,
   Pencil,
   Plus,
+  Power,
+  RotateCcw,
+  Save,
+  Search,
   Send,
+  Timer,
   Trash2,
+  Type,
   Webhook as WebhookIcon,
+  X,
   XCircle,
   Zap,
-  Save,
-  X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -279,7 +285,7 @@ export default function Webhooks() {
                 : []),
             ]}
           >
-            <FilterField label={t('common.filterLabels.search')}>
+            <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput
                 placeholder={t('webhooks.searchPlaceholder')}
                 value={searchTerm}
@@ -287,7 +293,7 @@ export default function Webhooks() {
                 className="w-44"
               />
             </FilterField>
-            <FilterField label={t('common.fields.status')}>
+            <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger
                   className="w-36"
@@ -313,7 +319,7 @@ export default function Webhooks() {
                 </SelectContent>
               </Select>
             </FilterField>
-            <FilterField label={t('common.filterLabels.event')}>
+            <FilterField label={t('common.filterLabels.event')} icon={Zap}>
               <Select value={eventFilter} onValueChange={setEventFilter}>
                 <SelectTrigger
                   className="w-44"
@@ -514,7 +520,10 @@ export default function Webhooks() {
 
           <div className="space-y-md py-sm">
             <div className="space-y-xs">
-              <Label>{t('webhooks.form.nameLabel')}</Label>
+              <Label className="gap-xs flex items-center">
+                <Type className="text-muted-foreground h-3.5 w-3.5" />
+                {t('webhooks.form.nameLabel')}
+              </Label>
               <Input
                 placeholder={t('webhooks.form.namePlaceholder')}
                 value={form.name}
@@ -522,15 +531,19 @@ export default function Webhooks() {
               />
             </div>
             <div className="space-y-xs">
-              <Label>{t('webhooks.form.urlLabel')}</Label>
+              <Label className="gap-xs flex items-center">
+                <Globe className="text-muted-foreground h-3.5 w-3.5" />
+                {t('webhooks.form.urlLabel')}
+              </Label>
               <Input
-                placeholder="https://hooks.zapier.com/..."
+                placeholder="https://exemplo.com"
                 value={form.url}
                 onChange={(e) => setForm((p) => ({ ...p, url: e.target.value }))}
               />
             </div>
             <div className="space-y-xs">
-              <Label>
+              <Label className="gap-xs flex items-center">
+                <KeyRound className="text-muted-foreground h-3.5 w-3.5" />
                 {editingWebhook
                   ? t('webhooks.form.secretEditLabel')
                   : t('webhooks.form.secretLabel')}
@@ -545,7 +558,10 @@ export default function Webhooks() {
 
             <div className="gap-sm grid grid-cols-2">
               <div className="space-y-xs">
-                <Label>{t('webhooks.form.timeoutLabel')}</Label>
+                <Label className="gap-xs flex items-center">
+                  <Timer className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('webhooks.form.timeoutLabel')}
+                </Label>
                 <NumberStepper
                   min={1}
                   max={60}
@@ -555,7 +571,10 @@ export default function Webhooks() {
                 />
               </div>
               <div className="space-y-xs">
-                <Label>{t('webhooks.form.maxRetriesLabel')}</Label>
+                <Label className="gap-xs flex items-center">
+                  <RotateCcw className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('webhooks.form.maxRetriesLabel')}
+                </Label>
                 <NumberStepper
                   min={0}
                   max={10}
@@ -572,11 +591,17 @@ export default function Webhooks() {
                 checked={form.is_active}
                 onCheckedChange={(v) => setForm((p) => ({ ...p, is_active: !!v }))}
               />
-              <Label htmlFor="is_active">{t('webhooks.form.isActiveLabel')}</Label>
+              <Label className="gap-xs flex items-center" htmlFor="is_active">
+                <Power className="text-muted-foreground h-3.5 w-3.5" />
+                {t('webhooks.form.isActiveLabel')}
+              </Label>
             </div>
 
             <div className="space-y-sm">
-              <Label>{t('webhooks.form.eventsLabel')}</Label>
+              <Label className="gap-xs flex items-center">
+                <Zap className="text-muted-foreground h-3.5 w-3.5" />
+                {t('webhooks.form.eventsLabel')}
+              </Label>
               <div className="gap-xs p-sm grid grid-cols-1 rounded-md border sm:grid-cols-2">
                 {(events ?? []).map((ev) => (
                   <div key={ev.value} className="gap-sm flex items-center">

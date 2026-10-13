@@ -2,14 +2,16 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarDays,
+  Check,
   Copy,
+  Hash,
   Loader2,
   Share2,
   Trash2,
   User,
-  Check,
-  ArrowLeft,
-  ArrowRight,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -353,7 +355,10 @@ export function SharePasswordModal({
                     </p>
 
                     <div className="space-y-sm">
-                      <Label>{t('pages.sharePassword.expiryLabel')}</Label>
+                      <Label className="gap-xs flex items-center">
+                        <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                        {t('pages.sharePassword.expiryLabel')}
+                      </Label>
                       <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
                         {TTL_OPTIONS.map((opt) => (
                           <button
@@ -373,7 +378,8 @@ export function SharePasswordModal({
                     </div>
 
                     <div className="space-y-sm">
-                      <Label htmlFor="max-uses">
+                      <Label className="gap-xs flex items-center" htmlFor="max-uses">
+                        <Hash className="text-muted-foreground h-3.5 w-3.5" />
                         {t('pages.sharePassword.maxUsesLabel')}
                       </Label>
                       <Select value={maxUses} onValueChange={setMaxUses}>

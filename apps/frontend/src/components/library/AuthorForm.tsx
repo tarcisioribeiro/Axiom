@@ -4,11 +4,12 @@ import {
   CalendarDays,
   FileText,
   Globe,
+  ImagePlus,
   Loader2,
+  Save,
   User,
   UserCircle,
   X,
-  Save,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -157,8 +158,9 @@ export function AuthorForm({
           />
           <label
             htmlFor="author-photo"
-            className="text-primary cursor-pointer text-sm underline-offset-4 hover:underline"
+            className="gap-xs text-primary flex cursor-pointer items-center text-sm underline-offset-4 hover:underline"
           >
+            <ImagePlus className="h-3.5 w-3.5" />
             {photoPreview
               ? t('pages.authors.form.changePhoto')
               : t('pages.authors.form.addPhoto')}

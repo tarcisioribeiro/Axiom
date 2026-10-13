@@ -1,7 +1,8 @@
+/* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { isValidPhoneNumber } from 'libphonenumber-js';
-import { Pencil, Save, User, X } from 'lucide-react';
+import { Cake, Mail, Pencil, Phone, Save, User, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -130,10 +131,12 @@ function PersonalDataForm({
           <FormField
             id="name"
             label={t('userProfile.personalData.name')}
+            icon={User}
             error={nameError}
           >
             <Input
               autoComplete="name"
+              placeholder={t('common.placeholders.fullName')}
               maxLength={200}
               disabled={!editing}
               value={name}
@@ -151,11 +154,13 @@ function PersonalDataForm({
           <FormField
             id="email"
             label={t('userProfile.personalData.email')}
+            icon={Mail}
             error={emailError}
           >
             <Input
               type="email"
               autoComplete="email"
+              placeholder={t('common.placeholders.email')}
               disabled={!editing}
               value={email}
               onChange={(e) => setEmail(e.target.value.trim())}
@@ -164,6 +169,7 @@ function PersonalDataForm({
           <FormField
             id="phone"
             label={t('userProfile.personalData.phone')}
+            icon={Phone}
             error={phoneError}
           >
             <Input
@@ -178,7 +184,10 @@ function PersonalDataForm({
         </div>
         <div className="gap-md grid sm:grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="sex">{t('userProfile.personalData.sex')}</Label>
+            <Label className="gap-xs flex items-center" htmlFor="sex">
+              <User className="text-muted-foreground h-3.5 w-3.5" />
+              {t('userProfile.personalData.sex')}
+            </Label>
             <Select value={sex} onValueChange={setSex} disabled={!editing}>
               <SelectTrigger id="sex">
                 <SelectValue />
@@ -190,7 +199,10 @@ function PersonalDataForm({
             </Select>
           </div>
           <div className="space-y-sm">
-            <Label>{t('userProfile.personalData.birthDate')}</Label>
+            <Label className="gap-xs flex items-center">
+              <Cake className="text-muted-foreground h-3.5 w-3.5" />
+              {t('userProfile.personalData.birthDate')}
+            </Label>
             <DatePicker
               value={birthDate ? parseISO(birthDate + 'T00:00:00') : undefined}
               onChange={(d) => setBirthDate(d ? format(d, 'yyyy-MM-dd') : null)}

@@ -1,6 +1,21 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { BookMarked, Download, Edit, Trash2, Loader2, Save, X } from 'lucide-react';
+import {
+  Bookmark,
+  BookMarked,
+  BookOpen,
+  Download,
+  Edit,
+  Hash,
+  Loader2,
+  Palette,
+  Quote,
+  Save,
+  Search,
+  Shapes,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -97,7 +112,10 @@ function HighlightForm({
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
       <div className="space-y-sm">
-        <Label htmlFor="hl-book">{t('pages.highlights.form.bookLabel')}</Label>
+        <Label className="gap-xs flex items-center" htmlFor="hl-book">
+          <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
+          {t('pages.highlights.form.bookLabel')}
+        </Label>
         <Select value={bookId} onValueChange={setBookId}>
           <SelectTrigger id="hl-book">
             <SelectValue placeholder={t('pages.highlights.form.bookPlaceholder')} />
@@ -113,7 +131,10 @@ function HighlightForm({
       </div>
 
       <div className="space-y-sm">
-        <Label htmlFor="hl-text">{t('pages.highlights.form.textLabel')}</Label>
+        <Label className="gap-xs flex items-center" htmlFor="hl-text">
+          <Quote className="text-muted-foreground h-3.5 w-3.5" />
+          {t('pages.highlights.form.textLabel')}
+        </Label>
         <Textarea
           id="hl-text"
           value={text}
@@ -126,7 +147,10 @@ function HighlightForm({
 
       <div className="gap-md grid grid-cols-2">
         <div className="space-y-sm">
-          <Label htmlFor="hl-type">{t('pages.highlights.form.typeLabel')}</Label>
+          <Label className="gap-xs flex items-center" htmlFor="hl-type">
+            <Shapes className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.highlights.form.typeLabel')}
+          </Label>
           <Select
             value={highlightType}
             onValueChange={(v) => setHighlightType(v as typeof highlightType)}
@@ -148,7 +172,10 @@ function HighlightForm({
           </Select>
         </div>
         <div className="space-y-sm">
-          <Label htmlFor="hl-color">{t('pages.highlights.form.colorLabel')}</Label>
+          <Label className="gap-xs flex items-center" htmlFor="hl-color">
+            <Palette className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.highlights.form.colorLabel')}
+          </Label>
           <Select value={color} onValueChange={(v) => setColor(v as typeof color)}>
             <SelectTrigger id="hl-color">
               <SelectValue />
@@ -176,7 +203,10 @@ function HighlightForm({
 
       <div className="gap-md grid grid-cols-2">
         <div className="space-y-sm">
-          <Label htmlFor="hl-page">{t('pages.highlights.form.pageLabel')}</Label>
+          <Label className="gap-xs flex items-center" htmlFor="hl-page">
+            <Hash className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.highlights.form.pageLabel')}
+          </Label>
           <NumberStepper
             id="hl-page"
             min={1}
@@ -187,7 +217,10 @@ function HighlightForm({
           />
         </div>
         <div className="space-y-sm">
-          <Label htmlFor="hl-chapter">{t('pages.highlights.form.chapterLabel')}</Label>
+          <Label className="gap-xs flex items-center" htmlFor="hl-chapter">
+            <Bookmark className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.highlights.form.chapterLabel')}
+          </Label>
           <Input
             id="hl-chapter"
             value={chapter}
@@ -348,7 +381,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
           hasActiveFilters={!!searchTerm}
           onClear={() => setSearchTerm('')}
         >
-          <FilterField label={t('common.filterLabels.search')}>
+          <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput
               placeholder={t('pages.highlights.searchPlaceholder')}
               value={searchTerm}

@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Building2, Plus, Vault, Zap } from 'lucide-react';
+import { Building2, Plus, Search, Vault, Wallet, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -194,7 +194,7 @@ export default function Vaults() {
                 : []),
             ]}
           >
-            <FilterField label={t('common.filterLabels.search')}>
+            <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput
                 placeholder={t('pages.vaults.searchPlaceholder')}
                 value={searchTerm}
@@ -202,7 +202,7 @@ export default function Vaults() {
                 className="w-44"
               />
             </FilterField>
-            <FilterField label={t('common.fields.account')}>
+            <FilterField label={t('common.fields.account')} icon={Wallet}>
               <Select value={accountFilter} onValueChange={setAccountFilter}>
                 <SelectTrigger
                   className="w-48"

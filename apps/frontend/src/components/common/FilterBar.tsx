@@ -1,4 +1,4 @@
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X, type LucideIcon } from 'lucide-react';
 import React, { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -14,15 +14,25 @@ export interface ActiveFilterChip {
 
 interface FilterFieldProps {
   label: string;
+  /** Ícone à esquerda do rótulo (todo rótulo tem ícone). */
+  icon: LucideIcon;
   children: React.ReactElement;
 }
 
 /** Campo do FilterBar com rótulo acima do controle. */
-export const FilterField: React.FC<FilterFieldProps> = ({ label, children }) => {
+export const FilterField: React.FC<FilterFieldProps> = ({
+  label,
+  icon: Icon,
+  children,
+}) => {
   const id = useId();
   return (
     <div role="group" aria-labelledby={id} className="gap-xs flex flex-col">
-      <span id={id} className="text-muted-foreground text-center text-xs font-medium">
+      <span
+        id={id}
+        className="gap-xs text-muted-foreground flex items-center justify-center text-xs font-medium"
+      >
+        <Icon className="h-3.5 w-3.5" />
         {label}
       </span>
       <div className="flex [&>*]:min-w-0 [&>*]:flex-1">{children}</div>
@@ -64,7 +74,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             // elemento renderizado de fato, o que sobrepõe qualquer largura
             // fixa (w-40, w-52...) que a página tenha passado, já que
             // flex-basis tem prioridade sobre width no eixo principal.
-            // Cada campo vai dentro de <FilterField label=...> (rótulo acima).
+            // Cada campo vai dentro de <FilterField label=... icon=...> (rótulo acima).
             if (!React.isValidElement(child) || child.type === Button) {
               return child;
             }

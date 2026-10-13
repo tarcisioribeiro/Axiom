@@ -1,17 +1,19 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
+  Check,
+  Copy,
+  CreditCard as CreditCardIcon,
+  ExternalLink,
   Eye,
   EyeOff,
-  ExternalLink,
   Loader2,
-  Copy,
-  Check,
+  Pencil,
+  Plus,
+  Search,
   Star,
-  CreditCard as CreditCardIcon,
+  Tag,
+  Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -323,7 +325,7 @@ export default function StoredCards() {
               : []),
           ]}
         >
-          <FilterField label={t('common.filterLabels.search')}>
+          <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput
               placeholder={t('pages.storedCards.searchPlaceholder')}
               value={searchTerm}
@@ -331,7 +333,7 @@ export default function StoredCards() {
               className="w-52 sm:w-64"
             />
           </FilterField>
-          <FilterField label={t('common.filterLabels.brand')}>
+          <FilterField label={t('common.filterLabels.brand')} icon={Tag}>
             <Select value={flagFilter} onValueChange={setFlagFilter}>
               <SelectTrigger
                 className="w-40"

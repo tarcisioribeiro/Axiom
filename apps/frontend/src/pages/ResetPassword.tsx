@@ -1,3 +1,4 @@
+import { Lock } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, Link, useNavigate } from 'react-router';
@@ -106,7 +107,8 @@ export default function ResetPassword() {
               )}
 
               <div className="space-y-sm">
-                <Label htmlFor="new-password">
+                <Label className="gap-xs flex items-center" htmlFor="new-password">
+                  <Lock className="text-muted-foreground h-3.5 w-3.5" />
                   {t('auth.resetPassword.newPassword')}
                 </Label>
                 <Input
@@ -122,7 +124,8 @@ export default function ResetPassword() {
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="confirm-password">
+                <Label className="gap-xs flex items-center" htmlFor="confirm-password">
+                  <Lock className="text-muted-foreground h-3.5 w-3.5" />
                   {t('auth.resetPassword.confirmPassword')}
                 </Label>
                 <Input

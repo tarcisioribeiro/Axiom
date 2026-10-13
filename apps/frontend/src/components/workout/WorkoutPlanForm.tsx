@@ -5,9 +5,10 @@ import {
   ClipboardList,
   FileText,
   Loader2,
-  XCircle,
+  Power,
   Save,
   X,
+  XCircle,
 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -147,6 +148,7 @@ export function WorkoutPlanForm({
         {/* Status */}
         <div className="space-y-sm">
           <Label className="gap-xs text-muted-foreground flex items-center text-xs font-semibold tracking-wider uppercase">
+            <Power className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.workoutPlans.planActive')}
           </Label>
           <div className="gap-sm grid grid-cols-2">

@@ -91,7 +91,7 @@ export function DatePicker({
   maxDate,
 }: DatePickerProps) {
   const { t } = useTranslation();
-  const resolvedPlaceholder = placeholder ?? t('common.fields.selectDate');
+  const resolvedPlaceholder = placeholder ?? t('common.placeholders.date');
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const flatpickrRef = useRef<flatpickr.Instance | null>(null);

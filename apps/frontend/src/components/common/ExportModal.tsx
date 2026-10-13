@@ -1,4 +1,4 @@
-import { Download, Loader2, X } from 'lucide-react';
+import { CalendarDays, Download, FileType, Loader2, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -90,7 +90,10 @@ export function ExportModal({
         <div className="space-y-md">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-xs">
-              <Label className="text-sm">{t('common.export.dateFrom')}</Label>
+              <Label className="gap-xs flex items-center text-sm">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('common.export.dateFrom')}
+              </Label>
               <DatePicker
                 value={dateFrom}
                 onChange={setDateFrom}
@@ -99,7 +102,10 @@ export function ExportModal({
               />
             </div>
             <div className="space-y-xs">
-              <Label className="text-sm">{t('common.export.dateTo')}</Label>
+              <Label className="gap-xs flex items-center text-sm">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('common.export.dateTo')}
+              </Label>
               <DatePicker
                 value={dateTo}
                 onChange={setDateTo}
@@ -110,7 +116,10 @@ export function ExportModal({
           </div>
 
           <div className="space-y-xs">
-            <Label className="text-sm">{t('common.export.format')}</Label>
+            <Label className="gap-xs flex items-center text-sm">
+              <FileType className="text-muted-foreground h-3.5 w-3.5" />
+              {t('common.export.format')}
+            </Label>
             <Select
               value={exportFormat}
               onValueChange={(v) => setExportFormat(v as 'csv' | 'pdf')}

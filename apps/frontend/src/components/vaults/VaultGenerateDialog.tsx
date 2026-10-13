@@ -1,4 +1,4 @@
-import { Loader2, Save, X, Repeat } from 'lucide-react';
+import { CalendarDays, Loader2, Repeat, Save, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -99,7 +99,10 @@ export function VaultGenerateDialog({
         </DialogHeader>
         <div className="space-y-md">
           <div>
-            <Label>{t('pages.vaults.recurringContributions.generateMonth')}</Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.vaults.recurringContributions.generateMonth')}
+            </Label>
             <div className="mt-xs gap-sm flex">
               <Select
                 value={String(selectedMonth)}

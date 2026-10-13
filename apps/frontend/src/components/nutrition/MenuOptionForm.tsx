@@ -2,14 +2,19 @@
 import { motion } from 'framer-motion';
 import type { TFunction } from 'i18next';
 import {
+  Apple,
+  CircleDashed,
+  FileText,
   GripVertical,
+  Hash,
   ListChecks,
   Loader2,
   Plus,
+  Ruler,
   Salad,
+  Save,
   StickyNote,
   Trash2,
-  Save,
   X,
 } from 'lucide-react';
 import { useEffect } from 'react';
@@ -462,7 +467,8 @@ function IngredientRow({
       {/* Alimento, quantidade, unidade, opcional e observação */}
       <div className="gap-xs grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_9rem_8rem_auto_minmax(0,1fr)]">
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-2xs block w-full text-center font-medium tracking-wider uppercase">
+          <Label className="gap-xs text-muted-foreground text-2xs flex w-full items-center justify-center font-medium tracking-wider uppercase">
+            <Apple className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.nutritionMealTypes.food')}
           </Label>
           <Select
@@ -484,7 +490,8 @@ function IngredientRow({
           </Select>
         </div>
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-2xs block w-full text-center font-medium tracking-wider uppercase">
+          <Label className="gap-xs text-muted-foreground text-2xs flex w-full items-center justify-center font-medium tracking-wider uppercase">
+            <Hash className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.nutritionMealTypes.quantity')}
           </Label>
           <DecimalInput
@@ -502,7 +509,8 @@ function IngredientRow({
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-2xs block w-full text-center font-medium tracking-wider uppercase">
+          <Label className="gap-xs text-muted-foreground text-2xs flex w-full items-center justify-center font-medium tracking-wider uppercase">
+            <Ruler className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.nutritionMealTypes.unit')}
           </Label>
           <Select
@@ -526,7 +534,8 @@ function IngredientRow({
           </Select>
         </div>
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-2xs block w-full text-center font-medium tracking-wider uppercase">
+          <Label className="gap-xs text-muted-foreground text-2xs flex w-full items-center justify-center font-medium tracking-wider uppercase">
+            <CircleDashed className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.nutritionMealTypes.optional')}
           </Label>
           <div className="flex h-8 items-center justify-center">
@@ -540,7 +549,8 @@ function IngredientRow({
           </div>
         </div>
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-2xs block w-full text-center font-medium tracking-wider uppercase">
+          <Label className="gap-xs text-muted-foreground text-2xs flex w-full items-center justify-center font-medium tracking-wider uppercase">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.nutritionMealTypes.ingredientNotes')}
           </Label>
           <div className="relative">

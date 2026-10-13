@@ -16,23 +16,23 @@ import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
+  AlertCircle,
   CheckCircle2,
   Circle,
   CircleDot,
-  RefreshCw,
-  AlertCircle,
+  Coffee,
   Flame,
   LayoutList,
-  Tag,
-  Zap,
   Moon,
+  Pause,
+  Play,
+  RefreshCw,
+  RotateCcw,
   Sun,
   Sunset,
+  Tag,
   Target,
-  Coffee,
-  Play,
-  Pause,
-  RotateCcw,
+  Zap,
 } from 'lucide-react';
 import {
   useState,
@@ -898,7 +898,7 @@ export default function DailyChecklist({
                       : []),
                   ]}
                 >
-                  <FilterField label={t('common.fields.category')}>
+                  <FilterField label={t('common.fields.category')} icon={Tag}>
                     <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                       <SelectTrigger
                         className="w-44"
@@ -930,7 +930,7 @@ export default function DailyChecklist({
                       </SelectContent>
                     </Select>
                   </FilterField>
-                  <FilterField label={t('common.fields.status')}>
+                  <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                       <SelectTrigger
                         className="w-36"

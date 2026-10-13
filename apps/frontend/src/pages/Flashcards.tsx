@@ -2,17 +2,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  BookOpen,
   Brain,
   CalendarClock,
+  CheckCircle2,
   ChevronLeft,
-  Layers,
-  Plus,
-  Star,
-  Loader2,
-  Save,
-  X,
   CircleDot,
-  BookOpen,
+  FileText,
+  Layers,
+  Loader2,
+  Plus,
+  Save,
+  Search,
+  Star,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -363,7 +366,7 @@ export default function Flashcards() {
                   : []),
               ]}
             >
-              <FilterField label={t('common.filterLabels.search')}>
+              <FilterField label={t('common.filterLabels.search')} icon={Search}>
                 <SearchInput
                   placeholder={t('pages.flashcards.searchPlaceholder')}
                   value={searchTerm}
@@ -371,7 +374,7 @@ export default function Flashcards() {
                   className="w-44"
                 />
               </FilterField>
-              <FilterField label={t('common.fields.status')}>
+              <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger
                     className="w-40"
@@ -412,7 +415,7 @@ export default function Flashcards() {
                 </Select>
               </FilterField>
               {bookTitles.length > 0 && (
-                <FilterField label={t('common.filterLabels.book')}>
+                <FilterField label={t('common.filterLabels.book')} icon={BookOpen}>
                   <Select value={bookFilter} onValueChange={setBookFilter}>
                     <SelectTrigger
                       className="w-44"
@@ -547,18 +550,26 @@ export default function Flashcards() {
             </DialogHeader>
             <form onSubmit={(e) => void handleCreateSubmit(e)} className="space-y-md">
               <div className="space-y-xs">
-                <Label>{t('pages.flashcards.front')}</Label>
+                <Label className="gap-xs flex items-center">
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.flashcards.front')}
+                </Label>
                 <Textarea
                   value={newFront}
+                  placeholder={t('common.placeholders.flashcardFront')}
                   onChange={(e) => setNewFront(e.target.value)}
                   rows={3}
                   required
                 />
               </div>
               <div className="space-y-xs">
-                <Label>{t('pages.flashcards.back')}</Label>
+                <Label className="gap-xs flex items-center">
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.flashcards.back')}
+                </Label>
                 <Textarea
                   value={newBack}
+                  placeholder={t('common.placeholders.flashcardBack')}
                   onChange={(e) => setNewBack(e.target.value)}
                   rows={3}
                   required

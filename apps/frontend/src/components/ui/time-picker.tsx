@@ -46,7 +46,7 @@ export function TimePicker({
   'aria-invalid': ariaInvalid,
 }: TimePickerProps) {
   const { t } = useTranslation();
-  const resolvedPlaceholder = placeholder ?? t('common.fields.horary');
+  const resolvedPlaceholder = placeholder ?? t('common.placeholders.time');
   const inputRef = useRef<HTMLInputElement>(null);
   const flatpickrRef = useRef<flatpickr.Instance | null>(null);
   const onChangeRef = useRef(onChange);

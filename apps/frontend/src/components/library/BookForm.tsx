@@ -1,17 +1,18 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  BookCheck,
   BookOpen,
   FileText,
   ImagePlus,
   Loader2,
+  Save,
   Smartphone,
   Star,
   Tag,
   Upload,
   User2,
   X,
-  Save,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -713,8 +714,9 @@ export function BookForm({
                     />
                     <Label
                       htmlFor="already-read"
-                      className="cursor-pointer font-normal"
+                      className="gap-xs flex cursor-pointer items-center font-normal"
                     >
+                      <BookCheck className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.books.form.alreadyReadLabel')}
                     </Label>
                   </div>

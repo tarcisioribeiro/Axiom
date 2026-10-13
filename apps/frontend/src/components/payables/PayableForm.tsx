@@ -227,7 +227,6 @@ export function PayableForm({
             <DatePicker
               value={formData.date ?? undefined}
               onChange={(date) => set({ date: date ? formatLocalDate(date) : '' })}
-              placeholder={t('common.actions.select')}
             />
           </div>
 

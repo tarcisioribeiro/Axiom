@@ -1,4 +1,4 @@
-import { TrendingDown } from 'lucide-react';
+import { Calculator, TrendingDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -49,7 +49,10 @@ export function LoanAmortizationDialog({
           <DialogDescription>{loan?.description}</DialogDescription>
         </DialogHeader>
         <div className="mb-md flex items-center gap-3">
-          <Label>{t('pages.loans.amortization.method')}:</Label>
+          <Label className="gap-xs flex items-center">
+            <Calculator className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.loans.amortization.method')}:
+          </Label>
           <div className="gap-sm flex">
             {(['price', 'sac'] as const).map((m) => (
               <Button

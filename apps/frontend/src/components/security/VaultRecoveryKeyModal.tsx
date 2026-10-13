@@ -1,12 +1,13 @@
 import {
-  Key,
-  Copy,
-  CheckCircle2,
   AlertTriangle,
-  X,
   Check,
-  Unlock,
+  CheckCircle2,
+  Copy,
+  Key,
+  KeyRound,
   Loader2,
+  Unlock,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -148,7 +149,10 @@ export function VaultRecoveryKeyModal({
                   <span>{t('userProfile.security.recoveryKey.oneTimeWarning')}</span>
                 </div>
                 <div className="space-y-xs">
-                  <Label>{t('userProfile.security.recoveryKey.yourKey')}</Label>
+                  <Label className="gap-xs flex items-center">
+                    <KeyRound className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('userProfile.security.recoveryKey.yourKey')}
+                  </Label>
                   <div className="gap-sm flex">
                     <Input value={generatedKey} readOnly className="text-sm" />
                     <Button
@@ -180,7 +184,8 @@ export function VaultRecoveryKeyModal({
         ) : (
           <div className="space-y-md">
             <div className="space-y-xs">
-              <Label htmlFor="recovery-input">
+              <Label className="gap-xs flex items-center" htmlFor="recovery-input">
+                <KeyRound className="text-muted-foreground h-3.5 w-3.5" />
                 {t('userProfile.security.recoveryKey.inputLabel')}
               </Label>
               <Input

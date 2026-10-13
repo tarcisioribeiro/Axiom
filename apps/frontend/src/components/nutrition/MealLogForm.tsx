@@ -2,16 +2,17 @@
 import {
   CalendarDays,
   CheckCircle2,
+  Clock,
   Flame,
   Loader2,
   Moon,
+  Save,
   StickyNote,
   Sun,
   Sunrise,
   UtensilsCrossed,
-  Zap,
-  Save,
   X,
+  Zap,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
@@ -150,7 +151,8 @@ export function MealLogForm({
         <FormSection title="Data & Hora" icon={CalendarDays}>
           <div className="gap-sm grid grid-cols-2">
             <div className="space-y-xs">
-              <Label className="text-muted-foreground text-xs">
+              <Label className="gap-xs text-muted-foreground flex items-center text-xs">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.nutritionLog.logDate')}
               </Label>
               <DatePicker
@@ -160,7 +162,8 @@ export function MealLogForm({
               />
             </div>
             <div className="space-y-xs">
-              <Label className="text-muted-foreground text-xs">
+              <Label className="gap-xs text-muted-foreground flex items-center text-xs">
+                <Clock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.nutritionLog.logTime')}
               </Label>
               <TimePicker

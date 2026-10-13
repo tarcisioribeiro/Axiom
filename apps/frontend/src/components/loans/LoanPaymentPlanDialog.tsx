@@ -1,4 +1,4 @@
-import { Loader2, Save, X, CalendarClock } from 'lucide-react';
+import { CalendarClock, CalendarDays, Hash, Loader2, Save, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -88,7 +88,10 @@ export function LoanPaymentPlanDialog({
         </DialogHeader>
         <div className="space-y-md">
           <div className="space-y-xs">
-            <Label>{t('pages.loans.paymentPlan.installmentsCountLabel')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Hash className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.loans.paymentPlan.installmentsCountLabel')} *
+            </Label>
             <NumberStepper
               min={2}
               optional
@@ -98,7 +101,10 @@ export function LoanPaymentPlanDialog({
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.loans.paymentPlan.firstInstallmentLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.loans.paymentPlan.firstInstallmentLabel')}
+            </Label>
             <DatePicker
               value={firstDueDate}
               onChange={(date) => setFirstDueDate(date ? formatLocalDate(date) : '')}

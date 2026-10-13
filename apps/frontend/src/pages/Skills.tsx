@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
   Brain,
+  CheckCircle2,
   CircleDot,
   Clock,
   Edit,
@@ -11,6 +12,8 @@ import {
   LayoutGrid,
   Plus,
   Radar,
+  Search,
+  Tag,
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -370,14 +373,14 @@ export default function Skills() {
                 : []),
             ]}
           >
-            <FilterField label={t('common.filterLabels.search')}>
+            <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput
                 placeholder={t('pages.skills.searchPlaceholder')}
                 value={search}
                 onValueChange={setSearch}
               />
             </FilterField>
-            <FilterField label={t('common.fields.status')}>
+            <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger
                   className="w-36"
@@ -403,7 +406,7 @@ export default function Skills() {
                 </SelectContent>
               </Select>
             </FilterField>
-            <FilterField label={t('common.fields.category')}>
+            <FilterField label={t('common.fields.category')} icon={Tag}>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger
                   className="w-40"

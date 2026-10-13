@@ -84,6 +84,7 @@ Há três tipos de modal:
 - **[regra]** Erro do servidor ligado a um campo: `setError` para a borda e toast com a mensagem.
 - **[regra]** Formulário com validação manual (sem react-hook-form) mostra um toast por mensagem no submit.
 - **[regra]** O botão Salvar não fica desabilitado por erro de validação. O clique mostra os toasts. Status: vale para dados pessoais; demais formulários a verificar.
+- **[regra]** Campo de nova senha (perfil e cadastro): `PasswordField` + `FieldRow` de `components/user-profile/PasswordSection.tsx`. À direita ficam a força (`PasswordStrength`) e as regras (mín. 8, não só números, senhas iguais). No cadastro, o botão não é desabilitado: as regras viram `rules` do `Controller` e falhas vão para toast no envio (§3), e `warnCapsLock` mostra o aviso de Caps Lock do login (`hooks/use-caps-lock.ts`).
 - **Status:** aplicado nos 23 arquivos de formulário que tinham mensagem inline. A verificar: `Register.tsx` (usa `FormField` com `error` dentro de `Controller`, borda via `aria-invalid` direto no `Input`) e `PersonalDataSection.tsx` (validação manual).
 
 ## 4. Botões e ícones
@@ -156,6 +157,8 @@ Há três tipos de modal:
 - **[regra]** Moeda em BRL com vírgula e duas casas: `R$ 0,00`.
 - **[regra]** Datas em dd/mm/aaaa. Intervalos no formato "28/09 - 04/10/2026".
 - **[regra]** Telefone no formato "+DDD (DDI) número". Documento formatado do mesmo jeito.
+- **[regra]** Todo rótulo de campo tem ícone à esquerda (formulários, filtros, checkbox/radio): `<Label className="gap-xs flex items-center">` + ícone `text-muted-foreground h-3.5 w-3.5`. `FormField` e `FilterField` exigem a prop `icon`. Mesmo campo, mesmo ícone: valor/conta `Wallet`, data `CalendarDays`, hora `Clock`, categoria `Tag`, descrição/observações `FileText`, vínculo `Link2`, status `CheckCircle2`, número `Hash`, taxa `Percent`, senha `Lock`, usuário `AtSign`, e-mail `Mail`, telefone `Phone`, documento `IdCard`, busca `Search`. Ficam de fora itens de lista selecionáveis (linhas com checkbox, chips de dia da semana), onde o conteúdo da linha é o rótulo.
+- **[regra]** Todo campo tem placeholder curto (até 3 palavras, sem reticências): texto livre como exemplo `Ex.: Netflix` (`e.g.` em inglês); máscara/formato quando houver (`000.000.000-00`, `nome@email.com`, `https://exemplo.com`, `••••••••`); select `Selecione`; data `dd/mm/aaaa`; hora `hh:mm`; número `0`; moeda `0,00`; busca `Buscar <coisa>`. Defaults já vêm dos primitivos (`SelectValue`, `DatePicker`, `TimePicker`, `NumberStepper`, `DecimalInput`, `CurrencyInput`, `SearchInput`, `PasswordField`). Placeholders genéricos ficam em `common.placeholders.*`. Filtros de "todos" (`Todas as categorias`) continuam como estão.
 - **[pontual]** Decimais pt-BR com uma casa. Plural correto de unidades de medida. Hora sem segundos. "Todo o período" vira "Tudo".
 
 ## 12. Layout

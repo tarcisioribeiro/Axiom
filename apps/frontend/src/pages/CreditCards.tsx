@@ -3,13 +3,15 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import type { TFunction } from 'i18next';
 import {
-  Pencil,
-  Trash2,
-  CreditCard as CreditCardIcon,
   Calendar,
-  SlidersHorizontal,
+  CheckCircle2,
   CircleDot,
+  CreditCard as CreditCardIcon,
+  Pencil,
+  Search,
+  SlidersHorizontal,
   Tag,
+  Trash2,
 } from 'lucide-react';
 import { useState, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -347,7 +349,7 @@ export default function CreditCards({
               : []),
           ]}
         >
-          <FilterField label={t('common.filterLabels.search')}>
+          <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput
               placeholder={t('pages.creditCards.searchPlaceholder')}
               value={searchTerm}
@@ -355,7 +357,7 @@ export default function CreditCards({
               className="w-44"
             />
           </FilterField>
-          <FilterField label={t('common.filterLabels.brand')}>
+          <FilterField label={t('common.filterLabels.brand')} icon={Tag}>
             <Select value={flagFilter} onValueChange={setFlagFilter}>
               <SelectTrigger
                 className="w-40"
@@ -374,7 +376,7 @@ export default function CreditCards({
               </SelectContent>
             </Select>
           </FilterField>
-          <FilterField label={t('common.fields.status')}>
+          <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger
                 className="w-36"

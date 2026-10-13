@@ -1,6 +1,15 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Building2, Globe, Calendar, BookOpen } from 'lucide-react';
+import {
+  BookOpen,
+  Building2,
+  Calendar,
+  Edit,
+  Globe,
+  Plus,
+  Search,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -200,7 +209,7 @@ export default function Publishers() {
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.publishers.searchPlaceholder')}
             value={searchTerm}
@@ -208,7 +217,7 @@ export default function Publishers() {
             className="w-52 sm:w-64"
           />
         </FilterField>
-        <FilterField label={t('common.filterLabels.country')}>
+        <FilterField label={t('common.filterLabels.country')} icon={Globe}>
           <Select value={countryFilter} onValueChange={setCountryFilter}>
             <SelectTrigger
               className="w-44"

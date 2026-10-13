@@ -1,14 +1,16 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Pencil,
-  Trash2,
-  CreditCard as CreditCardIcon,
-  Receipt,
-  Wallet,
-  RotateCcw,
+  CalendarDays,
+  CheckCircle2,
   CircleDot,
+  CreditCard as CreditCardIcon,
+  Pencil,
+  Receipt,
   RefreshCw,
+  RotateCcw,
+  Trash2,
+  Wallet,
 } from 'lucide-react';
 import { useState, useEffect, useMemo, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -504,7 +506,7 @@ export default function CreditCardBills({
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.card')}>
+        <FilterField label={t('common.filterLabels.card')} icon={CreditCardIcon}>
           <Select value={cardFilter} onValueChange={setCardFilter}>
             <SelectTrigger className="w-52">
               <SelectValue placeholder={t('pages.creditCardBills.allCards')} />
@@ -527,7 +529,7 @@ export default function CreditCardBills({
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.fields.status')}>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger
               className="w-auto whitespace-nowrap"
@@ -554,7 +556,7 @@ export default function CreditCardBills({
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.year')}>
+        <FilterField label={t('common.filterLabels.year')} icon={CalendarDays}>
           <Select value={yearFilter} onValueChange={setYearFilter}>
             <SelectTrigger className="w-auto whitespace-nowrap">
               <SelectValue placeholder={t('pages.creditCardBills.allYears')} />
@@ -569,7 +571,7 @@ export default function CreditCardBills({
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.period')}>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
           <DateRangeFilter
             startDate={dueDateStart}
             endDate={dueDateEnd}

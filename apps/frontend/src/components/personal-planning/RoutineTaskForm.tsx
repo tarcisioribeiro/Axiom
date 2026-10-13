@@ -465,7 +465,7 @@ export function RoutineTaskForm({
                       aria-invalid={!!errors.day_of_month}
                       id="day_of_month"
                       disabled={isLoading}
-                      placeholder="1-31"
+                      placeholder="Ex.: 15"
                       min={1}
                       max={31}
                       optional

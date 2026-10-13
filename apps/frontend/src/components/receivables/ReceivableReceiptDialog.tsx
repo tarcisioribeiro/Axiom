@@ -1,12 +1,15 @@
+/* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
 import {
   AlertCircle,
+  Banknote,
   CalendarClock,
-  Wallet,
+  CalendarDays,
+  FileText,
   Loader2,
   Save,
+  Wallet,
   X,
-  Banknote,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -172,14 +175,20 @@ export function ReceivableReceiptDialog({
           </div>
 
           <div className="space-y-xs">
-            <Label>{t('pages.receivables.receipt.value')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.receivables.receipt.value')} *
+            </Label>
             <CurrencyInput
               value={form.value}
               onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.receivables.receipt.account')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.receivables.receipt.account')} *
+            </Label>
             <Select
               value={form.account}
               onValueChange={(v) => setForm((f) => ({ ...f, account: v }))}
@@ -197,7 +206,8 @@ export function ReceivableReceiptDialog({
             </Select>
           </div>
           <div className="space-y-xs">
-            <Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {scheduled
                 ? t('pages.receivables.receipt.scheduledDate')
                 : t('pages.receivables.receipt.date')}{' '}
@@ -212,11 +222,14 @@ export function ReceivableReceiptDialog({
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.receivables.receipt.notes')}</Label>
+            <Label className="gap-xs flex items-center">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.receivables.receipt.notes')}
+            </Label>
             <Input
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              placeholder={t('common.fields.notes')}
+              placeholder={t('common.placeholders.notes')}
             />
           </div>
 

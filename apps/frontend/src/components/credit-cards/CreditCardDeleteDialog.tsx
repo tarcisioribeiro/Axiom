@@ -1,4 +1,13 @@
-import { AlertTriangle, Loader2, X, FileText, Trash2, ShieldAlert } from 'lucide-react';
+import {
+  AlertTriangle,
+  FileText,
+  Hash,
+  Loader2,
+  Lock,
+  ShieldAlert,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -160,7 +169,8 @@ export function CreditCardDeleteDialog({
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-xs">
-              <Label htmlFor="delete-card-number">
+              <Label className="gap-xs flex items-center" htmlFor="delete-card-number">
+                <Hash className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.cardNumberLabel')}
               </Label>
               <Input
@@ -174,7 +184,8 @@ export function CreditCardDeleteDialog({
               />
             </div>
             <div className="space-y-xs">
-              <Label htmlFor="delete-card-cvv">
+              <Label className="gap-xs flex items-center" htmlFor="delete-card-cvv">
+                <Lock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.cvvLabel')}
               </Label>
               <Input

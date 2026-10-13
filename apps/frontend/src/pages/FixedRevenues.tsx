@@ -1,18 +1,20 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Pencil,
-  Trash2,
-  TrendingUp,
-  Store,
-  Tag,
-  Wallet,
   CalendarDays,
+  CheckCircle2,
+  CircleDot,
   History,
   Loader2,
+  Pencil,
   Save,
+  Search,
+  Store,
+  Tag,
+  Trash2,
+  TrendingUp,
+  Wallet,
   X,
-  CircleDot,
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -367,7 +369,7 @@ export default function FixedRevenues({
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.fixedRevenues.searchPlaceholder')}
             value={searchTerm}
@@ -375,7 +377,7 @@ export default function FixedRevenues({
             className="w-44"
           />
         </FilterField>
-        <FilterField label={t('common.fields.category')}>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger
               className="w-40"
@@ -403,7 +405,7 @@ export default function FixedRevenues({
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.fields.account')}>
+        <FilterField label={t('common.fields.account')} icon={Wallet}>
           <Select value={accountFilter} onValueChange={setAccountFilter}>
             <SelectTrigger
               className="w-40"
@@ -424,7 +426,7 @@ export default function FixedRevenues({
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.fields.status')}>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger
               className="w-36"

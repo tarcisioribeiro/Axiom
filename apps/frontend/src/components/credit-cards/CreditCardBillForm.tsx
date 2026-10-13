@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Loader2, Save, X } from 'lucide-react';
+import { CalendarDays, CreditCardIcon, Loader2, Save, Wallet, X } from 'lucide-react';
 /* eslint-disable max-lines */
 import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -301,7 +301,10 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           {creditCards.length > 1 && (
             <div className="space-y-sm md:col-span-2">
-              <Label>{t('pages.creditCardBills.form.creditCardLabel')}</Label>
+              <Label className="gap-xs flex items-center">
+                <CreditCardIcon className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.creditCardBills.form.creditCardLabel')}
+              </Label>
               <Select
                 value={watchedCreditCard > 0 ? watchedCreditCard.toString() : ''}
                 onValueChange={(v) => setValue('credit_card', parseInt(v))}
@@ -340,7 +343,10 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           )}
 
           <div className="space-y-sm">
-            <Label>{t('pages.creditCardBills.form.yearLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.creditCardBills.form.yearLabel')}
+            </Label>
             <Select value={watchedYear} onValueChange={(v) => setValue('year', v)}>
               <SelectTrigger>
                 <SelectValue
@@ -358,7 +364,10 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label>{t('pages.creditCardBills.form.monthLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.creditCardBills.form.monthLabel')}
+            </Label>
             <Select value={watchedMonth} onValueChange={(v) => setValue('month', v)}>
               <SelectTrigger>
                 <SelectValue
@@ -376,7 +385,11 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="invoice_beginning_date">
+            <Label
+              className="gap-xs flex items-center"
+              htmlFor="invoice_beginning_date"
+            >
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardBills.form.startDateLabel')}
             </Label>
             <DatePicker
@@ -390,7 +403,8 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="invoice_ending_date">
+            <Label className="gap-xs flex items-center" htmlFor="invoice_ending_date">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardBills.form.endDateLabel')}
             </Label>
             <DatePicker
@@ -404,7 +418,8 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="due_date">
+            <Label className="gap-xs flex items-center" htmlFor="due_date">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardBills.form.dueDateLabel')}
             </Label>
             <DatePicker
@@ -421,7 +436,8 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
             <>
               <div className="space-y-sm">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="total_amount">
+                  <Label className="gap-xs flex items-center" htmlFor="total_amount">
+                    <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.creditCardBills.form.totalAmountLabel')}
                   </Label>
                   {isCalculating && (
@@ -447,7 +463,8 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="minimum_payment">
+                <Label className="gap-xs flex items-center" htmlFor="minimum_payment">
+                  <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.creditCardBills.form.minPaymentLabel')}
                 </Label>
                 <Controller
@@ -468,7 +485,8 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="paid_amount">
+                <Label className="gap-xs flex items-center" htmlFor="paid_amount">
+                  <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.creditCardBills.form.paidAmountLabel')}
                 </Label>
                 <Controller
@@ -489,7 +507,8 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="payment_date">
+                <Label className="gap-xs flex items-center" htmlFor="payment_date">
+                  <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.creditCardBills.form.paymentDateLabel')}
                 </Label>
                 <DatePicker

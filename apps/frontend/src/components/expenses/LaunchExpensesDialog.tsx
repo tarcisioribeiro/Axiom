@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { X, CalendarPlus, Loader2 } from 'lucide-react';
+import { CalendarDays, CalendarPlus, ListChecks, Loader2, X } from 'lucide-react';
 /* eslint-disable max-lines */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -243,7 +243,10 @@ export const LaunchExpensesDialog = ({
           <div className="space-y-md">
             {/* Month selector */}
             <div className="space-y-sm">
-              <Label>{t('pages.fixedExpenses.launchDialog.selectMonth')}</Label>
+              <Label className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.fixedExpenses.launchDialog.selectMonth')}
+              </Label>
               <Select value={validMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger>
                   <SelectValue
@@ -265,7 +268,8 @@ export const LaunchExpensesDialog = ({
             {/* Expense list with editable values + dates */}
             <div className="space-y-sm">
               <div className="flex items-center justify-between">
-                <Label>
+                <Label className="gap-xs flex items-center">
+                  <ListChecks className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.fixedExpenses.launchDialog.expensesLabel', {
                     selected: selectedExpenses.length,
                     total: fixedExpenses.length,
@@ -279,8 +283,9 @@ export const LaunchExpensesDialog = ({
                   />
                   <label
                     htmlFor="select-all"
-                    className="cursor-pointer text-sm font-medium"
+                    className="gap-xs flex cursor-pointer items-center text-sm font-medium"
                   >
+                    <ListChecks className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.fixedExpenses.launchDialog.selectAll')}
                   </label>
                 </div>

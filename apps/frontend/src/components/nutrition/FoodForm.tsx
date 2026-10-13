@@ -1,4 +1,4 @@
-import { FileText, Flame, Loader2, Salad, Save, X } from 'lucide-react';
+import { FileText, Flame, Loader2, Ruler, Salad, Save, Scale, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -123,7 +123,8 @@ export function FoodForm({
         <div className="space-y-sm">
           <div className="gap-sm grid grid-cols-2">
             <div className="space-y-xs">
-              <label className="text-foreground text-xs font-medium">
+              <label className="gap-xs text-foreground flex items-center text-xs font-medium">
+                <Scale className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.nutritionFoods.servingSize', 'Tamanho da Porção')}
               </label>
               <Controller
@@ -144,7 +145,8 @@ export function FoodForm({
               />
             </div>
             <div className="space-y-xs">
-              <label className="text-foreground text-xs font-medium">
+              <label className="gap-xs text-foreground flex items-center text-xs font-medium">
+                <Ruler className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.nutritionFoods.servingUnit', 'Unidade')}
               </label>
               <Controller
@@ -168,7 +170,8 @@ export function FoodForm({
             </div>
           </div>
           <div className="space-y-xs">
-            <label className="text-foreground text-xs font-medium">
+            <label className="gap-xs text-foreground flex items-center text-xs font-medium">
+              <Flame className="text-muted-foreground h-3.5 w-3.5" />
               {t(
                 'pages.nutritionFoods.caloriesPerServing',
                 'Calorias (kcal) por Porção'
@@ -181,7 +184,7 @@ export function FoodForm({
                 <DecimalInput
                   decimals={1}
                   unit="kcal"
-                  placeholder="ex: 70"
+                  placeholder="Ex.: 70"
                   aria-label={t(
                     'pages.nutritionFoods.caloriesPerServing',
                     'Calorias (kcal) por Porção'

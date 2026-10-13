@@ -3,15 +3,22 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeftRight,
   Banknote,
+  CheckCircle2,
   CircleDot,
   CreditCard,
+  FileText,
+  Flag,
+  GitBranch,
   Loader2,
   MoreHorizontal,
   Plus,
+  Power,
   QrCode,
   Receipt,
   Save,
+  Search,
   Trash2,
+  Type,
   Wallet,
   X,
   Zap,
@@ -450,7 +457,8 @@ function RuleFormDialog({
           {/* Básico */}
           <div className="gap-md grid grid-cols-1 md:grid-cols-2">
             <div className="space-y-sm">
-              <Label htmlFor="rule-name">
+              <Label className="gap-xs flex items-center" htmlFor="rule-name">
+                <Type className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.automationRules.form.nameLabel')}
               </Label>
               <Input
@@ -463,7 +471,8 @@ function RuleFormDialog({
             </div>
 
             <div className="space-y-sm">
-              <Label htmlFor="rule-desc">
+              <Label className="gap-xs flex items-center" htmlFor="rule-desc">
+                <FileText className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.automationRules.form.descLabel')}
               </Label>
               <Input
@@ -476,7 +485,8 @@ function RuleFormDialog({
 
             <div className="gap-md grid grid-cols-3 md:col-span-2">
               <div className="space-y-sm flex flex-col items-center">
-                <Label htmlFor="rule-priority">
+                <Label className="gap-xs flex items-center" htmlFor="rule-priority">
+                  <Flag className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.automationRules.form.priorityLabel')}
                 </Label>
                 <NumberStepper
@@ -489,7 +499,10 @@ function RuleFormDialog({
               </div>
 
               <div className="space-y-sm flex flex-col items-center">
-                <Label>{t('pages.automationRules.logic')}</Label>
+                <Label className="gap-xs flex items-center">
+                  <GitBranch className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.automationRules.logic')}
+                </Label>
                 <Select
                   value={logic}
                   onValueChange={(v) => setLogic(v as 'all' | 'any')}
@@ -509,7 +522,10 @@ function RuleFormDialog({
               </div>
 
               <div className="space-y-sm flex flex-col items-center">
-                <Label>{t('pages.automationRules.form.isActiveLabel')}</Label>
+                <Label className="gap-xs flex items-center">
+                  <Power className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.automationRules.form.isActiveLabel')}
+                </Label>
                 <div className="gap-sm flex items-center">
                   <StatusToggle
                     value={isActive ? 'active' : 'inactive'}
@@ -979,7 +995,7 @@ export default function AutomationRules({
                 : []),
             ]}
           >
-            <FilterField label={t('common.filterLabels.search')}>
+            <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput
                 placeholder={t('pages.automationRules.searchPlaceholder')}
                 value={searchTerm}
@@ -987,7 +1003,7 @@ export default function AutomationRules({
                 className="w-44"
               />
             </FilterField>
-            <FilterField label={t('common.fields.status')}>
+            <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger
                   className="w-36"

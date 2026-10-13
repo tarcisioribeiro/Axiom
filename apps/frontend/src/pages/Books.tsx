@@ -1,24 +1,28 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Library,
-  Plus,
-  Star,
-  Edit,
-  Trash2,
   BookMarked,
+  BookOpen,
+  BookText,
+  Brain,
+  Check,
+  CheckCircle,
+  CheckCircle2,
+  Download,
+  Edit,
   FileText,
+  Hash,
   Highlighter,
+  LayoutGrid,
+  Library,
+  List,
   Loader2,
   MoreHorizontal,
-  Download,
-  BookText,
-  LayoutGrid,
-  List,
-  BookOpen,
-  Brain,
-  CheckCircle,
-  Check,
+  Plus,
+  Search,
+  Star,
+  Tag,
+  Trash2,
   X,
 } from 'lucide-react';
 import { lazy, Suspense, useState, type ReactNode } from 'react';
@@ -668,7 +672,7 @@ export default function Books() {
                   setFilterGenre('');
                 }}
               >
-                <FilterField label={t('common.filterLabels.search')}>
+                <FilterField label={t('common.filterLabels.search')} icon={Search}>
                   <SearchInput
                     placeholder={t('pages.books.searchPlaceholder')}
                     value={searchTerm}
@@ -678,7 +682,7 @@ export default function Books() {
                     className="w-44 flex-none"
                   />
                 </FilterField>
-                <FilterField label={t('common.fields.status')}>
+                <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
                   <Select
                     value={filterStatus || 'all'}
                     onValueChange={(v) => {
@@ -714,7 +718,7 @@ export default function Books() {
                     </SelectContent>
                   </Select>
                 </FilterField>
-                <FilterField label={t('common.filterLabels.genre')}>
+                <FilterField label={t('common.filterLabels.genre')} icon={Tag}>
                   <Select
                     value={filterGenre || 'all'}
                     onValueChange={(v) => {
@@ -1124,7 +1128,8 @@ export default function Books() {
           </DialogHeader>
           <div className="gap-md py-sm flex flex-col">
             <div className="gap-xs flex flex-col">
-              <Label htmlFor="qc-book">
+              <Label className="gap-xs flex items-center" htmlFor="qc-book">
+                <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.books.quickCapture.selectBook')}
               </Label>
               <Select
@@ -1150,7 +1155,8 @@ export default function Books() {
               </Select>
             </div>
             <div className="gap-xs flex flex-col">
-              <Label htmlFor="qc-pages">
+              <Label className="gap-xs flex items-center" htmlFor="qc-pages">
+                <Hash className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.books.quickCapture.pagesRead')}
               </Label>
               <NumberStepper

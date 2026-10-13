@@ -1,4 +1,4 @@
-import { FileText, Loader2, Download, X } from 'lucide-react';
+import { CalendarDays, Download, FileText, Loader2, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -101,7 +101,8 @@ export function StatementExportModal({
         <div className="space-y-md">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-xs">
-              <Label className="text-sm">
+              <Label className="gap-xs flex items-center text-sm">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.dashboard.statementModal.dateFrom')}
               </Label>
               <DatePicker
@@ -111,7 +112,8 @@ export function StatementExportModal({
               />
             </div>
             <div className="space-y-xs">
-              <Label className="text-sm">
+              <Label className="gap-xs flex items-center text-sm">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.dashboard.statementModal.dateTo')}
               </Label>
               <DatePicker

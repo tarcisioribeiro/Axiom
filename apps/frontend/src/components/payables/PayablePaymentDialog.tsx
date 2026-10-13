@@ -3,11 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import {
   AlertCircle,
   CalendarClock,
+  CalendarDays,
   CreditCard,
+  FileText,
   Loader2,
   Save,
-  X,
   Wallet,
+  X,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -233,14 +235,20 @@ export function PayablePaymentDialog({
           </div>
 
           <div className="space-y-xs">
-            <Label>{t('pages.payables.payment.value')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.payment.value')} *
+            </Label>
             <CurrencyInput
               value={form.value}
               onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.payables.payment.account')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.payment.account')} *
+            </Label>
             <Select
               value={form.account}
               onValueChange={(v) => setForm((f) => ({ ...f, account: v }))}
@@ -258,7 +266,8 @@ export function PayablePaymentDialog({
             </Select>
           </div>
           <div className="space-y-xs">
-            <Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {scheduled
                 ? t('pages.payables.payment.scheduledDate')
                 : t('pages.payables.payment.date')}{' '}
@@ -273,11 +282,14 @@ export function PayablePaymentDialog({
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.payables.payment.notes')}</Label>
+            <Label className="gap-xs flex items-center">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.payment.notes')}
+            </Label>
             <Input
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              placeholder={t('common.fields.notes')}
+              placeholder={t('common.placeholders.notes')}
             />
           </div>
 

@@ -4,20 +4,23 @@ import { format } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import {
-  ScrollText,
+  Activity,
   Calendar,
-  Plus,
-  Pencil,
-  Trash2,
-  Eye,
-  Key,
+  CalendarDays,
   Download,
+  Eye,
   FileDown,
+  Key,
   LogIn,
   LogOut,
-  ShieldAlert,
+  Pencil,
+  Plus,
+  ScrollText,
+  Search,
   Share2,
-  Activity,
+  ShieldAlert,
+  Trash2,
+  Zap,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { ElementType } from 'react';
@@ -283,7 +286,7 @@ export default function ActivityLogs() {
                 : []),
             ]}
           >
-            <FilterField label={t('common.filterLabels.search')}>
+            <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput
                 placeholder={t('pages.activityLogs.searchPlaceholder')}
                 value={searchTerm}
@@ -291,7 +294,7 @@ export default function ActivityLogs() {
                 className="w-44"
               />
             </FilterField>
-            <FilterField label={t('common.filterLabels.action')}>
+            <FilterField label={t('common.filterLabels.action')} icon={Zap}>
               <Select value={actionFilter} onValueChange={setActionFilter}>
                 <SelectTrigger
                   className="w-44"
@@ -312,7 +315,7 @@ export default function ActivityLogs() {
                 </SelectContent>
               </Select>
             </FilterField>
-            <FilterField label={t('common.filterLabels.period')}>
+            <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
               <DateRangeFilter
                 startDate={startDate}
                 endDate={endDate}

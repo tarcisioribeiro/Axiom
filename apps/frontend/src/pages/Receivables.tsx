@@ -1,6 +1,17 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, TrendingUp, Wallet, CircleDot, Tag } from 'lucide-react';
+import {
+  CalendarDays,
+  CheckCircle2,
+  CircleDot,
+  Pencil,
+  Plus,
+  Search,
+  Tag,
+  Trash2,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
 import { useState, useMemo, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -269,7 +280,7 @@ export default function Receivables({
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.receivables.searchPlaceholder')}
             value={searchTerm}
@@ -277,7 +288,7 @@ export default function Receivables({
             className="w-52 sm:w-64"
           />
         </FilterField>
-        <FilterField label={t('common.fields.category')}>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger
               className="w-44"
@@ -305,7 +316,7 @@ export default function Receivables({
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.fields.status')}>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger
               className="w-40"
@@ -343,7 +354,7 @@ export default function Receivables({
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.period')}>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
           <DateRangeFilter
             startDate={startDate}
             endDate={endDate}

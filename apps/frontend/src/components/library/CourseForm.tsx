@@ -3,16 +3,21 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Atom,
   Briefcase,
+  CalendarDays,
+  CheckCircle2,
   Clock,
   Code2,
   ExternalLink,
+  FileText,
   Globe,
   GraduationCap,
   Layers,
+  MonitorPlay,
   MoreHorizontal,
   Paintbrush,
   Palette,
   Save,
+  Tag,
   X,
 } from 'lucide-react';
 import { useEffect } from 'react';
@@ -175,7 +180,10 @@ export function CourseForm({
     >
       <FormSection title={t('pages.courses.form.sectionInfo')} icon={GraduationCap}>
         <div className="space-y-sm">
-          <Label htmlFor="title">{t('pages.courses.form.titleLabel')}</Label>
+          <Label className="gap-xs flex items-center" htmlFor="title">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.courses.form.titleLabel')}
+          </Label>
           <Input
             id="title"
             placeholder={t('pages.courses.form.titlePlaceholder')}
@@ -186,7 +194,10 @@ export function CourseForm({
 
         <div className="gap-md grid grid-cols-2">
           <div className="space-y-sm">
-            <Label>{t('pages.courses.form.platformLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <MonitorPlay className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.courses.form.platformLabel')}
+            </Label>
             <Select
               value={watch('platform')}
               onValueChange={(v) => setValue('platform', v)}
@@ -205,7 +216,10 @@ export function CourseForm({
           </div>
 
           <div className="space-y-sm">
-            <Label>{t('pages.courses.form.categoryLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.courses.form.categoryLabel')}
+            </Label>
             <Select
               value={watch('category')}
               onValueChange={(v) => setValue('category', v)}
@@ -246,7 +260,8 @@ export function CourseForm({
         </div>
 
         <div className="space-y-sm">
-          <Label htmlFor="description">
+          <Label className="gap-xs flex items-center" htmlFor="description">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.courses.form.descriptionLabel')}
           </Label>
           <Textarea
@@ -261,7 +276,10 @@ export function CourseForm({
       <FormSection title={t('pages.courses.form.sectionDetails')} icon={Layers}>
         <div className="gap-md grid grid-cols-2">
           <div className="space-y-sm">
-            <Label>{t('pages.courses.form.statusLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.courses.form.statusLabel')}
+            </Label>
             <Select
               value={watch('status')}
               onValueChange={(v) => setValue('status', v)}
@@ -305,14 +323,20 @@ export function CourseForm({
 
         <div className="gap-md grid grid-cols-2">
           <div className="space-y-sm">
-            <Label>{t('pages.courses.form.startDateLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.courses.form.startDateLabel')}
+            </Label>
             <DatePicker
               value={startDate ? parseLocalDate(startDate) : undefined}
               onChange={(d) => setValue('start_date', d ? formatLocalDate(d) : null)}
             />
           </div>
           <div className="space-y-sm">
-            <Label>{t('pages.courses.form.endDateLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.courses.form.endDateLabel')}
+            </Label>
             <DatePicker
               value={endDate ? parseLocalDate(endDate) : undefined}
               onChange={(d) => setValue('end_date', d ? formatLocalDate(d) : null)}

@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   Award,
+  CalendarDays,
   CheckCircle2,
   Flame,
   Medal,
@@ -212,7 +213,10 @@ export default function Journey() {
                         : []),
                     ]}
                   >
-                    <FilterField label={t('common.filterLabels.period')}>
+                    <FilterField
+                      label={t('common.filterLabels.period')}
+                      icon={CalendarDays}
+                    >
                       <DateRangeFilter
                         startDate={startDate}
                         endDate={endDate}

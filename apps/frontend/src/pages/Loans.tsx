@@ -1,20 +1,23 @@
 /* eslint-disable max-lines */
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Trash2,
-  Pencil,
+  CalendarDays,
+  CalendarRange,
+  CheckCircle2,
+  CircleDot,
+  CreditCard,
   Download,
   HandCoins,
-  CreditCard,
   List,
-  TableProperties,
-  CheckCircle2,
-  Users,
-  CalendarRange,
-  Tag,
-  CircleDot,
   MoreHorizontal,
+  Pencil,
+  Plus,
+  Search,
+  Shield,
+  TableProperties,
+  Tag,
+  Trash2,
+  Users,
 } from 'lucide-react';
 import { useState, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -275,7 +278,7 @@ export default function Loans() {
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.loans.searchPlaceholder')}
             value={searchTerm}
@@ -284,7 +287,7 @@ export default function Loans() {
           />
         </FilterField>
         {currentUserMemberId !== null && (
-          <FilterField label={t('common.filterLabels.role')}>
+          <FilterField label={t('common.filterLabels.role')} icon={Shield}>
             <Select
               value={roleFilter}
               onValueChange={(v) => setRoleFilter(v as LoanRole)}
@@ -308,7 +311,7 @@ export default function Loans() {
             </Select>
           </FilterField>
         )}
-        <FilterField label={t('common.fields.status')}>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger
               className="w-40"
@@ -346,7 +349,7 @@ export default function Loans() {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.fields.category')}>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger
               className="w-44"
@@ -372,7 +375,7 @@ export default function Loans() {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.period')}>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
           <DateRangeFilter
             startDate={dueStartDate}
             endDate={dueEndDate}

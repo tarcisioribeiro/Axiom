@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  AlignLeft,
   BookMarked,
   BookOpen,
   Brain,
@@ -15,7 +16,9 @@ import {
   Library,
   Loader2,
   MessageSquare,
+  Palette,
   Plus,
+  Save,
   Send,
   Sparkles,
   Star,
@@ -23,9 +26,8 @@ import {
   Trash2,
   TrendingUp,
   User,
-  XCircle,
-  Save,
   X,
+  XCircle,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -175,7 +177,10 @@ function HighlightInlineForm({
       />
       <div className="gap-sm grid grid-cols-2">
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.books.detail.hlTypeLbl')}</Label>
+          <Label className="gap-xs flex items-center text-xs">
+            <Highlighter className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.books.detail.hlTypeLbl')}
+          </Label>
           <Select
             value={highlightType}
             onValueChange={(v) => setHighlightType(v as typeof highlightType)}
@@ -197,7 +202,10 @@ function HighlightInlineForm({
           </Select>
         </div>
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.books.detail.hlColorLbl')}</Label>
+          <Label className="gap-xs flex items-center text-xs">
+            <Palette className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.books.detail.hlColorLbl')}
+          </Label>
           <Select value={color} onValueChange={(v) => setColor(v as typeof color)}>
             <SelectTrigger className="h-8 text-xs">
               <SelectValue />
@@ -1405,11 +1413,13 @@ export function BookDetailModal({
                 </DialogHeader>
                 <div className="gap-md py-md grid">
                   <div className="space-y-sm">
-                    <Label htmlFor="summary-title">
+                    <Label className="gap-xs flex items-center" htmlFor="summary-title">
+                      <FileText className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.summaries.titleField')}
                     </Label>
                     <Input
                       id="summary-title"
+                      placeholder={t('common.placeholders.summaryTitle')}
                       value={summaryFormData.title}
                       onChange={(e) =>
                         setSummaryFormData({
@@ -1421,11 +1431,13 @@ export function BookDetailModal({
                     />
                   </div>
                   <div className="space-y-sm">
-                    <Label htmlFor="summary-text">
+                    <Label className="gap-xs flex items-center" htmlFor="summary-text">
+                      <AlignLeft className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.summaries.contentField')}
                     </Label>
                     <Textarea
                       id="summary-text"
+                      placeholder={t('common.placeholders.summaryText')}
                       value={summaryFormData.text}
                       onChange={(e) =>
                         setSummaryFormData({ ...summaryFormData, text: e.target.value })

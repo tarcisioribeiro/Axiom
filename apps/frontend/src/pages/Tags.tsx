@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Palette, Pencil, Tag as TagIcon, Trash2 } from 'lucide-react';
+import { Palette, Pencil, Search, Tag as TagIcon, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -203,14 +203,14 @@ export default function Tags({
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={`${t('common.actions.search')}...`}
             value={search}
             onValueChange={setSearch}
           />
         </FilterField>
-        <FilterField label={t('common.filterLabels.color')}>
+        <FilterField label={t('common.filterLabels.color')} icon={Palette}>
           <Select value={colorFilter} onValueChange={setColorFilter}>
             <SelectTrigger
               className="w-40"

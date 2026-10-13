@@ -281,7 +281,7 @@ export function VaultFormDialog({
                   <DecimalInput
                     id="yield_index_percentage"
                     unit="%"
-                    placeholder="Ex: 120"
+                    placeholder="Ex.: 120"
                     value={formData.yield_index_percentage}
                     onChange={(v) =>
                       setFormData({ ...formData, yield_index_percentage: v ?? 0 })
@@ -300,7 +300,7 @@ export function VaultFormDialog({
                   <DecimalInput
                     id="annual_yield_rate"
                     unit="%"
-                    placeholder="Ex: 12,00"
+                    placeholder="Ex.: 12,00"
                     value={formData.annual_yield_rate}
                     onChange={(v) =>
                       setFormData({ ...formData, annual_yield_rate: v ?? 0 })

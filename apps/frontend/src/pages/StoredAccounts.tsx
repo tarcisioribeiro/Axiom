@@ -1,19 +1,21 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
+  Building2,
+  Check,
+  Copy,
+  CreditCard,
+  ExternalLink,
   Eye,
   EyeOff,
-  ExternalLink,
   Loader2,
-  Copy,
-  Check,
+  Pencil,
+  Plus,
+  Search,
+  Shapes,
   Star,
+  Trash2,
   Wallet,
-  Building2,
-  CreditCard,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -364,7 +366,7 @@ export default function StoredAccounts() {
               : []),
           ]}
         >
-          <FilterField label={t('common.filterLabels.search')}>
+          <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput
               placeholder={t('pages.storedAccounts.searchPlaceholder')}
               value={searchTerm}
@@ -372,7 +374,7 @@ export default function StoredAccounts() {
               className="w-52 sm:w-64"
             />
           </FilterField>
-          <FilterField label={t('common.fields.type')}>
+          <FilterField label={t('common.fields.type')} icon={Shapes}>
             <Select value={accountTypeFilter} onValueChange={setAccountTypeFilter}>
               <SelectTrigger
                 className="w-44"
@@ -400,7 +402,7 @@ export default function StoredAccounts() {
               </SelectContent>
             </Select>
           </FilterField>
-          <FilterField label={t('common.fields.institution')}>
+          <FilterField label={t('common.fields.institution')} icon={Building2}>
             <Select value={institutionFilter} onValueChange={setInstitutionFilter}>
               <SelectTrigger
                 className="w-48"

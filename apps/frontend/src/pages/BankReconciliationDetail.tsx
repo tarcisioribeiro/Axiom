@@ -4,10 +4,14 @@ import {
   ArrowDownUp,
   ArrowLeft,
   ArrowLeftRight,
+  CalendarDays,
+  CheckCircle2,
   CircleDot,
   Link2,
   Plus,
   RefreshCw,
+  Search,
+  Shapes,
   Unlink,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -643,7 +647,7 @@ export default function BankReconciliationDetail() {
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.bankReconciliation.detail.searchPlaceholder')}
             value={searchTerm}
@@ -651,7 +655,7 @@ export default function BankReconciliationDetail() {
             className="w-44"
           />
         </FilterField>
-        <FilterField label={t('common.fields.status')}>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
           <Select
             value={statusFilter}
             onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
@@ -698,7 +702,7 @@ export default function BankReconciliationDetail() {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.fields.type')}>
+        <FilterField label={t('common.fields.type')} icon={Shapes}>
           <Select
             value={transactionTypeFilter}
             onValueChange={(v) =>
@@ -727,7 +731,7 @@ export default function BankReconciliationDetail() {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.period')}>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
           <DateRangeFilter
             startDate={startDate}
             endDate={endDate}

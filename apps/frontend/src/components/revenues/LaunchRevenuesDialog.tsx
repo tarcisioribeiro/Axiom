@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { X, CalendarPlus, Loader2 } from 'lucide-react';
+import { CalendarDays, CalendarPlus, ListChecks, Loader2, X } from 'lucide-react';
 /* eslint-disable max-lines */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -193,7 +193,10 @@ export function LaunchRevenuesDialog({
         ) : (
           <div className="space-y-md">
             <div className="space-y-sm">
-              <Label>{t('pages.fixedRevenues.launchDialog.selectMonth')}</Label>
+              <Label className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.fixedRevenues.launchDialog.selectMonth')}
+              </Label>
               <Select value={validMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger>
                   <SelectValue
@@ -213,7 +216,8 @@ export function LaunchRevenuesDialog({
             </div>
 
             <div className="space-y-sm">
-              <Label>
+              <Label className="gap-xs flex items-center">
+                <ListChecks className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.fixedRevenues.launchDialog.revenuesLabel', {
                   selected: selectedCount,
                   total: fixedRevenues.length,

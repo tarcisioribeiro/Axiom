@@ -1,17 +1,18 @@
 /* eslint-disable max-lines */
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Lock,
-  Shield,
+  AlertTriangle,
+  Clock,
   Eye,
   EyeOff,
-  Clock,
-  AlertTriangle,
   Key,
-  RefreshCw,
   Keyboard,
-  X,
   Loader2,
+  Lock,
+  RefreshCw,
+  Shield,
+  ShieldAlert,
+  X,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -285,7 +286,8 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
           </DialogHeader>
           <form onSubmit={(e) => void handleRenew(e)} className="space-y-md">
             <div className="space-y-xs">
-              <Label htmlFor="renew-password">
+              <Label className="gap-xs flex items-center" htmlFor="renew-password">
+                <Lock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.vaultGuard.locked.passwordLabel')}
               </Label>
               <div className="relative">
@@ -422,14 +424,16 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
                   onCheckedChange={(v) => setAcknowledged(v === true)}
                   className="border-warning data-[state=checked]:bg-warning data-[state=checked]:text-warning-foreground mt-0.5"
                 />
-                <span className="select-none">
+                <span className="gap-xs flex items-start select-none">
+                  <ShieldAlert className="text-muted-foreground mt-0.5 h-3.5 w-3.5 shrink-0" />
                   {t('pages.vaultGuard.setup.irreversibleAck')}
                 </span>
               </label>
             </div>
 
             <div className="space-y-xs">
-              <Label htmlFor="master-password">
+              <Label className="gap-xs flex items-center" htmlFor="master-password">
+                <Lock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.vaultGuard.setup.passwordLabel')}
               </Label>
               <div className="relative">
@@ -467,7 +471,8 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
             </div>
 
             <div className="space-y-xs">
-              <Label htmlFor="confirm-password">
+              <Label className="gap-xs flex items-center" htmlFor="confirm-password">
+                <Lock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.vaultGuard.setup.confirmLabel')}
               </Label>
               <Input
@@ -565,7 +570,8 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
         <CardContent>
           <form onSubmit={handleUnlock} className="space-y-md">
             <div className="space-y-xs">
-              <Label htmlFor="unlock-password">
+              <Label className="gap-xs flex items-center" htmlFor="unlock-password">
+                <Lock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.vaultGuard.locked.passwordLabel')}
               </Label>
               <div className="relative">

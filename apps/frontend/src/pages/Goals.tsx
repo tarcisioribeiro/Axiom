@@ -3,28 +3,31 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { differenceInDays, parseISO } from 'date-fns';
 import { motion } from 'framer-motion';
 import {
-  Plus,
-  Trophy,
+  AlertTriangle,
+  Award,
+  Ban,
+  Calendar,
+  CalendarDays,
+  CheckCircle2,
+  CircleDot,
+  Clock,
   Edit,
-  Trash2,
+  Flame,
+  History,
+  Layers,
+  Loader2,
+  Plus,
   RefreshCw,
   RotateCcw,
-  Ban,
-  Star,
-  Flame,
-  Award,
-  History,
-  Calendar,
-  AlertTriangle,
-  Loader2,
-  TrendingUp,
-  TrendingDown,
-  CheckCircle2,
-  Clock,
   Save,
+  Search,
+  Shapes,
+  Star,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+  Trophy,
   X,
-  CircleDot,
-  Layers,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -678,7 +681,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
               : []),
           ]}
         >
-          <FilterField label={t('common.filterLabels.search')}>
+          <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput
               placeholder={t('pages.goals.searchPlaceholder')}
               value={searchTerm}
@@ -686,7 +689,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
               className="w-44"
             />
           </FilterField>
-          <FilterField label={t('common.fields.status')}>
+          <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger
                 className="w-40"
@@ -718,7 +721,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
               </SelectContent>
             </Select>
           </FilterField>
-          <FilterField label={t('common.fields.type')}>
+          <FilterField label={t('common.fields.type')} icon={Shapes}>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger
                 className="w-44"
@@ -819,7 +822,10 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
             </DialogTitle>
           </DialogHeader>
           <div className="py-sm min-h-[340px]">
-            <Label>{t('pages.goals.failureDateLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.goals.failureDateLabel')}
+            </Label>
             <DatePicker
               value={failureDate}
               onChange={(date) => setFailureDate(date ? formatLocalDate(date) : '')}

@@ -1,12 +1,13 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  CheckCircle2,
-  Compass,
-  Lightbulb,
-  Search,
   ArrowLeft,
   ArrowRight,
   Check,
+  CheckCircle2,
+  Compass,
+  EyeOff,
+  Lightbulb,
+  Search,
   SkipForward,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -147,7 +148,10 @@ export function PageTour() {
             checked={dontShow}
             onCheckedChange={(c) => setDontShow(c === true)}
           />
-          {t('pageTour.dontShowAgain')}
+          <span className="gap-xs flex items-center">
+            <EyeOff className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pageTour.dontShowAgain')}
+          </span>
         </label>
 
         <div className="dialog-footer gap-sm flex justify-between">

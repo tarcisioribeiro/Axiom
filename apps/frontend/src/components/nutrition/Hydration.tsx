@@ -144,7 +144,7 @@ export function WaterLogPanel({ date }: { date: string }) {
             min={1}
             max={5000}
             optional
-            placeholder="ml"
+            placeholder="Ex.: 250"
             value={customMl === '' ? null : Number(customMl)}
             onChange={(v) => setCustomMl(v === null ? '' : String(v))}
             className="h-8"
@@ -263,7 +263,8 @@ export function HydrationGoalCard() {
           }}
         >
           <div className="space-y-xs flex-1">
-            <Label htmlFor="hydration-liters">
+            <Label className="gap-xs flex items-center" htmlFor="hydration-liters">
+              <Droplets className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.nutritionHydration.litersLabel')}
             </Label>
             <DecimalInput

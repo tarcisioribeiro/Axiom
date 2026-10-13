@@ -1,12 +1,15 @@
 /* eslint-disable max-lines */
 import {
-  Plus,
+  CalendarDays,
+  CheckCircle2,
+  CircleDot,
+  Download,
   Pencil,
+  Plus,
+  Search,
+  Tag,
   Trash2,
   TrendingUp,
-  Download,
-  Tag,
-  CircleDot,
 } from 'lucide-react';
 import { type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -157,7 +160,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.revenues.searchPlaceholder')}
             value={searchTerm}
@@ -165,7 +168,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             className="w-44"
           />
         </FilterField>
-        <FilterField label={t('common.fields.category')}>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-40" startIcon={<Tag className="h-3.5 w-3.5" />}>
               <SelectValue placeholder={t('pages.revenues.allCategories')} />
@@ -187,7 +190,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.fields.status')}>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger
               className="w-36"
@@ -212,7 +215,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.period')}>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
           <DateRangeFilter
             startDate={startDate}
             endDate={endDate}

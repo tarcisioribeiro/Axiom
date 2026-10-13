@@ -1,15 +1,17 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
+  BarChart2,
+  CheckCircle2,
   CheckSquare,
   CircleDot,
   Edit,
   Flag,
+  LayoutList,
+  Plus,
+  Search,
   Tag,
   Trash2,
-  BarChart2,
-  LayoutList,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
@@ -485,7 +487,7 @@ export default function RoutineTasks({
                 : []),
             ]}
           >
-            <FilterField label={t('common.filterLabels.search')}>
+            <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput
                 placeholder={t('pages.routineTasks.searchPlaceholder')}
                 value={searchTerm}
@@ -493,7 +495,7 @@ export default function RoutineTasks({
                 className="w-44"
               />
             </FilterField>
-            <FilterField label={t('common.fields.category')}>
+            <FilterField label={t('common.fields.category')} icon={Tag}>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger
                   className="w-44"
@@ -521,7 +523,7 @@ export default function RoutineTasks({
                 </SelectContent>
               </Select>
             </FilterField>
-            <FilterField label={t('common.fields.status')}>
+            <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger
                   className="w-36"
@@ -549,7 +551,7 @@ export default function RoutineTasks({
                 </SelectContent>
               </Select>
             </FilterField>
-            <FilterField label={t('common.filterLabels.priority')}>
+            <FilterField label={t('common.filterLabels.priority')} icon={Flag}>
               <Select value={priorityFilter} onValueChange={setPriorityFilter}>
                 <SelectTrigger
                   className="w-36"
@@ -630,7 +632,7 @@ export default function RoutineTasks({
                 : []
             }
           >
-            <FilterField label={t('common.filterLabels.search')}>
+            <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput
                 placeholder={t('pages.routineTasks.focusBlocks.searchPlaceholder')}
                 value={blockSearchTerm}
@@ -638,7 +640,7 @@ export default function RoutineTasks({
                 className="w-44"
               />
             </FilterField>
-            <FilterField label={t('common.fields.status')}>
+            <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
               <Select value={blockStatusFilter} onValueChange={setBlockStatusFilter}>
                 <SelectTrigger
                   className="w-36"

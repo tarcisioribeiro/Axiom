@@ -3,17 +3,19 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-  Plus,
-  BookOpen,
-  Edit,
-  Trash2,
-  SmilePlus,
-  Smile,
-  Meh,
-  Frown,
   Angry,
+  BookOpen,
+  CalendarDays,
   ChevronDown,
   ChevronUp,
+  Edit,
+  Frown,
+  Meh,
+  Plus,
+  Search,
+  Smile,
+  SmilePlus,
+  Trash2,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -341,7 +343,7 @@ export default function DailyReflections() {
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.dailyReflections.searchPlaceholder')}
             value={searchTerm}
@@ -349,7 +351,7 @@ export default function DailyReflections() {
             className="w-52 sm:w-64"
           />
         </FilterField>
-        <FilterField label={t('common.filterLabels.mood')}>
+        <FilterField label={t('common.filterLabels.mood')} icon={Smile}>
           <Select value={moodFilter} onValueChange={setMoodFilter}>
             <SelectTrigger
               className="w-44"
@@ -373,7 +375,7 @@ export default function DailyReflections() {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.period')}>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
           <DateRangeFilter
             startDate={startDate}
             endDate={endDate}

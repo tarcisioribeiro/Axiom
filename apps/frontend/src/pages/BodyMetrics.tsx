@@ -4,14 +4,16 @@ import { differenceInYears, format, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Activity,
+  CalendarDays,
   Layers,
+  Loader2,
   PieChart,
+  Pipette,
   Plus,
   RefreshCw,
   Ruler,
-  Scale,
-  Loader2,
   Save,
+  Scale,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -771,7 +773,10 @@ export default function BodyMetrics() {
               )}
 
               <div className="space-y-xs">
-                <Label>{t('pages.bodyMetrics.measuredAt')}</Label>
+                <Label className="gap-xs flex items-center">
+                  <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.bodyMetrics.measuredAt')}
+                </Label>
                 <DatePicker
                   value={form.measured_at}
                   onChange={(d) => setForm((f) => ({ ...f, measured_at: d }))}
@@ -782,23 +787,29 @@ export default function BodyMetrics() {
               <FormSection title={t('pages.bodyMetrics.sectionWeightHeight')}>
                 <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.weight')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Scale className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.weight')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="kg"
                       aria-label={t('pages.bodyMetrics.weight')}
-                      placeholder={placeholderFor('weight_kg', 'Ex: 75,5')}
+                      placeholder={placeholderFor('weight_kg', 'Ex.: 75,5')}
                       value={form.weight_kg}
                       onChange={setNumber('weight_kg')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.height')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.height')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="cm"
                       aria-label={t('pages.bodyMetrics.height')}
-                      placeholder={placeholderFor('height_cm', 'Ex: 175')}
+                      placeholder={placeholderFor('height_cm', 'Ex.: 175')}
                       value={form.height_cm}
                       onChange={setNumber('height_cm')}
                     />
@@ -810,18 +821,24 @@ export default function BodyMetrics() {
               <FormSection title={t('pages.bodyMetrics.sectionPerimetry')} icon={Ruler}>
                 <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.neck')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.neck')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="cm"
                       aria-label={t('pages.bodyMetrics.neck')}
-                      placeholder={placeholderFor('neck_cm', 'Ex: 38')}
+                      placeholder={placeholderFor('neck_cm', 'Ex.: 38')}
                       value={form.neck_cm}
                       onChange={setNumber('neck_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.shoulders')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.shoulders')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="cm"
@@ -832,7 +849,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.chest')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.chest')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="cm"
@@ -843,7 +863,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.abdomen')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.abdomen')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="cm"
@@ -854,18 +877,22 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.waist')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.waist')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="cm"
                       aria-label={t('pages.bodyMetrics.waist')}
-                      placeholder={placeholderFor('waist_cm', 'Ex: 80')}
+                      placeholder={placeholderFor('waist_cm', 'Ex.: 80')}
                       value={form.waist_cm}
                       onChange={setNumber('waist_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.bodyMetrics.hip')}
                       {sex === 'F' && (
                         <span className="ml-xs text-muted-foreground text-xs">*</span>
@@ -875,13 +902,16 @@ export default function BodyMetrics() {
                       decimals={1}
                       unit="cm"
                       aria-label={t('pages.bodyMetrics.hip')}
-                      placeholder={placeholderFor('hip_cm', 'Ex: 95')}
+                      placeholder={placeholderFor('hip_cm', 'Ex.: 95')}
                       value={form.hip_cm}
                       onChange={setNumber('hip_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.armLeft')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.armLeft')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="cm"
@@ -892,7 +922,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.armRight')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.armRight')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="cm"
@@ -903,7 +936,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.thighLeft')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.thighLeft')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="cm"
@@ -914,7 +950,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.thighRight')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.thighRight')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="cm"
@@ -925,7 +964,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.calfLeft')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.calfLeft')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="cm"
@@ -936,7 +978,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.calfRight')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.calfRight')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="cm"
@@ -956,7 +1001,10 @@ export default function BodyMetrics() {
               >
                 <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldTriceps')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.skinfoldTriceps')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="mm"
@@ -967,7 +1015,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldSubscapular')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.skinfoldSubscapular')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="mm"
@@ -978,7 +1029,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldSuprailiac')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.skinfoldSuprailiac')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="mm"
@@ -989,7 +1043,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldChest')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.skinfoldChest')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="mm"
@@ -1000,7 +1057,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldMidaxillary')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.skinfoldMidaxillary')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="mm"
@@ -1011,7 +1071,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldAbdominal')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.skinfoldAbdominal')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="mm"
@@ -1022,7 +1085,10 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldThigh')}</Label>
+                    <Label className="gap-xs flex items-center">
+                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.bodyMetrics.skinfoldThigh')}
+                    </Label>
                     <DecimalInput
                       decimals={1}
                       unit="mm"

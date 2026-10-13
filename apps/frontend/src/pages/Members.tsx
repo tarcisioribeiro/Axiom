@@ -2,15 +2,18 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
+  Banknote,
+  CheckCircle2,
+  CircleDot,
+  HandCoins,
+  Mail,
   Pencil,
+  Phone,
   Plus,
+  Search,
+  Shield,
   Trash2,
   Users,
-  Banknote,
-  HandCoins,
-  Phone,
-  Mail,
-  CircleDot,
 } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -268,7 +271,7 @@ export default function Members() {
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.members.searchPlaceholder')}
             value={searchTerm}
@@ -276,7 +279,7 @@ export default function Members() {
             className="w-52 sm:w-64"
           />
         </FilterField>
-        <FilterField label={t('common.fields.status')}>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger
               className="w-36"
@@ -302,7 +305,7 @@ export default function Members() {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.filterLabels.role')}>
+        <FilterField label={t('common.filterLabels.role')} icon={Shield}>
           <Select value={roleFilter} onValueChange={setRoleFilter}>
             <SelectTrigger
               className="w-40"

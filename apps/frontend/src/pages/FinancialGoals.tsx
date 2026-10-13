@@ -6,9 +6,12 @@ import {
   ChevronDown,
   FileText,
   Link,
+  Loader2,
   Pencil,
   PiggyBank,
   Plus,
+  Save,
+  Search,
   Sliders,
   Tag,
   Target,
@@ -17,8 +20,6 @@ import {
   TrendingUp,
   Vault as VaultIcon,
   Wallet,
-  Loader2,
-  Save,
   X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -587,7 +588,7 @@ export default function FinancialGoals() {
       />
 
       <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.financialGoals.searchPlaceholder')}
             value={searchTerm}
@@ -595,7 +596,7 @@ export default function FinancialGoals() {
             className="w-52 sm:w-64"
           />
         </FilterField>
-        <FilterField label={t('common.fields.category')}>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger
               className="w-44"
@@ -625,7 +626,7 @@ export default function FinancialGoals() {
             </SelectContent>
           </Select>
         </FilterField>
-        <FilterField label={t('common.fields.status')}>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
           <Select
             value={statusFilter}
             onValueChange={(v) => setStatusFilter(v as 'all' | 'active' | 'completed')}

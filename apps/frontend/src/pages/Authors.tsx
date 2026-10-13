@@ -1,17 +1,18 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Edit,
-  Trash2,
   BookOpen,
-  User,
-  UserPen,
   Calendar,
-  UserCircle,
   ChevronDown,
   ChevronUp,
+  Edit,
   Globe,
+  Plus,
+  Search,
+  Trash2,
+  User,
+  UserCircle,
+  UserPen,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -328,7 +329,7 @@ export default function Authors() {
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.authors.searchPlaceholder')}
             value={searchTerm}
@@ -336,7 +337,7 @@ export default function Authors() {
             className="w-52 sm:w-64"
           />
         </FilterField>
-        <FilterField label={t('common.filterLabels.nationality')}>
+        <FilterField label={t('common.filterLabels.nationality')} icon={Globe}>
           <Select value={nationalityFilter} onValueChange={setNationalityFilter}>
             <SelectTrigger
               className="w-48"

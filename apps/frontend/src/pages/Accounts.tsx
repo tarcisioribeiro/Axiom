@@ -1,15 +1,17 @@
 /* eslint-disable max-lines */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Wallet,
   ArrowLeftRight,
   FileUp,
-  RefreshCw,
   Loader2,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  Shapes,
+  Trash2,
   Upload,
+  Wallet,
   X,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
@@ -306,7 +308,7 @@ export default function Accounts() {
             : []),
         ]}
       >
-        <FilterField label={t('common.filterLabels.search')}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.accounts.searchPlaceholder')}
             value={searchTerm}
@@ -314,7 +316,7 @@ export default function Accounts() {
             className="w-52 sm:w-64"
           />
         </FilterField>
-        <FilterField label={t('common.fields.type')}>
+        <FilterField label={t('common.fields.type')} icon={Shapes}>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger
               className="w-44"
@@ -653,7 +655,10 @@ export default function Accounts() {
           </DialogHeader>
           <form onSubmit={(e) => void handleUploadSubmit(e)} className="space-y-md">
             <div className="space-y-sm">
-              <Label htmlFor="upload-file">Arquivo (.ofx ou .csv)</Label>
+              <Label className="gap-xs flex items-center" htmlFor="upload-file">
+                <Upload className="text-muted-foreground h-3.5 w-3.5" />
+                Arquivo (.ofx ou .csv)
+              </Label>
               <FileInput id="upload-file" accept=".ofx,.csv" onChange={setUploadFile} />
               {uploadFile && (
                 <p className="text-muted-foreground text-xs">

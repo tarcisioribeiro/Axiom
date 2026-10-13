@@ -1,4 +1,4 @@
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, IdCard } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -29,10 +29,14 @@ export function DocumentField({
 
   return (
     <div className="space-y-sm">
-      <Label htmlFor="document">{t('userProfile.personalData.document')}</Label>
+      <Label className="gap-xs flex items-center" htmlFor="document">
+        <IdCard className="text-muted-foreground h-3.5 w-3.5" />
+        {t('userProfile.personalData.document')}
+      </Label>
       <div className="relative">
         <Input
           id="document"
+          placeholder={t('common.placeholders.cpf')}
           inputMode="numeric"
           disabled={!editing}
           aria-invalid={error ? true : undefined}

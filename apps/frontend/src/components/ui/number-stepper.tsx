@@ -102,7 +102,7 @@ export function NumberStepper({
         aria-valuemin={min}
         aria-valuemax={max === Number.MAX_SAFE_INTEGER ? undefined : max}
         disabled={disabled}
-        placeholder={placeholder}
+        placeholder={placeholder ?? '0'}
         value={draft ?? (current === null ? '' : String(current))}
         onFocus={(e) => {
           setDraft(e.currentTarget.value);

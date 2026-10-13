@@ -1,4 +1,4 @@
-import { ArrowRight, Loader2, X, TrendingUp } from 'lucide-react';
+import { ArrowRight, Loader2, TrendingUp, Wallet, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -113,7 +113,10 @@ export function IncreaseValueDialog({
         </DialogHeader>
         <div className="space-y-md">
           <div className="space-y-xs">
-            <Label>{t('pages.payables.form.newValueLabel')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.form.newValueLabel')} *
+            </Label>
             <CurrencyInput
               accentColor="destructive"
               value={addValue}

@@ -3,31 +3,35 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Plus,
-  Pencil,
-  Trash2,
+  AtSign,
+  Calendar,
+  Check,
+  Copy,
+  ExternalLink,
   Eye,
   EyeOff,
-  Loader2,
-  Copy,
-  Check,
-  ExternalLink,
-  Key,
-  Share2,
-  Star,
-  Wand2,
-  Upload,
-  X,
-  Calendar,
-  User,
-  Globe,
   FileText,
-  Tag,
+  Globe,
+  History,
+  Key,
+  KeyRound,
+  Loader2,
+  Lock,
+  Pencil,
+  Plus,
+  Save,
+  Search,
+  Share2,
+  Shield,
   ShieldAlert,
   ShieldCheck,
-  History,
-  Shield,
-  Save,
+  Star,
+  Tag,
+  Trash2,
+  Upload,
+  User,
+  Wand2,
+  X,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -941,7 +945,7 @@ export default function Passwords() {
               : []),
           ]}
         >
-          <FilterField label={t('common.filterLabels.search')}>
+          <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput
               placeholder={t('pages.passwords.searchPlaceholder')}
               value={searchTerm}
@@ -949,7 +953,7 @@ export default function Passwords() {
               className="w-52 sm:w-64"
             />
           </FilterField>
-          <FilterField label={t('common.fields.category')}>
+          <FilterField label={t('common.fields.category')} icon={Tag}>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger
                 className="w-44"
@@ -1362,7 +1366,10 @@ export default function Passwords() {
               className="space-y-md"
             >
               <div className="space-y-sm">
-                <Label htmlFor="title">{t('common.fields.title')} *</Label>
+                <Label className="gap-xs flex items-center" htmlFor="title">
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('common.fields.title')} *
+                </Label>
                 <Input
                   id="title"
                   {...register('title')}
@@ -1372,7 +1379,10 @@ export default function Passwords() {
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="site">{t('common.fields.site')}</Label>
+                <Label className="gap-xs flex items-center" htmlFor="site">
+                  <Globe className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('common.fields.site')}
+                </Label>
                 <Input
                   id="site"
                   type="url"
@@ -1383,7 +1393,10 @@ export default function Passwords() {
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="username">{t('common.fields.username')} *</Label>
+                <Label className="gap-xs flex items-center" htmlFor="username">
+                  <AtSign className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('common.fields.username')} *
+                </Label>
                 <Input
                   id="username"
                   {...register('username')}
@@ -1394,7 +1407,8 @@ export default function Passwords() {
 
               <div className="space-y-sm">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">
+                  <Label className="gap-xs flex items-center" htmlFor="password">
+                    <Lock className="text-muted-foreground h-3.5 w-3.5" />
                     {t('auth.login.password')} {selectedPassword ? '' : '*'}
                   </Label>
                   <Button
@@ -1430,7 +1444,10 @@ export default function Passwords() {
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="category">{t('common.fields.category')} *</Label>
+                <Label className="gap-xs flex items-center" htmlFor="category">
+                  <Tag className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('common.fields.category')} *
+                </Label>
                 <Select
                   value={watchedCategory}
                   onValueChange={(value) => setValue('category', value)}
@@ -1459,7 +1476,10 @@ export default function Passwords() {
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="notes">{t('common.fields.notes')}</Label>
+                <Label className="gap-xs flex items-center" htmlFor="notes">
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('common.fields.notes')}
+                </Label>
                 <Textarea
                   id="notes"
                   {...register('notes')}
@@ -1474,7 +1494,11 @@ export default function Passwords() {
                 <div className="flex items-center justify-between">
                   <div className="gap-sm flex items-center">
                     <Shield className="text-muted-foreground h-4 w-4" />
-                    <Label className="cursor-pointer" htmlFor="totp_enabled">
+                    <Label
+                      className="gap-xs flex cursor-pointer items-center"
+                      htmlFor="totp_enabled"
+                    >
+                      <ShieldCheck className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.passwords.totpEnable', {
                         defaultValue: 'Habilitar TOTP (2FA)',
                       })}
@@ -1495,7 +1519,8 @@ export default function Passwords() {
                 </div>
                 {watchedTotpEnabled && (
                   <div className="mt-sm space-y-xs">
-                    <Label htmlFor="totp_secret">
+                    <Label className="gap-xs flex items-center" htmlFor="totp_secret">
+                      <KeyRound className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.passwords.totpSecret', {
                         defaultValue: 'Segredo TOTP',
                       })}

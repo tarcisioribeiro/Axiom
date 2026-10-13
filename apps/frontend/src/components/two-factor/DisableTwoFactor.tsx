@@ -44,7 +44,7 @@ export function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
           type={show ? 'text' : 'password'}
           autoComplete="current-password"
           aria-label={t('userProfile.security.currentPassword')}
-          placeholder={t('userProfile.security.currentPassword')}
+          placeholder={t('common.placeholders.password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required

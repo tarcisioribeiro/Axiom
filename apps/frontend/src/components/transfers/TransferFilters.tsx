@@ -1,4 +1,4 @@
-import { CircleDot } from 'lucide-react';
+import { CalendarDays, CheckCircle2, CircleDot, Search, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
@@ -93,7 +93,7 @@ export function TransferFilters({
       onClear={onClear}
       activeFilters={activeFilters}
     >
-      <FilterField label={t('common.filterLabels.search')}>
+      <FilterField label={t('common.filterLabels.search')} icon={Search}>
         <SearchInput
           placeholder={t('pages.transfers.searchPlaceholder')}
           value={searchTerm}
@@ -101,7 +101,7 @@ export function TransferFilters({
           className="w-44 flex-none"
         />
       </FilterField>
-      <FilterField label={t('common.fields.status')}>
+      <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
         <Select value={statusFilter} onValueChange={onStatusChange}>
           <SelectTrigger
             className="w-40"
@@ -144,7 +144,7 @@ export function TransferFilters({
           </SelectContent>
         </Select>
       </FilterField>
-      <FilterField label={t('common.fields.account')}>
+      <FilterField label={t('common.fields.account')} icon={Wallet}>
         <Select value={accountFilter} onValueChange={onAccountChange}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder={t('pages.transfers.allAccounts')} />
@@ -159,7 +159,7 @@ export function TransferFilters({
           </SelectContent>
         </Select>
       </FilterField>
-      <FilterField label={t('common.filterLabels.period')}>
+      <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
         <DateRangeFilter
           startDate={startDate}
           endDate={endDate}

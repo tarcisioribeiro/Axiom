@@ -3,16 +3,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
+  Brain,
+  CheckCircle2,
   CircleDot,
   Clock,
+  Edit,
   GraduationCap,
   Layers,
+  MonitorPlay,
   Plus,
+  Search,
+  Tag,
   Timer,
   Trash2,
-  Edit,
-  Brain,
-  Tag,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -505,14 +508,14 @@ export default function Courses() {
               : []),
           ]}
         >
-          <FilterField label={t('common.filterLabels.search')}>
+          <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput
               placeholder={t('pages.courses.searchPlaceholder')}
               value={search}
               onValueChange={setSearch}
             />
           </FilterField>
-          <FilterField label={t('common.fields.status')}>
+          <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
             <Select
               value={statusFilter}
               onValueChange={(v) => setStatusFilter(v as CourseStatus | 'all')}
@@ -539,7 +542,7 @@ export default function Courses() {
               </SelectContent>
             </Select>
           </FilterField>
-          <FilterField label={t('common.fields.category')}>
+          <FilterField label={t('common.fields.category')} icon={Tag}>
             <Select
               value={categoryFilter}
               onValueChange={(v) => setCategoryFilter(v as IntellectCategory | 'all')}
@@ -569,7 +572,7 @@ export default function Courses() {
               </SelectContent>
             </Select>
           </FilterField>
-          <FilterField label={t('common.filterLabels.platform')}>
+          <FilterField label={t('common.filterLabels.platform')} icon={MonitorPlay}>
             <Select
               value={platformFilter}
               onValueChange={(v) => setPlatformFilter(v as CoursePlatform | 'all')}

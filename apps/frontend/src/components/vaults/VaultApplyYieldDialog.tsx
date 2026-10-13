@@ -1,4 +1,4 @@
-import { Loader2, RefreshCcw, X } from 'lucide-react';
+import { Loader2, RefreshCcw, Wallet, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -87,7 +87,8 @@ export function VaultApplyYieldDialog({ open, onOpenChange, vault, onSuccess }: 
 
         <div className="space-y-md">
           <div>
-            <Label htmlFor="apply_yield_amount">
+            <Label className="gap-xs flex items-center" htmlFor="apply_yield_amount">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.vaults.applyYieldAmountLabel')}
             </Label>
             <CurrencyInput

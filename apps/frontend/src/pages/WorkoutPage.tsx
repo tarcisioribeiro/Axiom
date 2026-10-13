@@ -19,6 +19,7 @@ import {
   Activity,
   CalendarDays,
   Check,
+  CheckCircle2,
   CircleDot,
   ClipboardList,
   Clock,
@@ -30,12 +31,15 @@ import {
   ImagePlus,
   Layers,
   ListChecks,
-  NotebookPen,
-  Timer,
   Loader2,
+  NotebookPen,
   Plus,
   Save,
+  Search,
+  Shapes,
+  Tag,
   Target,
+  Timer,
   Trash2,
   X,
   Zap,
@@ -999,7 +1003,10 @@ export default function WorkoutPage() {
                       : []),
                   ]}
                 >
-                  <FilterField label={t('common.filterLabels.period')}>
+                  <FilterField
+                    label={t('common.filterLabels.period')}
+                    icon={CalendarDays}
+                  >
                     <DateRangeFilter
                       startDate={sessionStartDate}
                       endDate={sessionEndDate}
@@ -1088,7 +1095,7 @@ export default function WorkoutPage() {
                       : []),
                   ]}
                 >
-                  <FilterField label={t('common.fields.category')}>
+                  <FilterField label={t('common.fields.category')} icon={Tag}>
                     <Select
                       value={planCategoryFilter}
                       onValueChange={(v) =>
@@ -1125,7 +1132,7 @@ export default function WorkoutPage() {
                       </SelectContent>
                     </Select>
                   </FilterField>
-                  <FilterField label={t('common.fields.status')}>
+                  <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
                     <Select
                       value={planStatusFilter}
                       onValueChange={(v) =>
@@ -1244,7 +1251,7 @@ export default function WorkoutPage() {
                       : []),
                   ]}
                 >
-                  <FilterField label={t('common.filterLabels.search')}>
+                  <FilterField label={t('common.filterLabels.search')} icon={Search}>
                     <SearchInput
                       placeholder={t('pages.exercises.searchPlaceholder')}
                       value={exerciseSearch}
@@ -1252,7 +1259,7 @@ export default function WorkoutPage() {
                       className="w-44"
                     />
                   </FilterField>
-                  <FilterField label={t('common.fields.category')}>
+                  <FilterField label={t('common.fields.category')} icon={Tag}>
                     <Select
                       value={exerciseCategoryFilter}
                       onValueChange={setExerciseCategoryFilter}
@@ -1285,7 +1292,7 @@ export default function WorkoutPage() {
                       </SelectContent>
                     </Select>
                   </FilterField>
-                  <FilterField label={t('common.fields.type')}>
+                  <FilterField label={t('common.fields.type')} icon={Shapes}>
                     <Select
                       value={exerciseTypeFilter}
                       onValueChange={setExerciseTypeFilter}
@@ -1309,7 +1316,7 @@ export default function WorkoutPage() {
                       </SelectContent>
                     </Select>
                   </FilterField>
-                  <FilterField label={t('common.filterLabels.muscle')}>
+                  <FilterField label={t('common.filterLabels.muscle')} icon={Dumbbell}>
                     <Select
                       value={exerciseMuscleFilter}
                       onValueChange={setExerciseMuscleFilter}

@@ -305,7 +305,7 @@ export function ReceivableForm({
             <Textarea
               value={form.notes ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              placeholder={t('common.fields.notes')}
+              placeholder={t('common.placeholders.notes')}
               rows={3}
               disabled={isLoading}
             />
