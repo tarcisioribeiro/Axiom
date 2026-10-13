@@ -57,6 +57,7 @@
       "fitView": "Ajustar à tela"
     },
     "required": "Campo obrigatório",
+    "fieldRequired": "{{field}}: campo obrigatório",
     "messages": {
       "loadError": "Não foi possível carregar os dados. {{reason}}",
       "saveError": "Não foi possível salvar. {{reason}}",
@@ -7237,6 +7238,7 @@
   },
   "weeklyPlanning": {
     "title": "Planejamento Semanal",
+    "today": "Hoje",
     "tasks": "Tarefas",
     "completed": "Concluídas",
     "estimatedLoad": "Carga estimada",

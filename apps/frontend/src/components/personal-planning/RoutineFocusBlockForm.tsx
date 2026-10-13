@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { StatusToggle } from '@/components/ui/status-toggle';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/hooks/use-toast';
 import type { FocusBlock, FocusBlockFormData } from '@/types';
 import { WEEKDAY_CHOICES } from '@/types';
 
@@ -42,9 +43,26 @@ export function RoutineFocusBlockForm({
     block?.weekdays && block.weekdays.length > 0 ? block.weekdays : ALL_WEEKDAYS
   );
 
+  const [submitted, setSubmitted] = useState(false);
+  const nameInvalid = submitted && !name.trim();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || weekdays.length === 0) return;
+    setSubmitted(true);
+    const messages = [
+      !name.trim() &&
+        t('common.fieldRequired', {
+          field: t('pages.routineTasks.focusBlocks.nameLabel'),
+        }),
+      weekdays.length === 0 &&
+        t('common.fieldRequired', {
+          field: t('pages.routineTasks.focusBlocks.weekdaysLabel'),
+        }),
+    ].filter((m): m is string => !!m);
+    if (messages.length > 0) {
+      messages.forEach((title) => toast({ title, variant: 'destructive' }));
+      return;
+    }
     onSubmit({
       name: name.trim(),
       description: description.trim() || undefined,
@@ -68,7 +86,7 @@ export function RoutineFocusBlockForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('pages.routineTasks.focusBlocks.namePlaceholder')}
-            required
+            aria-invalid={nameInvalid}
           />
         </div>
 
@@ -156,11 +174,8 @@ export function RoutineFocusBlockForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading || !name.trim() || weekdays.length === 0}
-        >
-          <Save className="h-4 w-4" />
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
           {t('common.actions.save')}
         </Button>
       </div>

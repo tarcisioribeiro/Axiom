@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
+import { DURATION, EASE_OUT } from '@/lib/animations';
+
 interface XPParticle {
   id: number;
   x: number;
@@ -18,9 +20,12 @@ export function XPFloating({ onMount }: XPFloatingProps) {
   const trigger = (x: number, y: number, xp: number = 10) => {
     const id = Date.now() + Math.random();
     setParticles((prev) => [...prev, { id, x, y, xp }]);
-    setTimeout(() => {
-      setParticles((prev) => prev.filter((p) => p.id !== id));
-    }, 1200);
+    setTimeout(
+      () => {
+        setParticles((prev) => prev.filter((p) => p.id !== id));
+      },
+      DURATION.slow * 1000 + 100
+    );
   };
 
   useEffect(() => {
@@ -39,7 +44,7 @@ export function XPFloating({ onMount }: XPFloatingProps) {
             initial={{ opacity: 1, y: 0, scale: 1 }}
             animate={{ opacity: 0, y: -52, scale: 1.3 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.1, ease: 'easeOut' }}
+            transition={{ duration: DURATION.slow, ease: EASE_OUT }}
           >
             +{p.xp} XP
           </motion.div>

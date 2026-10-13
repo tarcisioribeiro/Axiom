@@ -82,6 +82,11 @@ export default {
           foreground: 'hsl(var(--info-foreground))',
         },
         star: 'hsl(var(--star))',
+        medal: {
+          bronze: 'hsl(var(--medal-bronze))',
+          silver: 'hsl(var(--medal-silver))',
+          gold: 'hsl(var(--medal-gold))',
+        },
         category: {
           finance: 'hsl(var(--category-finance))',
           health: 'hsl(var(--category-health))',

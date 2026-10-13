@@ -1,6 +1,6 @@
 # Padrões de design do frontend web
 
-**Documento oficial** · versão 1.0 · 12/10/2026
+**Documento oficial** · versão 1.1 · 13/10/2026
 
 Padrões de UI/UX definidos pelo product owner desde 25/08/2026. Toda mudança visual no frontend web segue este documento. Quando um pedido contradiz uma regra, a regra é atualizada aqui primeiro.
 
@@ -61,6 +61,7 @@ Há três tipos de modal:
 - **[regra]** Segue a estrutura comum (header fixo com ícone + texto, sem subtítulo).
 - **[regra]** Botões **Cancelar** e **Salvar** (ou o verbo da ação: Registrar, Confirmar, Depositar…) com ícones. Fluxos em etapas mantêm Cancelar em todas as etapas. Na tela final de resultado, o rodapé vira o de detalhe (Fechar à esquerda).
 - **[regra]** Configuração e desbloqueio do cofre (módulo Segurança, `VaultGuard`) são modais de ação abertos sobre a página vazia, não cards no lugar da página. Rodapé com Cancelar + ação (Configurar / Desbloquear). Cancelar, Esc ou clique fora voltam à página anterior (ou ao Dashboard em acesso direto). A chave de recuperação abre um modal por cima do de desbloqueio.
+- **[regra]** Onboarding em etapas (ex.: boas-vindas do Planejamento Pessoal) é um `Dialog` padrão: título da etapa no header com ícone, sem X, rodapé com Cancelar, Voltar (a partir da 2ª etapa) e Próximo/Começar, troca de etapa com `slideVariants`. Na tela de sucesso, o rodapé vira `DialogCloseFooter`.
 - **[regra]** Fluxo de perguntas em etapas (ex.: avaliação de autoestima): rodapé com Cancelar, **Voltar** (`ChevronLeft`, a partir da 2ª etapa, mantendo as respostas) e Confirmar/Enviar. A troca de etapa usa deslize lateral (`slideVariants` de `lib/animations`, `custom` = direção: avança para a esquerda, volta para a direita), a mesma animação do `PaginatedSlide`.
 
 ### 2.5 Sem rolagem em desktop
@@ -69,7 +70,7 @@ Há três tipos de modal:
 - **[desktop]** Quando o conteúdo não cabe:
   - **Formulário longo:** distribuir em colunas e alargar o modal (ex.: "Novo Livro" com duas colunas em `max-w-6xl`).
   - **Grupo fixo de opções** (checkboxes de eventos etc.): mais colunas.
-  - **Lista de tamanho variável dentro do modal:** paginar com `PaginatedSlide` e `pinNav={false}`, com no máximo 5 itens por página (`LIST_PAGE_SIZE`). Itens de texto longo (resumos, destaques) usam 3 por página. Grades de imagens usam até 8 (4 × 2).
+  - **Lista de tamanho variável dentro do modal:** paginar com `PaginatedSlide` e `pinNav={false}`, com no máximo 5 itens por página (`LIST_PAGE_SIZE`). Itens de texto longo (resumos, destaques, opções de refeição com ingredientes) usam 3 por página. Lista editável em que o usuário adiciona itens (ingredientes da opção de cardápio, 3 por página por terem vários campos por linha) usa `PageSlide` controlado e pula para a última página ao adicionar. Grades de imagens usam até 8 (4 × 2).
   - **Fluxo longo:** etapas (um passo por vez), como no formulário de sessão de treino.
 - **Exceções** (conteúdo que por natureza rola): transcrição de chat (aba Chat do livro), visualizador de documento/PDF (certificado de curso, pré-visualização de arquivo) e a paleta de comandos.
 - **Status:** medido em 1024 px de altura (mais rigoroso que 1080) nos formulários de inclusão, detalhes de card/linha e modais de ação dos módulos Controle Financeiro, Intelecto e Planejamento Pessoal, todos sem rolagem. As telas do módulo Segurança não foram medidas (dependem do cofre desbloqueado).
@@ -85,9 +86,10 @@ Há três tipos de modal:
 - **[regra]** Mensagens de erro de API (ex.: senha atual incorreta) continuam como texto no formulário. Não são validação de campo.
 - **[regra]** Erro do servidor ligado a um campo: `setError` para a borda e toast com a mensagem.
 - **[regra]** Formulário com validação manual (sem react-hook-form) mostra um toast por mensagem no submit.
-- **[regra]** O botão Salvar não fica desabilitado por erro de validação. O clique mostra os toasts. Status: vale para dados pessoais; demais formulários a verificar.
+- **[regra]** O botão Salvar não fica desabilitado por erro de validação. O clique mostra os toasts. Status: vale para dados pessoais e para o módulo Planejamento Pessoal; demais formulários a verificar.
 - **[regra]** Campo de nova senha (perfil e cadastro): `PasswordField` + `FieldRow` de `components/user-profile/PasswordSection.tsx`. À direita ficam a força (`PasswordStrength`) e as regras (mín. 8, não só números, senhas iguais). No cadastro, o botão não é desabilitado: as regras viram `rules` do `Controller` e falhas vão para toast no envio (§3), e `warnCapsLock` mostra o aviso de Caps Lock do login (`hooks/use-caps-lock.ts`). O aviso de Caps Lock (login, cadastro, perfil, cofre) sempre reserva sua linha (`h-5` + `invisible` quando desligado) para não alterar a altura da tela.
-- **Status:** aplicado nos 23 arquivos de formulário que tinham mensagem inline. A verificar: `Register.tsx` (usa `FormField` com `error` dentro de `Controller`, borda via `aria-invalid` direto no `Input`) e `PersonalDataSection.tsx` (validação manual).
+- **[regra]** Campo obrigatório sem schema Zod usa `required`/`validate` com mensagem `t('common.fieldRequired', { field })` ("Nome: campo obrigatório"), para o toast dizer qual campo falta. Campo controlado fora do `register` (Select, DatePicker) é registrado com `register('campo', { validate })`.
+- **Status:** aplicado nos 23 arquivos de formulário que tinham mensagem inline e em todo o módulo Planejamento Pessoal (Treino, Nutrição, Métricas Corporais, Blocos de Foco, Hidratação, Metas). A verificar: `Register.tsx` (usa `FormField` com `error` dentro de `Controller`, borda via `aria-invalid` direto no `Input`) e `PersonalDataSection.tsx` (validação manual).
 
 ## 4. Botões e ícones
 
@@ -98,22 +100,22 @@ Há três tipos de modal:
 - **[regra]** Botões de ação ficam visíveis sem depender de hover.
 - **[regra]** A ação do cabeçalho muda conforme a aba ativa e fica na linha do header, acima das abas (ex.: "Nova Tarefa" / "Novo Bloco"). O mesmo vale para outros controles de contexto (cards de progresso, calendário, toggle de visualização): ficam na linha do título da página, não numa linha própria entre o título e as abas. Status: aplicado em Checklist Diário.
 - **[regra]** Títulos de abas, páginas e modais têm ícone à esquerda.
-- **[regra]** Em cards de grade (mais de um por linha), os botões de ação ficam num rodapé próprio (`border-t`), agrupados e alinhados à direita (`justify-end`), sem dividir a linha com badge de status ou outro conteúdo. Com mais de ~3 ações, as secundárias vão para um menu "...", para o rodapé manter a mesma altura em todo card. Não vale para listas de uma linha por registro. Status: aplicado em Empréstimos, Contas a Pagar, Contas a Receber e Livros. A aplicar nos demais (Metas, Planos de Treino e Cursos têm rodapé dividindo linha com badge ou esticado).
+- **[regra]** Em cards de grade (mais de um por linha), os botões de ação ficam num rodapé próprio (`border-t`), agrupados e alinhados à direita (`justify-end`), sem dividir a linha com badge de status ou outro conteúdo. Com mais de ~3 ações, as secundárias vão para um menu "...", para o rodapé manter a mesma altura em todo card. Não vale para listas de uma linha por registro. Status: aplicado em Empréstimos, Contas a Pagar, Contas a Receber, Livros, Metas e Planos de Treino (badge ao lado do título; em Metas, Editar/Excluir no rodapé e Recalcular, Registrar falha e Reiniciar no menu "..."). A aplicar em Cursos.
 - **[pontual]** Sem ícone duplicado no botão. Botão de salvar só com ícone quando indicado. Sem botões "Gerar com IA".
 - **[pontual]** Botão de revelar senha ou documento é só ícone, com tooltip.
 
 ## 5. Cards, listas e empty states
 
 - **[regra]** Empty state: sem botão, sem texto abaixo do ícone e do rótulo, centralizado na horizontal e na vertical. Usar o componente `EmptyState`.
-- **[regra]** Cards de registro não têm contorno colorido (faixa lateral/superior por status, categoria, tipo ou prioridade, nem borda colorida de "ativo") e não têm efeito de hover (movimento, escala, sombra, troca de fundo ou borda). Borda sempre neutra (`border-border`). Cor por status fica só dentro do card (badge, barra de progresso, valores). Vale também para o `StatCard` (`accentColor` colore só o ícone e o valor) e para seções como as do Planejador Mensal. Destaques de leitura mantêm só o fundo na cor escolhida. O fundo do card e das linhas de tarefa não muda com o progresso ou a conclusão (sempre `bg-card`). Status: ainda há sombras em alguns arquivos.
+- **[regra]** Cards de registro não têm contorno colorido (faixa lateral/superior por status, categoria, tipo ou prioridade, nem borda colorida de "ativo") e não têm efeito de hover (movimento, escala, sombra, troca de fundo ou borda). Borda sempre neutra (`border-border`). Cor por status fica só dentro do card (badge, barra de progresso, valores). Vale também para o `StatCard` (`accentColor` colore só o ícone e o valor) e para seções como as do Planejador Mensal. Destaques de leitura mantêm só o fundo na cor escolhida. Cards de refeição (Nutrição) são neutros: o período colore só o ícone e o rótulo, e o status (registrada/atrasada) fica no ícone e no ponto da timeline. O card do dia no Planejamento Semanal é neutro: "Hoje" é um badge no header. Colunas do Kanban são neutras (`bg-muted/30`, borda `border-border`), com a cor do status só na bolinha do header. O fundo do card e das linhas de tarefa não muda com o progresso ou a conclusão (sempre `bg-card`). Status: ainda há sombras em alguns arquivos.
 - **[regra]** Telas de registros e listas não têm cards de resumo (StatCard ou faixa de totais). Começam direto em filtro + lista. Resumos ficam só em dashboards e análises (Dashboard, Painel de Segurança, Intelecto Hoje, Jornada, Patrimônio, Quitação de Dívidas, Planejador Mensal). Em Compras do Cartão, o seletor Faturas/Lista é o primeiro campo do filtro; no modo Faturas cada fatura é só o `DataTable`; o select de fatura tem "Parcelas sem fatura" (só quando há parcelas órfãs) em vez de "Todas as faturas".
-- **[regra]** Conteúdo do card de grade: ícone/avatar + título (+ no máximo 1 linha secundária) + no máximo 1 métrica em destaque + 1 badge de status. O resto vai para o modal de detalhe. Todo card de grade com conteúdo além disso tem modal de detalhe (ver [2.3](#23-modal-de-detalhe)). Status: aplicado em Empréstimos, Contas a Pagar e Contas a Receber. A aplicar em Cofres, Editoras, Arquivos, Autores, Membros, Contas, Metas Financeiras, Orçamentos, Cartões Guardados e Contas Guardadas.
+- **[regra]** Conteúdo do card de grade: ícone/avatar + título (+ no máximo 1 linha secundária) + no máximo 1 métrica em destaque + 1 badge de status. O resto vai para o modal de detalhe. Todo card de grade com conteúdo além disso tem modal de detalhe (ver [2.3](#23-modal-de-detalhe)). Status: aplicado em Empréstimos, Contas a Pagar, Contas a Receber, Metas (anel de progresso como métrica; valores e dias ativos no detalhe), Planos de Treino (dias · exercícios como métrica; descrição no modal do plano) e Reflexões (texto em 3 linhas; texto completo no detalhe). A aplicar em Cofres, Editoras, Arquivos, Autores, Membros, Contas, Metas Financeiras, Orçamentos, Cartões Guardados e Contas Guardadas.
 - **[regra]** Texto nunca encosta na borda do card. Conteúdo centralizado na vertical.
 - **[regra]** Cards alinhados em linha e com o mesmo tamanho. Rótulos não mudam de posição.
 - **[regra]** Toggles em accordion: o primeiro aberto por padrão, os demais recolhidos, só um aberto por vez. Toggles de detalhe começam recolhidos (`Collapse`).
 - **[pontual]** Cards redundantes ou que só funcionam como hiperlink são removidos.
 - **[regra]** Data em card de registro é texto dd/mm/aaaa (`formatDate`), não bloco com dia em cima e mês embaixo. Ex.: card de sessão de treino, com a data num chip `bg-primary/10` à esquerda.
-- **[pontual]** Linha de métricas/chips abaixo do título do card de sessão de treino fica centralizada na horizontal.
+- **[pontual]** Linha de métricas/chips abaixo do título do card de sessão de treino fica centralizada na horizontal. O card usa `p-sm` e `mt-xs` entre título e chips, para 5 sessões caberem em 880 px de altura.
 - **[pontual]** Card de intervenção (Bem-Estar Emocional): linha 1 com categoria, duração, dificuldade e título à esquerda, benefício esperado centralizado no card e botão de ação à direita (`grid-cols-[1fr_auto_1fr]` a partir de `sm`); linha 2 só com a descrição. Assim 5 cards cabem na página sem rolagem. Sem rodapé com borda.
 
 ## 6. Paginação e filtros
@@ -121,9 +123,9 @@ Há três tipos de modal:
 - **[regra]** Um único componente de paginação (`PaginatedSlide` / `PageSlide`), com mesma posição, ícones e animação em todas as telas.
 - **[regra]** Registros por página:
   - **Lista vertical de cards** (um card por linha) e **`DataTable`**: **no máximo 5** (`LIST_PAGE_SIZE`). É o padrão do `DataTable`.
-  - **Grade de cards** (mais de um por linha): `GRID_PAGE_SIZE = 12`.
+  - **Grade de cards** (mais de um por linha): `GRID_PAGE_SIZE = 12`, em 2/3/4 colunas para as linhas fecharem (ex.: Alimentos em `lg:grid-cols-4`).
   - Listas de uma linha por registro (Tags, Webhooks etc.) ainda não têm regra própria.
-- **[desktop]** Telas com lista vertical de cards (um por linha) ou com `DataTable` não têm barra de rolagem: 5 registros por página cabem na viewport. Status: medido em 1024 px de altura em Reflexões, Sessões de Treino, Regras de Automação, Check-in, Autoestima, Tarefas Rotineiras, Checklist Diário, Despesas, Receitas, Compras do Cartão, Transferências, Gastos/Receitas Fixas, Faturas, Livros e Flashcards, todas sem rolagem.
+- **[desktop]** Telas com lista vertical de cards (um por linha) ou com `DataTable` não têm barra de rolagem: 5 registros por página cabem na viewport. Status: Reflexões, Sessões de Treino, Planejamento Semanal, Checklist Diário, Jornada e Diário Alimentar medidos em 880 px em 13/10/2026; os demais medidos em 1024 px de altura em Reflexões, Sessões de Treino, Regras de Automação, Check-in, Autoestima, Tarefas Rotineiras, Checklist Diário, Despesas, Receitas, Compras do Cartão, Transferências, Gastos/Receitas Fixas, Faturas, Livros e Flashcards, todas sem rolagem.
 - **[regra]** Nenhuma tela tem rolagem de página.
 - **[regra]** `PaginatedSlide` dentro de gráficos (cards de dashboard e análise) e dentro de modais usa `pinNav={false}`. Com o padrão `pinNav`, a classe `page-fill` estica os ancestrais até o `<main>`.
 - **[regra]** Telas com filtro e busca usam `FilterBar` + `SearchInput`, como no Controle Financeiro.
@@ -145,7 +147,8 @@ Há três tipos de modal:
 ## 9. Tema, cores e tipografia
 
 - **[regra]** Nenhuma cor fixa. Usar variáveis de cor do tema, em claro e escuro. Status: ainda há `slate`, `black` e `white` em cerca de 14 arquivos.
-- **[regra]** Cores de ícones são globais, não exclusivas de um módulo.
+- **[regra]** Cores de ícones são globais, não exclusivas de um módulo. Mapeamentos: chama/calorias `text-warning`; hidratação `text-info`; período da refeição: manhã `text-warning`, almoço/tarde `text-category-nutrition`, noite `text-info`.
+- **[regra]** Medalhas (Jornada) usam os tokens `--medal-bronze`, `--medal-silver` e `--medal-gold` (`bg-medal-*/15 text-medal-* border-medal-*/40`), definidos em `index.css` para claro (`:root`) e escuro (`.dark`).
 - **[regra]** A scrollbar (onde permitida) segue o estilo do app e as variáveis de cor do tema.
 - **[pontual]** Cards parecidos usam a mesma espessura de fonte.
 

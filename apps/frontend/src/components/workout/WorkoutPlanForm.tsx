@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   ClipboardList,
   FileText,
-  Loader2,
   Power,
   Save,
   X,
@@ -139,7 +138,7 @@ export function WorkoutPlanForm({
         <FormSection title={t('pages.workoutPlans.planDescription')} icon={FileText}>
           <Textarea
             placeholder={t('pages.workoutPlans.planDescriptionPlaceholder')}
-            rows={3}
+            rows={1}
             {...register('description')}
             className="resize-none"
           />
@@ -187,12 +186,8 @@ export function WorkoutPlanForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
 
           {t('common.actions.save')}
         </Button>

@@ -768,9 +768,9 @@ export default function DailyChecklist({
             </div>
           </div>
           {gamification.current_streak > 0 && (
-            <div className="gap-xs px-sm py-xs flex items-center rounded-full bg-orange-500/10">
-              <Flame className="h-3.5 w-3.5 text-orange-500" />
-              <span className="text-sm font-bold text-orange-500">
+            <div className="gap-xs px-sm py-xs bg-warning/10 flex items-center rounded-full">
+              <Flame className="text-warning h-3.5 w-3.5" />
+              <span className="text-warning text-sm font-bold">
                 {gamification.current_streak}
               </span>
             </div>

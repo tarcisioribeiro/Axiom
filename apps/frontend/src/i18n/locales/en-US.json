@@ -57,6 +57,7 @@
       "fitView": "Fit to screen"
     },
     "required": "Required field",
+    "fieldRequired": "{{field}}: required field",
     "messages": {
       "loadError": "Could not load the data. {{reason}}",
       "saveError": "Could not save. {{reason}}",
@@ -7206,6 +7207,7 @@
   },
   "weeklyPlanning": {
     "title": "Weekly Planning",
+    "today": "Today",
     "tasks": "Tasks",
     "completed": "Completed",
     "estimatedLoad": "Estimated Load",

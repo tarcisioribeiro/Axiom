@@ -190,6 +190,10 @@
 
     /* Star rating color - golden yellow */
     --star: 45 90% 48%;
+    /* Medalhas (Jornada): bronze, prata e ouro */
+    --medal-bronze: 28 60% 40%;
+    --medal-silver: 215 12% 45%;
+    --medal-gold: 45 90% 40%;
 
     /* Heatmap cell colors — derived from semantic tokens, adapt per theme */
     --heatmap-empty: hsl(var(--muted));
@@ -328,6 +332,10 @@
 
     /* Star rating color - Dracula yellow (#F1FA8C) */
     --star: 65 92% 76%;
+    /* Medalhas (Jornada): bronze, prata e ouro */
+    --medal-bronze: 28 65% 62%;
+    --medal-silver: 215 15% 72%;
+    --medal-gold: 45 90% 60%;
 
     /* Heatmap dark overrides — higher opacity needed on dark backgrounds */
     --heatmap-missed: hsl(var(--destructive) / 0.28);

@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   Clock,
   Flame,
-  Loader2,
   Moon,
   Save,
   StickyNote,
@@ -41,6 +40,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { TimePicker } from '@/components/ui/time-picker';
 import { useToast } from '@/hooks/use-toast';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { optionCalories } from '@/lib/nutrition-calories';
 import { cn, formatLocalDate, formatQuantity } from '@/lib/utils';
 import type { MealLog, MealLogFormData, MealType, MenuOption } from '@/types/nutrition';
@@ -63,10 +63,10 @@ function timeInputValue(time?: string | null): string {
 function getPeriodIcon(time?: string | null): ReactNode {
   if (!time) return <UtensilsCrossed className="h-4 w-4" />;
   const h = parseInt(time.slice(0, 2));
-  if (h >= 4 && h < 9) return <Sunrise className="h-4 w-4 text-amber-500" />;
-  if (h >= 9 && h < 15) return <Sun className="h-4 w-4 text-yellow-500" />;
-  if (h >= 15 && h < 19) return <Sun className="h-4 w-4 text-amber-600" />;
-  return <Moon className="h-4 w-4 text-violet-500" />;
+  if (h >= 4 && h < 9) return <Sunrise className="text-warning h-4 w-4" />;
+  if (h >= 9 && h < 12) return <Sun className="text-warning h-4 w-4" />;
+  if (h >= 12 && h < 19) return <Sun className="text-category-nutrition h-4 w-4" />;
+  return <Moon className="text-info h-4 w-4" />;
 }
 
 export function MealLogForm({
@@ -136,6 +136,11 @@ export function MealLogForm({
   const selectedMenuOption = watch('menu_option');
   const selectedMealType = mealTypes.find((mt) => mt.id === Number(selectedMealTypeId));
 
+  register('meal_type', {
+    validate: (v) =>
+      !!v || t('common.fieldRequired', { field: t('pages.nutritionLog.mealType') }),
+  });
+
   const handleFormSubmit = async (data: MealLogFormData) => {
     try {
       await onSubmit(data);
@@ -146,7 +151,10 @@ export function MealLogForm({
 
   return (
     <>
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+      <form
+        onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+        className="space-y-lg"
+      >
         {/* Data e hora */}
         <FormSection title="Data & Hora" icon={CalendarDays}>
           <div className="gap-sm grid grid-cols-2">
@@ -197,7 +205,7 @@ export function MealLogForm({
           >
             <SelectTrigger
               disabled={prefillMealTypeId !== undefined || isLoading}
-              className={cn(errors.meal_type && 'border-destructive')}
+              aria-invalid={!!errors.meal_type}
             >
               <SelectValue placeholder={t('pages.nutritionLog.mealTypePlaceholder')} />
             </SelectTrigger>
@@ -286,7 +294,7 @@ export function MealLogForm({
                     {(() => {
                       const kcal = optionCalories(opt);
                       return kcal != null && kcal > 0 ? (
-                        <span className="ml-auto inline-flex shrink-0 items-center gap-0.5 text-xs text-orange-500">
+                        <span className="text-warning ml-auto inline-flex shrink-0 items-center gap-0.5 text-xs">
                           <Flame className="h-3 w-3" />
                           {kcal} kcal
                         </span>
@@ -319,12 +327,8 @@ export function MealLogForm({
             <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
+          <Button type="submit" loading={isLoading}>
+            {!isLoading && <Save className="h-4 w-4" />}
 
             {t('common.actions.save')}
           </Button>

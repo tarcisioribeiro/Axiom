@@ -35,11 +35,9 @@ import { libraryDashboardService } from '@/services/library-dashboard-service';
 import type { Goal } from '@/types';
 
 const BADGE_LEVEL_COLORS: Record<string, string> = {
-  bronze:
-    'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-300',
-  silver:
-    'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300',
-  gold: 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300',
+  bronze: 'bg-medal-bronze/15 text-medal-bronze border-medal-bronze/40',
+  silver: 'bg-medal-silver/15 text-medal-silver border-medal-silver/40',
+  gold: 'bg-medal-gold/15 text-medal-gold border-medal-gold/40',
 };
 
 type TimelineEvent =
@@ -143,7 +141,7 @@ export default function Journey() {
           <Card>
             <CardHeader className="pb-sm">
               <CardTitle className="gap-sm flex items-center text-base">
-                <Star className="h-4 w-4 text-yellow-500" />
+                <Star className="text-star h-4 w-4" />
                 {t('pages.journey.badgesTitle')}
               </CardTitle>
             </CardHeader>
@@ -245,7 +243,7 @@ export default function Journey() {
                               <div className="mt-xs bg-background absolute -left-1.5 h-3 w-3 rounded-full border">
                                 {ev.kind === 'badge' ? (
                                   <Award
-                                    className="absolute -top-0.5 -left-0.5 h-2.5 w-2.5 text-amber-500"
+                                    className="text-medal-gold absolute -top-0.5 -left-0.5 h-2.5 w-2.5"
                                     aria-hidden="true"
                                   />
                                 ) : (
