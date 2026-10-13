@@ -1,11 +1,14 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
-  CreditCard,
-  Calendar,
-  Wallet,
-  Building2,
   AlertCircle,
+  Building2,
+  Calendar,
   CalendarClock,
+  CalendarDays,
+  CreditCard,
+  FileText,
+  Wallet,
+  X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -17,6 +20,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { translate } from '@/config/constants';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
@@ -144,7 +148,10 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
   const accountName = bill.credit_card_associated_account_name || 'N/A';
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+    <form
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       {/* Bill Summary */}
       <div className="bg-muted/50 p-md space-y-3 rounded-lg">
         <h4 className="text-muted-foreground text-sm font-semibold">
@@ -271,62 +278,65 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
       {/* Payment Form */}
       {remaining > 0 && (
         <div className="space-y-md">
-          <div className="space-y-sm">
-            <Label htmlFor="amount">
-              {t('pages.creditCardBills.payForm.paymentAmountLabel')}
-            </Label>
-            <Controller
-              name="amount"
-              control={control}
-              rules={{
-                required: true,
-                min: { value: 0.01, message: '' },
-                max: {
-                  value: remaining,
-                  message: t('pages.creditCardBills.payForm.maxHint', {
-                    value: formatCurrency(remaining.toString()),
-                  }),
-                },
-              }}
-              render={({ field }) => (
-                <CurrencyInput
-                  id="amount"
-                  disabled={isLoading}
-                  ref={field.ref}
-                  value={field.value}
-                  onBlur={field.onBlur}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                />
-              )}
-            />
-            {errors.amount && (
-              <p className="text-destructive text-xs">{errors.amount.message}</p>
-            )}
-            <p className="text-muted-foreground text-xs">
-              {t('pages.creditCardBills.payForm.maxHint', {
-                value: formatCurrency(remaining.toString()),
-              })}
-            </p>
+          <div className="gap-md grid grid-cols-2">
+            <div className="space-y-sm">
+              <Label className="gap-xs flex items-center" htmlFor="amount">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.creditCardBills.payForm.paymentAmountLabel')}
+              </Label>
+              <Controller
+                name="amount"
+                control={control}
+                rules={{
+                  required: true,
+                  min: { value: 0.01, message: '' },
+                  max: {
+                    value: remaining,
+                    message: t('pages.creditCardBills.payForm.maxHint', {
+                      value: formatCurrency(remaining.toString()),
+                    }),
+                  },
+                }}
+                render={({ field }) => (
+                  <CurrencyInput
+                    id="amount"
+                    disabled={isLoading}
+                    ref={field.ref}
+                    value={field.value}
+                    onBlur={field.onBlur}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    aria-invalid={!!errors.amount}
+                  />
+                )}
+              />
+              <p className="text-muted-foreground text-xs">
+                {t('pages.creditCardBills.payForm.maxHint', {
+                  value: formatCurrency(remaining.toString()),
+                })}
+              </p>
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="gap-xs flex items-center" htmlFor="payment_date">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {scheduled
+                  ? t('pages.payables.payment.scheduledDate')
+                  : t('pages.creditCardBills.payForm.paymentDateLabel')}
+              </Label>
+              <DatePicker
+                value={watch('payment_date')}
+                onChange={(date) =>
+                  setValue('payment_date', date ? formatLocalDate(date) : '')
+                }
+                placeholder={t('pages.creditCardBills.payForm.paymentDatePlaceholder')}
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="payment_date">
-              {scheduled
-                ? t('pages.payables.payment.scheduledDate')
-                : t('pages.creditCardBills.payForm.paymentDateLabel')}
-            </Label>
-            <DatePicker
-              value={watch('payment_date')}
-              onChange={(date) =>
-                setValue('payment_date', date ? formatLocalDate(date) : '')
-              }
-              placeholder={t('pages.creditCardBills.payForm.paymentDatePlaceholder')}
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="space-y-sm">
-            <Label htmlFor="notes">
+            <Label className="gap-xs flex items-center" htmlFor="notes">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardBills.payForm.notesLabel')}
             </Label>
             <Textarea
@@ -334,7 +344,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
               placeholder={t('pages.creditCardBills.payForm.notesPlaceholder')}
               {...register('notes')}
               disabled={isLoading}
-              rows={3}
+              rows={1}
             />
           </div>
         </div>
@@ -398,8 +408,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
         </div>
       )}
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         {remaining > 0 && (

@@ -200,7 +200,7 @@ export function ReceiptButton({
                 className="justify-start"
                 onClick={handlePreview}
               >
-                <Eye className="mr-sm h-4 w-4" />
+                <Eye className="h-4 w-4" />
                 {t('receipt.button.preview')}
               </Button>
               <Button
@@ -209,7 +209,7 @@ export function ReceiptButton({
                 className="justify-start"
                 onClick={() => handleExport('pdf')}
               >
-                <FileText className="mr-sm h-4 w-4" />
+                <FileText className="h-4 w-4" />
                 {t('receipt.button.exportPdf')}
               </Button>
               <Button
@@ -218,7 +218,7 @@ export function ReceiptButton({
                 className="justify-start"
                 onClick={() => handleExport('png')}
               >
-                <Image className="mr-sm h-4 w-4" />
+                <Image className="h-4 w-4" />
                 {t('receipt.button.exportPng')}
               </Button>
             </div>

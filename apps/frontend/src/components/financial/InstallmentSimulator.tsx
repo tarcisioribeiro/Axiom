@@ -1,10 +1,11 @@
-import { Calculator } from 'lucide-react';
+import { Calculator, Percent, Wallet } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -77,7 +78,7 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="custom-scrollbar max-h-[90vh] w-full max-w-2xl overflow-y-auto">
+      <DialogContent className="w-full max-w-2xl">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
             <Calculator className="h-5 w-5" />
@@ -88,7 +89,8 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
         <div className="space-y-md">
           <div className="gap-md grid grid-cols-2">
             <div className="space-y-xs">
-              <Label htmlFor="sim-principal">
+              <Label className="gap-xs flex items-center" htmlFor="sim-principal">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('components.installmentSimulator.purchaseValue')}
               </Label>
               <CurrencyInput
@@ -99,7 +101,8 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
             </div>
 
             <div className="space-y-xs">
-              <Label htmlFor="sim-rate">
+              <Label className="gap-xs flex items-center" htmlFor="sim-rate">
+                <Percent className="text-muted-foreground h-3.5 w-3.5" />
                 {t('components.installmentSimulator.annualRate')}
               </Label>
               <div className="relative">
@@ -200,6 +203,7 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
             </p>
           )}
         </div>
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

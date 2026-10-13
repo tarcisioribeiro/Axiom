@@ -42,14 +42,7 @@ const DARK_VARIANTS: DarkVariantOption[] = [
     bg: '#1E1E2E',
   },
   { id: 'tokyo-night', label: 'Tokyo Night', primary: '#7AA2F7', bg: '#1A1B26' },
-  { id: 'gruvbox-dark', label: 'Gruvbox Dark', primary: '#FE8019', bg: '#282828' },
-  { id: 'cyberpunk', label: 'Cyberpunk', primary: '#FF00FF', bg: '#0D0D1A' },
-  {
-    id: 'flat-remix-blue-darkest',
-    label: 'Flat Remix Blue Darkest',
-    primary: '#5294E2',
-    bg: '#0D0F16',
-  },
+  { id: 'gruvbox-dark', label: 'Gruvbox Dark', primary: '#FABD2F', bg: '#282828' },
   { id: 'everforest', label: 'Everforest', primary: '#7FBBB3', bg: '#2D353B' },
   { id: 'ubuntu', label: 'Ubuntu Dark', primary: '#E95420', bg: '#300A24' },
   { id: 'mint-dark', label: 'Linux Mint Dark', primary: '#1F9EDE', bg: '#2E2E33' },
@@ -63,21 +56,14 @@ const LIGHT_VARIANTS: LightVariantOption[] = [
     primary: '#8839EF',
     bg: '#EFF1F5',
   },
-  { id: 'rose-pine-dawn', label: 'Rosé Pine Dawn', primary: '#907AA9', bg: '#FAF4ED' },
   {
     id: 'everforest-light',
     label: 'Everforest Light',
     primary: '#3A94C5',
     bg: '#F3F0E4',
   },
-  { id: 'gruvbox-light', label: 'Gruvbox Light', primary: '#D79921', bg: '#FBF1C7' },
-  {
-    id: 'solarized-light',
-    label: 'Solarized Light',
-    primary: '#268BD2',
-    bg: '#FDF6E3',
-  },
-  { id: 'nord-light', label: 'Nord Light', primary: '#5E81AC', bg: '#ECEFF4' },
+  { id: 'gruvbox-light', label: 'Gruvbox Light', primary: '#D65D0E', bg: '#FBF1C7' },
+  { id: 'tokyo-day', label: 'Tokyo Day', primary: '#2E7DE9', bg: '#E1E2E7' },
   { id: 'ubuntu-light', label: 'Ubuntu Light', primary: '#E95420', bg: '#FFFFFF' },
   { id: 'mint-light', label: 'Linux Mint Light', primary: '#1F9EDE', bg: '#F8F8F9' },
 ];
@@ -99,12 +85,12 @@ export function ThemeToggle({ className, syncWithDesktop = false }: ThemeToggleP
         >
           {isDark ? (
             <Sun
-              className="text-warning h-5 w-5 transition-transform duration-200 hover:rotate-12"
+              className="text-warning duration-normal h-5 w-5 transition-transform hover:rotate-12"
               aria-hidden="true"
             />
           ) : (
             <Moon
-              className="text-primary h-5 w-5 transition-transform duration-200 hover:rotate-12"
+              className="text-primary duration-normal h-5 w-5 transition-transform hover:rotate-12"
               aria-hidden="true"
             />
           )}

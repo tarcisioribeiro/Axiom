@@ -1,5 +1,14 @@
 /* eslint-disable max-lines */
-import { Pencil } from 'lucide-react';
+import {
+  Calculator,
+  Check,
+  Hash,
+  ListOrdered,
+  Loader2,
+  Pencil,
+  Save,
+  X,
+} from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -15,8 +24,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
@@ -135,8 +144,7 @@ export function InstallmentsPlanDialog({
       onChanged();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -153,8 +161,7 @@ export function InstallmentsPlanDialog({
       setRecalcPreview(res.installments_preview);
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -174,8 +181,7 @@ export function InstallmentsPlanDialog({
       onChanged();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -187,9 +193,9 @@ export function InstallmentsPlanDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="custom-scrollbar max-h-[85vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle icon={ListOrdered}>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
@@ -229,7 +235,6 @@ export function InstallmentsPlanDialog({
                             <div className="w-44">
                               <DatePicker
                                 value={d.due_date}
-                                clearable={false}
                                 onChange={(date) =>
                                   setDraft(inst.installment_number, {
                                     due_date: date ? formatLocalDate(date) : '',
@@ -274,15 +279,18 @@ export function InstallmentsPlanDialog({
               <div className="space-y-sm pt-md border-t">
                 <p className="text-muted-foreground text-xs">{tr('editHint')}</p>
                 <div className="space-y-xs">
-                  <Label>{tr('recalcCountLabel')}</Label>
+                  <Label className="gap-xs flex items-center">
+                    <Hash className="text-muted-foreground h-3.5 w-3.5" />
+                    {tr('recalcCountLabel')}
+                  </Label>
                   <div className="gap-sm flex items-center">
-                    <Input
-                      type="number"
+                    <NumberStepper
                       min={1}
-                      className="w-24"
-                      value={recalcCount}
-                      onChange={(e) => {
-                        setRecalcCount(e.target.value);
+                      optional
+                      aria-label={tr('recalcCountLabel')}
+                      value={recalcCount === '' ? null : Number(recalcCount)}
+                      onChange={(v) => {
+                        setRecalcCount(v === null ? '' : String(v));
                         setRecalcPreview(null);
                       }}
                     />
@@ -292,6 +300,7 @@ export function InstallmentsPlanDialog({
                       onClick={() => void handleRecalcPreview()}
                       disabled={isRecalculating}
                     >
+                      <Calculator aria-hidden="true" />
                       {tr('recalcApply')}
                     </Button>
                   </div>
@@ -317,6 +326,7 @@ export function InstallmentsPlanDialog({
                       onClick={() => void handleRecalcApply()}
                       disabled={isRecalculating}
                     >
+                      <Check aria-hidden="true" />
                       {t('common.actions.confirm')}
                     </Button>
                   </div>
@@ -336,16 +346,22 @@ export function InstallmentsPlanDialog({
                     }}
                     disabled={isSaving}
                   >
+                    <X className="h-4 w-4" />
                     {t('common.actions.cancel')}
                   </Button>
                   <Button onClick={() => void handleSave()} disabled={isSaving}>
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
                     {isSaving ? t('common.actions.saving') : t('common.actions.save')}
                   </Button>
                 </>
               ) : (
                 canEdit && (
                   <Button variant="outline" onClick={() => setIsEditing(true)}>
-                    <Pencil className="mr-sm h-4 w-4" />
+                    <Pencil className="h-4 w-4" />
                     {tr('editPlan')}
                   </Button>
                 )

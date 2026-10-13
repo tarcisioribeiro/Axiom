@@ -1,3 +1,4 @@
+import { House } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
@@ -17,7 +18,10 @@ export default function Unauthorized() {
         </h2>
         <p className="mb-lg">{t('pages.unauthorized.message')}</p>
         <Button asChild>
-          <Link to="/">{t('pages.unauthorized.backBtn')}</Link>
+          <Link to="/">
+            <House aria-hidden="true" />
+            {t('pages.unauthorized.backBtn')}
+          </Link>
         </Button>
       </div>
     </div>

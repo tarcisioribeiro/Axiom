@@ -14,6 +14,7 @@ from app.export_utils import (
     build_pdf_response,
     format_decimal,
 )
+from app.pagination import SmallResultsSetPagination
 from app.permissions import GlobalDefaultPermission
 from app.throttles import ExportRateThrottle
 from revenues.filters import RevenueFilter
@@ -64,6 +65,7 @@ class RevenueCreateListView(BaseListCreateView):
     serializer_class = RevenueSerializer
     filterset_class = RevenueFilter
     ordering = ["-date", "-id"]
+    pagination_class = SmallResultsSetPagination
 
     def get_queryset(self):
         return Revenue.objects.filter(

@@ -82,6 +82,7 @@ vi.mock('@/services/dashboard-service', () => ({
       loans_to_receive: 0,
       loans_to_pay: 0,
       pending_payables: 0,
+      pending_receivables: 0,
       summary: { total_income: 500, total_outcome: 200, net_change: 300 },
     }),
     getCashFlowForecast: vi.fn().mockResolvedValue({
@@ -190,7 +191,7 @@ describe('Dashboard page', () => {
   it('renders the dashboard title after data loads', async () => {
     renderDashboard();
     await waitFor(() => {
-      expect(screen.getByText(/resumo financeiro/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     });
   });
 
@@ -279,7 +280,7 @@ describe('Dashboard page', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText(/resumo financeiro/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     });
 
     // Restore defaults

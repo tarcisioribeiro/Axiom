@@ -1,3 +1,4 @@
+import { KeyRound, Lock } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, Link, useNavigate } from 'react-router';
@@ -106,7 +107,8 @@ export default function ResetPassword() {
               )}
 
               <div className="space-y-sm">
-                <Label htmlFor="new-password">
+                <Label className="gap-xs flex items-center" htmlFor="new-password">
+                  <Lock className="text-muted-foreground h-3.5 w-3.5" />
                   {t('auth.resetPassword.newPassword')}
                 </Label>
                 <Input
@@ -122,7 +124,8 @@ export default function ResetPassword() {
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="confirm-password">
+                <Label className="gap-xs flex items-center" htmlFor="confirm-password">
+                  <Lock className="text-muted-foreground h-3.5 w-3.5" />
                   {t('auth.resetPassword.confirmPassword')}
                 </Label>
                 <Input
@@ -139,9 +142,11 @@ export default function ResetPassword() {
 
               <Button
                 type="submit"
-                className="gradient-primary w-full font-semibold text-white"
-                disabled={isLoading || !newPassword || !confirmPassword}
+                className="w-full"
+                disabled={!newPassword || !confirmPassword}
+                loading={isLoading}
               >
+                {!isLoading && <KeyRound aria-hidden="true" />}
                 {isLoading
                   ? t('auth.resetPassword.loading')
                   : t('auth.resetPassword.submit')}

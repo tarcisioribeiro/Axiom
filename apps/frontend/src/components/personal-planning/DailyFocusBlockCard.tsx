@@ -1,5 +1,6 @@
 import { CheckCircle2, Circle, Edit } from 'lucide-react';
 import { createElement } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { getIconByName } from '@/components/ui/icon-picker';
@@ -26,23 +27,14 @@ export function DailyFocusBlockCard({
   onToggleTaskComplete,
   onEdit,
 }: DailyFocusBlockCardProps) {
+  const { t } = useTranslation();
   const doneCount = tasks.filter((t) => t.status === 'completed').length;
   const total = tasks.length;
   const progressPct = total > 0 ? (doneCount / total) * 100 : 0;
   const isAllDone = total > 0 && doneCount === total;
-  const hasProgress = progressPct > 0 && !isAllDone;
 
   return (
-    <div
-      className={cn(
-        'overflow-hidden rounded-lg border border-l-4 transition-colors',
-        isAllDone
-          ? 'border-l-success bg-success/5'
-          : hasProgress
-            ? 'border-l-primary bg-primary/[0.03]'
-            : 'border-l-muted-foreground/20 bg-card'
-      )}
-    >
+    <div className="bg-card overflow-hidden rounded-lg border">
       <div className="gap-sm px-md py-sm flex items-center">
         <BlockIcon
           name={block.icon}
@@ -61,7 +53,13 @@ export function DailyFocusBlockCard({
             {doneCount}/{total}
           </span>
         )}
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onEdit}>
+        <Button
+          aria-label={t('common.actions.edit')}
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={onEdit}
+        >
           <Edit className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
       </div>
@@ -70,7 +68,7 @@ export function DailyFocusBlockCard({
         <div className="mx-md mb-xs bg-muted/50 h-1 overflow-hidden rounded-full">
           <div
             className={cn(
-              'h-full w-full origin-left rounded-full transition-transform duration-500',
+              'duration-slow h-full w-full origin-left rounded-full transition-transform',
               isAllDone ? 'bg-success' : 'bg-primary'
             )}
             style={{ transform: `scaleX(${progressPct / 100})` }}
@@ -84,13 +82,13 @@ export function DailyFocusBlockCard({
             key={task.id}
             className={cn(
               'gap-sm px-sm py-xs flex items-center rounded-md transition-colors',
-              task.status === 'completed' ? 'bg-success/5' : 'hover:bg-muted/40'
+              task.status !== 'completed' && 'hover:bg-muted/40'
             )}
           >
             <PlainButton
               type="button"
               onClick={() => onToggleTaskComplete(task)}
-              className="text-muted-foreground hover:text-primary shrink-0 transition-colors"
+              className="text-primary hover:text-primary shrink-0 transition-colors"
             >
               {task.status === 'completed' ? (
                 <CheckCircle2 className="text-success h-4 w-4" />
@@ -106,9 +104,11 @@ export function DailyFocusBlockCard({
             >
               {task.task_name}
             </span>
-            {task.time_display && (
-              <span className="text-muted-foreground/70 text-xs">
-                {task.time_display}
+            {(task.time_display || task.closing_time) && (
+              <span className="text-muted-foreground/70 text-xs tabular-nums">
+                {[task.time_display, task.closing_time?.substring(0, 5)]
+                  .filter(Boolean)
+                  .join(' — ')}
               </span>
             )}
           </div>

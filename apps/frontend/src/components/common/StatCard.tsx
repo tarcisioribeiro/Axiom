@@ -24,6 +24,10 @@ interface StatCardProps {
   accentColor?: 'green' | 'red' | 'blue' | 'orange' | 'purple';
   /** If true, renders the value in a larger text size to emphasize importance */
   prominent?: boolean;
+  /** Densidade reduzida: cabeçalho, padding, ícone e valor menores */
+  compact?: boolean;
+  /** Centraliza o conteúdo (valor, descrição, tendência) na vertical e horizontal do card */
+  centered?: boolean;
   /** Optional click handler — adds cursor-pointer and hover ring */
   onClick?: () => void;
   /** Inline progress bar shown below the value */
@@ -52,14 +56,6 @@ const extractNumber = (val: string | number): number => {
   return parseFloat(cleaned.replace(/,/g, ''));
 };
 
-const accentCardClasses: Record<NonNullable<StatCardProps['accentColor']>, string> = {
-  green: 'border-l-4 border-l-success border-success/30 bg-success/[0.03]',
-  red: 'border-l-4 border-l-destructive border-destructive/30 bg-destructive/[0.03]',
-  blue: 'border-l-4 border-l-primary border-primary/30 bg-primary/[0.03]',
-  orange: 'border-l-4 border-l-warning border-warning/30 bg-warning/[0.03]',
-  purple: 'border-l-4 border-l-purple-500 border-purple-500/30 bg-purple-500/[0.03]',
-};
-
 const accentIconClasses: Record<NonNullable<StatCardProps['accentColor']>, string> = {
   green: 'bg-success/12 text-success ring-1 ring-inset ring-success/25',
   red: 'bg-destructive/12 text-destructive ring-1 ring-inset ring-destructive/25',
@@ -85,17 +81,12 @@ export const StatCard: React.FC<StatCardProps> = ({
   variant = 'default',
   accentColor,
   prominent = false,
+  compact = false,
+  centered = false,
   onClick,
   progressBar,
 }) => {
   const { i18n } = useTranslation();
-  const variantClasses = {
-    default: '',
-    success: 'border-success/40 bg-success/[0.04]',
-    warning: 'border-warning/40 bg-warning/[0.04]',
-    danger: 'border-destructive/40 bg-destructive/[0.04]',
-  };
-
   const iconBadgeClasses = {
     default: 'bg-primary/10 text-primary ring-1 ring-inset ring-primary/20',
     success:
@@ -104,10 +95,6 @@ export const StatCard: React.FC<StatCardProps> = ({
       'bg-warning/12 text-[hsl(var(--warning))] ring-1 ring-inset ring-warning/25',
     danger: 'bg-destructive/12 text-destructive ring-1 ring-inset ring-destructive/25',
   };
-
-  const cardClass = accentColor
-    ? accentCardClasses[accentColor]
-    : variantClasses[variant];
 
   const iconClass = accentColor
     ? accentIconClasses[accentColor]
@@ -142,40 +129,44 @@ export const StatCard: React.FC<StatCardProps> = ({
   const valueClass = accentColor ? accentValueClasses[accentColor] : '';
 
   return (
-    <motion.div
-      variants={cardVariants}
-      initial="initial"
-      animate="animate"
-      whileHover="hover"
-      whileTap="tap"
-    >
+    <motion.div variants={cardVariants} initial="initial" animate="animate">
       <Card
         className={cn(
-          `h-full transition-shadow ${cardClass}`,
-          onClick && 'hover:ring-primary/30 cursor-pointer hover:ring-2'
+          'h-full',
+          centered && 'flex flex-col',
+          onClick && 'cursor-pointer'
         )}
         onClick={onClick}
       >
-        <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
+        <CardHeader
+          className={cn(
+            'flex flex-row items-center justify-between space-y-0',
+            compact ? 'py-sm pb-0' : 'pb-sm'
+          )}
+        >
           <p className="text-sm font-medium tracking-tight">{title}</p>
           {icon && (
-            <motion.div
-              whileHover={{ scale: 1.05, rotate: 4 }}
-              transition={{ duration: 0.25 }}
+            <div
               className={cn(
-                'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg [&>svg]:h-4 [&>svg]:w-4',
+                'flex shrink-0 items-center justify-center rounded-lg [&>svg]:h-4 [&>svg]:w-4',
+                compact ? 'h-7 w-7' : 'h-9 w-9',
                 iconClass
               )}
             >
               {icon}
-            </motion.div>
+            </div>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent
+          className={cn(
+            compact && 'px-md pb-md',
+            centered && 'flex flex-1 flex-col items-center justify-center text-center'
+          )}
+        >
           <div
             className={cn(
               'numeric font-bold tracking-tight',
-              prominent ? 'text-3xl' : 'text-2xl',
+              compact ? 'text-lg' : prominent ? 'text-3xl' : 'text-2xl',
               valueClass
             )}
           >

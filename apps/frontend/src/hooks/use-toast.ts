@@ -108,7 +108,9 @@ type ToastReturn = {
   update: (props: ToasterToast) => void;
 };
 
-function _toast({ ...props }: Toast): ToastReturn {
+function _toast({ description, ...props }: Toast): ToastReturn {
+  // Padrão único: o toast mostra só o título. A descrição (ex.: detalhe técnico
+  // "error: ...") é descartada; sem título, ela vira o título para não ficar vazio.
   const id = genId();
   const update = (p: ToasterToast) =>
     dispatch({ type: 'UPDATE_TOAST', toast: { ...p, id } });
@@ -118,6 +120,7 @@ function _toast({ ...props }: Toast): ToastReturn {
     type: 'ADD_TOAST',
     toast: {
       ...props,
+      title: props.title ?? description,
       id,
       open: true,
       onOpenChange: (open) => {

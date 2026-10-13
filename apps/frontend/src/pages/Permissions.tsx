@@ -1,20 +1,15 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { Loader2, Shield, Users, Check, X } from 'lucide-react';
+import { Check, Loader2, Shield, Users, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { membersService } from '@/services/members-service';
 import { permissionsService, type Permission } from '@/services/permissions-service';
@@ -56,8 +51,7 @@ export default function Permissions() {
         return { members: membersData, availableApps: apps };
       } catch (error: unknown) {
         toast({
-          title: t('pages.permissions.loadError'),
-          description: getErrorMessage(error),
+          title: t('pages.permissions.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { members: EMPTY_MEMBERS, availableApps: EMPTY_APPS };
@@ -74,8 +68,7 @@ export default function Permissions() {
     // Se o membro não tem usuário associado, não pode ter permissões
     if (!member.user) {
       toast({
-        title: t('pages.permissions.noUserWarning'),
-        description: t('pages.permissions.noUserDesc'),
+        title: t('pages.permissions.noUserDesc'),
         variant: 'default',
       });
       return;
@@ -87,8 +80,9 @@ export default function Permissions() {
       setMemberPermissions(new Set(response.permissions));
     } catch (error: unknown) {
       toast({
-        title: t('pages.permissions.loadPermissionsError'),
-        description: getErrorMessage(error),
+        title: t('pages.permissions.loadPermissionsError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -111,8 +105,7 @@ export default function Permissions() {
 
     if (!selectedMember.user) {
       toast({
-        title: t('pages.permissions.saveErrorTitle'),
-        description: t('pages.permissions.noUserDesc'),
+        title: t('pages.permissions.noUserDesc'),
         variant: 'destructive',
       });
       return;
@@ -133,13 +126,11 @@ export default function Permissions() {
       setMemberPermissions(new Set(response.permissions));
 
       toast({
-        title: t('pages.permissions.saved'),
-        description: t('pages.permissions.savedDesc', { name: selectedMember.name }),
+        title: t('pages.permissions.savedDesc', { name: selectedMember.name }),
       });
     } catch (error: unknown) {
       toast({
-        title: t('pages.permissions.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.permissions.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -157,13 +148,7 @@ export default function Permissions() {
 
   return (
     <PageContainer>
-      <div>
-        <h1 className="gap-sm flex items-center text-3xl font-bold">
-          <Shield className="h-8 w-8" />
-          {t('pages.permissions.title')}
-        </h1>
-        <p className="mt-sm">{t('pages.permissions.subtitle')}</p>
-      </div>
+      <PageHeader title={t('pages.permissions.title')} icon={<Shield />} />
 
       <div className="gap-lg grid grid-cols-1 lg:grid-cols-3">
         {/* Lista de Membros */}
@@ -173,7 +158,6 @@ export default function Permissions() {
               <Users className="h-5 w-5" />
               {t('pages.permissions.membersTitle')}
             </CardTitle>
-            <CardDescription>{t('pages.permissions.membersDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-sm">
@@ -203,9 +187,7 @@ export default function Permissions() {
                 </Button>
               ))}
               {members.length === 0 && (
-                <p className="py-md text-center text-sm">
-                  {t('pages.permissions.noMembers')}
-                </p>
+                <EmptyState title={t('pages.permissions.noMembers')} />
               )}
             </div>
           </CardContent>
@@ -219,11 +201,6 @@ export default function Permissions() {
                 ? t('pages.permissions.permissionsOf', { name: selectedMember.name })
                 : t('pages.permissions.selectMember')}
             </CardTitle>
-            <CardDescription>
-              {selectedMember
-                ? t('pages.permissions.checkPermissions')
-                : t('pages.permissions.selectMemberDesc')}
-            </CardDescription>
           </CardHeader>
           <CardContent>
             {selectedMember ? (
@@ -270,6 +247,7 @@ export default function Permissions() {
 
                   <div className="gap-sm pt-md flex justify-end border-t">
                     <Button variant="outline" onClick={() => setSelectedMember(null)}>
+                      <X aria-hidden="true" />
                       {t('common.actions.cancel')}
                     </Button>
                     <Button
@@ -278,12 +256,12 @@ export default function Permissions() {
                     >
                       {isSaving ? (
                         <>
-                          <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                           {t('common.actions.saving')}
                         </>
                       ) : (
                         <>
-                          <Check className="mr-sm h-4 w-4" />
+                          <Check className="h-4 w-4" />
                           {t('pages.permissions.savePermissions')}
                         </>
                       )}
@@ -294,7 +272,7 @@ export default function Permissions() {
             ) : (
               <EmptyState
                 icon={<Shield className="text-muted-foreground h-12 w-12" />}
-                message={t('pages.permissions.selectMemberStart')}
+                title={t('pages.permissions.selectMemberStart')}
               />
             )}
           </CardContent>

@@ -1,7 +1,17 @@
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  FileText,
+  Hash,
+  Loader2,
+  Lock,
+  ShieldAlert,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -73,14 +83,12 @@ export function CreditCardDeleteDialog({
       });
       toast({
         title: t('pages.creditCards.deleted'),
-        description: t('pages.creditCards.deletedDesc'),
       });
       close();
       onDeleted();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -104,28 +112,37 @@ export function CreditCardDeleteDialog({
                 {t('pages.creditCards.deleteFlow.pendingDesc')}
               </DialogDescription>
             </DialogHeader>
-            <ul className="space-y-xs max-h-60 overflow-y-auto">
-              {pendingBills.map((bill) => (
-                <li
-                  key={bill.id}
-                  className="bg-card px-md py-sm flex items-center justify-between rounded-md border text-sm"
-                >
-                  <span className="font-medium">
-                    {translate('months', bill.month)}/{bill.year}
-                  </span>
-                  <span className="gap-sm flex items-center">
-                    <span className="font-semibold">
-                      {formatCurrency(parseFloat(bill.total_amount))}
+            <p className="text-sm">{t('pages.creditCards.deleteFlow.pendingDesc')}</p>
+            <PaginatedSlide
+              items={pendingBills}
+              pageSize={LIST_PAGE_SIZE}
+              pinNav={false}
+              className="space-y-xs"
+            >
+              {(pageBills) =>
+                pageBills.map((bill) => (
+                  <div
+                    key={bill.id}
+                    className="bg-card px-md py-sm flex items-center justify-between rounded-md border text-sm"
+                  >
+                    <span className="font-medium">
+                      {translate('months', bill.month)}/{bill.year}
                     </span>
-                    <span className="text-muted-foreground text-xs">
-                      {t(`pages.creditCardExpenses.status.${bill.status}`)}
+                    <span className="gap-sm flex items-center">
+                      <span className="font-semibold">
+                        {formatCurrency(parseFloat(bill.total_amount))}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        {t(`pages.creditCardExpenses.status.${bill.status}`)}
+                      </span>
                     </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <div className="gap-sm flex justify-end">
+                  </div>
+                ))
+              }
+            </PaginatedSlide>
+            <div className="dialog-footer gap-sm flex justify-end">
               <Button variant="outline" onClick={close}>
+                <X className="h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               {onShowBills && card && (
@@ -135,6 +152,7 @@ export function CreditCardDeleteDialog({
                     onShowBills(card.id);
                   }}
                 >
+                  <FileText className="h-4 w-4" />
                   {t('pages.creditCards.deleteFlow.viewBills')}
                 </Button>
               )}
@@ -143,7 +161,7 @@ export function CreditCardDeleteDialog({
         ) : (
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle icon={ShieldAlert}>
                 {t('pages.creditCards.deleteFlow.credentialsTitle')}
               </DialogTitle>
               <DialogDescription>
@@ -151,7 +169,8 @@ export function CreditCardDeleteDialog({
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-xs">
-              <Label htmlFor="delete-card-number">
+              <Label className="gap-xs flex items-center" htmlFor="delete-card-number">
+                <Hash className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.cardNumberLabel')}
               </Label>
               <Input
@@ -165,7 +184,8 @@ export function CreditCardDeleteDialog({
               />
             </div>
             <div className="space-y-xs">
-              <Label htmlFor="delete-card-cvv">
+              <Label className="gap-xs flex items-center" htmlFor="delete-card-cvv">
+                <Lock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.cvvLabel')}
               </Label>
               <Input
@@ -180,12 +200,18 @@ export function CreditCardDeleteDialog({
                 required
               />
             </div>
-            <div className="gap-sm flex justify-end">
+            <div className="dialog-footer gap-sm flex justify-end">
               <Button type="button" variant="outline" onClick={close}>
+                <X className="h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               <Button type="submit" variant="destructive" disabled={isDeleting}>
-                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isDeleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+
                 {t('pages.creditCards.deleteFlow.continue')}
               </Button>
             </div>

@@ -24,6 +24,15 @@ export const EXPENSE_CATEGORIES_CANONICAL = [
   { key: 'travels', label: 'Viagens' },
 ] as const;
 
+// Receitas na Carteira Móvel (CM) não aceitam estas categorias — espelha o backend.
+export const WALLET_FORBIDDEN_REVENUE_CATEGORIES = ['ticket', 'income', 'cashback'];
+
+export const isRevenueCategoryAllowed = (
+  key: string,
+  accountType: string | undefined
+): boolean =>
+  accountType !== 'CM' || !WALLET_FORBIDDEN_REVENUE_CATEGORIES.includes(key);
+
 export const REVENUE_CATEGORIES_CANONICAL = [
   { key: 'deposit', label: 'Depósito' },
   { key: 'award', label: 'Prêmio' },

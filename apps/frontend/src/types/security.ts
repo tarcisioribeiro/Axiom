@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 export interface VaultStatus {
   is_configured: boolean;
   is_unlocked: boolean;
@@ -259,47 +258,4 @@ export interface ActivityLog {
   user?: number;
   username?: string;
   created_at: string;
-}
-
-export interface SecuritySearchPasswordResult {
-  id: number;
-  title: string;
-  site?: string;
-  username: string;
-  category: string;
-  is_favorite: boolean;
-  totp_enabled: boolean;
-}
-
-export interface SecuritySearchCardResult {
-  id: number;
-  name: string;
-  cardholder_name: string;
-  flag: string;
-  card_number_masked: string;
-  is_favorite: boolean;
-}
-
-export interface SecuritySearchAccountResult {
-  id: number;
-  name: string;
-  institution_name: string;
-  institution_code: string;
-  is_favorite: boolean;
-}
-
-export interface SecuritySearchArchiveResult {
-  id: number;
-  title: string;
-  category: string;
-  file_name?: string;
-  is_favorite: boolean;
-}
-
-export interface SecuritySearchResults {
-  passwords: SecuritySearchPasswordResult[];
-  stored_cards: SecuritySearchCardResult[];
-  stored_accounts: SecuritySearchAccountResult[];
-  archives: SecuritySearchArchiveResult[];
-  total: number;
 }

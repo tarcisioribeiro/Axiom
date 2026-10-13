@@ -33,11 +33,10 @@ export function useTaskReminders(cards: TaskCard[]) {
         ) {
           notifiedRef.current.add(key);
           toast({
-            title: `Hora da tarefa: ${card.task_name}`,
-            description:
+            title:
               diff === 0
-                ? 'É agora!'
-                : `Começa em ${diff} min — ${card.scheduled_time}`,
+                ? `A tarefa ${card.task_name} é agora!`
+                : `A tarefa ${card.task_name} começa em ${diff} min, às ${card.scheduled_time}.`,
           });
         }
       }

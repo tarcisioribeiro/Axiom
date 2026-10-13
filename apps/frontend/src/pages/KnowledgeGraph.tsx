@@ -22,9 +22,9 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -218,6 +218,7 @@ function NodeDetailPanel({
           </div>
         </div>
         <PlainButton
+          aria-label={t('common.actions.close')}
           onClick={onClose}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
@@ -383,6 +384,7 @@ function NodeDetailPanel({
                     </div>
                     {link.link_id && (
                       <PlainButton
+                        aria-label={t('common.actions.delete')}
                         onClick={() => onDeleteLink(link.link_id!)}
                         className="ml-xs text-destructive/60 hover:text-destructive shrink-0 transition-colors"
                       >
@@ -413,7 +415,7 @@ function NodeDetailPanel({
             className="w-full"
             onClick={() => onStartLink(node)}
           >
-            <Link2 className="mr-sm h-3.5 w-3.5" />
+            <Link2 className="h-3.5 w-3.5" />
             {linkingFrom?.id === node.id
               ? t('pages.knowledgeGraph.cancelLink')
               : t('pages.knowledgeGraph.createLink')}
@@ -517,9 +519,11 @@ function CreateLinkModal({
 
         <div className="gap-sm flex justify-end">
           <Button variant="ghost" size="sm" onClick={onCancel}>
+            <X aria-hidden="true" />
             {t('pages.knowledgeGraph.createLinkModal.cancel')}
           </Button>
-          <Button size="sm" onClick={() => onConfirm(relation)} disabled={isLoading}>
+          <Button size="sm" onClick={() => onConfirm(relation)} loading={isLoading}>
+            {!isLoading && <Link2 aria-hidden="true" />}
             {isLoading
               ? t('pages.knowledgeGraph.createLinkModal.creating')
               : t('pages.knowledgeGraph.createLinkModal.confirm')}
@@ -660,8 +664,9 @@ export default function KnowledgeGraph() {
     },
     onError: (error) => {
       toast({
-        title: t('pages.knowledgeGraph.toasts.linkCreateError'),
-        description: getErrorMessage(error),
+        title: t('pages.knowledgeGraph.toasts.linkCreateError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     },
@@ -925,7 +930,6 @@ export default function KnowledgeGraph() {
       <PageContainer>
         <PageHeader
           title={t('pages.knowledgeGraph.title')}
-          description={t('pages.knowledgeGraph.description')}
           icon={<Network className="h-5 w-5" />}
         />
 
@@ -959,6 +963,7 @@ export default function KnowledgeGraph() {
               />
               {search && (
                 <PlainButton
+                  aria-label={t('common.actions.clear')}
                   onClick={() => setSearch('')}
                   className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
                 >
@@ -1066,41 +1071,14 @@ export default function KnowledgeGraph() {
                 <p className="text-sm">{t('pages.knowledgeGraph.loading')}</p>
               </div>
             ) : filteredGraphData.nodes.length === 0 ? (
-              <div className="gap-md px-xl text-muted-foreground flex h-full flex-col items-center justify-center text-center">
-                <div className="bg-primary/10 ring-primary/20 flex h-16 w-16 items-center justify-center rounded-2xl ring-1 ring-inset">
-                  <Sparkles className="text-primary h-8 w-8" />
-                </div>
-                <div className="space-y-xs">
-                  <p className="text-foreground text-base font-semibold">
-                    {search
-                      ? t('pages.knowledgeGraph.emptySearch')
-                      : t('pages.knowledgeGraph.empty')}
-                  </p>
-                  {!search && (
-                    <p className="max-w-xs text-sm">
-                      {t('pages.knowledgeGraph.emptyHint')}
-                    </p>
-                  )}
-                </div>
-                {!search && (
-                  <div className="gap-sm flex items-center">
-                    <Link
-                      to="/library/books"
-                      className="gap-xs border-border bg-card px-md py-xs text-foreground hover:bg-muted flex items-center rounded-md border text-xs font-medium transition-colors"
-                    >
-                      <BookOpen className="h-3.5 w-3.5" />
-                      {t('pages.knowledgeGraph.emptyCtaBooks')}
-                    </Link>
-                    <Link
-                      to="/library/courses"
-                      className="gap-xs border-border bg-card px-md py-xs text-foreground hover:bg-muted flex items-center rounded-md border text-xs font-medium transition-colors"
-                    >
-                      <GraduationCap className="h-3.5 w-3.5" />
-                      {t('pages.knowledgeGraph.emptyCtaCourses')}
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <EmptyState
+                icon={<Sparkles />}
+                title={
+                  search
+                    ? t('pages.knowledgeGraph.emptySearch')
+                    : t('pages.knowledgeGraph.empty')
+                }
+              />
             ) : (
               <ForceGraph2D
                 ref={graphRef as never}
@@ -1129,27 +1107,26 @@ export default function KnowledgeGraph() {
 
             {/* Suggest links panel */}
             {showSuggestions && (
-              <div className="right-md top-md border-border bg-card absolute z-20 flex max-h-[60vh] w-72 flex-col overflow-hidden rounded-lg border shadow-lg">
+              <div className="animate-pop-in right-md top-md border-border bg-card absolute z-20 flex max-h-[60vh] w-72 flex-col overflow-hidden rounded-lg border shadow-lg">
                 <div className="border-border px-md py-sm flex items-center justify-between border-b">
                   <p className="text-sm font-semibold">
                     {t('pages.knowledgeGraph.suggestionsPanel')}
                   </p>
                   <PlainButton
+                    aria-label={t('common.actions.close')}
                     onClick={() => setShowSuggestions(false)}
                     className="hover:bg-muted rounded p-0.5"
                   >
                     <X className="h-3.5 w-3.5" />
                   </PlainButton>
                 </div>
-                <div className="custom-scrollbar p-sm flex-1 overflow-y-auto">
+                <div className="p-sm flex-1 overflow-y-auto">
                   {suggestLoading ? (
                     <p className="py-md text-muted-foreground text-center text-xs">
                       {t('pages.knowledgeGraph.loadingSuggestions')}
                     </p>
                   ) : !suggestData?.suggestions?.length ? (
-                    <p className="py-md text-muted-foreground text-center text-xs">
-                      {t('pages.knowledgeGraph.noSuggestions')}
-                    </p>
+                    <EmptyState title={t('pages.knowledgeGraph.noSuggestions')} />
                   ) : (
                     <div className="space-y-xs">
                       {suggestData.suggestions.map((s, i) => (
@@ -1205,6 +1182,7 @@ export default function KnowledgeGraph() {
                 </PlainButton>
               </Tooltip>
               <PlainButton
+                aria-label={t('common.actions.zoomIn')}
                 onClick={() => {
                   const g = graphRef.current;
                   if (!g) return;
@@ -1215,6 +1193,7 @@ export default function KnowledgeGraph() {
                 <ZoomIn className="h-3.5 w-3.5" />
               </PlainButton>
               <PlainButton
+                aria-label={t('common.actions.zoomOut')}
                 onClick={() => {
                   const g = graphRef.current;
                   if (!g) return;
@@ -1225,6 +1204,7 @@ export default function KnowledgeGraph() {
                 <ZoomOut className="h-3.5 w-3.5" />
               </PlainButton>
               <PlainButton
+                aria-label={t('common.actions.fitView')}
                 onClick={() => graphRef.current?.zoomToFit(400)}
                 className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
               >
@@ -1251,7 +1231,7 @@ export default function KnowledgeGraph() {
                     </strong>
                   </span>
                   <span className="mx-xs text-accent/40">·</span>
-                  <kbd className="border-accent/30 bg-accent/10 px-xs text-2xs rounded border py-0.5 font-mono">
+                  <kbd className="border-accent/30 bg-accent/10 px-xs text-2xs rounded border py-0.5">
                     Esc
                   </kbd>
                   <PlainButton

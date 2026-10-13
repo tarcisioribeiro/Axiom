@@ -19,8 +19,10 @@ import {
 } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -28,6 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Collapse } from '@/components/ui/collapsible-section';
 import { MaskedCurrencyInput } from '@/components/ui/currency-input';
 import { Input } from '@/components/ui/input';
 import { API_CONFIG } from '@/config/constants';
@@ -252,24 +255,15 @@ function CardSubSection({
   title,
   icon: Icon,
   total,
-  variant = 'default',
   children,
 }: {
   title: string;
   icon: React.ElementType;
   total: number;
-  variant?: 'revenue' | 'expense' | 'bill' | 'default';
   children: React.ReactNode;
 }) {
-  const accent = {
-    revenue: 'border-l-success/60',
-    expense: 'border-l-destructive/60',
-    bill: 'border-l-warning/60',
-    default: 'border-l-border',
-  }[variant];
-
   return (
-    <div className={cn('space-y-sm pl-sm border-l-2', accent)}>
+    <div className="space-y-sm">
       <div className="gap-xs flex items-center">
         <Icon className="text-muted-foreground h-3.5 w-3.5" />
         <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
@@ -482,7 +476,7 @@ function ExtraItemRow({
         variant="ghost"
         size="sm"
         onClick={() => onRemove(index)}
-        className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+        className="text-destructive hover:text-destructive h-8 w-8 p-0"
         aria-label={removeLabel}
       >
         <Trash2 className="h-3.5 w-3.5" />
@@ -497,7 +491,6 @@ function ExtraItemRow({
 function ActualItemsSection({
   title,
   icon: Icon,
-  variant,
   items,
   emptyText,
   renderItem,
@@ -505,18 +498,14 @@ function ActualItemsSection({
 }: {
   title: string;
   icon: React.ElementType;
-  variant: 'revenue' | 'expense';
   items: unknown[];
   emptyText: string;
   renderItem: (item: unknown, idx: number) => ReactNode;
   summary?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const accent =
-    variant === 'revenue' ? 'border-l-success/60' : 'border-l-destructive/60';
-
   return (
-    <div className={cn('space-y-sm pl-sm border-l-2', accent)}>
+    <div className="space-y-sm">
       <button
         className="gap-xs flex w-full items-center"
         onClick={() => setExpanded((v) => !v)}
@@ -536,17 +525,15 @@ function ActualItemsSection({
         )}
       </button>
       {summary}
-      {expanded && (
+      <Collapse open={expanded}>
         <div className="space-y-xs">
           {items.length === 0 ? (
-            <p className="py-sm text-muted-foreground text-center text-xs">
-              {emptyText}
-            </p>
+            <EmptyState title={emptyText} />
           ) : (
             items.map((item, idx) => renderItem(item, idx))
           )}
         </div>
-      )}
+      </Collapse>
     </div>
   );
 }
@@ -557,7 +544,16 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function MonthlyPlanner({ embedded = false }: { embedded?: boolean }) {
+interface MonthlyPlannerProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
+export default function MonthlyPlanner({
+  embedded = false,
+  headerTarget,
+}: MonthlyPlannerProps) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const { showConfirm, showAlert } = useAlertDialog();
@@ -960,24 +956,37 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
   const actualRevenueItems = data?.actual_revenue_items ?? [];
   const actualExpenseItems = data?.actual_expense_items ?? [];
 
+  const header = (
+    <PageHeader
+      title={t('monthlyPlanner.title')}
+      icon={<CalendarCheck className="h-5 w-5" />}
+    />
+  );
+
   return (
     <Wrapper>
-      <PageHeader
-        title={t('monthlyPlanner.title')}
-        description={t('monthlyPlanner.description')}
-        icon={<CalendarCheck className="h-5 w-5" />}
-      />
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       {/* Month navigation */}
       <div className="mb-lg flex items-center justify-between">
         <div className="gap-sm flex items-center">
-          <Button variant="outline" size="sm" onClick={() => navigateMonth(-1)}>
+          <Button
+            aria-label={t('financialCalendar.prevMonth')}
+            variant="outline"
+            size="sm"
+            onClick={() => navigateMonth(-1)}
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="min-w-44 text-center text-2xl font-bold tracking-tight">
             {monthNames[month - 1]} {year}
           </span>
-          <Button variant="outline" size="sm" onClick={() => navigateMonth(1)}>
+          <Button
+            aria-label={t('financialCalendar.nextMonth')}
+            variant="outline"
+            size="sm"
+            onClick={() => navigateMonth(1)}
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -988,7 +997,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           size="sm"
           variant={isApplied ? 'outline' : 'default'}
         >
-          <CalendarCheck className="mr-xs h-4 w-4" />
+          <CalendarCheck className="h-4 w-4" />
           {applyMutation.isPending
             ? t('monthlyPlanner.applyingPlan')
             : isApplied
@@ -999,7 +1008,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
 
       {/* Summary stats */}
       <div className="mb-lg gap-md grid grid-cols-2 lg:grid-cols-4">
-        <Card className="border-emerald-500/20 bg-emerald-500/5">
+        <Card>
           <CardContent className="pt-md">
             <div className="gap-sm flex items-center">
               <TrendingUp className="h-4 w-4 text-emerald-500" />
@@ -1023,7 +1032,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           </CardContent>
         </Card>
 
-        <Card className="border-destructive/20 bg-destructive/5">
+        <Card>
           <CardContent className="pt-md">
             <div className="gap-sm flex items-center">
               <TrendingDown className="text-destructive h-4 w-4" />
@@ -1047,13 +1056,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           </CardContent>
         </Card>
 
-        <Card
-          className={cn(
-            projectedBalance >= 0
-              ? 'border-primary/20 bg-primary/5'
-              : 'border-destructive/20 bg-destructive/5'
-          )}
-        >
+        <Card>
           <CardContent className="pt-md">
             <div className="gap-sm flex items-center">
               <Wallet className="text-primary h-4 w-4" />
@@ -1087,7 +1090,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           </CardContent>
         </Card>
 
-        <Card className="border-primary/20 bg-primary/5">
+        <Card>
           <CardContent className="pt-md">
             <div className="gap-sm flex items-center">
               <Landmark className="text-primary h-4 w-4" />
@@ -1115,7 +1118,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
       <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
         {/* Left: Revenues + Budgets */}
         <div className="space-y-sm">
-          <Card className="border-l-success border-l-4">
+          <Card>
             <CardHeader className="pb-sm">
               <div className="flex items-center justify-between">
                 <div className="gap-sm flex items-center">
@@ -1134,12 +1137,9 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 title={t('monthlyPlanner.fixedRevenues')}
                 icon={CircleDollarSign}
                 total={totalFixed}
-                variant="revenue"
               >
                 {(data?.fixed_revenues.length ?? 0) === 0 && (
-                  <p className="py-sm text-muted-foreground text-center text-xs">
-                    {t('monthlyPlanner.noFixedRevenues')}
-                  </p>
+                  <EmptyState title={t('monthlyPlanner.noFixedRevenues')} />
                 )}
                 {data?.fixed_revenues.map((r) => (
                   <EditableFixedItem
@@ -1167,7 +1167,6 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 title={t('monthlyPlanner.extraRevenues')}
                 icon={CircleDollarSign}
                 total={totalExtra}
-                variant="revenue"
               >
                 {extraRevenues.map((r, i) => (
                   <ExtraItemRow
@@ -1194,7 +1193,6 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
               <ActualItemsSection
                 title={t('monthlyPlanner.registeredRevenues')}
                 icon={TrendingUp}
-                variant="revenue"
                 items={actualRevenueItems}
                 emptyText={t('monthlyPlanner.noRegisteredRevenues')}
                 summary={<VaultSplit total={actualRevenues} inVaults={totalVaults} />}
@@ -1225,7 +1223,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           </Card>
 
           {/* Budget by category */}
-          <Card className="border-l-primary border-l-4">
+          <Card>
             <CardHeader className="pb-sm">
               <div className="flex items-center justify-between">
                 <div className="gap-sm flex items-center">
@@ -1241,9 +1239,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
             </CardHeader>
             <CardContent>
               {allCategories.length === 0 && (
-                <p className="py-sm text-muted-foreground text-center text-xs">
-                  {t('monthlyPlanner.noBudgetSuggestions')}
-                </p>
+                <EmptyState title={t('monthlyPlanner.noBudgetSuggestions')} />
               )}
               <div className="gap-sm grid grid-cols-1 sm:grid-cols-2">
                 {allCategories.map((cat) => {
@@ -1336,7 +1332,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
 
         {/* Right: Expenses */}
         <div className="space-y-sm">
-          <Card className="border-l-destructive border-l-4">
+          <Card>
             <CardHeader className="pb-sm">
               <div className="flex items-center justify-between">
                 <div className="gap-sm flex items-center">
@@ -1355,12 +1351,9 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 title={t('monthlyPlanner.fixedExpenses')}
                 icon={TrendingDown}
                 total={totalFixedExp}
-                variant="expense"
               >
                 {(data?.fixed_expenses.length ?? 0) === 0 && (
-                  <p className="py-sm text-muted-foreground text-center text-xs">
-                    {t('monthlyPlanner.noFixedExpenses')}
-                  </p>
+                  <EmptyState title={t('monthlyPlanner.noFixedExpenses')} />
                 )}
                 {data?.fixed_expenses.map((e) => (
                   <EditableFixedItem
@@ -1392,12 +1385,9 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 title={t('monthlyPlanner.creditCardBills')}
                 icon={CreditCard}
                 total={totalBills}
-                variant="bill"
               >
                 {(data?.credit_card_bills.length ?? 0) === 0 && (
-                  <p className="py-sm text-muted-foreground text-center text-xs">
-                    {t('monthlyPlanner.noBills')}
-                  </p>
+                  <EmptyState title={t('monthlyPlanner.noBills')} />
                 )}
                 {data?.credit_card_bills.map((b) => (
                   <BillItem
@@ -1414,7 +1404,6 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 title={t('monthlyPlanner.extraExpenses')}
                 icon={TrendingDown}
                 total={totalExtraExp}
-                variant="expense"
               >
                 {extraExpenses.map((e, i) => (
                   <ExtraItemRow
@@ -1441,7 +1430,6 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
               <ActualItemsSection
                 title={t('monthlyPlanner.registeredExpenses')}
                 icon={TrendingDown}
-                variant="expense"
                 items={actualExpenseItems}
                 emptyText={t('monthlyPlanner.noRegisteredExpenses')}
                 renderItem={(item, idx) => {

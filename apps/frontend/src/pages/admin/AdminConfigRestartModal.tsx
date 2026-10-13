@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { Container, RefreshCw, RotateCcw, Server } from 'lucide-react';
+import { Container, RefreshCw, RotateCcw, Server, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -50,8 +50,7 @@ export function RestartModal({
     },
     onError: (err: Error) => {
       toast({
-        title: t('pages.adminConfig.restartError'),
-        description: err.message,
+        title: t('pages.adminConfig.restartError', { reason: err.message }),
         variant: 'destructive',
       });
     },
@@ -123,6 +122,7 @@ export function RestartModal({
             onClick={handleClose}
             disabled={mutation.isPending || countdown !== null}
           >
+            <X className="h-4 w-4" />
             {t('pages.adminConfig.restartModal.cancel')}
           </Button>
           <Button
@@ -132,12 +132,12 @@ export function RestartModal({
           >
             {mutation.isPending ? (
               <>
-                <RefreshCw className="mr-sm h-4 w-4 animate-spin" />
+                <RefreshCw className="h-4 w-4 animate-spin" />
                 {t('pages.adminConfig.restartModal.sending')}
               </>
             ) : (
               <>
-                <RotateCcw className="mr-sm h-4 w-4" />
+                <RotateCcw className="h-4 w-4" />
                 {t('pages.adminConfig.restartModal.confirm')}
               </>
             )}

@@ -1,8 +1,8 @@
 /* eslint-disable max-lines */
 import { zodResolver } from '@hookform/resolvers/zod';
-import { BookOpen, Loader2, Plus, Tag, Target, Trash2 } from 'lucide-react';
+import { BookOpen, Loader2, Plus, Tag, Target, Trash2, Save, X } from 'lucide-react';
 import { startTransition, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,16 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { BOOK_LITERARY_TYPE_ICONS } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { readingGoalSchema, type ReadingGoalFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
@@ -53,6 +62,7 @@ export function ReadingGoalModal({
   const currentYear = new Date().getFullYear();
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -139,14 +149,17 @@ export function ReadingGoalModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle mode={goal ? 'edit' : 'create'}>
             {goal
               ? t('pages.libraryDashboard.readingGoals.editTitle')
               : t('pages.libraryDashboard.readingGoals.newTitle')}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+        <form
+          onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+          className="space-y-lg"
+        >
           <FormSection
             title={t('pages.libraryDashboard.readingGoals.sectionGoal')}
             icon={Target}
@@ -157,19 +170,21 @@ export function ReadingGoalModal({
                   <Target className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.libraryDashboard.readingGoals.formYear')}
                 </Label>
-                <Input
-                  id="year"
-                  type="number"
-                  min={2000}
-                  max={2100}
-                  {...register('year', {
-                    setValueAs: (v: string) => (v === '' ? 0 : parseInt(v)),
-                  })}
-                  disabled={isLoading}
+                <Controller
+                  control={control}
+                  name="year"
+                  render={({ field }) => (
+                    <NumberStepper
+                      id="year"
+                      aria-invalid={!!errors.year}
+                      disabled={isLoading}
+                      min={2000}
+                      max={2100}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
-                {errors.year && (
-                  <p className="text-destructive text-sm">{errors.year.message}</p>
-                )}
               </div>
 
               <div className="space-y-sm">
@@ -180,17 +195,12 @@ export function ReadingGoalModal({
                 <Input
                   id="name"
                   {...register('name')}
+                  aria-invalid={!!errors.name}
                   placeholder={t(
                     'pages.libraryDashboard.readingGoals.formNamePlaceholder'
                   )}
                   disabled={isLoading}
                 />
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.libraryDashboard.readingGoals.formNameHint')}
-                </p>
-                {errors.name && (
-                  <p className="text-destructive text-sm">{errors.name.message}</p>
-                )}
               </div>
             </div>
           </FormSection>
@@ -205,26 +215,21 @@ export function ReadingGoalModal({
                   <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.libraryDashboard.readingGoals.formBooksGoal')}
                 </Label>
-                <Input
-                  id="books_goal"
-                  type="number"
-                  min={1}
-                  max={365}
-                  {...register('books_goal', {
-                    setValueAs: (v: string) => (v === '' ? 0 : parseInt(v)),
-                  })}
-                  disabled={isLoading}
+                <Controller
+                  control={control}
+                  name="books_goal"
+                  render={({ field }) => (
+                    <NumberStepper
+                      id="books_goal"
+                      aria-invalid={!!errors.books_goal}
+                      disabled={isLoading}
+                      min={1}
+                      max={365}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.libraryDashboard.readingGoals.formBooksGoalHint', {
-                    year: currentYear,
-                  })}
-                </p>
-                {errors.books_goal && (
-                  <p className="text-destructive text-sm">
-                    {errors.books_goal.message}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-sm">
@@ -232,27 +237,24 @@ export function ReadingGoalModal({
                   <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.libraryDashboard.readingGoals.formPagesGoal')}
                 </Label>
-                <Input
-                  id="pages_goal"
-                  type="number"
-                  min={0}
-                  max={100000}
-                  {...register('pages_goal', {
-                    setValueAs: (v: string) => (v === '' ? 0 : parseInt(v)),
-                  })}
-                  placeholder={t(
-                    'pages.libraryDashboard.readingGoals.formPagesGoalPlaceholder'
+                <Controller
+                  control={control}
+                  name="pages_goal"
+                  render={({ field }) => (
+                    <NumberStepper
+                      id="pages_goal"
+                      aria-invalid={!!errors.pages_goal}
+                      disabled={isLoading}
+                      placeholder={t(
+                        'pages.libraryDashboard.readingGoals.formPagesGoalPlaceholder'
+                      )}
+                      min={0}
+                      max={100000}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
                   )}
-                  disabled={isLoading}
                 />
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.libraryDashboard.readingGoals.formPagesGoalHint')}
-                </p>
-                {errors.pages_goal && (
-                  <p className="text-destructive text-sm">
-                    {errors.pages_goal.message}
-                  </p>
-                )}
               </div>
             </div>
           </FormSection>
@@ -263,9 +265,6 @@ export function ReadingGoalModal({
           >
             <div className="space-y-sm">
               <div className="flex items-center justify-between">
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.libraryDashboard.readingGoals.formLiteraryTypesHint')}
-                </p>
                 {availableValues.length > 0 && (
                   <Button
                     type="button"
@@ -285,49 +284,50 @@ export function ReadingGoalModal({
                 <div className="space-y-sm">
                   {ltgDrafts.map((draft, index) => (
                     <div key={index} className="gap-sm flex items-center">
-                      <select
-                        className="border-input bg-background py-xs flex h-9 flex-1 rounded-md border px-3 text-sm shadow-sm"
+                      <Select
                         value={draft.literary_type}
-                        onChange={(e) =>
-                          updateLtg(index, 'literary_type', e.target.value)
-                        }
+                        onValueChange={(v) => updateLtg(index, 'literary_type', v)}
                       >
-                        {LITERARY_TYPE_GOAL_VALUES.filter(
-                          (v) =>
-                            v === draft.literary_type ||
-                            !usedTypes.has(v) ||
-                            ltgDrafts.findIndex(
-                              (d, i) => i !== index && d.literary_type === v
-                            ) === -1
-                        ).map((v) => (
-                          <option key={v} value={v}>
-                            {(() => {
-                              const LitIcon = BOOK_LITERARY_TYPE_ICONS[v];
-                              return LitIcon ? (
-                                <LitIcon className="mr-1 inline h-4 w-4" />
-                              ) : null;
-                            })()}
-                            {t(
-                              `pages.libraryDashboard.readingGoals.literaryTypes.${v}`
-                            )}
-                          </option>
-                        ))}
-                      </select>
-                      <Input
-                        type="number"
+                        <SelectTrigger className="flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LITERARY_TYPE_GOAL_VALUES.filter(
+                            (v) =>
+                              v === draft.literary_type ||
+                              !usedTypes.has(v) ||
+                              ltgDrafts.findIndex(
+                                (d, i) => i !== index && d.literary_type === v
+                              ) === -1
+                          ).map((v) => {
+                            const LitIcon = BOOK_LITERARY_TYPE_ICONS[v];
+                            return (
+                              <SelectItem
+                                key={v}
+                                value={v}
+                                icon={
+                                  LitIcon ? <LitIcon className="h-4 w-4" /> : undefined
+                                }
+                              >
+                                {t(
+                                  `pages.libraryDashboard.readingGoals.literaryTypes.${v}`
+                                )}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <NumberStepper
                         min={1}
                         max={500}
-                        className="w-24"
+                        aria-label={t(
+                          'pages.libraryDashboard.readingGoals.formBooksGoal'
+                        )}
                         value={draft.goal_count}
-                        onChange={(e) =>
-                          updateLtg(
-                            index,
-                            'goal_count',
-                            e.target.value === '' ? 1 : parseInt(e.target.value)
-                          )
-                        }
+                        onChange={(v) => updateLtg(index, 'goal_count', v ?? 1)}
                       />
                       <Button
+                        aria-label={t('common.actions.remove')}
                         type="button"
                         variant="ghost"
                         size="icon"
@@ -343,24 +343,23 @@ export function ReadingGoalModal({
             </div>
           </FormSection>
 
-          <div className="gap-sm pt-md flex justify-end border-t">
+          <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={isLoading}
             >
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
-                <>
-                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-                  {t('common.actions.saving')}
-                </>
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                t('common.actions.save')
+                <Save className="h-4 w-4" />
               )}
+              {isLoading ? t('common.actions.saving') : t('common.actions.save')}
             </Button>
           </div>
         </form>

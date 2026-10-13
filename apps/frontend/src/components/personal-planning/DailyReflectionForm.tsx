@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarDays, Loader2, MessageSquare, Smile } from 'lucide-react';
+import { CalendarDays, Loader2, MessageSquare, Smile, Save, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { MOOD_ICONS } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { dailyReflectionSchema } from '@/lib/validations';
@@ -79,7 +80,7 @@ export function DailyReflectionForm({
   }, [reflection, setValue]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
       <FormSection
         title={t('pages.dailyReflections.form.sectionReflection')}
         icon={MessageSquare}
@@ -91,14 +92,11 @@ export function DailyReflectionForm({
               {t('pages.dailyReflections.form.date')}
             </Label>
             <DatePicker
+              aria-invalid={!!errors.date}
               value={watch('date')}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
-              placeholder={t('pages.dailyReflections.form.date')}
               disabled={isLoading}
             />
-            {errors.date && (
-              <p className="text-destructive text-sm">{errors.date.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -111,7 +109,7 @@ export function DailyReflectionForm({
               onValueChange={(value) => setValue('mood', value === 'none' ? '' : value)}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.mood}>
                 <SelectValue
                   placeholder={t('pages.dailyReflections.form.moodPlaceholder')}
                 />
@@ -133,9 +131,6 @@ export function DailyReflectionForm({
                 })}
               </SelectContent>
             </Select>
-            {errors.mood && (
-              <p className="text-destructive text-sm">{errors.mood.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
@@ -144,32 +139,31 @@ export function DailyReflectionForm({
               {t('pages.dailyReflections.form.reflection')}
             </Label>
             <Textarea
+              aria-invalid={!!errors.reflection}
               id="reflection"
               {...register('reflection')}
               placeholder={t('pages.dailyReflections.form.reflectionPlaceholder')}
               rows={6}
               disabled={isLoading}
             />
-            {errors.reflection && (
-              <p className="text-destructive text-sm">{errors.reflection.message}</p>
-            )}
           </div>
         </div>
       </FormSection>
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('pages.dailyReflections.form.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <>
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-              {t('pages.dailyReflections.form.saving')}
-            </>
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            t('pages.dailyReflections.form.save')
+            <Save className="h-4 w-4" />
           )}
+          {isLoading
+            ? t('pages.dailyReflections.form.saving')
+            : t('pages.dailyReflections.form.save')}
         </Button>
       </div>
     </form>

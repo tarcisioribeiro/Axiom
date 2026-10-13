@@ -4,16 +4,20 @@ import {
   Award,
   BookOpen,
   Calendar,
+  CalendarDays,
   Check,
   CheckCircle2,
   CheckSquare,
   Circle,
   Edit,
   ExternalLink,
+  FileText,
   GraduationCap,
   Layers,
   Loader2,
+  PlayCircle,
   Plus,
+  Save,
   Square,
   Timer,
   Trash2,
@@ -24,16 +28,18 @@ import {
 // (same setup as BookReader.tsx — safe to register more than once).
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -41,16 +47,25 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { PlainButton } from '@/components/ui/plain-button';
 import { Progress } from '@/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { API_CONFIG } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
-import { formatLocalDate, parseLocalDate } from '@/lib/utils';
+import { cn, formatLocalDate, parseLocalDate } from '@/lib/utils';
 import {
   courseModulesService,
   courseLessonsService,
@@ -204,9 +219,11 @@ function ModuleItem({
               <Input
                 value={editingTitle}
                 onChange={(e) => setEditingTitle(e.target.value)}
+                placeholder={t('pages.courses.modules.titlePlaceholder')}
                 className="h-7 text-sm"
               />
               <Button
+                aria-label={t('common.actions.save')}
                 size="sm"
                 variant="outline"
                 className="px-sm h-7"
@@ -225,6 +242,7 @@ function ModuleItem({
             {completedCount}/{lessons.length}
           </span>
           <Button
+            aria-label={t('common.actions.edit')}
             size="icon"
             variant="ghost"
             className="h-6 w-6"
@@ -236,6 +254,7 @@ function ModuleItem({
             <Edit className="h-3 w-3" />
           </Button>
           <Button
+            aria-label={t('common.actions.delete')}
             size="icon"
             variant="ghost"
             className="text-destructive hover:text-destructive h-6 w-6"
@@ -316,6 +335,7 @@ function ModuleItem({
             className="gap-sm px-sm py-xs hover:bg-muted/40 flex items-center justify-between rounded transition-colors"
           >
             <PlainButton
+              aria-label={t('common.actions.select')}
               type="button"
               className="flex shrink-0"
               onClick={() => toggleSelect(lesson.id)}
@@ -347,9 +367,10 @@ function ModuleItem({
               </span>
             </button>
             <Button
+              aria-label={t('common.actions.delete')}
               size="icon"
               variant="ghost"
-              className="text-muted-foreground hover:text-destructive h-5 w-5 shrink-0"
+              className="text-destructive hover:text-destructive h-5 w-5 shrink-0"
               onClick={() => {
                 void showConfirm({
                   title: t('common.messages.confirmDeleteTitle'),
@@ -384,6 +405,7 @@ function ModuleItem({
               }}
             />
             <Button
+              aria-label={t('common.actions.add')}
               size="sm"
               variant="outline"
               className="px-sm h-7"
@@ -459,9 +481,10 @@ function SessionItem({
           {session.duration_hours}h
         </span>
         <Button
+          aria-label={t('common.actions.delete')}
           size="icon"
           variant="ghost"
-          className="text-muted-foreground hover:text-destructive h-6 w-6"
+          className="text-destructive hover:text-destructive h-6 w-6"
           onClick={() => {
             void showConfirm({
               title: t('common.messages.confirmDeleteTitle'),
@@ -478,35 +501,63 @@ function SessionItem({
   );
 }
 
-function AddSessionForm({
-  courseId,
-  ownerId,
+export function AddSessionForm({
+  course,
+  defaultMinutes = 60,
   onSaved,
   onCancel,
+  stickyActions = false,
 }: {
-  courseId: number;
-  ownerId: number;
+  course: Course;
+  defaultMinutes?: number;
   onSaved: () => void;
   onCancel: () => void;
+  /** Fixa os botões na base do modal quando o form é o corpo inteiro do dialog. */
+  stickyActions?: boolean;
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { register, handleSubmit, setValue, watch } = useForm<{
+  const queryClient = useQueryClient();
+  const [moduleId, setModuleId] = useState('');
+  const [lessonId, setLessonId] = useState('');
+  const { control, register, handleSubmit, setValue, watch } = useForm<{
     session_date: string;
     duration_minutes: number;
     notes: string;
   }>({
     defaultValues: {
       session_date: formatLocalDate(new Date()),
-      duration_minutes: 60,
+      duration_minutes: defaultMinutes,
       notes: '',
     },
   });
 
+  // Módulos já vêm com as aulas aninhadas (CourseModuleSerializer.lessons).
+  const { data: modules = [] } = useQuery({
+    queryKey: ['course-modules', course.id],
+    queryFn: () => courseModulesService.getAll({ course: course.id, page_size: 200 }),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const pendingLessons = (
+    modules.find((m) => String(m.id) === moduleId)?.lessons ?? []
+  ).filter((l) => !l.is_completed);
+
+  const projectedCompleted = course.completed_lessons + (lessonId ? 1 : 0);
+  const projectedProgress =
+    course.total_lessons > 0
+      ? Math.round((projectedCompleted / course.total_lessons) * 100)
+      : 0;
+
   const create = useMutation({
-    mutationFn: (data: CourseSessionFormData) => courseSessionsService.create(data),
+    mutationFn: async (data: CourseSessionFormData) => {
+      await courseSessionsService.create(data);
+      if (lessonId) await courseLessonsService.bulkComplete([Number(lessonId)], true);
+    },
     onSuccess: () => {
       toast({ title: t('pages.courses.sessions.saved') });
+      void queryClient.invalidateQueries({ queryKey: ['course-modules', course.id] });
+      void queryClient.invalidateQueries({ queryKey: ['course-lessons'] });
+      void queryClient.invalidateQueries({ queryKey: ['courses'] });
       onSaved();
     },
     onError: (err) => toast({ title: getErrorMessage(err), variant: 'destructive' }),
@@ -518,22 +569,25 @@ function AddSessionForm({
     notes: string;
   }) => {
     create.mutate({
-      course: courseId,
+      course: course.id,
       session_date: values.session_date,
       duration_minutes: Number(values.duration_minutes),
       notes: values.notes || null,
-      owner: ownerId,
+      owner: course.owner,
     });
   };
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-md border-category-intellect/20 bg-category-intellect/5 p-md rounded-lg border"
+      onSubmit={handleSubmit(onSubmit, notifyFormErrors)}
+      className="space-y-md border-border bg-card p-md rounded-lg border"
     >
       <div className="gap-md grid grid-cols-2">
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.courses.sessions.dateLabel')}</Label>
+          <Label className="gap-xs flex items-center text-xs">
+            <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.courses.sessions.dateLabel')}
+          </Label>
           <DatePicker
             value={parseLocalDate(watch('session_date'))}
             onChange={(d) =>
@@ -545,31 +599,108 @@ function AddSessionForm({
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-xs" htmlFor="duration_minutes">
+          <Label
+            className="gap-xs flex items-center text-xs"
+            htmlFor="duration_minutes"
+          >
+            <Timer className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.courses.sessions.durationLabel')}
           </Label>
-          <Input
-            id="duration_minutes"
-            type="number"
-            min={1}
-            placeholder={t('pages.courses.sessions.durationPlaceholder')}
-            {...register('duration_minutes')}
+          <Controller
+            control={control}
+            name="duration_minutes"
+            render={({ field }) => (
+              <NumberStepper
+                id="duration_minutes"
+                placeholder={t('pages.courses.sessions.durationPlaceholder')}
+                min={1}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
         </div>
       </div>
       <div className="space-y-xs">
-        <Label className="text-xs" htmlFor="session_notes">
+        <Label className="gap-xs flex items-center text-xs" htmlFor="session_notes">
+          <FileText className="text-muted-foreground h-3.5 w-3.5" />
           {t('pages.courses.sessions.notesLabel')}
         </Label>
         <Textarea
           id="session_notes"
-          rows={2}
+          rows={1}
           placeholder={t('pages.courses.sessions.notesPlaceholder')}
           {...register('notes')}
         />
       </div>
-      <div className="gap-sm flex justify-end">
+      <div className="gap-md grid grid-cols-2">
+        <div className="space-y-xs">
+          <Label className="gap-xs flex items-center text-xs">
+            <Layers className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.courses.sessions.moduleLabel')}
+          </Label>
+          <Select
+            value={moduleId}
+            onValueChange={(v) => {
+              setModuleId(v);
+              setLessonId('');
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={t('pages.courses.sessions.modulePlaceholder')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {modules.map((m) => (
+                <SelectItem key={m.id} value={String(m.id)}>
+                  {m.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-xs">
+          <Label className="gap-xs flex items-center text-xs">
+            <PlayCircle className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.courses.sessions.lessonLabel')}
+          </Label>
+          <Select
+            value={lessonId}
+            onValueChange={setLessonId}
+            disabled={pendingLessons.length === 0}
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={t('pages.courses.sessions.lessonPlaceholder')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {pendingLessons.map((l) => (
+                <SelectItem key={l.id} value={String(l.id)}>
+                  {l.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-xs">
+        <div className="text-muted-foreground flex items-center justify-between text-xs">
+          <span>{t('pages.courses.stats.progress')}</span>
+          <span className="text-category-intellect font-semibold">
+            {t('pages.courses.sessions.progressValue', {
+              done: projectedCompleted,
+              total: course.total_lessons,
+              percent: projectedProgress,
+            })}
+          </span>
+        </div>
+        <Progress value={projectedProgress} className="bg-category-intellect/20 h-2" />
+      </div>
+      <div className={cn('gap-sm flex justify-end', stickyActions && 'dialog-footer')}>
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -579,8 +710,11 @@ function AddSessionForm({
           className="bg-category-intellect hover:bg-category-intellect/90 text-white"
         >
           {create.isPending ? (
-            <Loader2 className="mr-xs h-3.5 w-3.5 animate-spin" />
-          ) : null}
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+
           {t('common.actions.save')}
         </Button>
       </div>
@@ -756,100 +890,73 @@ export function CourseDetailModal({
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
-          {/* Colored header */}
-          <div className="bg-category-intellect/10 px-xl pb-md pt-xl">
-            <DialogHeader>
-              <div className="gap-md flex items-start justify-between">
-                <div className="gap-md flex min-w-0 flex-1 items-center">
-                  <div className="bg-category-intellect/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-                    <GraduationCap className="text-category-intellect h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <DialogTitle className="truncate text-lg font-bold">
-                      {displayCourse.title}
-                    </DialogTitle>
-                    <DialogDescription className="mt-xs gap-sm flex items-center">
-                      <span>{displayCourse.platform_display}</span>
-                      <span className="text-muted-foreground/50">·</span>
-                      <span>{displayCourse.category_display}</span>
-                    </DialogDescription>
-                  </div>
-                </div>
-                <Badge variant={STATUS_VARIANT[displayCourse.status] ?? 'outline'}>
-                  {displayCourse.status_display}
-                </Badge>
-              </div>
-
-              {/* Progress bar */}
-              <div className="mt-md">
-                <div className="mb-xs text-muted-foreground flex items-center justify-between text-xs">
-                  <span>{t('pages.courses.stats.progress')}</span>
-                  <span className="text-category-intellect font-semibold">
-                    {displayCourse.progress_percentage}%
-                  </span>
-                </div>
-                <Progress
-                  value={displayCourse.progress_percentage}
-                  className="bg-category-intellect/20 h-2"
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <div className="gap-md flex items-center justify-between">
+              <DialogTitle className="gap-sm flex min-w-0 items-center">
+                <GraduationCap
+                  className="text-category-intellect h-4 w-4 shrink-0"
+                  aria-hidden="true"
                 />
-              </div>
+                <span className="truncate">{displayCourse.title}</span>
+              </DialogTitle>
+              <Badge variant={STATUS_VARIANT[displayCourse.status] ?? 'outline'}>
+                {displayCourse.status_display}
+              </Badge>
+            </div>
+            <DialogDescription>
+              {displayCourse.platform_display} · {displayCourse.category_display}
+            </DialogDescription>
+          </DialogHeader>
 
-              {/* Stats row */}
-              <div className="mt-md gap-sm grid grid-cols-3">
-                <div className="bg-background/60 p-sm rounded-lg text-center">
-                  <div className="text-category-intellect text-lg font-bold">
-                    {displayCourse.completed_lessons}/{displayCourse.total_lessons}
-                  </div>
-                  <div className="text-muted-foreground text-xs">
-                    {t('pages.courses.stats.lessons')}
-                  </div>
+          <div className="bg-category-intellect/10 p-md rounded-lg">
+            {/* Progress bar */}
+            <div>
+              <div className="mb-xs text-muted-foreground flex items-center justify-between text-xs">
+                <span>{t('pages.courses.stats.progress')}</span>
+                <span className="text-category-intellect font-semibold">
+                  {displayCourse.progress_percentage}%
+                </span>
+              </div>
+              <Progress
+                value={displayCourse.progress_percentage}
+                className="bg-category-intellect/20 h-2"
+              />
+            </div>
+
+            {/* Stats row */}
+            <div className="mt-md gap-sm grid grid-cols-3">
+              <div className="bg-background/60 p-sm rounded-lg text-center">
+                <div className="text-category-intellect text-lg font-bold">
+                  {displayCourse.completed_lessons}/{displayCourse.total_lessons}
                 </div>
-                <div className="bg-background/60 p-sm rounded-lg text-center">
-                  <div className="text-category-intellect text-lg font-bold">
-                    {displayCourse.invested_hours.toFixed(1)}h
-                  </div>
-                  <div className="text-muted-foreground text-xs">
-                    {t('pages.courses.stats.investedHours')}
-                  </div>
-                </div>
-                <div className="bg-background/60 p-sm rounded-lg text-center">
-                  <div className="text-category-intellect text-lg font-bold">
-                    {displayCourse.estimated_hours
-                      ? `${displayCourse.estimated_hours}h`
-                      : '—'}
-                  </div>
-                  <div className="text-muted-foreground text-xs">
-                    {t('pages.courses.stats.estimatedHours')}
-                  </div>
+                <div className="text-muted-foreground text-xs">
+                  {t('pages.courses.stats.lessons')}
                 </div>
               </div>
-            </DialogHeader>
-
-            <div className="mt-md gap-sm flex">
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-xs h-8"
-                onClick={() => onEdit(displayCourse)}
-              >
-                <Edit className="h-3.5 w-3.5" />
-                {t('common.actions.edit')}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-xs text-destructive hover:text-destructive h-8"
-                onClick={() => onDelete(displayCourse)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                {t('common.actions.delete')}
-              </Button>
+              <div className="bg-background/60 p-sm rounded-lg text-center">
+                <div className="text-category-intellect text-lg font-bold">
+                  {displayCourse.invested_hours.toFixed(1)}h
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  {t('pages.courses.stats.investedHours')}
+                </div>
+              </div>
+              <div className="bg-background/60 p-sm rounded-lg text-center">
+                <div className="text-category-intellect text-lg font-bold">
+                  {displayCourse.estimated_hours
+                    ? `${displayCourse.estimated_hours}h`
+                    : '—'}
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  {t('pages.courses.stats.estimatedHours')}
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="modules" className="p-xl pt-md">
+          <Tabs defaultValue="modules">
             <TabsList className="w-full">
               <TabsTrigger value="overview" className="flex-1">
                 <BookOpen className="mr-xs h-4 w-4" />
@@ -904,15 +1011,10 @@ export function CourseDetailModal({
 
             <TabsContent value="modules" className="mt-md space-y-sm">
               {modules.length === 0 && !showAddModule && (
-                <div className="border-category-intellect/30 bg-category-intellect/5 p-lg rounded-lg border border-dashed text-center">
-                  <Layers className="mb-sm text-category-intellect/40 mx-auto h-8 w-8" />
-                  <p className="text-foreground text-sm font-medium">
-                    {t('pages.courses.modules.emptyTitle')}
-                  </p>
-                  <p className="mt-xs text-muted-foreground text-xs">
-                    {t('pages.courses.modules.emptyHint')}
-                  </p>
-                </div>
+                <EmptyState
+                  title={t('pages.courses.modules.emptyTitle')}
+                  icon={<Layers />}
+                />
               )}
 
               {modules.map((mod) => (
@@ -945,6 +1047,7 @@ export function CourseDetailModal({
                     }}
                   />
                   <Button
+                    aria-label={t('common.actions.add')}
                     variant="outline"
                     onClick={() => {
                       if (newModuleTitle.trim()) {
@@ -1033,8 +1136,7 @@ export function CourseDetailModal({
                   })}
                 </span>
                 <Button
-                  size="sm"
-                  className="gap-xs bg-category-intellect hover:bg-category-intellect/90 text-white"
+                  className="bg-category-intellect hover:bg-category-intellect/90 text-white"
                   onClick={() => setShowAddSession(true)}
                   disabled={displayCourse.total_lessons === 0}
                   title={
@@ -1043,7 +1145,7 @@ export function CourseDetailModal({
                       : undefined
                   }
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus className="h-4 w-4" />
                   {t('pages.courses.sessions.newBtn')}
                 </Button>
               </div>
@@ -1055,8 +1157,7 @@ export function CourseDetailModal({
 
               {showAddSession && (
                 <AddSessionForm
-                  courseId={displayCourse.id}
-                  ownerId={displayCourse.owner}
+                  course={displayCourse}
                   onSaved={() => {
                     setShowAddSession(false);
                     handleSessionUpdated();
@@ -1066,9 +1167,7 @@ export function CourseDetailModal({
               )}
 
               {sessions.length === 0 && !showAddSession ? (
-                <p className="py-md text-muted-foreground text-center text-sm">
-                  {t('pages.courses.sessions.emptyState')}
-                </p>
+                <EmptyState title={t('pages.courses.sessions.emptyState')} />
               ) : (
                 sessions.map((s) => (
                   <SessionItem
@@ -1083,7 +1182,7 @@ export function CourseDetailModal({
             <TabsContent value="certificate" className="mt-md space-y-md">
               {displayCourse.completion_certificate ? (
                 <div className="space-y-md">
-                  <div className="gap-md border-category-intellect/20 bg-category-intellect/5 p-md flex items-center rounded-lg border">
+                  <div className="gap-md border-border bg-card p-md flex items-center rounded-lg border">
                     <Award className="text-category-intellect h-8 w-8 shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">
@@ -1100,6 +1199,7 @@ export function CourseDetailModal({
                     </div>
                     <div className="gap-xs flex shrink-0">
                       <PlainButton
+                        aria-label={t('common.actions.remove')}
                         type="button"
                         disabled={uploadingCert}
                         onClick={() => void handleCertificateRemove()}
@@ -1136,7 +1236,7 @@ export function CourseDetailModal({
                   )}
                 </div>
               ) : canAttachCertificate ? (
-                <label className="gap-md border-category-intellect/30 bg-category-intellect/5 p-xl hover:bg-category-intellect/10 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
+                <label className="gap-md border-border bg-card p-xl hover:bg-muted/30 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
                   {uploadingCert ? (
                     <Loader2 className="text-category-intellect/50 h-10 w-10 animate-spin" />
                   ) : (
@@ -1170,14 +1270,31 @@ export function CourseDetailModal({
               )}
             </TabsContent>
           </Tabs>
+
+          <DialogCloseFooter>
+            <Button
+              variant="outline"
+              className="text-destructive hover:text-destructive"
+              onClick={() => onDelete(displayCourse)}
+            >
+              <Trash2 className="h-4 w-4" />
+              {t('common.actions.delete')}
+            </Button>
+            <Button onClick={() => onEdit(displayCourse)}>
+              <Edit className="h-4 w-4" />
+              {t('common.actions.edit')}
+            </Button>
+          </DialogCloseFooter>
         </DialogContent>
       </Dialog>
 
       {displayCourse.completion_certificate && certificateStreamUrl && (
         <Dialog open={showCertPreview} onOpenChange={setShowCertPreview}>
-          <DialogContent size="xl" className="max-h-[90vh]">
+          <DialogContent size="xl">
             <DialogHeader>
-              <DialogTitle>{t('pages.courses.certificate.previewTitle')}</DialogTitle>
+              <DialogTitle icon={Award}>
+                {t('pages.courses.certificate.previewTitle')}
+              </DialogTitle>
             </DialogHeader>
             <div className="bg-muted/20 border-border h-[75vh] w-full overflow-auto rounded-md border">
               {isCertificateImage ? (
@@ -1225,6 +1342,7 @@ export function CourseDetailModal({
                 </div>
               )}
             </div>
+            <DialogCloseFooter />
           </DialogContent>
         </Dialog>
       )}

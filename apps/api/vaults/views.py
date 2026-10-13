@@ -23,6 +23,7 @@ from .models import (
 from .serializers import (
     FinancialGoalListSerializer,
     FinancialGoalSerializer,
+    VaultApplyYieldSerializer,
     VaultDepositSerializer,
     VaultRecurringContributionCreateSerializer,
     VaultRecurringContributionSerializer,
@@ -256,14 +257,26 @@ class VaultApplyYieldView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        serializer = VaultApplyYieldSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+        amount_override = serializer.validated_data.get("amount")
+
         # Sem worker Celery em produção, este endpoint é o gatilho real do
         # rendimento: recalcula a taxa a partir do CDI/SELIC do dia (líquida
         # de IR) antes de calcular. Se a API do BCB falhar, mantém a última
-        # taxa conhecida.
-        if vault.yield_index_type in ("cdi", "selic"):
+        # taxa conhecida. Pulado quando o valor foi editado manualmente.
+        if amount_override is None and vault.yield_index_type in (
+            "cdi",
+            "selic",
+        ):
             vault.refresh_annual_rate_from_index(user=request.user)
 
-        yield_value = vault.apply_yield(user=request.user)
+        yield_value = vault.apply_yield(
+            user=request.user, amount_override=amount_override
+        )
 
         return Response(
             {
@@ -493,6 +506,14 @@ class VaultTransactionListView(generics.ListAPIView):
         transaction_type = self.request.query_params.get("type")
         if transaction_type:
             queryset = queryset.filter(transaction_type=transaction_type)
+
+        start_date = self.request.query_params.get("start_date")
+        if start_date:
+            queryset = queryset.filter(transaction_date__gte=start_date)
+
+        end_date = self.request.query_params.get("end_date")
+        if end_date:
+            queryset = queryset.filter(transaction_date__lte=end_date)
 
         return queryset
 

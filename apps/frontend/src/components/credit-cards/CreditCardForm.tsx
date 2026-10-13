@@ -1,4 +1,5 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
+import { useReducedMotion } from 'framer-motion';
 import {
   BadgePercent,
   CalendarDays,
@@ -10,18 +11,22 @@ import {
   Settings,
   User,
   Wallet,
+  Save,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { BRAND_COLORS, BRAND_ICONS } from '@/components/credit-cards/card-brands';
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -30,7 +35,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TabTransition } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import { TRANSLATIONS } from '@/config/constants';
 import { formatLocalDate } from '@/lib/utils';
 import type {
@@ -59,39 +63,50 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'card' | 'settings'>('card');
+  // 1 = aba Configurações (entra pela direita), -1 = Dados do cartão (entra pela esquerda)
+  const [tabDirection, setTabDirection] = useState(0);
+  const reducedMotion = useReducedMotion();
 
-  const { register, handleSubmit, setValue, watch } = useForm<CreditCardFormData>({
-    defaultValues: creditCard
-      ? {
-          name: creditCard.name,
-          on_card_name: creditCard.on_card_name,
-          card_number: '',
-          flag: creditCard.flag,
-          security_code: '',
-          validation_date: creditCard.validation_date,
-          credit_limit: parseFloat(creditCard.credit_limit),
-          max_limit: parseFloat(creditCard.max_limit),
-          due_day: creditCard.due_day,
-          closing_day: creditCard.closing_day,
-          associated_account: creditCard.associated_account,
-          is_active: creditCard.is_active,
-          interest_rate: creditCard.interest_rate
-            ? parseFloat(creditCard.interest_rate)
-            : undefined,
-          annual_fee: creditCard.annual_fee
-            ? parseFloat(creditCard.annual_fee)
-            : undefined,
-          owner: creditCard.owner,
-          notes: creditCard.notes,
-        }
-      : {
-          credit_limit: 0,
-          max_limit: 0,
-          due_day: 10,
-          closing_day: 5,
-          is_active: true,
-        },
-  });
+  const selectTab = (id: 'card' | 'settings') => {
+    if (id === activeTab) return;
+    setTabDirection(id === 'settings' ? 1 : -1);
+    setActiveTab(id);
+  };
+
+  const { control, register, handleSubmit, setValue, watch } =
+    useForm<CreditCardFormData>({
+      defaultValues: creditCard
+        ? {
+            name: creditCard.name,
+            on_card_name: creditCard.on_card_name,
+            card_number: '',
+            flag: creditCard.flag,
+            security_code: '',
+            validation_date: creditCard.validation_date,
+            credit_limit: parseFloat(creditCard.credit_limit),
+            max_limit: parseFloat(creditCard.max_limit),
+            due_day: creditCard.due_day,
+            closing_day: creditCard.closing_day,
+            associated_account: creditCard.associated_account,
+            is_active: creditCard.is_active,
+            interest_rate: creditCard.interest_rate
+              ? parseFloat(creditCard.interest_rate)
+              : undefined,
+            annual_fee: creditCard.annual_fee
+              ? parseFloat(creditCard.annual_fee)
+              : undefined,
+            owner: creditCard.owner,
+            notes: creditCard.notes,
+          }
+        : {
+            credit_limit: 0,
+            max_limit: 0,
+            due_day: 10,
+            closing_day: 5,
+            is_active: true,
+            validation_date: formatLocalDate(new Date()),
+          },
+    });
 
   const watchedFlag = watch('flag') || '';
   const watchedName = watch('name') || '';
@@ -144,9 +159,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
               )}
             </div>
             <div className="space-y-xs">
-              <p className="font-mono text-sm tracking-widest opacity-90">
-                {maskedCardNumber}
-              </p>
+              <p className="text-sm tracking-widest opacity-90">{maskedCardNumber}</p>
               <div className="flex items-end justify-between">
                 <div>
                   <p className="text-xs opacity-60">{t('common.fields.name')}</p>
@@ -156,7 +169,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                 </div>
                 <div className="text-right">
                   <p className="text-xs opacity-60">VALIDADE</p>
-                  <p className="font-mono text-sm">
+                  <p className="text-sm">
                     {watchedValidationDate
                       ? `${watchedValidationDate.substring(5, 7)}/${watchedValidationDate.substring(2, 4)}`
                       : '••/••'}
@@ -176,8 +189,8 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           <button
             key={id}
             type="button"
-            onClick={() => setActiveTab(id)}
-            className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition duration-150 ${
+            onClick={() => selectTab(id)}
+            className={`gap-xs duration-fast flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition ${
               activeTab === id
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -191,7 +204,13 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
 
       {/* Tab: Dados do Cartão */}
       {activeTab === 'card' && (
-        <TabTransition key="card">
+        <TabTransition
+          key="card"
+          {...(!reducedMotion && {
+            initial: { opacity: 0, x: -24 * tabDirection },
+            animate: { opacity: 1, x: 0 },
+          })}
+        >
           <FormSection
             title={t('pages.creditCards.form.tabCardData')}
             icon={CreditCard}
@@ -226,22 +245,22 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.creditCards.form.flagLabel')}
                 </Label>
-                <div className="gap-xs grid grid-cols-3">
-                  {Object.entries(TRANSLATIONS.cardBrands).map(([k, v]) => (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => setValue('flag', k)}
-                      className={`p-xs rounded border text-xs font-semibold transition ${
-                        watchedFlag === k
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
-                      }`}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
+                <Select
+                  value={watchedFlag || undefined}
+                  onValueChange={(v) => setValue('flag', v)}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger aria-label={t('pages.creditCards.form.flagLabel')}>
+                    <SelectValue placeholder={t('common.actions.select')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(TRANSLATIONS.cardBrands).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>
+                        {v}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-sm">
@@ -259,11 +278,6 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   maxLength={16}
                   disabled={isLoading}
                 />
-                {creditCard && (
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.creditCards.form.cardNumberHiddenHint')}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-sm">
@@ -301,7 +315,13 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
 
       {/* Tab: Configurações */}
       {activeTab === 'settings' && (
-        <TabTransition key="settings">
+        <TabTransition
+          key="settings"
+          {...(!reducedMotion && {
+            initial: { opacity: 0, x: 24 * tabDirection },
+            animate: { opacity: 1, x: 0 },
+          })}
+        >
           <FormSection title={t('pages.creditCards.form.tabSettings')} icon={Settings}>
             <div className="gap-md grid grid-cols-1 md:grid-cols-2">
               <div className="space-y-sm">
@@ -317,7 +337,6 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   disabled={isLoading}
                 />
               </div>
-
               <div className="space-y-sm">
                 <Label className="gap-xs flex items-center">
                   <DollarSign className="text-muted-foreground h-3.5 w-3.5" />
@@ -331,7 +350,6 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   disabled={isLoading}
                 />
               </div>
-
               <div className="space-y-sm">
                 <Label className="gap-xs flex items-center">
                   <Wallet className="text-muted-foreground h-3.5 w-3.5" />
@@ -353,95 +371,105 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-sm">
-                <Label className="gap-xs flex items-center">
-                  <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.creditCards.form.dueDayLabel')}
-                </Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="31"
-                  {...register('due_day', { required: true, valueAsNumber: true })}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-sm">
-                <Label className="gap-xs flex items-center">
-                  <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.creditCards.form.closingDayLabel')}
-                </Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="31"
-                  {...register('closing_day', { required: true, valueAsNumber: true })}
-                  disabled={isLoading}
-                />
-              </div>
-
               <div className="space-y-sm">
                 <Label className="gap-xs flex items-center">
                   <BadgePercent className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.creditCards.form.interestRateLabel')}
                 </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  {...register('interest_rate', { valueAsNumber: true })}
-                  placeholder="0.00"
-                  disabled={isLoading}
+                <Controller
+                  control={control}
+                  name="interest_rate"
+                  render={({ field }) => (
+                    <DecimalInput
+                      unit="%"
+                      placeholder="0,00"
+                      disabled={isLoading}
+                      aria-label={t('pages.creditCards.form.interestRateLabel')}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
 
-              <div className="space-y-sm">
-                <Label className="gap-xs flex items-center">
-                  <DollarSign className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.creditCards.form.annualFeeLabel')}
-                </Label>
-                <CurrencyInput
-                  value={watch('annual_fee') ?? 0}
-                  onChange={(e) =>
-                    setValue('annual_fee', parseFloat(e.target.value) || 0)
-                  }
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-sm md:col-span-2">
-                <Label className="gap-xs flex items-center">
-                  <Settings className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.creditCards.form.notesLabel')}
-                </Label>
-                <Textarea
-                  {...register('notes')}
-                  placeholder={t('pages.creditCards.form.notesPlaceholder')}
-                  disabled={isLoading}
-                  rows={3}
-                />
+              <div className="gap-md grid grid-cols-1 md:col-span-2 md:grid-cols-3">
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.creditCards.form.closingDayLabel')}
+                  </Label>
+                  <Controller
+                    control={control}
+                    name="closing_day"
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <NumberStepper
+                        disabled={isLoading}
+                        min={1}
+                        max={31}
+                        aria-label={t('pages.creditCards.form.closingDayLabel')}
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                </div>
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.creditCards.form.dueDayLabel')}
+                  </Label>
+                  <Controller
+                    control={control}
+                    name="due_day"
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <NumberStepper
+                        disabled={isLoading}
+                        min={1}
+                        max={31}
+                        aria-label={t('pages.creditCards.form.dueDayLabel')}
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                </div>
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <DollarSign className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.creditCards.form.annualFeeLabel')}
+                  </Label>
+                  <CurrencyInput
+                    value={watch('annual_fee') ?? 0}
+                    onChange={(e) =>
+                      setValue('annual_fee', parseFloat(e.target.value) || 0)
+                    }
+                    disabled={isLoading}
+                  />
+                </div>
               </div>
             </div>
           </FormSection>
         </TabTransition>
       )}
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <>
-              <Loader2 className="mr-xs h-4 w-4 animate-spin" />
-              {t('common.actions.saving')}
-            </>
-          ) : creditCard ? (
-            t('common.actions.update')
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            t('common.actions.create')
+            <Save className="h-4 w-4" />
           )}
+          {isLoading
+            ? t('common.actions.saving')
+            : creditCard
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
     </form>

@@ -2,29 +2,38 @@
 import {
   AlertCircle,
   ArrowDownToLine,
+  ArrowLeft,
   ArrowRight,
   ArrowUpFromLine,
   BadgePercent,
   CalendarDays,
   Check,
+  CheckCircle2,
   Clock,
   FileText,
   Loader2,
+  Save,
   Shield,
   Tag,
+  TrendingDown,
+  TrendingUp,
   Users,
   Wallet,
+  X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { FileInput } from '@/components/ui/file-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -109,6 +118,7 @@ export function LoanForm({
           payed_value: 0,
           date: formatLocalDate(new Date()),
           horary: new Date().toTimeString().slice(0, 5),
+          due_date: formatLocalDate(new Date()),
           category: 'loans',
           account: accounts[0]?.id ?? 0,
           benefited: currentUserMemberId ?? members[0]?.id ?? 0,
@@ -291,6 +301,7 @@ export function LoanForm({
               </Label>
               <Input
                 id="description"
+                placeholder={t('common.placeholders.loanDescription')}
                 value={formData.description}
                 onChange={(e) => set({ description: e.target.value })}
                 required
@@ -322,11 +333,6 @@ export function LoanForm({
                 disabled={!!loan}
                 className={loan ? 'bg-muted cursor-not-allowed' : ''}
               />
-              {loan && (
-                <p className="mt-xs text-muted-foreground text-xs">
-                  {t('pages.loans.form.paidValueNote')}
-                </p>
-              )}
             </div>
 
             <div>
@@ -526,11 +532,11 @@ export function LoanForm({
                 <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.installmentsLabel')}
               </Label>
-              <Input
+              <NumberStepper
                 id="installments"
-                type="number"
+                min={1}
                 value={formData.installments}
-                onChange={(e) => set({ installments: parseInt(e.target.value) })}
+                onChange={(v) => set({ installments: v ?? 1 })}
               />
             </div>
 
@@ -539,12 +545,11 @@ export function LoanForm({
                 <BadgePercent className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.interestRateLabel')}
               </Label>
-              <Input
+              <DecimalInput
                 id="interest_rate"
-                type="number"
-                step="0.01"
-                value={formData.interest_rate ?? ''}
-                onChange={(e) => set({ interest_rate: parseFloat(e.target.value) })}
+                unit="%"
+                value={formData.interest_rate}
+                onChange={(v) => set({ interest_rate: v ?? undefined })}
               />
             </div>
 
@@ -630,9 +635,10 @@ export function LoanForm({
               </Label>
               <Textarea
                 id="notes"
+                placeholder={t('common.placeholders.notes')}
                 value={formData.notes ?? ''}
                 onChange={(e) => set({ notes: e.target.value })}
-                rows={3}
+                rows={1}
               />
             </div>
 
@@ -648,14 +654,16 @@ export function LoanForm({
             </div>
 
             <div className="gap-sm col-span-2 flex items-center">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="payed"
                 checked={formData.payed}
-                onChange={(e) => set({ payed: e.target.checked })}
-                className="rounded"
+                onCheckedChange={(v) => set({ payed: v === true })}
               />
-              <Label htmlFor="payed" className="cursor-pointer">
+              <Label
+                htmlFor="payed"
+                className="gap-xs flex cursor-pointer items-center"
+              >
+                <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.loanPaidLabel')}
               </Label>
             </div>
@@ -663,44 +671,38 @@ export function LoanForm({
             {!isEditing && formData.loan_type === 'borrowed' && (
               <div className="space-y-xs p-sm col-span-2 rounded-md border">
                 <div className="gap-sm flex items-center">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     id="generate_revenue"
                     checked={formData.generate_revenue ?? false}
-                    onChange={(e) => set({ generate_revenue: e.target.checked })}
-                    className="rounded"
+                    onCheckedChange={(v) => set({ generate_revenue: v === true })}
                   />
-                  <Label htmlFor="generate_revenue" className="cursor-pointer">
+                  <Label
+                    htmlFor="generate_revenue"
+                    className="gap-xs flex cursor-pointer items-center"
+                  >
+                    <TrendingUp className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.loans.form.generateRevenueLabel')}
                   </Label>
                 </div>
-                {formData.generate_revenue && (
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.loans.form.generateRevenueHint')}
-                  </p>
-                )}
               </div>
             )}
 
             {!isEditing && formData.loan_type === 'lent' && (
               <div className="space-y-xs p-sm col-span-2 rounded-md border">
                 <div className="gap-sm flex items-center">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     id="generate_expense"
                     checked={formData.generate_expense ?? false}
-                    onChange={(e) => set({ generate_expense: e.target.checked })}
-                    className="rounded"
+                    onCheckedChange={(v) => set({ generate_expense: v === true })}
                   />
-                  <Label htmlFor="generate_expense" className="cursor-pointer">
+                  <Label
+                    htmlFor="generate_expense"
+                    className="gap-xs flex cursor-pointer items-center"
+                  >
+                    <TrendingDown className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.loans.form.generateExpenseLabel')}
                   </Label>
                 </div>
-                {formData.generate_expense && (
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.loans.form.generateExpenseHint')}
-                  </p>
-                )}
               </div>
             )}
           </div>
@@ -730,13 +732,15 @@ export function LoanForm({
         </div>
       )}
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         {step > 1 && !isEditing && (
           <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
+            <ArrowLeft className="h-4 w-4" />
             {t('common.actions.back')}
           </Button>
         )}
         <Button type="button" variant="outline" onClick={onCancel}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -745,16 +749,19 @@ export function LoanForm({
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : !isEditing && step < totalSteps ? (
             <>
+              <ArrowRight className="h-4 w-4" />
               {t('pages.loans.wizard.next')}
-              <ArrowRight className="ml-sm h-4 w-4" />
             </>
           ) : (
-            t('common.actions.save')
+            <>
+              <Save className="h-4 w-4" />
+              {t('common.actions.save')}
+            </>
           )}
         </Button>
       </div>

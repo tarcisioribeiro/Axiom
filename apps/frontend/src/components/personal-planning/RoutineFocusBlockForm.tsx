@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { FileText, Power, Repeat, Save, Smile, Type, X } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,9 @@ interface RoutineFocusBlockFormProps {
   onSubmit: (data: FocusBlockFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  /** Editor de tarefas do bloco (só existe com o bloco já salvo), renderizado
+   * acima do rodapé de ações para não ficar abaixo de Salvar/Cancelar. */
+  tasksEditor?: ReactNode;
 }
 
 export function RoutineFocusBlockForm({
@@ -27,6 +31,7 @@ export function RoutineFocusBlockForm({
   onSubmit,
   onCancel,
   isLoading = false,
+  tasksEditor,
 }: RoutineFocusBlockFormProps) {
   const { t } = useTranslation();
   const [name, setName] = useState(block?.name ?? '');
@@ -52,38 +57,50 @@ export function RoutineFocusBlockForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-md">
+      <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
+        <div className="space-y-sm">
+          <Label className="gap-xs flex items-center" htmlFor="focus-block-name">
+            <Type className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.routineTasks.focusBlocks.nameLabel')}
+          </Label>
+          <Input
+            id="focus-block-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t('pages.routineTasks.focusBlocks.namePlaceholder')}
+            required
+          />
+        </div>
+
+        <div className="space-y-sm">
+          <Label className="gap-xs flex items-center" htmlFor="focus-block-description">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.routineTasks.focusBlocks.descriptionLabel')}
+          </Label>
+          <Textarea
+            id="focus-block-description"
+            placeholder={t('common.placeholders.focusBlockDescription')}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={1}
+            className="min-h-0 resize-none"
+          />
+        </div>
+
+        <div className="space-y-sm">
+          <Label className="gap-xs flex items-center">
+            <Smile className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.routineTasks.focusBlocks.iconLabel')}
+          </Label>
+          <IconPicker value={icon} onChange={setIcon} />
+        </div>
+      </div>
+
       <div className="space-y-sm">
-        <Label htmlFor="focus-block-name">
-          {t('pages.routineTasks.focusBlocks.nameLabel')}
+        <Label className="gap-xs flex items-center">
+          <Repeat className="text-muted-foreground h-3.5 w-3.5" />
+          {t('pages.routineTasks.focusBlocks.weekdaysLabel')}
         </Label>
-        <Input
-          id="focus-block-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t('pages.routineTasks.focusBlocks.namePlaceholder')}
-          required
-        />
-      </div>
-
-      <div className="space-y-sm">
-        <Label htmlFor="focus-block-description">
-          {t('pages.routineTasks.focusBlocks.descriptionLabel')}
-        </Label>
-        <Textarea
-          id="focus-block-description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={2}
-        />
-      </div>
-
-      <div className="space-y-sm">
-        <Label>{t('pages.routineTasks.focusBlocks.iconLabel')}</Label>
-        <IconPicker value={icon} onChange={setIcon} />
-      </div>
-
-      <div className="space-y-sm">
-        <Label>{t('pages.routineTasks.focusBlocks.weekdaysLabel')}</Label>
         <div className="gap-sm grid grid-cols-7">
           {WEEKDAY_CHOICES.map((day) => (
             <div key={day.value} className="gap-xs flex flex-col items-center">
@@ -118,25 +135,32 @@ export function RoutineFocusBlockForm({
       </div>
 
       <div className="space-y-sm">
-        <Label>{t('pages.routineTasks.focusBlocks.activeLabel')}</Label>
+        <Label className="gap-xs flex items-center">
+          <Power className="text-muted-foreground h-3.5 w-3.5" />
+          {t('pages.routineTasks.focusBlocks.activeLabel')}
+        </Label>
         <StatusToggle
-          value={isActive ? 'active' : 'inactive'}
-          onChange={(v) => setIsActive(v === 'active')}
+          value={isActive ? 'true' : 'false'}
+          onChange={(v) => setIsActive(v === 'true')}
           options={[
-            { value: 'active', label: t('pages.routineTasks.statusActive') },
-            { value: 'inactive', label: t('pages.routineTasks.statusInactive') },
+            { value: 'true', label: t('common.status.active'), accentColor: 'success' },
+            { value: 'false', label: t('common.status.inactive') },
           ]}
         />
       </div>
 
-      <div className="gap-sm pt-sm flex justify-end">
+      {tasksEditor && <div className="pt-sm border-t">{tasksEditor}</div>}
+
+      <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
           type="submit"
           disabled={isLoading || !name.trim() || weekdays.length === 0}
         >
+          <Save className="h-4 w-4" />
           {t('common.actions.save')}
         </Button>
       </div>

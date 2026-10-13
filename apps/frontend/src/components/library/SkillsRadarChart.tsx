@@ -9,6 +9,7 @@ import {
   Tooltip,
 } from 'recharts';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { IntellectCategory, Skill } from '@/types';
 
@@ -98,11 +99,7 @@ export function SkillsRadarChart({ skills }: SkillsRadarChartProps) {
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <div className="flex h-48 items-center justify-center">
-            <p className="text-muted-foreground text-sm">
-              {t('pages.skills.radarChart.emptyState')}
-            </p>
-          </div>
+          <EmptyState title={t('pages.skills.radarChart.emptyState')} />
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <RadarChart data={data}>

@@ -853,7 +853,7 @@ O módulo de Agentes precisa de LLM para chat e embeddings. Diferentes usuários
 | Provider | Configuração | Chat Model (padrão) | Embeddings |
 |---|---|---|---|
 | **Ollama** (padrão) | `LLM_PROVIDER=ollama` | `mistral:7b-instruct` | `nomic-embed-text` |
-| **Groq** | `LLM_PROVIDER=groq` | `llama-3.1-8b-instant` | via Ollama |
+| **Groq** | `LLM_PROVIDER=groq` | `openai/gpt-oss-120b` | via Ollama |
 | **Anthropic** | `LLM_PROVIDER=anthropic` | `claude-haiku-4-5-20251001` | via Ollama |
 
 ### Justificativa

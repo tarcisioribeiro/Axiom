@@ -1,17 +1,45 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, ChevronUp, History, Plus, Trash2, Zap } from 'lucide-react';
-import { useState } from 'react';
+import {
+  ArrowLeftRight,
+  Banknote,
+  CheckCircle2,
+  CircleDot,
+  CreditCard,
+  FileText,
+  Flag,
+  GitBranch,
+  Loader2,
+  MoreHorizontal,
+  Plus,
+  Power,
+  QrCode,
+  Receipt,
+  Save,
+  Search,
+  Trash2,
+  Type,
+  Wallet,
+  X,
+  Zap,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PageHeader } from '@/components/common/PageHeader';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -20,6 +48,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -28,12 +57,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { StatusToggle } from '@/components/ui/status-toggle';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS, TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
+import { accountsService } from '@/services/accounts-service';
 import { automationRulesService } from '@/services/automation-rules-service';
+import { tagsService } from '@/services/tags-service';
 import type {
+  Account,
   AutomationAction,
   AutomationActionType,
   AutomationCondition,
@@ -41,7 +75,7 @@ import type {
   AutomationOperator,
   AutomationRule,
   AutomationRuleFormData,
-  AutomationRuleLog,
+  Tag,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -54,16 +88,14 @@ const CONDITION_FIELDS: AutomationConditionField[] = [
   'payment_method',
 ];
 
-const OPERATORS: AutomationOperator[] = [
-  'contains',
-  'not_contains',
-  'eq',
-  'neq',
-  'gt',
-  'gte',
-  'lt',
-  'lte',
-];
+const OPERATORS_BY_FIELD: Record<AutomationConditionField, AutomationOperator[]> = {
+  merchant: ['contains', 'eq'],
+  description: ['contains', 'eq'],
+  category: ['contains'],
+  payment_method: ['contains'],
+  account: ['contains'],
+  value: ['eq', 'gt', 'lt', 'gte', 'lte'],
+};
 
 const ACTION_TYPES: AutomationActionType[] = [
   'set_category',
@@ -71,14 +103,36 @@ const ACTION_TYPES: AutomationActionType[] = [
   'create_alert',
 ];
 
+const PAYMENT_METHODS = [
+  'cash',
+  'debit_card',
+  'credit_card',
+  'pix',
+  'transfer',
+  'check',
+  'other',
+];
+
+const PAYMENT_METHOD_ICONS: Record<string, LucideIcon> = {
+  cash: Banknote,
+  debit_card: Wallet,
+  credit_card: CreditCard,
+  pix: QrCode,
+  transfer: ArrowLeftRight,
+  check: Receipt,
+  other: MoreHorizontal,
+};
+
 function ConditionRow({
   condition,
   index,
+  accounts,
   onChange,
   onRemove,
 }: {
   condition: AutomationCondition;
   index: number;
+  accounts: Account[];
   onChange: (i: number, c: AutomationCondition) => void;
   onRemove: (i: number) => void;
 }) {
@@ -87,9 +141,14 @@ function ConditionRow({
     <div className="gap-sm border-border/60 bg-muted/20 p-sm grid grid-cols-[1fr_1fr_1fr_auto] rounded-lg border">
       <Select
         value={condition.field}
-        onValueChange={(v) =>
-          onChange(index, { ...condition, field: v as AutomationConditionField })
-        }
+        onValueChange={(v) => {
+          const field = v as AutomationConditionField;
+          const allowedOps = OPERATORS_BY_FIELD[field];
+          const operator = allowedOps.includes(condition.operator)
+            ? condition.operator
+            : allowedOps[0];
+          onChange(index, { ...condition, field, operator });
+        }}
       >
         <SelectTrigger>
           <SelectValue placeholder={t('pages.automationRules.conditionField')} />
@@ -113,7 +172,7 @@ function ConditionRow({
           <SelectValue placeholder={t('pages.automationRules.conditionOperator')} />
         </SelectTrigger>
         <SelectContent>
-          {OPERATORS.map((op) => (
+          {OPERATORS_BY_FIELD[condition.field].map((op) => (
             <SelectItem key={op} value={op}>
               {t(`pages.automationRules.operators.${op}`)}
             </SelectItem>
@@ -130,13 +189,64 @@ function ConditionRow({
             <SelectValue placeholder={t('pages.automationRules.conditionValue')} />
           </SelectTrigger>
           <SelectContent>
-            {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
-              <SelectItem key={cat.key} value={cat.key}>
-                {translate('expenseCategories', cat.key)}
+            {EXPENSE_CATEGORIES_CANONICAL.map((cat) => {
+              const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
+              return (
+                <SelectItem key={cat.key} value={cat.key}>
+                  <span className="gap-sm flex items-center">
+                    {CatIcon && (
+                      <CatIcon className="text-muted-foreground h-4 w-4 shrink-0" />
+                    )}
+                    {translate('expenseCategories', cat.key)}
+                  </span>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      ) : condition.field === 'payment_method' ? (
+        <Select
+          value={condition.value}
+          onValueChange={(v) => onChange(index, { ...condition, value: v })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={t('pages.automationRules.conditionValue')} />
+          </SelectTrigger>
+          <SelectContent>
+            {PAYMENT_METHODS.map((pm) => {
+              const PmIcon = PAYMENT_METHOD_ICONS[pm];
+              return (
+                <SelectItem key={pm} value={pm}>
+                  <span className="gap-sm flex items-center">
+                    {PmIcon && <PmIcon className="h-4 w-4" />}
+                    {t(`common.paymentMethods.${pm}`)}
+                  </span>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      ) : condition.field === 'account' ? (
+        <Select
+          value={condition.value}
+          onValueChange={(v) => onChange(index, { ...condition, value: v })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={t('pages.automationRules.conditionValue')} />
+          </SelectTrigger>
+          <SelectContent>
+            {accounts.map((acc) => (
+              <SelectItem key={acc.id} value={String(acc.id)}>
+                {acc.account_name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+      ) : condition.field === 'value' ? (
+        <CurrencyInput
+          value={condition.value}
+          onChange={(e) => onChange(index, { ...condition, value: e.target.value })}
+        />
       ) : (
         <Input
           placeholder={t('pages.automationRules.conditionValue')}
@@ -149,7 +259,7 @@ function ConditionRow({
         type="button"
         variant="ghost"
         size="icon"
-        className="text-muted-foreground hover:text-destructive h-8 w-8"
+        className="text-destructive hover:text-destructive h-8 w-8"
         onClick={() => onRemove(index)}
         title={t('pages.automationRules.removeCondition')}
       >
@@ -162,11 +272,13 @@ function ConditionRow({
 function ActionRow({
   action,
   index,
+  tags,
   onChange,
   onRemove,
 }: {
   action: AutomationAction;
   index: number;
+  tags: Tag[];
   onChange: (i: number, a: AutomationAction) => void;
   onRemove: (i: number) => void;
 }) {
@@ -200,9 +312,39 @@ function ActionRow({
             <SelectValue placeholder={t('pages.automationRules.actionValue')} />
           </SelectTrigger>
           <SelectContent>
-            {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
-              <SelectItem key={cat.key} value={cat.key}>
-                {translate('expenseCategories', cat.key)}
+            {EXPENSE_CATEGORIES_CANONICAL.map((cat) => {
+              const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
+              return (
+                <SelectItem key={cat.key} value={cat.key}>
+                  <span className="gap-sm flex items-center">
+                    {CatIcon && (
+                      <CatIcon className="text-muted-foreground h-4 w-4 shrink-0" />
+                    )}
+                    {translate('expenseCategories', cat.key)}
+                  </span>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      ) : action.type === 'add_tag' ? (
+        <Select
+          value={action.value}
+          onValueChange={(v) => onChange(index, { ...action, value: v })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={t('pages.automationRules.actionValue')} />
+          </SelectTrigger>
+          <SelectContent>
+            {tags.map((tag) => (
+              <SelectItem key={tag.id} value={String(tag.id)}>
+                <span className="gap-sm flex items-center">
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: `hsl(var(--${tag.color}))` }}
+                  />
+                  {tag.name}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -219,7 +361,7 @@ function ActionRow({
         type="button"
         variant="ghost"
         size="icon"
-        className="text-muted-foreground hover:text-destructive h-8 w-8"
+        className="text-destructive hover:text-destructive h-8 w-8"
         onClick={() => onRemove(index)}
         title={t('pages.automationRules.removeAction')}
       >
@@ -243,6 +385,16 @@ function RuleFormDialog({
   isLoading?: boolean;
 }) {
   const { t } = useTranslation();
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => accountsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const { data: tags = [] } = useQuery({
+    queryKey: ['tags'],
+    queryFn: async () => (await tagsService.getAll()).results ?? [],
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
   const [name, setName] = useState(rule?.name ?? '');
   const [desc, setDesc] = useState(rule?.description ?? '');
   const [logic, setLogic] = useState<'all' | 'any'>(rule?.logic ?? 'all');
@@ -289,19 +441,24 @@ function RuleFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>
-            {rule ? t('common.actions.edit') : t('pages.automationRules.newRule')}
+          <DialogTitle mode={rule ? 'edit' : 'create'}>
+            {rule
+              ? t('pages.automationRules.editRule')
+              : t('pages.automationRules.newRule')}
           </DialogTitle>
-          <DialogDescription>{t('pages.automationRules.subtitle')}</DialogDescription>
+          <VisuallyHidden>
+            <DialogDescription>{t('pages.automationRules.subtitle')}</DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-lg">
           {/* Básico */}
           <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-            <div className="space-y-sm md:col-span-2">
-              <Label htmlFor="rule-name">
+            <div className="space-y-sm">
+              <Label className="gap-xs flex items-center" htmlFor="rule-name">
+                <Type className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.automationRules.form.nameLabel')}
               </Label>
               <Input
@@ -313,8 +470,9 @@ function RuleFormDialog({
               />
             </div>
 
-            <div className="space-y-sm md:col-span-2">
-              <Label htmlFor="rule-desc">
+            <div className="space-y-sm">
+              <Label className="gap-xs flex items-center" htmlFor="rule-desc">
+                <FileText className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.automationRules.form.descLabel')}
               </Label>
               <Input
@@ -325,53 +483,67 @@ function RuleFormDialog({
               />
             </div>
 
-            <div className="space-y-sm">
-              <Label htmlFor="rule-priority">
-                {t('pages.automationRules.form.priorityLabel')}
-              </Label>
-              <Input
-                id="rule-priority"
-                type="number"
-                min={1}
-                max={9999}
-                value={priority}
-                onChange={(e) => setPriority(parseInt(e.target.value) || 100)}
-              />
-            </div>
+            <div className="gap-md grid grid-cols-3 md:col-span-2">
+              <div className="space-y-sm flex flex-col items-center">
+                <Label className="gap-xs flex items-center" htmlFor="rule-priority">
+                  <Flag className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.automationRules.form.priorityLabel')}
+                </Label>
+                <NumberStepper
+                  id="rule-priority"
+                  min={1}
+                  max={9999}
+                  value={priority}
+                  onChange={(v) => setPriority(v ?? 100)}
+                />
+              </div>
 
-            <div className="space-y-sm">
-              <Label>{t('pages.automationRules.logic')}</Label>
-              <Select value={logic} onValueChange={(v) => setLogic(v as 'all' | 'any')}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">
-                    {t('pages.automationRules.logicAll')}
-                  </SelectItem>
-                  <SelectItem value="any">
-                    {t('pages.automationRules.logicAny')}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-sm flex flex-col items-center">
+                <Label className="gap-xs flex items-center">
+                  <GitBranch className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.automationRules.logic')}
+                </Label>
+                <Select
+                  value={logic}
+                  onValueChange={(v) => setLogic(v as 'all' | 'any')}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t('pages.automationRules.logicAll')}
+                    </SelectItem>
+                    <SelectItem value="any">
+                      {t('pages.automationRules.logicAny')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="gap-sm flex items-center">
-              <StatusToggle
-                value={isActive ? 'active' : 'inactive'}
-                onChange={(v) => setIsActive(v === 'active')}
-                options={[
-                  {
-                    value: 'active',
-                    label: t('pages.automationRules.active'),
-                    accentColor: 'success',
-                  },
-                  {
-                    value: 'inactive',
-                    label: t('pages.automationRules.inactive'),
-                  },
-                ]}
-              />
+              <div className="space-y-sm flex flex-col items-center">
+                <Label className="gap-xs flex items-center">
+                  <Power className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.automationRules.form.isActiveLabel')}
+                </Label>
+                <div className="gap-sm flex items-center">
+                  <StatusToggle
+                    value={isActive ? 'active' : 'inactive'}
+                    onChange={(v) => setIsActive(v === 'active')}
+                    options={[
+                      {
+                        value: 'active',
+                        label: t('pages.automationRules.active'),
+                        accentColor: 'success',
+                      },
+                      {
+                        value: 'inactive',
+                        label: t('pages.automationRules.inactive'),
+                      },
+                    ]}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -382,21 +554,32 @@ function RuleFormDialog({
                 {t('pages.automationRules.conditions')}
               </span>
               <Button type="button" variant="outline" size="sm" onClick={addCondition}>
-                <Plus className="mr-xs h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5" />
                 {t('pages.automationRules.addCondition')}
               </Button>
             </div>
-            <div className="space-y-sm">
-              {conditions.map((c, i) => (
-                <ConditionRow
-                  key={i}
-                  condition={c}
-                  index={i}
-                  onChange={updateCondition}
-                  onRemove={removeCondition}
-                />
-              ))}
-            </div>
+            <PaginatedSlide
+              items={conditions}
+              pageSize={LIST_PAGE_SIZE}
+              pinNav={false}
+              className="space-y-sm"
+            >
+              {(pageConditions) =>
+                pageConditions.map((c) => {
+                  const i = conditions.indexOf(c);
+                  return (
+                    <ConditionRow
+                      key={i}
+                      condition={c}
+                      index={i}
+                      accounts={accounts}
+                      onChange={updateCondition}
+                      onRemove={removeCondition}
+                    />
+                  );
+                })
+              }
+            </PaginatedSlide>
           </div>
 
           {/* Ações */}
@@ -406,25 +589,37 @@ function RuleFormDialog({
                 {t('pages.automationRules.actions')}
               </span>
               <Button type="button" variant="outline" size="sm" onClick={addAction}>
-                <Plus className="mr-xs h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5" />
                 {t('pages.automationRules.addAction')}
               </Button>
             </div>
-            <div className="space-y-sm">
-              {actions.map((a, i) => (
-                <ActionRow
-                  key={i}
-                  action={a}
-                  index={i}
-                  onChange={updateAction}
-                  onRemove={removeAction}
-                />
-              ))}
-            </div>
+            <PaginatedSlide
+              items={actions}
+              pageSize={LIST_PAGE_SIZE}
+              pinNav={false}
+              className="space-y-sm"
+            >
+              {(pageActions) =>
+                pageActions.map((a) => {
+                  const i = actions.indexOf(a);
+                  return (
+                    <ActionRow
+                      key={i}
+                      action={a}
+                      index={i}
+                      tags={tags}
+                      onChange={updateAction}
+                      onRemove={removeAction}
+                    />
+                  );
+                })
+              }
+            </PaginatedSlide>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
@@ -436,6 +631,11 @@ function RuleFormDialog({
                 actions.length === 0
               }
             >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
               {isLoading ? t('common.actions.saving') : t('common.actions.save')}
             </Button>
           </DialogFooter>
@@ -445,7 +645,7 @@ function RuleFormDialog({
   );
 }
 
-function RuleLogsDialog({
+function RuleDetailsDialog({
   rule,
   open,
   onOpenChange,
@@ -455,170 +655,20 @@ function RuleLogsDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const { t } = useTranslation();
-  const { data: logs = [], isLoading } = useQuery<AutomationRuleLog[]>({
-    queryKey: ['automation-rule-logs', rule.id],
-    queryFn: () => automationRulesService.getLogs(rule.id),
-    enabled: open,
-  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>
-            {t('pages.automationRules.logsTitle')} — {rule.name}
+          <DialogTitle className="gap-sm flex items-center">
+            <Zap className="text-primary h-5 w-5 shrink-0" />
+            {rule.name}
           </DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>{rule.name}</DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
-        {isLoading ? (
-          <LoadingState />
-        ) : logs.length === 0 ? (
-          <p className="py-md text-muted-foreground text-center text-sm">
-            {t('pages.automationRules.noLogs')}
-          </p>
-        ) : (
-          <div className="space-y-sm max-h-96 overflow-y-auto">
-            {logs.map((log) => (
-              <div
-                key={log.id}
-                className="border-border/60 bg-muted/20 p-sm rounded-lg border text-sm"
-              >
-                <p className="font-medium">{log.expense_description}</p>
-                <p className="text-muted-foreground text-xs">
-                  {new Date(log.created_at).toLocaleString('pt-BR')}
-                </p>
-                <div className="mt-xs gap-xs flex flex-wrap">
-                  {log.actions_applied.map((a, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs">
-                      {a}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function RuleCard({
-  rule,
-  onEdit,
-  onDelete,
-  onToggle,
-  onViewLogs,
-}: {
-  rule: AutomationRule;
-  onEdit: (r: AutomationRule) => void;
-  onDelete: (id: number) => void;
-  onToggle: (r: AutomationRule) => void;
-  onViewLogs: (r: AutomationRule) => void;
-}) {
-  const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className="border-border/60 bg-card p-md rounded-lg border transition hover:shadow-sm">
-      <div className="gap-sm flex items-start justify-between">
-        <div className="flex-1">
-          <div className="gap-sm flex items-center">
-            <span className="font-semibold">{rule.name}</span>
-            <Badge
-              variant="outline"
-              className={
-                rule.is_active
-                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600'
-                  : 'border-border bg-muted text-muted-foreground'
-              }
-            >
-              {rule.is_active
-                ? t('pages.automationRules.active')
-                : t('pages.automationRules.inactive')}
-            </Badge>
-            <Badge variant="secondary" className="text-xs">
-              #{rule.priority}
-            </Badge>
-          </div>
-          {rule.description && (
-            <p className="mt-xs text-muted-foreground text-sm">{rule.description}</p>
-          )}
-          <p className="mt-xs text-muted-foreground text-xs">
-            {rule.apply_count} {t('pages.automationRules.applied')}
-          </p>
-        </div>
-
-        <div className="gap-xs flex items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            title={t('pages.automationRules.logsTitle')}
-            onClick={() => onViewLogs(rule)}
-          >
-            <History className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => onToggle(rule)}
-            title={
-              rule.is_active
-                ? t('pages.automationRules.inactive')
-                : t('pages.automationRules.active')
-            }
-          >
-            <Zap
-              className={`h-3.5 w-3.5 ${rule.is_active ? 'text-primary' : 'text-muted-foreground'}`}
-            />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => onEdit(rule)}
-          >
-            <span className="sr-only">{t('common.actions.edit')}</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-3.5 w-3.5"
-            >
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-destructive h-7 w-7"
-            onClick={() => onDelete(rule.id)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => setExpanded((v) => !v)}
-          >
-            {expanded ? (
-              <ChevronUp className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronDown className="h-3.5 w-3.5" />
-            )}
-          </Button>
-        </div>
-      </div>
-
-      {expanded && (
-        <div className="mt-md gap-sm border-border/40 pt-md grid border-t md:grid-cols-2">
+        <div className="gap-md grid md:grid-cols-2">
           <div>
             <p className="mb-xs text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               {t('pages.automationRules.conditions')} (
@@ -633,7 +683,7 @@ function RuleCard({
                   <span className="text-muted-foreground text-xs">
                     {t(`pages.automationRules.operators.${c.operator}`)}
                   </span>
-                  <span className="font-mono text-xs font-medium">
+                  <span className="text-xs font-medium">
                     {c.field === 'category'
                       ? translate('expenseCategories', c.value)
                       : c.value}
@@ -652,7 +702,7 @@ function RuleCard({
                   <Badge variant="secondary" className="text-xs">
                     {t(`pages.automationRules.actionTypes.${a.type}`)}
                   </Badge>
-                  <span className="font-mono text-xs font-medium">
+                  <span className="text-xs font-medium">
                     {a.type === 'set_category'
                       ? translate('expenseCategories', a.value)
                       : a.value}
@@ -662,7 +712,105 @@ function RuleCard({
             </div>
           </div>
         </div>
-      )}
+        <DialogCloseFooter />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RuleCard({
+  rule,
+  onEdit,
+  onDelete,
+  onOpenDetails,
+}: {
+  rule: AutomationRule;
+  onEdit: (r: AutomationRule) => void;
+  onDelete: (id: number) => void;
+  onOpenDetails: (r: AutomationRule) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div
+      className="border-border bg-card p-md gap-sm flex cursor-pointer items-start justify-between rounded-lg border"
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpenDetails(rule)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') onOpenDetails(rule);
+      }}
+    >
+      <div className="flex-1">
+        <div className="gap-sm flex items-center">
+          <span className="font-semibold">{rule.name}</span>
+          <Badge
+            variant="outline"
+            className={`gap-xs ${
+              rule.is_active
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600'
+                : 'border-border bg-muted text-muted-foreground'
+            }`}
+          >
+            {(() => {
+              const StatusIcon =
+                TASK_STATUS_ICONS[rule.is_active ? 'active' : 'inactive'];
+              return <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />;
+            })()}
+            {rule.is_active
+              ? t('pages.automationRules.active')
+              : t('pages.automationRules.inactive')}
+          </Badge>
+          <Badge variant="secondary" className="text-xs">
+            #{rule.priority}
+          </Badge>
+        </div>
+        {rule.description && (
+          <p className="mt-xs text-muted-foreground text-sm">{rule.description}</p>
+        )}
+        <p className="mt-xs text-muted-foreground text-xs">
+          {rule.apply_count} {t('pages.automationRules.applied')}
+        </p>
+      </div>
+
+      <div className="gap-xs flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(rule);
+          }}
+        >
+          <span className="sr-only">{t('common.actions.edit')}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-3.5 w-3.5"
+          >
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </Button>
+        <Button
+          aria-label={t('common.actions.delete')}
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive h-7 w-7"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(rule.id);
+          }}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -671,7 +819,15 @@ function EmbeddedWrapper({ children }: { children: React.ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function AutomationRules({ embedded = false }: { embedded?: boolean }) {
+export default function AutomationRules({
+  embedded = false,
+  newRuleRef,
+  applyAllRef,
+}: {
+  embedded?: boolean;
+  newRuleRef?: RefObject<(() => void) | undefined>;
+  applyAllRef?: RefObject<(() => void) | undefined>;
+}) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -679,8 +835,19 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<AutomationRule | undefined>();
-  const [logsRule, setLogsRule] = useState<AutomationRule | undefined>();
-  const [logsOpen, setLogsOpen] = useState(false);
+  const [detailsRule, setDetailsRule] = useState<AutomationRule | undefined>();
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  useEffect(() => {
+    if (newRuleRef) {
+      newRuleRef.current = () => {
+        setEditingRule(undefined);
+        setFormOpen(true);
+      };
+    }
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['automation-rules'],
@@ -691,6 +858,21 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
   const rules: AutomationRule[] = Array.isArray(data)
     ? data
     : ((data as { results: AutomationRule[] } | undefined)?.results ?? []);
+
+  const filteredRules = rules.filter((rule) => {
+    if (searchTerm && !rule.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      return false;
+    if (statusFilter !== 'all' && rule.is_active !== (statusFilter === 'active'))
+      return false;
+    return true;
+  });
+
+  const hasActiveFilters = searchTerm !== '' || statusFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+  };
 
   const createMutation = useMutation({
     mutationFn: (d: AutomationRuleFormData) => automationRulesService.create(d),
@@ -737,8 +919,7 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
       void queryClient.invalidateQueries({ queryKey: ['expenses'] });
       void queryClient.invalidateQueries({ queryKey: ['tags'] });
       toast({
-        title: t('pages.automationRules.applySuccess'),
-        description: t('pages.automationRules.applySuccessDesc', {
+        title: t('pages.automationRules.applySuccessDesc', {
           count: res.applied,
         }),
       });
@@ -746,6 +927,12 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
     onError: (e) => {
       toast({ title: getErrorMessage(e), variant: 'destructive' });
     },
+  });
+
+  useEffect(() => {
+    if (applyAllRef) {
+      applyAllRef.current = () => applyMutation.mutate();
+    }
   });
 
   const handleSubmit = (d: AutomationRuleFormData) => {
@@ -769,24 +956,9 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
     if (ok) deleteMutation.mutate(id);
   };
 
-  const handleToggle = (rule: AutomationRule) => {
-    updateMutation.mutate({
-      id: rule.id,
-      data: {
-        name: rule.name,
-        description: rule.description ?? undefined,
-        logic: rule.logic,
-        conditions: rule.conditions,
-        actions: rule.actions,
-        is_active: !rule.is_active,
-        priority: rule.priority,
-      },
-    });
-  };
-
-  const handleViewLogs = (rule: AutomationRule) => {
-    setLogsRule(rule);
-    setLogsOpen(true);
+  const handleOpenDetails = (rule: AutomationRule) => {
+    setDetailsRule(rule);
+    setDetailsOpen(true);
   };
 
   const isMutating = createMutation.isPending || updateMutation.isPending;
@@ -795,61 +967,98 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
 
   return (
     <Wrapper>
-      <PageHeader
-        title={t('pages.automationRules.title')}
-        subtitle={t('pages.automationRules.subtitle')}
-        actions={
-          <div className="gap-sm flex">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => applyMutation.mutate()}
-              disabled={applyMutation.isPending}
-            >
-              <Zap className="mr-xs h-3.5 w-3.5" />
-              {t('pages.automationRules.applyAll')}
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => {
-                setEditingRule(undefined);
-                setFormOpen(true);
-              }}
-            >
-              <Plus className="mr-xs h-3.5 w-3.5" />
-              {t('pages.automationRules.newRule')}
-            </Button>
-          </div>
-        }
-      />
-
       {isLoading ? (
         <LoadingState />
       ) : rules.length === 0 ? (
         <EmptyState
+          icon={<Zap className="h-6 w-6" />}
           title={t('pages.automationRules.empty')}
-          description={t('pages.automationRules.emptyDesc')}
-          action={{
-            label: t('pages.automationRules.newRule'),
-            onClick: () => {
-              setEditingRule(undefined);
-              setFormOpen(true);
-            },
-          }}
         />
       ) : (
-        <div className="space-y-sm">
-          {rules.map((rule) => (
-            <RuleCard
-              key={rule.id}
-              rule={rule}
-              onEdit={handleEdit}
-              onDelete={(id) => void handleDelete(id)}
-              onToggle={handleToggle}
-              onViewLogs={handleViewLogs}
+        <>
+          <FilterBar
+            hasActiveFilters={hasActiveFilters}
+            onClear={clearFilters}
+            activeFilters={[
+              ...(statusFilter !== 'all'
+                ? [
+                    {
+                      key: 'status',
+                      label: `${t('common.fields.status')}: ${
+                        statusFilter === 'active'
+                          ? t('pages.automationRules.active')
+                          : t('pages.automationRules.inactive')
+                      }`,
+                      onRemove: () => setStatusFilter('all'),
+                    },
+                  ]
+                : []),
+            ]}
+          >
+            <FilterField label={t('common.filterLabels.search')} icon={Search}>
+              <SearchInput
+                placeholder={t('pages.automationRules.searchPlaceholder')}
+                value={searchTerm}
+                onValueChange={setSearchTerm}
+                className="w-44"
+              />
+            </FilterField>
+            <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger
+                  className="w-36"
+                  aria-label={t('pages.automationRules.allStatus')}
+                  startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('pages.automationRules.allStatus')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {t('pages.automationRules.allStatus')}
+                  </SelectItem>
+                  <SelectItem
+                    value="active"
+                    icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                  >
+                    {t('pages.automationRules.active')}
+                  </SelectItem>
+                  <SelectItem
+                    value="inactive"
+                    icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                  >
+                    {t('pages.automationRules.inactive')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
+          </FilterBar>
+
+          {filteredRules.length === 0 ? (
+            <EmptyState
+              icon={<Zap className="h-6 w-6" />}
+              title={t('pages.automationRules.empty')}
             />
-          ))}
-        </div>
+          ) : (
+            <PaginatedSlide
+              items={filteredRules}
+              pageSize={5}
+              centerList
+              className="space-y-sm"
+            >
+              {(pageItems) =>
+                pageItems.map((rule) => (
+                  <RuleCard
+                    key={rule.id}
+                    rule={rule}
+                    onEdit={handleEdit}
+                    onDelete={(id) => void handleDelete(id)}
+                    onOpenDetails={handleOpenDetails}
+                  />
+                ))
+              }
+            </PaginatedSlide>
+          )}
+        </>
       )}
 
       <RuleFormDialog
@@ -864,8 +1073,12 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
         isLoading={isMutating}
       />
 
-      {logsRule && (
-        <RuleLogsDialog rule={logsRule} open={logsOpen} onOpenChange={setLogsOpen} />
+      {detailsRule && (
+        <RuleDetailsDialog
+          rule={detailsRule}
+          open={detailsOpen}
+          onOpenChange={setDetailsOpen}
+        />
       )}
     </Wrapper>
   );

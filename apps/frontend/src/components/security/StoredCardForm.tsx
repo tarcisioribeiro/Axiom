@@ -8,6 +8,8 @@ import {
   Loader2,
   Shield,
   Tag,
+  Save,
+  X,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { CARD_FLAG_ICON } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { storedCardSchema, type StoredCreditCardFormData } from '@/lib/validations';
 import { CARD_FLAGS } from '@/types';
 import type { StoredCreditCard, CreditCard, Member } from '@/types';
@@ -97,7 +100,7 @@ export function StoredCardForm({
   const formatCVV = (value: string) => value.replace(/\D/g, '').slice(0, 4);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
       <FormSection
         title={t('pages.storedCards.form.sectionIdentification')}
         icon={CreditCardIcon}
@@ -111,12 +114,10 @@ export function StoredCardForm({
             <Input
               id="name"
               {...register('name')}
+              aria-invalid={!!errors.name}
               placeholder={t('pages.storedCards.form.namePlaceholder')}
               disabled={isLoading}
             />
-            {errors.name && (
-              <p className="mt-xs text-destructive text-sm">{errors.name.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
@@ -127,14 +128,10 @@ export function StoredCardForm({
             <Input
               id="cardholder_name"
               {...register('cardholder_name')}
+              aria-invalid={!!errors.cardholder_name}
               placeholder={t('pages.storedCards.form.holderPlaceholder')}
               disabled={isLoading}
             />
-            {errors.cardholder_name && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.cardholder_name.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
@@ -149,7 +146,7 @@ export function StoredCardForm({
               }
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.flag}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -165,9 +162,6 @@ export function StoredCardForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.flag && (
-              <p className="mt-xs text-destructive text-sm">{errors.flag.message}</p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -182,6 +176,7 @@ export function StoredCardForm({
             <Input
               id="card_number"
               {...register('card_number')}
+              aria-invalid={!!errors.card_number}
               placeholder={t('pages.storedCards.form.numberPlaceholder')}
               maxLength={16}
               onChange={(e) => {
@@ -190,16 +185,7 @@ export function StoredCardForm({
               }}
               disabled={isLoading}
             />
-            {errors.card_number && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.card_number.message}
-              </p>
-            )}
-            {!card && (
-              <p className="mt-xs text-muted-foreground text-xs">
-                {t('pages.storedCards.form.numberHint')}
-              </p>
-            )}
+
             {card && (
               <p className="mt-xs text-warning text-xs">
                 {t('pages.storedCards.form.keepCurrentNumber')}
@@ -215,6 +201,7 @@ export function StoredCardForm({
             <Input
               id="security_code"
               {...register('security_code')}
+              aria-invalid={!!errors.security_code}
               placeholder={t('pages.storedCards.form.cvvPlaceholder')}
               maxLength={4}
               onChange={(e) => {
@@ -223,11 +210,6 @@ export function StoredCardForm({
               }}
               disabled={isLoading}
             />
-            {errors.security_code && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.security_code.message}
-              </p>
-            )}
             {card && (
               <p className="mt-xs text-warning text-xs">
                 {t('pages.storedCards.form.keepCurrentCvv')}
@@ -252,7 +234,7 @@ export function StoredCardForm({
               onValueChange={(value) => setValue('expiration_month', parseInt(value))}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.expiration_month}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -263,11 +245,6 @@ export function StoredCardForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.expiration_month && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.expiration_month.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -280,7 +257,7 @@ export function StoredCardForm({
               onValueChange={(value) => setValue('expiration_year', parseInt(value))}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.expiration_year}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -291,11 +268,6 @@ export function StoredCardForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.expiration_year && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.expiration_year.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -326,9 +298,6 @@ export function StoredCardForm({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-muted-foreground text-xs">
-              {t('pages.storedCards.form.financeCardHint')}
-            </p>
           </div>
         </FormSection>
       )}
@@ -342,29 +311,26 @@ export function StoredCardForm({
           <Textarea
             id="notes"
             {...register('notes')}
+            aria-invalid={!!errors.notes}
             placeholder={t('pages.storedCards.form.notesPlaceholder')}
-            rows={3}
+            rows={1}
             disabled={isLoading}
           />
-          {errors.notes && (
-            <p className="mt-xs text-destructive text-sm">{errors.notes.message}</p>
-          )}
         </div>
       </FormSection>
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <>
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-              {t('common.actions.saving')}
-            </>
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            t('common.actions.save')
+            <Save className="h-4 w-4" />
           )}
+          {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>
     </form>

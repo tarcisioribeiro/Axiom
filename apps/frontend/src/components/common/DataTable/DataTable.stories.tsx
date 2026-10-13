@@ -95,8 +95,6 @@ export const Empty: Story = {
       keyExtractor={(item) => item.id}
       emptyState={{
         title: 'Nenhuma despesa',
-        message: 'Adicione sua primeira despesa para começar.',
-        action: { label: 'Adicionar', onClick: () => alert('Nova despesa') },
       }}
     />
   ),

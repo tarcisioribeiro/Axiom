@@ -324,39 +324,51 @@ class ExpenseServiceViewTest(BaseCoverageTestCase):
             ],
         )
 
-    def test_categorization_rule_detail(self):
-        from expenses.models import CategorizationRule
+    def test_automation_rule_detail(self):
+        from expenses.models import AutomationRule
 
-        rule = CategorizationRule.objects.create(
-            merchant_contains="test",
-            category="food and drink",
+        rule = AutomationRule.objects.create(
+            name="Categorizar: test",
+            conditions=[
+                {"field": "merchant", "operator": "contains", "value": "test"}
+            ],
+            actions=[{"type": "set_category", "value": "food and drink"}],
             is_active=True,
             owner=self.user,
             created_by=self.user,
         )
-        url = reverse("categorization-rule-detail", args=[rule.pk])
+        url = reverse("automation-rule-detail", args=[rule.pk])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["merchant_contains"], "test")
-        self.assertEqual(response.data["category"], "food and drink")
+        self.assertEqual(response.data["name"], "Categorizar: test")
+        self.assertEqual(
+            response.data["actions"][0]["value"], "food and drink"
+        )
 
-    def test_categorization_rule_update(self):
-        from expenses.models import CategorizationRule
+    def test_automation_rule_update(self):
+        from expenses.models import AutomationRule
 
-        rule = CategorizationRule.objects.create(
-            merchant_contains="update",
-            category="transport",
+        rule = AutomationRule.objects.create(
+            name="Categorizar: update",
+            conditions=[
+                {
+                    "field": "merchant",
+                    "operator": "contains",
+                    "value": "update",
+                }
+            ],
+            actions=[{"type": "set_category", "value": "transport"}],
             is_active=True,
             owner=self.user,
             created_by=self.user,
         )
-        url = reverse("categorization-rule-detail", args=[rule.pk])
-        response = self.client.patch(url, {"merchant_contains": "updated"})
+        url = reverse("automation-rule-detail", args=[rule.pk])
+        response = self.client.patch(url, {"name": "Categorizar: updated"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["merchant_contains"], "updated")
+        self.assertEqual(response.data["name"], "Categorizar: updated")
 
-    def test_categorization_rule_apply(self):
-        url = reverse("categorization-rule-apply")
+    def test_automation_rule_apply(self):
+        url = reverse("automation-rule-apply")
         response = self.client.post(url)
         self.assertIn(
             response.status_code,

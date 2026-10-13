@@ -1,15 +1,16 @@
 /* eslint-disable max-lines */
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  ArrowRight,
+  BookOpen,
+  Calendar,
   CheckCircle2,
   Dumbbell,
-  Target,
-  Calendar,
-  ArrowRight,
-  X,
-  BookOpen,
   Loader2,
+  SkipForward,
   Sparkles,
+  Target,
+  X,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -85,13 +86,15 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
   const TOTAL_STEPS = 3;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <motion.div
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+    >
       <motion.div
         key={step}
         initial={{ scale: 0.92, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.92, opacity: 0 }}
-        transition={{ duration: 0.2 }}
         className="mx-md border-border bg-card p-xl relative w-full max-w-lg rounded-2xl border shadow-2xl"
       >
         <PlainButton
@@ -278,13 +281,14 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
         <div className="gap-sm flex">
           {step < TOTAL_STEPS - 1 && (
             <Button variant="ghost" size="sm" onClick={handleSkip} className="flex-1">
+              <SkipForward aria-hidden="true" />
               {t('pages.planningOnboarding.skip')}
             </Button>
           )}
           {step < TOTAL_STEPS - 1 ? (
             <Button onClick={() => setStep((s) => s + 1)} className="gap-sm flex-1">
-              {t('pages.planningOnboarding.next')}
               <ArrowRight className="h-4 w-4" />
+              {t('pages.planningOnboarding.next')}
             </Button>
           ) : (
             <Button
@@ -301,14 +305,14 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                 </>
               ) : (
                 <>
-                  {t('pages.planningOnboarding.start')}
                   <ArrowRight className="h-4 w-4" />
+                  {t('pages.planningOnboarding.start')}
                 </>
               )}
             </Button>
           )}
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }

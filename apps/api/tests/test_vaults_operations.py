@@ -224,6 +224,46 @@ class VaultTransactionListFilterTest(BaseVaultOperationsTestCase):
         for tx in results:
             self.assertEqual(tx["transaction_type"], "deposit")
 
+    def test_transaction_list_filter_by_date_range(self):
+        """
+        GET /vaults/<pk>/transactions/?start_date=&end_date= filtra pela
+        data da transação.
+        """
+        import datetime
+
+        from vaults.models import VaultTransaction
+
+        VaultTransaction.objects.filter(vault_id=self.vault_pk).update(
+            transaction_date=datetime.date.today()
+            - datetime.timedelta(days=10)
+        )
+
+        url = reverse("vault-transactions", args=[self.vault_pk])
+
+        # Fora do intervalo: nenhum resultado
+        response = self.client.get(
+            url,
+            {
+                "start_date": datetime.date.today()
+                - datetime.timedelta(days=5),
+                "end_date": datetime.date.today(),
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("results", response.data)), 0)
+
+        # Dentro do intervalo: resultado presente
+        response = self.client.get(
+            url,
+            {
+                "start_date": datetime.date.today()
+                - datetime.timedelta(days=15),
+                "end_date": datetime.date.today(),
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreater(len(response.data.get("results", response.data)), 0)
+
     def test_all_vault_transactions_filter_by_vault(self):
         """GET /vault-transactions/?vault=<pk> filters by vault_id."""
         url = reverse("all-vault-transactions")
@@ -452,3 +492,29 @@ class VaultApplyYieldSuccessTest(BaseVaultOperationsTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("yield_applied", response.data)
         self.assertGreater(response.data["yield_applied"], 0)
+
+    def test_apply_yield_with_custom_amount(self):
+        """Um valor editado pelo usuário substitui o rendimento calculado."""
+        from vaults.models import Vault
+
+        vault_pk = self._create_vault()
+        self.client.post(
+            reverse("vault-deposit", args=[vault_pk]), {"amount": "1000.00"}
+        )
+
+        url = reverse("vault-apply-yield", args=[vault_pk])
+        response = self.client.post(url, {"amount": "50.00"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["yield_applied"], 50.0)
+
+        vault = Vault.objects.get(pk=vault_pk)
+        self.assertEqual(vault.current_balance, Decimal("1050.00"))
+        self.assertEqual(vault.accumulated_yield, Decimal("50.00"))
+
+    def test_apply_yield_with_invalid_amount(self):
+        """Valor zero ou negativo é rejeitado pelo serializer."""
+        vault_pk = self._create_vault()
+        url = reverse("vault-apply-yield", args=[vault_pk])
+        response = self.client.post(url, {"amount": "0"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

@@ -214,7 +214,7 @@ export const EnhancedBarChart = ({
               <Cell
                 key={`cell-${index}`}
                 fill={fillColor}
-                className="transition-opacity duration-200 hover:opacity-80"
+                className="duration-normal transition-opacity hover:opacity-80"
                 style={{ cursor: 'pointer' }}
               />
             );

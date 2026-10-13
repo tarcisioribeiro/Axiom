@@ -1,38 +1,49 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Calendar,
-  TrendingDown,
+  CheckCircle2,
+  CircleDot,
   History,
-  ClipboardList,
+  Pencil,
+  Search,
+  Tag,
+  Trash2,
+  TrendingDown,
+  Wallet,
 } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PageHeader } from '@/components/common/PageHeader';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { FixedExpenseForm } from '@/components/expenses/FixedExpenseForm';
-import { FixedExpenseStats } from '@/components/expenses/FixedExpenseStats';
 import { LaunchExpensesDialog } from '@/components/expenses/LaunchExpensesDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { translate } from '@/config/constants';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS, TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { creditCardsService } from '@/services/credit-cards-service';
@@ -42,7 +53,6 @@ import type {
   Expense,
   FixedExpense,
   FixedExpenseFormData,
-  FixedExpenseGenerationLog,
   Account,
   CreditCard,
 } from '@/types';
@@ -60,7 +70,15 @@ function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNod
   );
 }
 
-export default function FixedExpenses({ embedded = false }: { embedded?: boolean }) {
+export default function FixedExpenses({
+  embedded = false,
+  newExpenseRef,
+  launchExpensesRef,
+}: {
+  embedded?: boolean;
+  newExpenseRef?: RefObject<(() => void) | undefined>;
+  launchExpensesRef?: RefObject<(() => void) | undefined>;
+}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -69,17 +87,25 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [historyItem, setHistoryItem] = useState<FixedExpense | null>(null);
   const [historyExpenses, setHistoryExpenses] = useState<Expense[]>([]);
-  const [showGenerationLog, setShowGenerationLog] = useState(false);
-
-  const generationLogQuery = useQuery<FixedExpenseGenerationLog[]>({
-    queryKey: ['fixedExpenses', 'generationLog'],
-    queryFn: () => fixedExpensesService.getGenerationLog(),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-    enabled: showGenerationLog,
-  });
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [accountFilter, setAccountFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+
+  useEffect(() => {
+    if (newExpenseRef) {
+      newExpenseRef.current = () => {
+        setSelectedExpense(undefined);
+        setIsDialogOpen(true);
+      };
+    }
+    if (launchExpensesRef) {
+      launchExpensesRef.current = () => setIsLaunchDialogOpen(true);
+    }
+  });
 
   const { data: pageData, isLoading } = useQuery({
     queryKey: ['fixed-expenses'],
@@ -97,8 +123,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
         };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return {
@@ -136,21 +161,18 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
         await fixedExpensesService.update(selectedExpense.id, data);
         toast({
           title: t('pages.fixedExpenses.updated'),
-          description: t('pages.fixedExpenses.updatedDesc'),
         });
       } else {
         await fixedExpensesService.create(data);
         toast({
           title: t('pages.fixedExpenses.created'),
-          description: t('pages.fixedExpenses.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -172,13 +194,11 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
       await fixedExpensesService.delete(id);
       toast({
         title: t('pages.fixedExpenses.deleted'),
-        description: t('pages.fixedExpenses.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -188,19 +208,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
     {
       key: 'description',
       label: t('pages.fixedExpenses.columns.description'),
-      render: (item) => (
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold">
-            {item.due_day}
-          </div>
-          <div>
-            <div className="font-medium">{item.description}</div>
-            <div className="text-muted-foreground text-xs">
-              {t('pages.fixedExpenses.dueDayDesc', { day: item.due_day })}
-            </div>
-          </div>
-        </div>
-      ),
+      render: (item) => <span className="font-medium">{item.description}</span>,
     },
     {
       key: 'default_value',
@@ -239,143 +247,180 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
     {
       key: 'is_active',
       label: t('pages.fixedExpenses.columns.status'),
-      render: (item) => (
-        <Badge variant={item.is_active ? 'default' : 'secondary'}>
-          {item.is_active ? t('common.status.active') : t('common.status.inactive')}
-        </Badge>
-      ),
-    },
-    {
-      key: 'total_generated',
-      label: t('pages.fixedExpenses.columns.generated'),
-      align: 'center',
-      render: (item) => <span className="text-sm">{item.total_generated}x</span>,
+      render: (item) => {
+        const StatusIcon = TASK_STATUS_ICONS[item.is_active ? 'active' : 'inactive'];
+        return (
+          <Badge variant={item.is_active ? 'default' : 'secondary'} className="gap-xs">
+            <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            {item.is_active ? t('common.status.active') : t('common.status.inactive')}
+          </Badge>
+        );
+      },
     },
   ];
 
+  const filteredExpenses = fixedExpenses.filter((item) => {
+    if (
+      searchTerm &&
+      !item.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+      return false;
+    if (categoryFilter !== 'all' && item.category !== categoryFilter) return false;
+    if (accountFilter !== 'all' && String(item.account ?? '') !== accountFilter)
+      return false;
+    if (statusFilter !== 'all' && (statusFilter === 'active') !== item.is_active)
+      return false;
+    return true;
+  });
+
+  const hasActiveFilters =
+    searchTerm !== '' ||
+    categoryFilter !== 'all' ||
+    accountFilter !== 'all' ||
+    statusFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('all');
+    setAccountFilter('all');
+    setStatusFilter('all');
+  };
+
   return (
     <Wrapper embedded={embedded}>
-      <PageHeader
-        title={t('pages.fixedExpenses.title')}
-        icon={<Calendar className="h-6 w-6" />}
-        action={{
-          label: t('pages.fixedExpenses.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: () => {
-            setSelectedExpense(undefined);
-            setIsDialogOpen(true);
-          },
-        }}
-      />
-
-      {/* Stats Dashboard */}
-      <FixedExpenseStats />
-
-      {/* 3 cards horizontais: lançamento | comprometimento | calendário */}
-      {(() => {
-        const activeExpenses = fixedExpenses.filter((e) => e.is_active);
-        const totalMonthlyFixed = activeExpenses.reduce(
-          (sum, e) => sum + parseFloat(e.default_value || '0'),
-          0
-        );
-        return (
-          <div
-            className={cn(
-              'gap-md grid',
-              activeExpenses.length > 0 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'
-            )}
-          >
-            {/* Card 1: Lançamento */}
-            <div className="bg-card p-md flex flex-col justify-between rounded-lg border">
-              <div>
-                <h3 className="text-base font-semibold">
-                  {t('pages.fixedExpenses.launchSection')}
-                </h3>
-                <p className="mt-xs text-muted-foreground text-sm">
-                  {t('pages.fixedExpenses.launchDesc')}
-                </p>
-              </div>
-              <Button
-                onClick={() => setIsLaunchDialogOpen(true)}
-                className="mt-md w-full"
+      <FilterBar
+        hasActiveFilters={hasActiveFilters}
+        onClear={clearFilters}
+        activeFilters={[
+          ...(categoryFilter !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('pages.fixedExpenses.allCategories')}: ${EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === categoryFilter)?.label ?? categoryFilter}`,
+                  onRemove: () => setCategoryFilter('all'),
+                },
+              ]
+            : []),
+          ...(accountFilter !== 'all'
+            ? [
+                {
+                  key: 'account',
+                  label: `${t('pages.fixedExpenses.allAccounts')}: ${accounts.find((a) => String(a.id) === accountFilter)?.account_name ?? accountFilter}`,
+                  onRemove: () => setAccountFilter('all'),
+                },
+              ]
+            : []),
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${statusFilter === 'active' ? t('common.status.active') : t('common.status.inactive')}`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.fixedExpenses.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-44"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.fixedExpenses.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.fixedExpenses.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.fixedExpenses.allCategories')}
+              </SelectItem>
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
+                const Icon = EXPENSE_CATEGORY_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {label}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.account')} icon={Wallet}>
+          <Select value={accountFilter} onValueChange={setAccountFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.fixedExpenses.allAccounts')}
+              startIcon={<Wallet className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.fixedExpenses.allAccounts')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.fixedExpenses.allAccounts')}
+              </SelectItem>
+              {accounts.map((account) => (
+                <SelectItem key={account.id} value={String(account.id)}>
+                  {account.account_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.fixedExpenses.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.fixedExpenses.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.fixedExpenses.allStatus')}</SelectItem>
+              <SelectItem
+                value="active"
+                icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
               >
-                <TrendingDown className="mr-sm h-4 w-4" />
-                {t('pages.fixedExpenses.launchBtn')}
-              </Button>
-            </div>
-
-            {activeExpenses.length > 0 && (
-              <>
-                {/* Card 2: Comprometimento */}
-                <div className="bg-card p-md rounded-lg border">
-                  <p className="text-sm font-medium">
-                    {t('pages.fixedExpenses.stats.monthlyCommitment')}
-                  </p>
-                  <p className="mt-xs text-destructive text-2xl font-bold">
-                    {formatCurrency(totalMonthlyFixed)}
-                  </p>
-                  <p className="mt-sm text-muted-foreground text-xs">
-                    {t('pages.fixedExpenses.stats.activeCountDesc', {
-                      count: activeExpenses.length,
-                    })}
-                  </p>
-                </div>
-
-                {/* Card 3: Calendário */}
-                <div className="bg-card p-md rounded-lg border">
-                  <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wider uppercase">
-                    {t('pages.fixedExpenses.scheduleTitle')}
-                  </p>
-                  <div className="gap-sm flex flex-wrap">
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
-                      const expensesOnDay = activeExpenses.filter(
-                        (e) => e.due_day === day
-                      );
-                      const hasExpense = expensesOnDay.length > 0;
-                      return (
-                        <div
-                          key={day}
-                          title={
-                            hasExpense
-                              ? expensesOnDay.map((e) => e.description).join(', ')
-                              : undefined
-                          }
-                          className={cn(
-                            'flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium',
-                            hasExpense
-                              ? 'bg-destructive/15 text-destructive ring-destructive/30 ring-1'
-                              : 'text-muted-foreground'
-                          )}
-                        >
-                          {day}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        );
-      })()}
+                {t('common.status.active')}
+              </SelectItem>
+              <SelectItem
+                value="inactive"
+                icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+              >
+                {t('common.status.inactive')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+      </FilterBar>
 
       {/* Table */}
       <DataTable
-        data={fixedExpenses}
+        centerList
+        pageSize={LIST_PAGE_SIZE}
+        data={filteredExpenses}
         columns={columns}
         keyExtractor={(item) => item.id}
         isLoading={isLoading}
         emptyState={{
           icon: <TrendingDown className="text-muted-foreground h-12 w-12" />,
-          message: t('pages.fixedExpenses.emptyState'),
+          title: t('pages.fixedExpenses.emptyState'),
         }}
-        rowClassName={(item) =>
-          item.is_active
-            ? 'border-l-4 border-l-destructive/50'
-            : 'border-l-4 border-l-muted opacity-60'
-        }
+        rowClassName={(item) => (item.is_active ? '' : 'opacity-60')}
         actions={(item) => (
-          <div className="gap-sm flex items-center justify-end">
+          <div className="gap-sm flex items-center justify-center">
             {item.total_generated > 0 && (
               <Button
                 variant="ghost"
@@ -412,73 +457,22 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
         )}
       />
 
-      {/* Generation Log */}
-      <CollapsibleSection
-        title={t('pages.fixedExpenses.generationLog.viewLog')}
-        icon={<ClipboardList className="h-4 w-4" />}
-        open={showGenerationLog}
-        onToggle={() => setShowGenerationLog((v) => !v)}
-      >
-        {generationLogQuery.isLoading ? (
-          <p className="py-sm text-muted-foreground text-center text-sm">
-            {t('common.actions.loading')}
-          </p>
-        ) : !generationLogQuery.data?.length ? (
-          <p className="py-sm text-muted-foreground text-center text-sm">
-            {t('pages.fixedExpenses.generationLog.emptyState')}
-          </p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-muted-foreground border-b text-left text-xs">
-                <th className="pb-xs pr-md">
-                  {t('pages.fixedExpenses.generationLog.month')}
-                </th>
-                <th className="pb-xs pr-md text-right">
-                  {t('pages.fixedExpenses.generationLog.totalGenerated')}
-                </th>
-                <th className="pb-xs pr-md">
-                  {t('pages.fixedExpenses.generationLog.generatedBy')}
-                </th>
-                <th className="pb-xs text-right">
-                  {t('pages.fixedExpenses.generationLog.generatedAt')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {generationLogQuery.data.map((log) => (
-                <tr key={log.id}>
-                  <td className="py-xs pr-md font-medium">
-                    {log.month.split('-').reverse().join('/')}
-                  </td>
-                  <td className="py-xs pr-md text-right">{log.total_generated}</td>
-                  <td className="py-xs pr-md text-muted-foreground">
-                    {log.generated_by_name ?? '—'}
-                  </td>
-                  <td className="py-xs text-muted-foreground text-right">
-                    {formatDate(log.created_at)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </CollapsibleSection>
-
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={selectedExpense ? 'edit' : 'create'}>
               {selectedExpense
                 ? t('pages.fixedExpenses.editTitle')
                 : t('pages.fixedExpenses.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedExpense
-                ? t('pages.fixedExpenses.editDesc')
-                : t('pages.fixedExpenses.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedExpense
+                  ? t('pages.fixedExpenses.editDesc')
+                  : t('pages.fixedExpenses.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <FixedExpenseForm
             fixedExpense={selectedExpense}
@@ -512,9 +506,11 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
               <History className="h-4 w-4" />
               {t('pages.fixedExpenses.historyTitle')}: {historyItem?.description}
             </DialogTitle>
-            <DialogDescription>
-              {t('pages.fixedExpenses.historyDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.fixedExpenses.historyDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           {historyLoading ? (
             <p className="py-md text-muted-foreground text-center text-sm">
@@ -525,38 +521,41 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
               {t('pages.fixedExpenses.historyEmpty')}
             </p>
           ) : (
-            <div className="max-h-96 overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-muted-foreground border-b text-left text-xs">
-                    <th className="pb-xs pr-md">{t('common.fields.date')}</th>
-                    <th className="pb-xs pr-md">{t('common.fields.description')}</th>
-                    <th className="pb-xs text-right">{t('common.fields.amount')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {historyExpenses.map((exp) => (
-                    <tr key={exp.id}>
-                      <td className="py-xs pr-md text-muted-foreground">
-                        {formatDate(exp.date)}
-                      </td>
-                      <td className="py-xs pr-md">{exp.description}</td>
-                      <td
-                        className={cn(
-                          'py-xs text-right font-medium',
-                          exp.payed
-                            ? 'text-muted-foreground line-through'
-                            : 'text-destructive'
-                        )}
-                      >
-                        {formatCurrency(exp.value)}
-                      </td>
+            <PaginatedSlide items={historyExpenses} pageSize={5} pinNav={false}>
+              {(pageItems) => (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground border-b text-left text-xs">
+                      <th className="pb-xs pr-md">{t('common.fields.date')}</th>
+                      <th className="pb-xs pr-md">{t('common.fields.description')}</th>
+                      <th className="pb-xs text-right">{t('common.fields.amount')}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y">
+                    {pageItems.map((exp) => (
+                      <tr key={exp.id}>
+                        <td className="py-xs pr-md text-muted-foreground">
+                          {formatDate(exp.date)}
+                        </td>
+                        <td className="py-xs pr-md">{exp.description}</td>
+                        <td
+                          className={cn(
+                            'py-xs text-right font-medium',
+                            exp.payed
+                              ? 'text-muted-foreground line-through'
+                              : 'text-destructive'
+                          )}
+                        >
+                          {formatCurrency(exp.value)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </PaginatedSlide>
           )}
+          <DialogCloseFooter />
         </DialogContent>
       </Dialog>
     </Wrapper>

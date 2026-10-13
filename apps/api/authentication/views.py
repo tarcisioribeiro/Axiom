@@ -1031,6 +1031,26 @@ class MyThemeView(APIView):
         return Response({"theme": (pref.theme or None) if pref else None})
 
 
+class ThemeSyncTokenView(APIView):
+    """
+    POST /api/v1/me/theme/sync-token/
+
+    Gera (ou regenera) o token de sync de tema do usuário autenticado e o
+    retorna uma única vez — equivalente HTTP do
+    `manage.py issue_theme_sync_token`, usado pelo setup-env.sh do desktop.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        from .models import ThemePreference
+
+        pref, _ = ThemePreference.objects.get_or_create(
+            user=cast(User, request.user)
+        )
+        return Response({"token": pref.issue_sync_token()})
+
+
 class ThemeSyncView(APIView):
     """
     PUT /api/v1/theme-sync/   Authorization: ThemeSync <token>

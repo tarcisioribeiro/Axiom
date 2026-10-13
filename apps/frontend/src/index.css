@@ -1,6 +1,14 @@
 @import 'tailwindcss';
 @config '../tailwind.config.js';
 
+/* Padrão global de animação: todo `transition-*` sem duração/easing explícitos
+   usa --duration-fast + --ease-out (espelhados aqui porque @theme não resolve
+   var() de :root). */
+@theme {
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Nossos tokens --spacing-{xs,sm,md,lg,xl} colidem, por nome, com a escala
    nomeada padrão do Tailwind para max-width e min-width (container sizes).
    Em Tailwind v4 (com ou sem @config), quando existe uma chave de spacing
@@ -140,10 +148,10 @@
     --radius: 0.5rem;
 
     /* Animation duration tokens */
-    --duration-fast: 200ms;
-    --duration-normal: 300ms;
-    --duration-medium: 400ms;
-    --duration-slow: 600ms;
+    --duration-fast: 150ms; /* micro: hover, clique, chevrons, saídas */
+    --duration-normal: 220ms; /* entradas: modal, popover, página, aba, expandir */
+    --duration-medium: 350ms; /* layout: largura da sidebar */
+    --duration-slow: 600ms; /* decorativo: barras de progresso */
 
     /* Animation easing tokens — fonte única para entradas/saídas (ver
        lib/animations/transitions.ts EASE_OUT/EASE_IN_OUT, que espelham os
@@ -223,7 +231,6 @@
     --spacing-xl: 2rem; /* 32px */
 
     /* Card hover elevation shadow */
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
 
     /* Shadow opacity tokens — theme-aware, used by .shadow-* utilities */
     --shadow-opacity-soft: 0.08;
@@ -329,7 +336,6 @@
     --heatmap-medium: hsl(var(--success) / 0.55);
 
     /* Card hover elevation shadow */
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
 
     /* Shadow opacity tokens — dark theme overrides */
     --shadow-opacity-soft: 0.4;
@@ -412,7 +418,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
     --shadow-opacity-soft: 0.4;
     --shadow-opacity-medium: 0.5;
     --shadow-opacity-strong: 0.6;
@@ -492,7 +497,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.65);
     --shadow-opacity-soft: 0.4;
     --shadow-opacity-medium: 0.5;
     --shadow-opacity-strong: 0.65;
@@ -511,8 +515,8 @@
     --popover: 6 4% 23%;
     --popover-foreground: 43 60% 80%;
 
-    /* Primary — Orange (#FE8019) */
-    --primary: 28 99% 55%;
+    /* Primary — Yellow (#FABD2F) */
+    --primary: 42 95% 58%;
     --primary-foreground: 0 0% 16%;
 
     --secondary: 6 4% 23%;
@@ -533,8 +537,8 @@
     --success: 62 67% 44%;
     --success-foreground: 0 0% 16%;
 
-    /* Warning — Yellow (#FABD2F) */
-    --warning: 42 95% 58%;
+    /* Warning — Orange (#FE8019) */
+    --warning: 28 99% 55%;
     --warning-foreground: 0 0% 16%;
 
     /* Info — Aqua (#8EC07C) */
@@ -543,7 +547,7 @@
 
     --border: 6 4% 30%;
     --input: 6 4% 30%;
-    --ring: 28 99% 55%;
+    --ring: 42 95% 58%;
 
     --category-finance: 62 67% 44%;
     --category-health: 107 31% 61%;
@@ -572,177 +576,9 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.7);
     --shadow-opacity-soft: 0.45;
     --shadow-opacity-medium: 0.55;
     --shadow-opacity-strong: 0.7;
-  }
-
-  /* ── Cyberpunk (Dark Variant) ── */
-  .dark[data-dark-theme='cyberpunk'] {
-    color-scheme: dark;
-
-    --background: 240 31% 8%;
-    --foreground: 240 100% 94%;
-
-    --card: 240 28% 14%;
-    --card-foreground: 240 100% 94%;
-
-    --popover: 240 28% 14%;
-    --popover-foreground: 240 100% 94%;
-
-    /* Primary — Magenta (#FF00FF) */
-    --primary: 300 100% 50%;
-    --primary-foreground: 240 31% 8%;
-
-    --secondary: 240 28% 14%;
-    --secondary-foreground: 240 100% 94%;
-
-    --muted: 240 28% 11%;
-    --muted-foreground: 240 20% 55%;
-
-    /* Accent — Cyan (#00FFFF) */
-    --accent: 180 100% 50%;
-    --accent-foreground: 240 31% 8%;
-
-    /* Destructive — Red (#FF003C) */
-    --destructive: 346 100% 50%;
-    --destructive-foreground: 240 100% 94%;
-
-    /* Success — Green (#00FF9C) */
-    --success: 158 100% 50%;
-    --success-foreground: 240 31% 8%;
-
-    /* Warning — Yellow (#FFE600) */
-    --warning: 54 100% 50%;
-    --warning-foreground: 240 31% 8%;
-
-    /* Info — Blue (#0066FF) */
-    --info: 220 100% 50%;
-    --info-foreground: 240 100% 94%;
-
-    --border: 240 28% 22%;
-    --input: 240 28% 22%;
-    --ring: 300 100% 50%;
-
-    --category-finance: 158 100% 50%;
-    --category-health: 180 100% 50%;
-    --category-studies: 220 100% 50%;
-    --category-spiritual: 300 100% 50%;
-    --category-exercise: 24 100% 50%;
-    --category-nutrition: 54 100% 50%;
-    --category-work: 240 20% 55%;
-    --category-leisure: 346 100% 50%;
-    --category-intellect: 275 100% 74%; /* neon purple Cyberpunk */
-
-    --on-primary: 240 31% 8%;
-    --on-secondary: 240 100% 94%;
-    --on-accent: 240 31% 8%;
-    --on-success: 240 31% 8%;
-    --on-warning: 240 31% 8%;
-    --on-destructive: 240 100% 94%;
-    --on-info: 240 100% 94%;
-
-    --border-subtle: 240 28% 10%;
-    --star: 54 100% 50%;
-
-    /* Heatmap dark overrides */
-    --heatmap-missed: hsl(var(--destructive) / 0.28);
-    --heatmap-low: hsl(var(--success) / 0.15);
-    --heatmap-medium-low: hsl(var(--success) / 0.3);
-    --heatmap-medium: hsl(var(--success) / 0.55);
-
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.8);
-    --shadow-opacity-soft: 0.5;
-    --shadow-opacity-medium: 0.6;
-    --shadow-opacity-strong: 0.75;
-  }
-
-  /* ── Flat Remix Blue Darkest (Dark Variant) ── */
-  .dark[data-dark-theme='flat-remix-blue-darkest'] {
-    color-scheme: dark;
-
-    /* Background — #0D0F16 */
-    --background: 227 26% 7%;
-    /* Foreground — #D3DAE3 */
-    --foreground: 214 22% 86%;
-
-    /* Card — #22252E */
-    --card: 225 15% 16%;
-    --card-foreground: 214 22% 86%;
-
-    /* Popover — #22252E */
-    --popover: 225 15% 16%;
-    --popover-foreground: 214 22% 86%;
-
-    /* Primary — Blue (#5294E2) */
-    --primary: 213 71% 60%;
-    --primary-foreground: 227 15% 12%;
-
-    /* Secondary — Card surface */
-    --secondary: 225 15% 16%;
-    --secondary-foreground: 214 22% 86%;
-
-    /* Muted — entre background e card */
-    --muted: 226 15% 10%;
-    /* Muted foreground — #7C818C ajustado para WCAG AA no fundo escuro */
-    --muted-foreground: 221 9% 60%;
-
-    /* Accent — Purple (#B98EAD) */
-    --accent: 317 23% 64%;
-    --accent-foreground: 227 15% 12%;
-
-    /* Destructive — Red (#EC6A88) */
-    --destructive: 346 77% 67%;
-    --destructive-foreground: 227 15% 12%;
-
-    /* Success — Green (#5BC0A0) */
-    --success: 161 44% 55%;
-    --success-foreground: 227 15% 12%;
-
-    /* Warning — Yellow (#F9C859) */
-    --warning: 42 93% 66%;
-    --warning-foreground: 227 15% 12%;
-
-    /* Info — Cyan (#5BC0CF) */
-    --info: 188 55% 58%;
-    --info-foreground: 227 15% 12%;
-
-    --border: 226 14% 22%;
-    --input: 226 14% 22%;
-    --ring: 213 71% 60%;
-
-    --category-finance: 161 44% 55%; /* green  #5BC0A0 */
-    --category-health: 188 55% 58%; /* cyan   #5BC0CF */
-    --category-studies: 213 71% 60%; /* blue   #5294E2 */
-    --category-spiritual: 317 23% 64%; /* purple #B98EAD */
-    --category-exercise: 24 72% 62%; /* orange (derivado da paleta) */
-    --category-nutrition: 42 93% 66%; /* yellow #F9C859 */
-    --category-work: 221 9% 60%; /* comment #7C818C */
-    --category-leisure: 346 77% 67%; /* red    #EC6A88 */
-    --category-intellect: 265 68% 70%; /* purple Flat Remix Blue Darkest */
-
-    --on-primary: 227 15% 12%;
-    --on-secondary: 214 22% 86%;
-    --on-accent: 227 15% 12%;
-    --on-success: 227 15% 12%;
-    --on-warning: 227 15% 12%;
-    --on-destructive: 227 15% 12%;
-    --on-info: 227 15% 12%;
-
-    --border-subtle: 226 20% 8%;
-    --star: 42 93% 58%;
-
-    /* Heatmap dark overrides */
-    --heatmap-missed: hsl(var(--destructive) / 0.28);
-    --heatmap-low: hsl(var(--success) / 0.15);
-    --heatmap-medium-low: hsl(var(--success) / 0.3);
-    --heatmap-medium: hsl(var(--success) / 0.55);
-
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.65);
-    --shadow-opacity-soft: 0.4;
-    --shadow-opacity-medium: 0.5;
-    --shadow-opacity-strong: 0.65;
   }
 
   /* ── Everforest (Dark Variant) ── */
@@ -820,7 +656,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
     --shadow-opacity-soft: 0.35;
     --shadow-opacity-medium: 0.45;
     --shadow-opacity-strong: 0.55;
@@ -904,7 +739,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.7);
     --shadow-opacity-soft: 0.45;
     --shadow-opacity-medium: 0.55;
     --shadow-opacity-strong: 0.7;
@@ -986,7 +820,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
     --shadow-opacity-soft: 0.35;
     --shadow-opacity-medium: 0.45;
     --shadow-opacity-strong: 0.6;
@@ -1064,7 +897,6 @@
     --border-subtle: 307 11% 90%;
     --star: 49 100% 38%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
     --shadow-opacity-soft: 0.06;
     --shadow-opacity-medium: 0.09;
     --shadow-opacity-strong: 0.14;
@@ -1141,7 +973,6 @@
     --border-subtle: 240 5% 90%;
     --star: 36 100% 45%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
     --shadow-opacity-soft: 0.06;
     --shadow-opacity-medium: 0.09;
     --shadow-opacity-strong: 0.14;
@@ -1216,82 +1047,6 @@
     --border-subtle: 220 14% 91%;
     --star: 35 78% 42%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
-    --shadow-opacity-soft: 0.06;
-    --shadow-opacity-medium: 0.08;
-    --shadow-opacity-strong: 0.12;
-  }
-
-  /* ── Rosé Pine Dawn (Light Variant) ── */
-  :root[data-light-theme='rose-pine-dawn'] {
-    color-scheme: light;
-
-    --background: 35 61% 95%;
-    --foreground: 245 20% 40%;
-
-    --card: 35 55% 97%;
-    --card-foreground: 245 20% 40%;
-
-    --popover: 35 55% 97%;
-    --popover-foreground: 245 20% 40%;
-
-    /* Primary — Iris (#907AA9) */
-    --primary: 277 24% 57%;
-    --primary-foreground: 35 61% 95%;
-
-    /* Secondary — Selection (#DFDAD9) */
-    --secondary: 12 8% 86%;
-    --secondary-foreground: 245 20% 40%;
-
-    --muted: 29 39% 92%;
-    --muted-foreground: 271 9% 52%;
-
-    /* Accent — Rose (#D7827E) */
-    --accent: 3 47% 55%;
-    --accent-foreground: 35 61% 95%;
-
-    /* Destructive — Love (#B4637A) */
-    --destructive: 343 35% 48%;
-    --destructive-foreground: 35 61% 95%;
-
-    /* Success — Pine (#286983) */
-    --success: 197 53% 34%;
-    --success-foreground: 35 61% 95%;
-
-    /* Warning — Gold (#EA9D34) */
-    --warning: 35 81% 48%;
-    --warning-foreground: 35 61% 95%;
-
-    /* Info — Foam (#56949F) */
-    --info: 189 30% 40%;
-    --info-foreground: 35 61% 95%;
-
-    --border: 12 8% 78%;
-    --input: 12 8% 52%;
-    --ring: 277 24% 57%;
-
-    --category-finance: 197 53% 34%;
-    --category-health: 189 30% 40%;
-    --category-studies: 245 20% 38%;
-    --category-spiritual: 277 24% 48%;
-    --category-exercise: 35 81% 45%;
-    --category-nutrition: 35 90% 40%;
-    --category-work: 271 9% 45%;
-    --category-leisure: 343 35% 48%;
-    --category-intellect: 267 42% 54%; /* iris Rose Pinê Dawn */
-
-    --on-primary: 35 61% 95%;
-    --on-secondary: 245 20% 40%;
-    --on-accent: 35 61% 95%;
-    --on-success: 35 61% 95%;
-    --on-warning: 35 61% 95%;
-    --on-destructive: 35 61% 95%;
-    --on-info: 35 61% 95%;
-
-    --border-subtle: 12 8% 90%;
-    --star: 35 81% 45%;
-
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.1);
     --shadow-opacity-soft: 0.06;
     --shadow-opacity-medium: 0.08;
     --shadow-opacity-strong: 0.12;
@@ -1366,7 +1121,6 @@
     --border-subtle: 48 27% 87%;
     --star: 43 100% 38%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
     --shadow-opacity-soft: 0.06;
     --shadow-opacity-medium: 0.09;
     --shadow-opacity-strong: 0.13;
@@ -1385,9 +1139,9 @@
     --popover: 46 79% 90%;
     --popover-foreground: 8 5% 22%;
 
-    /* Primary — Yellow (#D79921) */
-    --primary: 40 74% 42%;
-    --primary-foreground: 8 5% 22%;
+    /* Primary — Orange (#D65D0E) */
+    --primary: 24 88% 45%;
+    --primary-foreground: 46 79% 88%;
 
     /* Secondary — Selection (#D5C4A1) */
     --secondary: 41 38% 73%;
@@ -1408,9 +1162,9 @@
     --success: 60 71% 35%;
     --success-foreground: 46 79% 88%;
 
-    /* Warning — Orange (#D65D0E) */
-    --warning: 24 88% 45%;
-    --warning-foreground: 46 79% 88%;
+    /* Warning — Yellow (#D79921) */
+    --warning: 40 74% 42%;
+    --warning-foreground: 8 5% 22%;
 
     /* Info — Aqua (#689D6A) */
     --info: 122 21% 43%;
@@ -1418,7 +1172,7 @@
 
     --border: 41 38% 65%;
     --input: 41 38% 44%;
-    --ring: 40 74% 42%;
+    --ring: 24 88% 45%;
 
     --category-finance: 60 71% 35%;
     --category-health: 122 21% 43%;
@@ -1430,177 +1184,121 @@
     --category-leisure: 2 75% 46%;
     --category-intellect: 271 16% 46%; /* purple Gruvbox Light */
 
-    --on-primary: 8 5% 22%;
+    --on-primary: 46 79% 88%;
     --on-secondary: 8 5% 22%;
     --on-accent: 46 79% 88%;
     --on-success: 46 79% 88%;
-    --on-warning: 46 79% 88%;
+    --on-warning: 8 5% 22%;
     --on-destructive: 46 79% 88%;
     --on-info: 46 79% 88%;
 
     --border-subtle: 41 38% 80%;
     --star: 40 74% 38%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
     --shadow-opacity-soft: 0.07;
     --shadow-opacity-medium: 0.1;
     --shadow-opacity-strong: 0.15;
   }
 
-  /* ── Solarized Light (Light Variant) ── */
-  :root[data-light-theme='solarized-light'] {
+  /* ── Tokyo Day (Light Variant) ── */
+  :root[data-light-theme='tokyo-day'] {
     color-scheme: light;
 
-    --background: 44 87% 94%;
-    --foreground: 194 13% 40%;
+    /* Background — #E1E2E7 */
+    --background: 230 11% 89%;
+    /* Foreground — #3760BF */
+    --foreground: 222 55% 48%;
 
-    --card: 44 87% 96%;
-    --card-foreground: 194 13% 40%;
+    --card: 240 10% 92%;
+    --card-foreground: 222 55% 48%;
 
-    --popover: 44 87% 96%;
-    --popover-foreground: 194 13% 40%;
+    --popover: 240 10% 92%;
+    --popover-foreground: 222 55% 48%;
 
-    /* Primary — Blue (#268BD2) */
-    --primary: 205 69% 49%;
-    --primary-foreground: 44 87% 94%;
+    /* Primary — Blue (#2E7DE9) */
+    --primary: 215 81% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary — Selection (#EEE8D5) */
-    --secondary: 44 47% 88%;
-    --secondary-foreground: 194 13% 40%;
+    /* Secondary — Selection (#B7C1E3) */
+    --secondary: 226 44% 80%;
+    --secondary-foreground: 222 55% 48%;
 
-    --muted: 44 47% 91%;
-    --muted-foreground: 180 8% 50%;
+    --muted: 224 25% 85%;
+    --muted-foreground: 227 33% 54%; /* #6172B0 — comment #848CB5 escurecido p/ contraste */
 
-    /* Accent — Magenta (#D33682) */
-    --accent: 331 64% 46%;
-    --accent-foreground: 44 87% 94%;
+    /* Accent — Purple (#9854F1) */
+    --accent: 266 85% 64%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Destructive — Red (#DC322F) */
-    --destructive: 1 70% 46%;
-    --destructive-foreground: 44 87% 94%;
+    /* Destructive — Red (#F52A65) */
+    --destructive: 343 91% 56%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Success — Green (#859900) */
-    --success: 68 100% 30%;
-    --success-foreground: 44 87% 94%;
+    /* Success — Green (#587539) */
+    --success: 89 34% 34%;
+    --success-foreground: 0 0% 100%;
 
-    /* Warning — Yellow (#B58900) */
-    --warning: 45 100% 35%;
-    --warning-foreground: 44 87% 94%;
+    /* Warning — Orange (#B15C00) */
+    --warning: 31 100% 35%;
+    --warning-foreground: 0 0% 100%;
 
-    /* Info — Cyan (#2AA198) */
-    --info: 175 59% 40%;
-    --info-foreground: 44 87% 94%;
+    /* Info — Cyan (#007197) */
+    --info: 195 100% 30%;
+    --info-foreground: 0 0% 100%;
 
-    --border: 44 47% 80%;
-    --input: 44 47% 52%;
-    --ring: 205 69% 49%;
+    --border: 230 25% 73%;
+    --input: 227 33% 54%;
+    --ring: 215 81% 55%;
 
-    --category-finance: 68 100% 30%;
-    --category-health: 175 59% 40%;
-    --category-studies: 205 69% 42%;
-    --category-spiritual: 331 64% 44%;
-    --category-exercise: 18 80% 40%;
-    --category-nutrition: 45 100% 32%;
-    --category-work: 194 13% 38%;
-    --category-leisure: 1 70% 46%;
-    --category-intellect: 237 44% 53%; /* violet Solarized Light */
+    --category-finance: 89 34% 34%;
+    --category-health: 195 100% 30%;
+    --category-studies: 215 81% 55%;
+    --category-spiritual: 331 100% 41%;
+    --category-exercise: 31 100% 35%;
+    --category-nutrition: 35 39% 40%;
+    --category-work: 227 33% 54%;
+    --category-leisure: 343 91% 56%;
+    --category-intellect: 266 85% 64%; /* purple Tokyo Day */
 
-    --on-primary: 44 87% 94%;
-    --on-secondary: 194 13% 40%;
-    --on-accent: 44 87% 94%;
-    --on-success: 44 87% 94%;
-    --on-warning: 44 87% 94%;
-    --on-destructive: 44 87% 94%;
-    --on-info: 44 87% 94%;
+    --on-primary: 0 0% 100%;
+    --on-secondary: 222 55% 48%;
+    --on-accent: 0 0% 100%;
+    --on-success: 0 0% 100%;
+    --on-warning: 0 0% 100%;
+    --on-destructive: 0 0% 100%;
+    --on-info: 0 0% 100%;
 
-    --border-subtle: 44 47% 90%;
-    --star: 45 100% 35%;
+    --border-subtle: 230 8% 85%;
+    --star: 35 39% 40%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.1);
     --shadow-opacity-soft: 0.06;
     --shadow-opacity-medium: 0.08;
     --shadow-opacity-strong: 0.12;
-  }
-
-  /* ── Nord Light (Light Variant) ── */
-  :root[data-light-theme='nord-light'] {
-    color-scheme: light;
-
-    --background: 218 27% 94%;
-    --foreground: 220 17% 22%;
-
-    --card: 218 27% 96%;
-    --card-foreground: 220 17% 22%;
-
-    --popover: 218 27% 96%;
-    --popover-foreground: 220 17% 22%;
-
-    /* Primary — Blue (#5E81AC) */
-    --primary: 213 32% 46%;
-    --primary-foreground: 218 27% 94%;
-
-    /* Secondary — Selection (#D8DEE9) */
-    --secondary: 219 26% 81%;
-    --secondary-foreground: 220 17% 22%;
-
-    --muted: 219 26% 87%;
-    --muted-foreground: 220 16% 40%;
-
-    /* Accent — Purple (#B48EAD) */
-    --accent: 311 20% 50%;
-    --accent-foreground: 218 27% 94%;
-
-    /* Destructive — Red (#BF616A) */
-    --destructive: 354 40% 46%;
-    --destructive-foreground: 218 27% 94%;
-
-    /* Success — Green (#A3BE8C darkened) */
-    --success: 92 35% 38%;
-    --success-foreground: 218 27% 94%;
-
-    /* Warning — Yellow (#EBCB8B darkened) */
-    --warning: 40 55% 40%;
-    --warning-foreground: 218 27% 94%;
-
-    /* Info — Cyan (#88C0D0 darkened) */
-    --info: 193 45% 38%;
-    --info-foreground: 218 27% 94%;
-
-    --border: 219 26% 74%;
-    --input: 219 26% 48%;
-    --ring: 213 32% 46%;
-
-    --category-finance: 92 35% 38%;
-    --category-health: 193 45% 38%;
-    --category-studies: 213 32% 42%;
-    --category-spiritual: 311 25% 44%;
-    --category-exercise: 16 55% 42%;
-    --category-nutrition: 40 55% 38%;
-    --category-work: 220 16% 38%;
-    --category-leisure: 354 40% 46%;
-    --category-intellect: 265 34% 57%; /* purple Nord Light */
-
-    --on-primary: 218 27% 94%;
-    --on-secondary: 220 17% 22%;
-    --on-accent: 218 27% 94%;
-    --on-success: 218 27% 94%;
-    --on-warning: 218 27% 94%;
-    --on-destructive: 218 27% 94%;
-    --on-info: 218 27% 94%;
-
-    --border-subtle: 219 26% 88%;
-    --star: 40 55% 38%;
-
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.08);
-    --shadow-opacity-soft: 0.05;
-    --shadow-opacity-medium: 0.07;
-    --shadow-opacity-strong: 0.1;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    /* Scrollbar global seguindo o tema (Firefox / Chrome 121+) */
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) hsl(var(--muted));
+  }
+  /* Fallback WebKit (Safari / Chrome antigo) */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
   }
   body {
     @apply bg-background text-foreground;
@@ -1613,6 +1311,13 @@
   h3,
   h4 {
     @apply font-display tracking-tight;
+  }
+  /* O navegador aplica monoespaçada por padrão nessas tags — app não usa fonte mono */
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: inherit;
   }
 }
 
@@ -1630,16 +1335,8 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, var(--shadow-opacity-strong));
 }
 
-@utility shadow-card-hover {
-  box-shadow: var(--shadow-card-hover);
-}
-
 @layer utilities {
   /* Gradientes adaptáveis */
-  .gradient-primary {
-    @apply from-primary to-accent bg-gradient-to-br;
-  }
-
   .gradient-secondary {
     @apply from-info to-success bg-gradient-to-br;
   }
@@ -1728,10 +1425,6 @@
 
   /* Hover effects — gateados por (hover: hover) and (pointer: fine) para não
      "grudar" em telas de toque (tap dispara :hover sem um mouse para sair dele) */
-  .hover-lift {
-    @apply duration-fast hoverable:hover:-translate-y-1 transition-transform;
-  }
-
   .hover-glow {
     @apply hoverable:hover:shadow-medium duration-normal transition-shadow;
   }
@@ -1744,32 +1437,6 @@
   /* Sidebar text com contraste total */
   .sidebar-text {
     @apply text-foreground;
-  }
-
-  /* Custom scrollbar para browsers com suporte */
-  .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--border)) hsl(var(--muted));
-  }
-
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: hsl(var(--muted));
-    border-radius: 5px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
-    border-radius: 5px;
-    transition: background var(--duration-fast);
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
   }
 
   /* Kanban scrollbar estilizado - Dracula/Alucard */
@@ -1840,11 +1507,8 @@
     color: hsl(var(--muted-foreground));
   }
 
-  /* Numeric / financial values — fonte mono do sistema + alinha dígitos */
+  /* Numeric / financial values — alinha dígitos sem trocar a fonte do app */
   .numeric {
-    font-family:
-      ui-monospace, SFMono-Regular, 'SF Mono', 'Cascadia Code', 'Cascadia Mono',
-      'JetBrains Mono', Consolas, 'Liberation Mono', monospace;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
   }
@@ -1902,6 +1566,71 @@
   }
 }
 
+/* ── Rodapé de ações de modal ──────────────────────────────────────── */
+/* Fica fixo na base do modal enquanto o conteúdo rola. Escopado a
+   [role='dialog'] para que forms reutilizados fora de modais não mudem.
+   Fora de @layer de propósito: no Tailwind v4 qualquer regra em layer perde
+   para utilities (ex.: p-lg do DialogContent), independente da especificidade. */
+[role='dialog']:has(.dialog-footer) {
+  padding-bottom: 0;
+}
+
+[role='dialog'] .dialog-footer {
+  @apply -mx-lg px-lg pb-lg pt-md border-border/60 bg-card sticky bottom-0 z-10 border-t;
+}
+
+/* Área que ocupa a altura restante da página (.page-fill): cada ancestral até o
+   <main> vira coluna flex e cresce. Usado pelo PaginatedSlide (navegação na
+   mesma altura em todas as telas), pelo EmptyState e por conteúdos centralizados
+   na vertical. Grid e flex em linha ficam de fora para não quebrar layouts; nesses
+   casos o conteúdo só fica na altura natural. Um EmptyState dentro de card
+   (.bg-card) não estica a página. */
+main:has(.page-fill:not(.bg-card [data-empty-state])),
+main :has(.page-fill:not(.bg-card [data-empty-state])):not(.grid, .flex) {
+  display: flex;
+  flex-direction: column;
+}
+
+main > :has(.page-fill:not(.bg-card [data-empty-state])),
+main
+  :has(.page-fill:not(.bg-card [data-empty-state])):not(.grid, .flex)
+  > :has(.page-fill:not(.bg-card [data-empty-state])),
+main .flex-col > :has(.page-fill:not(.bg-card [data-empty-state])) {
+  flex-grow: 1;
+}
+
+/* Cabeçalho fixo (DialogHeader). O DialogContent é flex em coluna: num grid,
+   um item sticky ficaria preso à própria linha e não acompanharia a rolagem. */
+[role='dialog']:has(.dialog-header-sticky) {
+  padding-top: 0;
+}
+
+[role='dialog'] .dialog-header-sticky {
+  @apply -mx-lg px-lg pt-lg pb-md border-border/60 bg-card sticky top-0 z-10 border-b;
+}
+
+/* Campo com stepper (NumberStepper, DecimalInput com step) em modal: label e
+   componente centralizados. Só quando há label (direto ou dentro do FormField),
+   para não afetar grades de séries sem label. */
+[role='dialog'] :is(:has(> label), :has(> div > label)):has(> [data-stepper]) {
+  text-align: center;
+}
+
+[role='dialog'] :has(> [data-stepper]) > label,
+[role='dialog'] :has(> [data-stepper]) > div:has(> label) {
+  justify-content: center;
+}
+
+[role='dialog'] :is(:has(> label), :has(> div > label)) > [data-stepper] {
+  width: fit-content;
+  margin-inline: auto;
+}
+
+[role='dialog'] :is(:has(> label), :has(> div > label)) > [data-stepper] input {
+  flex: none;
+  width: 4rem;
+}
+
 @layer components {
   /* ── Hierarquia tipográfica semântica ──────────────────────────────── */
 
@@ -1953,6 +1682,27 @@
   }
 }
 
+/* <details> nativo: abre/fecha no padrão de expandir. Só onde o navegador
+   anima até height:auto (interpolate-size); nos demais segue instantâneo. */
+@supports (interpolate-size: allow-keywords) {
+  details {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    block-size: 0;
+    opacity: 0;
+    overflow: clip;
+    transition:
+      block-size var(--duration-normal) var(--ease-out),
+      opacity var(--duration-normal) var(--ease-out),
+      content-visibility var(--duration-normal) allow-discrete;
+  }
+  details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}
+
 /* Acessibilidade: Respeita preferencia do usuario por menos animacoes */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -1970,10 +1720,6 @@
      aqui não teria efeito sobre ela. */
 
   /* Mantem funcionalidade de hover sem animacao */
-  .hover-lift:hover {
-    transform: none;
-  }
-
   .hover-glow:hover {
     box-shadow: var(--shadow-medium);
   }

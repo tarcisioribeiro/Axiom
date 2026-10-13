@@ -8,6 +8,8 @@ import {
   Loader2,
   Tag,
   Wallet,
+  Save,
+  X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -91,7 +94,7 @@ export function ReceivableForm({
     value: receivable ? parseFloat(receivable.value) : 0,
     received_value: receivable ? parseFloat(receivable.received_value) : 0,
     date: receivable?.date ?? formatLocalDate(new Date()),
-    due_date: receivable?.due_date ?? '',
+    due_date: receivable ? (receivable.due_date ?? '') : formatLocalDate(new Date()),
     category: receivable?.category ?? 'deposit',
     notes: receivable?.notes ?? '',
     status: receivable?.status ?? 'active',
@@ -119,13 +122,12 @@ export function ReceivableForm({
             <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.receivables.form.description')}
           </Label>
-          <input
+          <Input
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             required
             placeholder={t('pages.receivables.form.descriptionPlaceholder')}
             disabled={isLoading}
-            className="border-border/70 bg-background py-xs placeholder:text-muted-foreground/50 focus-visible:border-ring/50 focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 text-sm shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           />
         </div>
       </FormSection>
@@ -220,7 +222,6 @@ export function ReceivableForm({
                 }))
               }
               placeholder={t('common.fields.selectDate')}
-              clearable
               disabled={isLoading}
             />
             {dueDateInfo && (
@@ -304,7 +305,7 @@ export function ReceivableForm({
             <Textarea
               value={form.notes ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              placeholder={t('common.fields.notes')}
+              placeholder={t('common.placeholders.notes')}
               rows={3}
               disabled={isLoading}
             />
@@ -312,21 +313,22 @@ export function ReceivableForm({
         </div>
       </FormSection>
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <>
-              <Loader2 className="mr-xs h-4 w-4 animate-spin" />
-              {t('common.actions.saving')}
-            </>
-          ) : receivable ? (
-            t('common.actions.update')
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            t('common.actions.create')
+            <Save className="h-4 w-4" />
           )}
+          {isLoading
+            ? t('common.actions.saving')
+            : receivable
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
     </form>

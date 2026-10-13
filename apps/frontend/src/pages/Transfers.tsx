@@ -8,7 +8,6 @@ import { ReceiptButton } from '@/components/receipts';
 import { getTransferColumns } from '@/components/transfers/getTransferColumns';
 import { TransferFilters } from '@/components/transfers/TransferFilters';
 import { TransferForm } from '@/components/transfers/TransferForm';
-import { TransferStats } from '@/components/transfers/TransferStats';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useTransfersData } from '@/hooks/use-transfers-data';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -47,10 +47,6 @@ export default function Transfers() {
     setStartDate,
     endDate,
     setEndDate,
-    totalVolume,
-    completedCount,
-    pendingCount,
-    transfers,
     hasActiveFilters,
     clearFilters,
     handleCreate,
@@ -89,13 +85,6 @@ export default function Transfers() {
         onClear={clearFilters}
       />
 
-      <TransferStats
-        totalVolume={totalVolume}
-        completedCount={completedCount}
-        pendingCount={pendingCount}
-        totalCount={transfers.length}
-      />
-
       <DataTable
         data={paginatedTransfers}
         columns={columns}
@@ -103,7 +92,7 @@ export default function Transfers() {
         isLoading={isLoading}
         emptyState={{
           icon: <ArrowLeftRight className="text-muted-foreground h-12 w-12" />,
-          message: emptyMessage,
+          title: emptyMessage,
         }}
         pagination={{
           page,
@@ -112,7 +101,7 @@ export default function Transfers() {
           onPageChange: setPage,
         }}
         actions={(transfer) => (
-          <div className="gap-sm flex items-center justify-end">
+          <div className="gap-sm flex items-center justify-center">
             <ReceiptButton
               source={{ type: 'transfer', data: transfer }}
               memberName={getMemberDisplayName(null, user)}
@@ -142,16 +131,18 @@ export default function Transfers() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={selectedTransfer ? 'edit' : 'create'}>
               {selectedTransfer
                 ? t('pages.transfers.editTitle')
                 : t('pages.transfers.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedTransfer
-                ? t('pages.transfers.editDesc')
-                : t('pages.transfers.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedTransfer
+                  ? t('pages.transfers.editDesc')
+                  : t('pages.transfers.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <TransferForm
             transfer={selectedTransfer}

@@ -9,6 +9,7 @@ TRANSFER_CATEGORIES = (
     ("doc", "DOC"),
     ("ted", "TED"),
     ("pix", "PIX"),
+    ("withdrawal", "Saque"),
 )
 
 

@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react';
+import { Loader2, Save, X, Calculator } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -37,9 +37,9 @@ export function RecalculationPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onCancel()}>
-      <DialogContent className="custom-scrollbar max-h-[80vh] max-w-lg overflow-y-auto">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle icon={Calculator}>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
@@ -113,17 +113,16 @@ export function RecalculationPreviewDialog({
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onCancel}>
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button type="button" onClick={onConfirm} disabled={isLoading || !preview}>
             {isLoading ? (
-              <>
-                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-                {t('common.actions.saving')}
-              </>
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              t('common.actions.confirm')
+              <Save className="h-4 w-4" />
             )}
+            {isLoading ? t('common.actions.saving') : t('common.actions.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

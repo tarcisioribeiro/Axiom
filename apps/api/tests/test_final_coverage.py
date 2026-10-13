@@ -1,5 +1,5 @@
 """
-Final coverage push — member permissions, financial report, and remaining
+Final coverage push — member permissions and remaining
 areas.
 """
 
@@ -92,62 +92,6 @@ class MemberPermissionsViewTest(BaseFinalTestCase):
         self.assertIn(
             response.status_code,
             [status.HTTP_200_OK, status.HTTP_403_FORBIDDEN],
-        )
-
-
-# ---------------------------------------------------------------------------
-# Member financial report
-# ---------------------------------------------------------------------------
-
-
-class MemberFinancialReportViewTest(BaseFinalTestCase):
-    def setUp(self):
-        super().setUp()
-        # Create expenses and revenues for the member
-        from expenses.models import Expense
-        from revenues.models import Revenue
-
-        Revenue.objects.create(
-            description="Salary",
-            value=Decimal("5000.00"),
-            date=date.today(),
-            horary="09:00:00",
-            category="salary",
-            account=self.account,
-            received=True,
-            created_by=self.user,
-        )
-        Expense.objects.create(
-            description="Rent",
-            value=Decimal("1500.00"),
-            date=date.today(),
-            horary="10:00:00",
-            category="bills and services",
-            account=self.account,
-            payed=True,
-            created_by=self.user,
-        )
-
-    def test_member_financial_report(self):
-        url = reverse("member-financial-report", args=[self.member.pk])
-        response = self.client.get(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND],
-        )
-
-    def test_member_financial_report_with_date_range(self):
-        url = reverse("member-financial-report", args=[self.member.pk])
-        response = self.client.get(
-            url,
-            {
-                "start_date": str(date(2026, 1, 1)),
-                "end_date": str(date(2026, 12, 31)),
-            },
-        )
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND],
         )
 
 
@@ -420,18 +364,25 @@ class ExpenseExportFilterTest(BaseFinalTestCase):
 
 
 # ---------------------------------------------------------------------------
-# Apply categorization rules
+# Apply automation rules
 # ---------------------------------------------------------------------------
 
 
-class ApplyCategorizationRulesTest(BaseFinalTestCase):
+class ApplyAutomationRulesTest(BaseFinalTestCase):
     def setUp(self):
         super().setUp()
-        from expenses.models import CategorizationRule, Expense
+        from expenses.models import AutomationRule, Expense
 
-        CategorizationRule.objects.create(
-            merchant_contains="amazon",
-            category="shopping",
+        AutomationRule.objects.create(
+            name="Categorizar: amazon",
+            conditions=[
+                {
+                    "field": "merchant",
+                    "operator": "contains",
+                    "value": "amazon",
+                }
+            ],
+            actions=[{"type": "set_category", "value": "shopping"}],
             is_active=True,
             owner=self.user,
             created_by=self.user,
@@ -449,12 +400,48 @@ class ApplyCategorizationRulesTest(BaseFinalTestCase):
             created_by=self.user,
         )
 
-    def test_apply_categorization_rules(self):
-        url = reverse("categorization-rule-apply")
+    def test_apply_automation_rules(self):
+        url = reverse("automation-rule-apply")
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("updated", response.data)
-        self.assertIn("total_processed", response.data)
+        self.assertIn("applied", response.data)
+
+
+# ---------------------------------------------------------------------------
+# Tag duplicate (name + color) validation
+# ---------------------------------------------------------------------------
+
+
+class TagDuplicateValidationTest(BaseFinalTestCase):
+    def setUp(self):
+        super().setUp()
+        from expenses.models import Tag
+
+        Tag.objects.create(
+            name="Viagem",
+            color="primary",
+            owner=self.user,
+            created_by=self.user,
+        )
+
+    def test_duplicate_name_and_color_is_rejected(self):
+        url = reverse("tag-list-create")
+        response = self.client.post(
+            url, {"name": "Viagem", "color": "primary"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_duplicate_name_and_color_is_rejected_case_insensitive(self):
+        url = reverse("tag-list-create")
+        response = self.client.post(
+            url, {"name": "viagem", "color": "primary"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_same_name_different_color_is_allowed(self):
+        url = reverse("tag-list-create")
+        response = self.client.post(url, {"name": "Viagem", "color": "accent"})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
 # ---------------------------------------------------------------------------

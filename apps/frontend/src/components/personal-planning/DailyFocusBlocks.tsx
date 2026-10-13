@@ -3,6 +3,7 @@ import { LayoutList } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
 import { getPythonWeekday } from '@/lib/routine-export';
@@ -96,13 +98,13 @@ export function DailyFocusBlocks({
       setSelectedBlock(updated);
       toast({
         title: t('pages.routineTasks.focusBlocks.updated'),
-        description: t('pages.routineTasks.focusBlocks.updatedDesc'),
       });
       void invalidate();
     } catch (error: unknown) {
       toast({
-        title: t('pages.routineTasks.focusBlocks.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.routineTasks.focusBlocks.saveError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -123,8 +125,9 @@ export function DailyFocusBlocks({
       void invalidate();
     } catch (error: unknown) {
       toast({
-        title: t('pages.routineTasks.focusBlocks.addTaskError'),
-        description: getErrorMessage(error),
+        title: t('pages.routineTasks.focusBlocks.addTaskError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }
@@ -139,8 +142,9 @@ export function DailyFocusBlocks({
       void invalidate();
     } catch (error: unknown) {
       toast({
-        title: t('pages.routineTasks.focusBlocks.removeTaskError'),
-        description: getErrorMessage(error),
+        title: t('pages.routineTasks.focusBlocks.removeTaskError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }
@@ -148,43 +152,40 @@ export function DailyFocusBlocks({
 
   return (
     <div className="space-y-sm">
-      <div className="gap-sm flex items-center">
-        <LayoutList className="text-primary h-4 w-4" />
-        <span className="text-sm font-semibold">
-          {t('pages.routineTasks.focusBlocks.title')}
-        </span>
-      </div>
-
       {visibleBlocks.length === 0 ? (
-        <div className="bg-muted/20 px-md py-md rounded-lg border border-dashed text-center">
-          <LayoutList className="mb-xs text-muted-foreground/40 mx-auto h-5 w-5" />
-          <p className="text-muted-foreground text-xs">
-            {blocks.length === 0
+        <EmptyState
+          title={
+            blocks.length === 0
               ? t('pages.routineTasks.focusBlocks.emptyStateDesc')
-              : t('pages.todayTasks.focusBlocksNoneTodayDesc')}
-          </p>
-        </div>
+              : t('pages.todayTasks.focusBlocksNoneTodayDesc')
+          }
+          icon={<LayoutList />}
+        />
       ) : (
-        visibleBlocks.map(({ block, tasks }) => (
-          <DailyFocusBlockCard
-            key={block.id}
-            block={block}
-            tasks={tasks}
-            onToggleTaskComplete={onToggleTaskComplete}
-            onEdit={() => handleEdit(block)}
-          />
-        ))
+        <div className="gap-sm grid lg:auto-cols-fr lg:grid-flow-col">
+          {visibleBlocks.map(({ block, tasks }) => (
+            <DailyFocusBlockCard
+              key={block.id}
+              block={block}
+              tasks={tasks}
+              onToggleTaskComplete={onToggleTaskComplete}
+              onEdit={() => handleEdit(block)}
+            />
+          ))}
+        </div>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode="edit">
               {t('pages.routineTasks.focusBlocks.editBlockTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {t('pages.routineTasks.focusBlocks.editBlockDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.routineTasks.focusBlocks.editBlockDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <RoutineFocusBlockForm
             block={selectedBlock}
@@ -194,7 +195,7 @@ export function DailyFocusBlocks({
             isLoading={isSubmitting}
           />
           {selectedBlock && (
-            <div className="pt-sm border-t">
+            <div className="pt-sm pb-lg border-t">
               <FocusBlockTasksEditor
                 block={selectedBlock}
                 allBlocks={blocks}

@@ -1,8 +1,22 @@
 /* eslint-disable max-lines */
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import {
+  CalendarClock,
+  CalendarDays,
+  FileText,
+  Loader2,
+  Pencil,
+  Plus,
+  Power,
+  Repeat,
+  Save,
+  Trash2,
+  Wallet,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,14 +24,15 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
@@ -34,7 +49,7 @@ const DEFAULT_FORM: VaultRecurringContributionFormData = {
   amount: 0,
   day_of_month: 10,
   is_active: true,
-  start_date: new Date().toISOString().slice(0, 10),
+  start_date: formatLocalDate(new Date()),
   end_date: undefined,
   description: '',
 };
@@ -69,8 +84,7 @@ export function VaultContributionsDialog({
       setContributions(await vaultsService.getContributions(vault.id));
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -128,13 +142,11 @@ export function VaultContributionsDialog({
         await vaultsService.updateContribution(editing.id, formData);
         toast({
           title: t('pages.vaults.recurringContributions.updated'),
-          description: t('pages.vaults.recurringContributions.updatedDesc'),
         });
       } else {
         await vaultsService.createContribution(vault.id, formData);
         toast({
           title: t('pages.vaults.recurringContributions.created'),
-          description: t('pages.vaults.recurringContributions.createdDesc'),
         });
       }
       setIsFormOpen(false);
@@ -142,8 +154,7 @@ export function VaultContributionsDialog({
       await loadContributions();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -161,13 +172,11 @@ export function VaultContributionsDialog({
       await vaultsService.deleteContribution(c.id);
       toast({
         title: t('pages.vaults.recurringContributions.deleted'),
-        description: t('pages.vaults.recurringContributions.deletedDesc'),
       });
       await loadContributions();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -175,21 +184,21 @@ export function VaultContributionsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="custom-scrollbar max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{t('pages.vaults.recurringContributions.title')}</DialogTitle>
-          <DialogDescription>
-            {vault &&
-              t('pages.vaults.recurringContributions.desc', {
-                name: vault.description,
-              })}
+          <DialogTitle className="gap-sm flex items-center">
+            <CalendarClock className="text-primary h-4 w-4" aria-hidden="true" />
+            {t('pages.vaults.recurringContributions.title')}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            {t('pages.vaults.recurringContributions.title')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-md">
           {!isFormOpen && (
             <div className="flex justify-end">
-              <Button size="sm" onClick={() => openForm()}>
-                <Plus className="mr-xs h-4 w-4" />
+              <Button onClick={() => openForm()}>
+                <Plus className="h-4 w-4" />
                 {t('pages.vaults.recurringContributions.newBtn')}
               </Button>
             </div>
@@ -203,7 +212,11 @@ export function VaultContributionsDialog({
               </h4>
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <Label htmlFor="contrib_description">
+                  <Label
+                    className="gap-xs flex items-center"
+                    htmlFor="contrib_description"
+                  >
+                    <FileText className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.description')}
                   </Label>
                   <Input
@@ -218,7 +231,8 @@ export function VaultContributionsDialog({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="contrib_amount">
+                  <Label className="gap-xs flex items-center" htmlFor="contrib_amount">
+                    <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.amount')}
                   </Label>
                   <CurrencyInput
@@ -234,25 +248,21 @@ export function VaultContributionsDialog({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="contrib_day">
+                  <Label className="gap-xs flex items-center" htmlFor="contrib_day">
+                    <Repeat className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.dayOfMonth')}
                   </Label>
-                  <Input
+                  <NumberStepper
                     id="contrib_day"
-                    type="number"
-                    min="1"
-                    max="31"
+                    min={1}
+                    max={31}
                     value={formData.day_of_month}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        day_of_month: parseInt(e.target.value) || 1,
-                      })
-                    }
+                    onChange={(v) => setFormData({ ...formData, day_of_month: v ?? 1 })}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="contrib_start">
+                  <Label className="gap-xs flex items-center" htmlFor="contrib_start">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.startDate')}
                   </Label>
                   <DatePicker
@@ -266,7 +276,8 @@ export function VaultContributionsDialog({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="contrib_end">
+                  <Label className="gap-xs flex items-center" htmlFor="contrib_end">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.endDate')}
                   </Label>
                   <DatePicker
@@ -277,7 +288,6 @@ export function VaultContributionsDialog({
                         end_date: date ? formatLocalDate(date) : undefined,
                       })
                     }
-                    clearable
                   />
                 </div>
                 <div className="gap-sm col-span-2 flex items-center">
@@ -288,7 +298,11 @@ export function VaultContributionsDialog({
                       setFormData({ ...formData, is_active: checked === true })
                     }
                   />
-                  <Label htmlFor="contrib_active" className="cursor-pointer">
+                  <Label
+                    htmlFor="contrib_active"
+                    className="gap-xs flex cursor-pointer items-center"
+                  >
+                    <Power className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.isActive')}
                   </Label>
                 </div>
@@ -302,6 +316,7 @@ export function VaultContributionsDialog({
                     setEditing(null);
                   }}
                 >
+                  <X className="h-4 w-4" aria-hidden="true" />
                   {t('common.actions.cancel')}
                 </Button>
                 <Button
@@ -311,6 +326,11 @@ export function VaultContributionsDialog({
                     isSubmitting || !formData.description || formData.amount <= 0
                   }
                 >
+                  {isSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Save className="h-4 w-4" aria-hidden="true" />
+                  )}
                   {isSubmitting ? t('common.actions.saving') : t('common.actions.save')}
                 </Button>
               </div>
@@ -320,10 +340,8 @@ export function VaultContributionsDialog({
             <div className="py-xl text-muted-foreground text-center text-sm">
               {t('common.messages.loading')}
             </div>
-          ) : contributions.length === 0 ? (
-            <div className="py-xl text-muted-foreground text-center text-sm">
-              {t('pages.vaults.recurringContributions.emptyState')}
-            </div>
+          ) : !isFormOpen && contributions.length === 0 ? (
+            <EmptyState title={t('pages.vaults.recurringContributions.emptyState')} />
           ) : (
             <div className="space-y-sm">
               {contributions.map((c) => (
@@ -395,11 +413,7 @@ export function VaultContributionsDialog({
             </div>
           )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t('common.actions.close')}
-          </Button>
-        </DialogFooter>
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

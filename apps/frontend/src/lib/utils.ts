@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from 'clsx';
+import type { TFunction } from 'i18next';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
@@ -120,3 +121,16 @@ export function getErrorMessage(
   }
   return fallback;
 }
+
+/**
+ * "2 xícaras" — quantidade arredondada para inteiro + unidade traduzida.
+ * Plural vem de `units.<unit>_other` (i18next), com fallback para o singular.
+ */
+export const formatQuantity = (
+  t: TFunction,
+  quantity: string | number,
+  unit: string
+): string => {
+  const count = Math.round(Number(quantity));
+  return `${count} ${t(`units.${unit}`, { count, defaultValue: unit })}`;
+};

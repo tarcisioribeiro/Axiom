@@ -1,27 +1,34 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  CalendarDays,
+  Loader2,
+  Pencil,
   PiggyBank,
   Plus,
-  Pencil,
-  Trash2,
-  Sparkles,
-  Loader2,
-  Tag,
-  Wallet,
-  CalendarDays,
+  RefreshCw,
   RotateCcw,
+  Save,
+  Search,
   ShoppingCart,
+  Tag,
+  Trash2,
+  User,
+  Users,
+  Wallet,
+  X,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { BudgetPurchasesDialog } from '@/components/budgets/BudgetPurchasesDialog';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
+import { IconButton } from '@/components/common/IconButton';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,7 +51,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { API_CONFIG } from '@/config/api-config';
+import { Tooltip } from '@/components/ui/tooltip';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
@@ -53,8 +61,8 @@ import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
-import { apiClient } from '@/services/api-client';
 import { budgetsService } from '@/services/budgets-service';
+import { membersService } from '@/services/members-service';
 import type { Budget, BudgetFormData, BudgetStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -74,16 +82,27 @@ function getDefaultFormData(): BudgetFormData {
   };
 }
 
-type SuggestResp = {
-  suggestions?: {
-    category: string;
-    avg_monthly_spent: number;
-    suggested_limit: number;
-    reasoning: string | null;
-  }[];
-};
+const DESKTOP_QUERY = '(min-width: 1024px)';
+const DESKTOP_PAGE_SIZE = 9;
+
+function useBudgetsPageSize() {
+  const [pageSize, setPageSize] = useState(() =>
+    window.matchMedia(DESKTOP_QUERY).matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const handler = (e: MediaQueryListEvent) =>
+      setPageSize(e.matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  return pageSize;
+}
 
 export default function Budgets() {
+  const pageSize = useBudgetsPageSize();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const MONTHS = useMemo(
@@ -100,11 +119,12 @@ export default function Budgets() {
     String(new Date().getMonth() + 1)
   );
   const [filterYear, setFilterYear] = useState<string>(String(currentYear));
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [memberFilter, setMemberFilter] = useState<string>('all');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
   const [formData, setFormData] = useState<BudgetFormData>(getDefaultFormData());
-  const [isSuggestOpen, setIsSuggestOpen] = useState(false);
   const [purchasesBudget, setPurchasesBudget] = useState<Budget | undefined>();
 
   const { data: budgets = [], isLoading } = useQuery({
@@ -122,19 +142,10 @@ export default function Budgets() {
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
-  const { data: suggestions = [], isFetching: isSuggestLoading } = useQuery({
-    queryKey: ['budgets', 'suggest'],
-    queryFn: async () => {
-      const resp = await apiClient.post<SuggestResp>(
-        API_CONFIG.ENDPOINTS.BUDGET_SUGGEST,
-        {
-          include_llm_reasoning: true,
-        }
-      );
-      return resp.suggestions ?? [];
-    },
-    enabled: isSuggestOpen,
-    staleTime: 5 * 60 * 1000,
+  const { data: members = [] } = useQuery({
+    queryKey: ['members'],
+    queryFn: () => membersService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const invalidateBudgets = () => {
@@ -146,15 +157,13 @@ export default function Budgets() {
     onSuccess: () => {
       toast({
         title: t('pages.budgets.created'),
-        description: t('pages.budgets.createdDesc'),
       });
       setIsDialogOpen(false);
       invalidateBudgets();
     },
     onError: (error) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -166,15 +175,13 @@ export default function Budgets() {
     onSuccess: () => {
       toast({
         title: t('pages.budgets.updated'),
-        description: t('pages.budgets.updatedDesc'),
       });
       setIsDialogOpen(false);
       invalidateBudgets();
     },
     onError: (error) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -185,40 +192,14 @@ export default function Budgets() {
     onSuccess: () => {
       toast({
         title: t('pages.budgets.deleted'),
-        description: t('pages.budgets.deletedDesc'),
       });
       invalidateBudgets();
     },
     onError: (error) => {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
-    },
-  });
-
-  const applySuggestionMutation = useMutation({
-    mutationFn: (s: { category: string; suggested_limit: number }) => {
-      const now = new Date();
-      return budgetsService.create({
-        category: s.category,
-        limit_amount: s.suggested_limit,
-        month: now.getMonth() + 1,
-        year: now.getFullYear(),
-        member: null,
-        rollover_enabled: false,
-        rollover_amount: 0,
-      });
-    },
-    onSuccess: (_, s) => {
-      toast({
-        title: `Orçamento de ${translate('expenseCategories', s.category)} criado.`,
-      });
-      invalidateBudgets();
-    },
-    onError: () => {
-      toast({ title: t('pages.budgets.createError'), variant: 'destructive' });
     },
   });
 
@@ -274,7 +255,13 @@ export default function Budgets() {
       budget.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesMonth = !filterMonth || budget.month === parseInt(filterMonth);
     const matchesYear = !filterYear || budget.year === parseInt(filterYear);
-    return matchesSearch && matchesMonth && matchesYear;
+    const matchesCategory =
+      categoryFilter === 'all' || budget.category === categoryFilter;
+    const matchesMember =
+      memberFilter === 'all' || String(budget.member ?? '') === memberFilter;
+    return (
+      matchesSearch && matchesMonth && matchesYear && matchesCategory && matchesMember
+    );
   });
 
   if (isLoading) {
@@ -284,126 +271,138 @@ export default function Budgets() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.budgets.title')} icon={<PiggyBank />}>
-        <Button
-          variant="outline"
-          onClick={() => setIsSuggestOpen(true)}
-          className="gap-sm"
-        >
-          <Sparkles className="h-4 w-4" />
-          Sugerir com IA
-        </Button>
         <Button onClick={handleCreate} className="gap-sm">
           <Plus className="h-4 w-4" />
           {t('pages.budgets.newBtn')}
         </Button>
       </PageHeader>
 
-      {/* Dialog de sugestões LLM */}
-      <Dialog open={isSuggestOpen} onOpenChange={setIsSuggestOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="gap-sm flex items-center">
-              <Sparkles className="text-primary h-4 w-4" />
-              {t('pages.budgets.aiSuggestionsTitle')}
-            </DialogTitle>
-            <DialogDescription>
-              {t('pages.budgets.aiSuggestionsDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          {isSuggestLoading ? (
-            <div className="gap-sm py-xl text-muted-foreground flex items-center justify-center">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {t('pages.budgets.analyzing')}
-            </div>
-          ) : (
-            <div className="space-y-sm pr-xs max-h-96 overflow-y-auto">
-              {suggestions.map((s) => (
-                <div
-                  key={s.category}
-                  className="flex items-center justify-between gap-3 rounded-lg border p-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="gap-xs flex items-center text-sm font-medium">
-                      {(() => {
-                        const CatIcon =
-                          EXPENSE_CATEGORY_ICONS[s.category] ??
-                          EXPENSE_CATEGORY_ICONS['others'];
-                        return CatIcon ? (
-                          <CatIcon className="h-4 w-4 shrink-0" />
-                        ) : null;
-                      })()}
-                      {translate('expenseCategories', s.category)}
-                    </p>
-                    <p className="text-muted-foreground text-xs">
-                      {t('pages.budgets.averageLabel')}:{' '}
-                      {formatCurrency(s.avg_monthly_spent)} ·{' '}
-                      {t('pages.budgets.suggestionLabel')}:{' '}
-                      {formatCurrency(s.suggested_limit)}
-                    </p>
-                    {s.reasoning && (
-                      <p className="text-muted-foreground mt-0.5 text-xs italic">
-                        {s.reasoning}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => applySuggestionMutation.mutate(s)}
-                    disabled={applySuggestionMutation.isPending}
+      <FilterBar
+        hasActiveFilters={
+          !!searchTerm || categoryFilter !== 'all' || memberFilter !== 'all'
+        }
+        onClear={() => {
+          setSearchTerm('');
+          setCategoryFilter('all');
+          setMemberFilter('all');
+        }}
+        activeFilters={[
+          ...(categoryFilter !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('common.fields.category')}: ${translate('expenseCategories', categoryFilter)}`,
+                  onRemove: () => setCategoryFilter('all'),
+                },
+              ]
+            : []),
+          ...(memberFilter !== 'all'
+            ? [
+                {
+                  key: 'member',
+                  label: `${t('pages.budgets.member')} ${
+                    members.find((m) => String(m.id) === memberFilter)?.name ??
+                    memberFilter
+                  }`,
+                  onRemove: () => setMemberFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.budgets.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-44 flex-none"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.budgets.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.budgets.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.budgets.allCategories')}</SelectItem>
+              {EXPENSE_CATEGORIES_CANONICAL.map((cat) => {
+                const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
+                return (
+                  <SelectItem
+                    key={cat.key}
+                    value={cat.key}
+                    icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
                   >
-                    Aplicar
-                  </Button>
-                </div>
+                    {translate('expenseCategories', cat.key)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.member')} icon={Users}>
+          <Select value={memberFilter} onValueChange={setMemberFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.budgets.allMembers')}
+              startIcon={<User className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.budgets.allMembers')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.budgets.allMembers')}</SelectItem>
+              {members.map((m) => (
+                <SelectItem key={m.id} value={String(m.id)}>
+                  {m.name}
+                </SelectItem>
               ))}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
-        <SearchInput
-          placeholder={t('pages.budgets.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-44 flex-none"
-        />
-        <Select value={filterMonth} onValueChange={setFilterMonth}>
-          <SelectTrigger
-            className="w-40"
-            startIcon={<CalendarDays className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.budgets.month')} />
-          </SelectTrigger>
-          <SelectContent>
-            {MONTHS.map((m) => (
-              <SelectItem key={m.value} value={String(m.value)}>
-                {m.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={filterYear} onValueChange={setFilterYear}>
-          <SelectTrigger
-            className="w-28"
-            startIcon={<CalendarDays className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.budgets.year')} />
-          </SelectTrigger>
-          <SelectContent>
-            {YEARS.map((y) => (
-              <SelectItem key={y} value={String(y)}>
-                {y}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.month')} icon={CalendarDays}>
+          <Select value={filterMonth} onValueChange={setFilterMonth}>
+            <SelectTrigger
+              className="w-40"
+              startIcon={<CalendarDays className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.budgets.month')} />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m) => (
+                <SelectItem key={m.value} value={String(m.value)}>
+                  {m.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.year')} icon={CalendarDays}>
+          <Select value={filterYear} onValueChange={setFilterYear}>
+            <SelectTrigger
+              className="w-28"
+              startIcon={<CalendarDays className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.budgets.year')} />
+            </SelectTrigger>
+            <SelectContent>
+              {YEARS.map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
       </FilterBar>
 
       {filteredBudgets.length === 0 ? (
         <EmptyState
           icon={<PiggyBank className="text-muted-foreground h-12 w-12" />}
-          message={
+          title={
             searchTerm ? t('pages.budgets.emptySearch') : t('pages.budgets.emptyState')
           }
         />
@@ -417,67 +416,16 @@ export default function Budgets() {
               budget: b,
               status: statusMap.get(`${b.month}-${b.year}-${b.category}`),
             }));
-            const exceededCount = enriched.filter(({ status }) => {
-              const pct = status ? status.percentage : 0;
-              return pct > 100;
-            }).length;
-            const warningCount = enriched.filter(({ status }) => {
-              const pct = status ? status.percentage : 0;
-              return pct >= 70 && pct <= 100;
-            }).length;
-            const okCount = filteredBudgets.length - exceededCount - warningCount;
             return (
-              <>
-                <div className="bg-card p-md rounded-lg border">
-                  <p className="mb-sm text-sm font-medium">
-                    {t('pages.budgets.health.title')}
-                  </p>
-                  <div className="bg-muted flex h-3 overflow-hidden rounded-full">
-                    {exceededCount > 0 && (
-                      <div
-                        className="bg-destructive"
-                        style={{
-                          width: `${(exceededCount / filteredBudgets.length) * 100}%`,
-                        }}
-                      />
-                    )}
-                    {warningCount > 0 && (
-                      <div
-                        className="bg-warning"
-                        style={{
-                          width: `${(warningCount / filteredBudgets.length) * 100}%`,
-                        }}
-                      />
-                    )}
-                    {okCount > 0 && (
-                      <div
-                        className="bg-success"
-                        style={{
-                          width: `${(okCount / filteredBudgets.length) * 100}%`,
-                        }}
-                      />
-                    )}
-                  </div>
-                  <div className="mt-sm gap-md text-muted-foreground flex text-xs">
-                    <span>
-                      <span className="text-success font-semibold">{okCount}</span>{' '}
-                      {t('pages.budgets.health.withinLimit')}
-                    </span>
-                    <span>
-                      <span className="text-warning font-semibold">{warningCount}</span>{' '}
-                      {t('pages.budgets.health.warning')}
-                    </span>
-                    <span>
-                      <span className="text-destructive font-semibold">
-                        {exceededCount}
-                      </span>{' '}
-                      {t('pages.budgets.health.exceeded')}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-                  {enriched.map(({ budget, status }) => (
+              <PaginatedSlide
+                key={`${searchTerm}-${filterMonth}-${filterYear}-${categoryFilter}-${memberFilter}`}
+                items={enriched}
+                pageSize={pageSize}
+                centerList
+                className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+              >
+                {(pageItems) =>
+                  pageItems.map(({ budget, status }) => (
                     <BudgetCard
                       key={budget.id}
                       budget={budget}
@@ -486,9 +434,9 @@ export default function Budgets() {
                       onDelete={handleDelete}
                       onViewPurchases={setPurchasesBudget}
                     />
-                  ))}
-                </div>
-              </>
+                  ))
+                }
+              </PaginatedSlide>
             );
           })()}
         </>
@@ -503,12 +451,14 @@ export default function Budgets() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={selectedBudget ? 'edit' : 'create'}>
               {selectedBudget
                 ? t('pages.budgets.editTitle')
                 : t('pages.budgets.newTitle')}
             </DialogTitle>
-            <DialogDescription>{t('pages.budgets.formDesc')}</DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>{t('pages.budgets.formDesc')}</DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-lg">
             {/* Seção: Classificação */}
@@ -533,7 +483,9 @@ export default function Budgets() {
                       return (
                         <SelectItem key={cat.key} value={cat.key}>
                           <span className="gap-sm flex items-center">
-                            {CatIcon && <CatIcon className="h-4 w-4" />}
+                            {CatIcon && (
+                              <CatIcon className="text-muted-foreground h-4 w-4 shrink-0" />
+                            )}
                             {translate('expenseCategories', cat.key)}
                           </span>
                         </SelectItem>
@@ -633,13 +585,11 @@ export default function Budgets() {
                   <div>
                     <Label
                       htmlFor="rollover_enabled"
-                      className="cursor-pointer text-sm font-medium"
+                      className="gap-xs flex cursor-pointer items-center text-sm font-medium"
                     >
+                      <RefreshCw className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.budgets.rollover.enabled')}
                     </Label>
-                    <p className="text-muted-foreground text-xs">
-                      {t('pages.budgets.rollover.description')}
-                    </p>
                   </div>
                 </div>
 
@@ -673,9 +623,15 @@ export default function Budgets() {
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
               >
+                <X className="h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
                 {isSubmitting
                   ? t('common.actions.saving')
                   : selectedBudget
@@ -719,16 +675,7 @@ function BudgetCard({
     EXPENSE_CATEGORY_ICONS[budget.category] ?? EXPENSE_CATEGORY_ICONS['others'];
 
   return (
-    <div
-      className={cn(
-        'bg-card overflow-hidden rounded-lg border-l-4 transition-shadow hover:shadow-md',
-        pct > 100
-          ? 'border-l-destructive shadow-destructive/20 shadow-sm'
-          : pct >= 70
-            ? 'border-l-warning'
-            : 'border-l-success'
-      )}
-    >
+    <div className="bg-card overflow-hidden rounded-lg border">
       <div className="p-md">
         <div className="flex items-start justify-between">
           <div className="gap-sm flex items-center">
@@ -804,34 +751,37 @@ function BudgetCard({
           </p>
         )}
 
-        <div className="gap-sm mt-3 flex border-t pt-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => onViewPurchases(budget)}
-          >
-            <ShoppingCart className="mr-xs h-3 w-3" />
-            {t('pages.budgets.purchases.button')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => onEdit(budget)}
-          >
-            <Pencil className="mr-xs h-3 w-3" />
-            {t('common.actions.edit')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-destructive hover:bg-destructive hover:text-destructive-foreground flex-1"
-            onClick={() => void onDelete(budget)}
-          >
-            <Trash2 className="mr-xs h-3 w-3" />
-            {t('common.actions.delete')}
-          </Button>
+        <div className="gap-sm mt-3 flex justify-end border-t pt-3">
+          <Tooltip content={t('pages.budgets.purchases.button')}>
+            <IconButton
+              variant="ghost"
+              className="h-8 w-8 rounded-md"
+              aria-label={t('pages.budgets.purchases.button')}
+              onClick={() => onViewPurchases(budget)}
+            >
+              <ShoppingCart className="h-4 w-4" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip content={t('common.actions.edit')}>
+            <IconButton
+              variant="ghost"
+              className="h-8 w-8 rounded-md"
+              aria-label={t('common.actions.edit')}
+              onClick={() => onEdit(budget)}
+            >
+              <Pencil className="h-4 w-4" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip content={t('common.actions.delete')}>
+            <IconButton
+              variant="ghost"
+              aria-label={t('common.actions.delete')}
+              className="text-destructive hover:text-destructive h-8 w-8 rounded-md"
+              onClick={() => void onDelete(budget)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </IconButton>
+          </Tooltip>
         </div>
       </div>
     </div>

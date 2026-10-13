@@ -93,10 +93,11 @@ export class ErrorBoundary extends Component<Props, State> {
               )}
               <div className="gap-sm flex justify-center">
                 <Button onClick={this.handleRetry} variant="default">
-                  <RefreshCw className="mr-sm h-4 w-4" />
+                  <RefreshCw className="h-4 w-4" />
                   Tentar novamente
                 </Button>
                 <Button onClick={() => window.location.reload()} variant="outline">
+                  <RefreshCw aria-hidden="true" />
                   Recarregar pagina
                 </Button>
               </div>

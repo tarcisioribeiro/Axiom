@@ -57,8 +57,7 @@ describe('ThemeToggle', () => {
     expect(screen.getByText('Catppuccin Mocha')).toBeInTheDocument();
     expect(screen.getByText('Tokyo Night')).toBeInTheDocument();
     expect(screen.getByText('Gruvbox Dark')).toBeInTheDocument();
-    expect(screen.getByText('Cyberpunk')).toBeInTheDocument();
-    expect(screen.getByText('Flat Remix Blue Darkest')).toBeInTheDocument();
+    expect(screen.getByText('Tokyo Day')).toBeInTheDocument();
     expect(screen.getByText('Ubuntu Dark')).toBeInTheDocument();
     expect(screen.getByText('Ubuntu Light')).toBeInTheDocument();
   });

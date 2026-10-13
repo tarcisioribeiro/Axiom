@@ -1,9 +1,10 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 
+import { LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import type { ExpensePrefillData } from '@/components/expenses/ExpenseForm';
 import { Badge } from '@/components/ui/badge';
 import { translate } from '@/config/constants';
@@ -14,7 +15,7 @@ import { useUrlFilters } from '@/hooks/use-url-filters';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { sumByProperty } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
-import { formatLocalDate } from '@/lib/utils';
+import { formatLocalDate, parseLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import type { ExpenseExportParams } from '@/services/expenses-service';
 import { expensesService } from '@/services/expenses-service';
@@ -68,7 +69,7 @@ export interface UseExpensesPageReturn {
   handleEdit: (expense: Expense) => void;
   handleDelete: (id: number) => Promise<void>;
   deletingExpenseIds: Set<number | string>;
-  handleSubmit: (data: ExpenseFormData, splitOnCreate?: boolean) => void;
+  handleSubmit: (data: ExpenseFormData) => void;
   handleRedistributedSuccess: () => void;
   handleExport: (params: {
     export_format: 'csv' | 'pdf';
@@ -81,9 +82,7 @@ export interface UseExpensesPageReturn {
   prefillExpenseData: ExpensePrefillData | undefined;
 }
 
-export function useExpensesPage(opts?: {
-  onAfterCreate?: (expense: Expense) => void;
-}): UseExpensesPageReturn {
+export function useExpensesPage(): UseExpensesPageReturn {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -95,7 +94,6 @@ export function useExpensesPage(opts?: {
   const prefillExpenseData = locationState?.prefillExpense;
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const splitAfterCreate = useRef(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -122,16 +120,13 @@ export function useExpensesPage(opts?: {
   const setStatusFilter = (v: string) => setFilter('status', v);
 
   const startDate = useMemo(
-    () => (filters.startDate ? new Date(filters.startDate) : undefined),
+    () => parseLocalDate(filters.startDate),
     [filters.startDate]
   );
   const setStartDate = (d: Date | undefined) =>
     setFilter('startDate', d ? formatLocalDate(d) : '');
 
-  const endDate = useMemo(
-    () => (filters.endDate ? new Date(filters.endDate) : undefined),
-    [filters.endDate]
-  );
+  const endDate = useMemo(() => parseLocalDate(filters.endDate), [filters.endDate]);
   const setEndDate = (d: Date | undefined) =>
     setFilter('endDate', d ? formatLocalDate(d) : '');
 
@@ -153,7 +148,7 @@ export function useExpensesPage(opts?: {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const PAGE_SIZE = 50;
+  const PAGE_SIZE = LIST_PAGE_SIZE;
   const [page, setPage] = useState(1);
   const filtersKey = JSON.stringify([
     debouncedSearch,
@@ -237,22 +232,16 @@ export function useExpensesPage(opts?: {
 
   const createMutation = useMutation({
     mutationFn: (data: ExpenseFormData) => expensesService.create(data),
-    onSuccess: (createdExpense) => {
+    onSuccess: () => {
       void invalidateExpenses();
       toast({
         title: t('pages.expenses.created'),
-        description: t('pages.expenses.createdDesc'),
       });
       setIsDialogOpen(false);
-      if (splitAfterCreate.current) {
-        splitAfterCreate.current = false;
-        opts?.onAfterCreate?.(createdExpense);
-      }
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -265,14 +254,12 @@ export function useExpensesPage(opts?: {
       void invalidateExpenses();
       toast({
         title: t('pages.expenses.updated'),
-        description: t('pages.expenses.updatedDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -287,7 +274,6 @@ export function useExpensesPage(opts?: {
       onSuccess: () => {
         toast({
           title: t('pages.expenses.deleted'),
-          description: t('pages.expenses.deletedDesc'),
         });
       },
     });
@@ -301,8 +287,7 @@ export function useExpensesPage(opts?: {
   const handleCreate = () => {
     if (accounts.length === 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.expenses.noAccountMsg'),
+        title: t('pages.expenses.noAccountMsg'),
         variant: 'destructive',
       });
       return;
@@ -328,11 +313,10 @@ export function useExpensesPage(opts?: {
     await optimisticDelete(id);
   };
 
-  const handleSubmit = (data: ExpenseFormData, splitOnCreate?: boolean) => {
+  const handleSubmit = (data: ExpenseFormData) => {
     if (selectedExpense) {
       updateMutation.mutate({ id: selectedExpense.id, data });
     } else {
-      splitAfterCreate.current = splitOnCreate ?? false;
       createMutation.mutate(data);
     }
   };
@@ -346,7 +330,6 @@ export function useExpensesPage(opts?: {
     void invalidateExpenses();
     toast({
       title: t('pages.expenses.created'),
-      description: t('pages.expenses.createdDesc'),
     });
     setIsDialogOpen(false);
   };
@@ -374,12 +357,10 @@ export function useExpensesPage(opts?: {
       await expensesService.exportExpenses(exportParams);
       toast({
         title: t('common.messages.exportSuccess'),
-        description: t('common.messages.exportSuccessDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.exportError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.exportError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }

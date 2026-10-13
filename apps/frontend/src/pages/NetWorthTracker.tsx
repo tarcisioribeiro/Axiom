@@ -13,9 +13,11 @@ import {
 } from 'lucide-react';
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -24,7 +26,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
-import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { loansService } from '@/services/loans-service';
@@ -44,7 +45,16 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function NetWorthTracker({ embedded = false }: { embedded?: boolean }) {
+interface NetWorthTrackerProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
+export default function NetWorthTracker({
+  embedded = false,
+  headerTarget,
+}: NetWorthTrackerProps) {
   const { t } = useTranslation();
 
   const accountsQuery = useQuery({
@@ -235,13 +245,11 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
+  const header = <PageHeader title={t('netWorth.title')} icon={<TrendingUp />} />;
+
   return (
     <Wrapper>
-      <PageHeader
-        title={t('netWorth.title')}
-        icon={<TrendingUp />}
-        subtitle={t('netWorth.subtitle')}
-      />
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       <div className="mt-md gap-md grid grid-cols-1 md:grid-cols-3">
         <StatCard
@@ -352,11 +360,7 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
                   </span>
                 </div>
               )}
-              {totalAssets === 0 && (
-                <p className="py-md text-muted-foreground text-center text-sm">
-                  {t('netWorth.noAssets')}
-                </p>
-              )}
+              {totalAssets === 0 && <EmptyState title={t('netWorth.noAssets')} />}
             </CardContent>
           </Card>
 
@@ -427,14 +431,7 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
                   </div>
                 ))}
               {totalLiabilities === 0 && (
-                <p
-                  className={cn(
-                    'py-md text-center text-sm',
-                    totalLiabilities === 0 ? 'text-success' : 'text-muted-foreground'
-                  )}
-                >
-                  {t('netWorth.noLiabilities')}
-                </p>
+                <EmptyState title={t('netWorth.noLiabilities')} />
               )}
             </CardContent>
           </Card>

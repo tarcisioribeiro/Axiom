@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
+import { BarChart3 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -12,8 +13,10 @@ import {
   YAxis,
 } from 'recharts';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -130,9 +133,9 @@ export function LoanProgressDialog({
 
   return (
     <Dialog open={!!loan} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="custom-scrollbar max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{p('title', 'lentTitle')}</DialogTitle>
+          <DialogTitle icon={BarChart3}>{p('title', 'lentTitle')}</DialogTitle>
           <DialogDescription>{loan?.description}</DialogDescription>
         </DialogHeader>
 
@@ -311,12 +314,11 @@ export function LoanProgressDialog({
             )}
 
             {installments.length === 0 && (
-              <p className="py-sm text-muted-foreground text-center text-sm">
-                {t('pages.loans.progress.noInstallments')}
-              </p>
+              <EmptyState title={t('pages.loans.progress.noInstallments')} />
             )}
           </div>
         )}
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

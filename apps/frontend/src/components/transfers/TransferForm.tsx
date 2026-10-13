@@ -4,6 +4,7 @@ import {
   AlertCircle,
   ArrowLeftRight,
   ArrowRight,
+  Banknote,
   Building2,
   CalendarDays,
   Clock,
@@ -11,6 +12,8 @@ import {
   Loader2,
   Wallet,
   Zap,
+  Save,
+  X,
 } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -52,8 +55,10 @@ const TRANSFER_TYPE_ICONS: Record<string, IconComponent> = {
   pix: Zap,
   ted: Building2,
   doc: FileText,
-  internal: ArrowLeftRight,
+  withdrawal: Banknote,
 };
+
+const WALLET_ACCOUNT_TYPE = 'CM';
 
 export const TransferForm: React.FC<TransferFormProps> = ({
   transfer,
@@ -146,15 +151,31 @@ export const TransferForm: React.FC<TransferFormProps> = ({
     accounts,
   ]);
 
+  // Carteira Móvel só recebe saques: nunca é origem e só é destino de saque.
+  const walletAccount = accounts.find((a) => a.account_type === WALLET_ACCOUNT_TYPE);
+  const regularAccounts = accounts.filter(
+    (a) => a.account_type !== WALLET_ACCOUNT_TYPE
+  );
+  const isWithdrawal = watchedCategory === 'withdrawal';
+
   useEffect(() => {
-    if (!transfer && accounts.length > 0) {
+    if (isWithdrawal) {
+      if (walletAccount) setValue('destiny_account', walletAccount.id);
+    } else if (watchedDestinyAccount === walletAccount?.id) {
+      const newDestiny = regularAccounts.find((a) => a.id !== watchedOriginAccount);
+      if (newDestiny) setValue('destiny_account', newDestiny.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isWithdrawal, walletAccount?.id]);
+
+  useEffect(() => {
+    if (!transfer && regularAccounts.length > 0) {
       const currentOrigin = watchedOriginAccount;
       const currentDestiny = watchedDestinyAccount;
-      if (!currentOrigin && accounts.length > 0)
-        setValue('origin_account', accounts[0].id);
-      if (!currentDestiny && accounts.length > 1) {
-        const originId = currentOrigin || accounts[0].id;
-        const destinyAccount = accounts.find((a) => a.id !== originId);
+      if (!currentOrigin) setValue('origin_account', regularAccounts[0].id);
+      if (!currentDestiny && !isWithdrawal) {
+        const originId = currentOrigin || regularAccounts[0].id;
+        const destinyAccount = regularAccounts.find((a) => a.id !== originId);
         if (destinyAccount) setValue('destiny_account', destinyAccount.id);
       }
     }
@@ -162,9 +183,9 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   }, [transfer, accounts.length]);
 
   useEffect(() => {
-    if (!transfer && watchedOriginAccount && accounts.length > 1) {
+    if (!transfer && watchedOriginAccount && regularAccounts.length > 1) {
       if (watchedDestinyAccount === watchedOriginAccount) {
-        const newDestiny = accounts.find((a) => a.id !== watchedOriginAccount);
+        const newDestiny = regularAccounts.find((a) => a.id !== watchedOriginAccount);
         if (newDestiny) setValue('destiny_account', newDestiny.id);
       }
     }
@@ -210,7 +231,8 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                 key={k}
                 type="button"
                 onClick={() => setValue('category', k)}
-                className={`p-sm flex flex-col items-center gap-1 rounded-lg border text-sm font-medium transition ${
+                disabled={k === 'withdrawal' && !walletAccount}
+                className={`p-sm flex flex-col items-center gap-1 rounded-lg border text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
                   watchedCategory === k
                     ? 'border-primary bg-primary/10 text-primary'
                     : 'border-border/70 bg-muted/20 text-muted-foreground hover:border-primary/50 hover:text-foreground'
@@ -244,7 +266,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                 />
               </SelectTrigger>
               <SelectContent>
-                {accounts.map((a) => (
+                {regularAccounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     <span>{a.account_name}</span>
                     <span className="text-muted-foreground ml-2 text-xs">
@@ -268,7 +290,8 @@ export const TransferForm: React.FC<TransferFormProps> = ({
               type="button"
               title={t('pages.transfers.form.swapAccounts')}
               onClick={handleSwapAccounts}
-              className="border-border/70 bg-background text-muted-foreground hover:border-primary/50 hover:text-primary rounded-full border p-1.5 transition-colors"
+              disabled={isWithdrawal}
+              className="border-border/70 bg-background text-primary hover:border-primary/50 hover:text-primary rounded-full border p-1.5 transition-colors disabled:pointer-events-none disabled:opacity-50"
             >
               <ArrowLeftRight className="h-4 w-4" />
             </PlainButton>
@@ -286,6 +309,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             <Select
               value={watchedDestinyAccount?.toString() || ''}
               onValueChange={(v) => setValue('destiny_account', parseInt(v))}
+              disabled={isWithdrawal}
             >
               <SelectTrigger className="py-sm h-auto">
                 <SelectValue
@@ -293,13 +317,14 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                 />
               </SelectTrigger>
               <SelectContent>
-                {accounts
-                  .filter((a) => a.id !== watchedOriginAccount)
-                  .map((a) => (
-                    <SelectItem key={a.id} value={a.id.toString()}>
-                      {a.account_name}
-                    </SelectItem>
-                  ))}
+                {(isWithdrawal && walletAccount
+                  ? [walletAccount]
+                  : regularAccounts.filter((a) => a.id !== watchedOriginAccount)
+                ).map((a) => (
+                  <SelectItem key={a.id} value={a.id.toString()}>
+                    {a.account_name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             {destinyAccount && (
@@ -433,8 +458,9 @@ export const TransferForm: React.FC<TransferFormProps> = ({
         </div>
       )}
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -446,15 +472,15 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           }
         >
           {isLoading ? (
-            <>
-              <Loader2 className="mr-xs h-4 w-4 animate-spin" />
-              {t('common.actions.saving')}
-            </>
-          ) : transfer ? (
-            t('common.actions.update')
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            t('common.actions.create')
+            <Save className="h-4 w-4" />
           )}
+          {isLoading
+            ? t('common.actions.saving')
+            : transfer
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
     </form>

@@ -991,6 +991,7 @@ class WorkoutPlanSerializer(serializers.ModelSerializer):
         read_only_fields = ["uuid", "created_at", "updated_at"]
 
     def validate(self, data):
+        self._validate_unique_name(data)
         value = data.get("category")
         if self.instance and value and value != self.instance.category:
             conflict = (
@@ -1013,6 +1014,33 @@ class WorkoutPlanSerializer(serializers.ModelSerializer):
                     }
                 )
         return data
+
+    def _validate_unique_name(self, data):
+        """Um plano por nome (sem diferenciar maiúsculas) + categoria
+        por dono."""
+        instance = self.instance
+        name = data.get("name", instance.name if instance else "")
+        name = (name or "").strip()
+        category = data.get(
+            "category", instance.category if instance else "resistance"
+        )
+        owner = data.get("owner", instance.owner if instance else None)
+        if not name or owner is None:
+            return
+        if "name" in data:
+            data["name"] = name
+        duplicates = WorkoutPlan.objects.filter(
+            owner=owner,
+            category=category,
+            name__iexact=name,
+            deleted_at__isnull=True,
+        )
+        if instance:
+            duplicates = duplicates.exclude(pk=instance.pk)
+        if duplicates.exists():
+            raise serializers.ValidationError(
+                {"name": "Já existe um plano com este nome nesta categoria."}
+            )
 
     def get_day_count(self, obj):
         # `days` (e `days.exercises`) já vêm filtrados por soft-delete via
@@ -1379,6 +1407,36 @@ class MealTypeSerializer(serializers.ModelSerializer):
 
     def validate_default_menu_option(self, value):
         return _validate_default_menu_option(self.instance, value)
+
+    def validate(self, attrs):
+        owner = attrs.get("owner", getattr(self.instance, "owner", None))
+        name = attrs.get("name", getattr(self.instance, "name", ""))
+        suggested_time = attrs.get(
+            "suggested_time", getattr(self.instance, "suggested_time", None)
+        )
+        if owner is None:
+            return attrs
+        key = _meal_type_name_key(name)
+        others = MealType.objects.filter(owner=owner, deleted_at__isnull=True)
+        if self.instance is not None:
+            others = others.exclude(pk=self.instance.pk)
+        for mt in others:
+            if (
+                _meal_type_name_key(mt.name) == key
+                and mt.suggested_time == suggested_time
+            ):
+                raise serializers.ValidationError(
+                    {
+                        "detail": (
+                            "Já existe uma refeição com este nome e horário."
+                        )
+                    }
+                )
+        return attrs
+
+
+def _meal_type_name_key(name):
+    return " ".join((name or "").split()).casefold()
 
 
 def _validate_default_menu_option(meal_type, option):

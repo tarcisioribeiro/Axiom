@@ -1,17 +1,24 @@
 /* eslint-disable max-lines */
 import {
-  Upload,
-  FileUp,
-  CheckSquare,
-  Square,
-  CheckCircle2,
   AlertCircle,
-  Info,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  CheckSquare,
   Download,
+  FileType,
+  FileUp,
+  Import,
+  Info,
+  RotateCcw,
+  Square,
+  Upload,
+  X,
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -94,8 +101,7 @@ export function PasswordImportContent() {
       setStep('preview');
     } catch (err) {
       toast({
-        title: t('pages.passwordImport.parseError'),
-        description: getErrorMessage(err),
+        title: t('pages.passwordImport.parseError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     } finally {
@@ -163,8 +169,7 @@ export function PasswordImportContent() {
       setSummary(result);
       setStep('summary');
       toast({
-        title: t('pages.passwordImport.importSuccess'),
-        description: t('pages.passwordImport.importSuccessDesc', {
+        title: t('pages.passwordImport.importSuccessDesc', {
           imported: result.imported,
           duplicates: result.duplicates_skipped,
           errors: result.errors,
@@ -172,8 +177,7 @@ export function PasswordImportContent() {
       });
     } catch (err) {
       toast({
-        title: t('pages.passwordImport.importError'),
-        description: getErrorMessage(err),
+        title: t('pages.passwordImport.importError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     } finally {
@@ -205,7 +209,8 @@ export function PasswordImportContent() {
           </CardHeader>
           <CardContent className="space-y-md">
             <div className="space-y-xs">
-              <Label htmlFor="format-select">
+              <Label className="gap-xs flex items-center" htmlFor="format-select">
+                <FileType className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.passwordImport.formatLabel')}
               </Label>
               <Select
@@ -229,7 +234,8 @@ export function PasswordImportContent() {
             </div>
 
             <div className="space-y-xs">
-              <Label htmlFor="file-input">
+              <Label className="gap-xs flex items-center" htmlFor="file-input">
+                <Upload className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.passwordImport.uploadLabel')}
               </Label>
               <div
@@ -293,7 +299,7 @@ export function PasswordImportContent() {
                 <LoadingState size="sm" />
               ) : (
                 <>
-                  <Download className="mr-sm h-4 w-4" />
+                  <Download className="h-4 w-4" />
                   {t('pages.passwordImport.previewBtn')}
                 </>
               )}
@@ -316,11 +322,11 @@ export function PasswordImportContent() {
                 </div>
                 <div className="gap-sm flex items-center">
                   <Button variant="outline" size="sm" onClick={selectAll}>
-                    <CheckSquare className="mr-xs h-4 w-4" />
+                    <CheckSquare className="h-4 w-4" />
                     {t('pages.passwordImport.selectAll')}
                   </Button>
                   <Button variant="outline" size="sm" onClick={deselectAll}>
-                    <Square className="mr-xs h-4 w-4" />
+                    <Square className="h-4 w-4" />
                     {t('pages.passwordImport.deselectAll')}
                   </Button>
                 </div>
@@ -328,9 +334,7 @@ export function PasswordImportContent() {
             </CardHeader>
             <CardContent>
               {preview.entries.length === 0 ? (
-                <p className="py-xl text-muted-foreground text-center">
-                  {t('pages.passwordImport.emptyFile')}
-                </p>
+                <EmptyState title={t('pages.passwordImport.emptyFile')} />
               ) : (
                 <div className="rounded-md border">
                   <Table>
@@ -392,6 +396,7 @@ export function PasswordImportContent() {
 
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={handleReset}>
+              <X aria-hidden="true" />
               {t('common.actions.cancel')}
             </Button>
             <div className="flex items-center gap-3">
@@ -399,6 +404,7 @@ export function PasswordImportContent() {
                 {t('pages.passwordImport.selectedCount', { count: selected.size })}
               </span>
               <Button disabled={selected.size === 0} onClick={handleGoToMapping}>
+                <ArrowRight aria-hidden="true" />
                 {t('pages.passwordImport.nextMappingBtn')}
               </Button>
             </div>
@@ -419,17 +425,13 @@ export function PasswordImportContent() {
             </CardHeader>
             <CardContent className="space-y-md">
               {Object.keys(categoryMapping).length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                  {t('pages.passwordImport.noCategoriesToMap')}
-                </p>
+                <EmptyState title={t('pages.passwordImport.noCategoriesToMap')} />
               ) : (
                 Object.entries(categoryMapping).map(
                   ([sourceCategory, targetCategory]) => (
                     <div key={sourceCategory} className="gap-md flex items-center">
                       <div className="w-40 shrink-0">
-                        <Badge variant="secondary" className="font-mono">
-                          {sourceCategory}
-                        </Badge>
+                        <Badge variant="secondary">{sourceCategory}</Badge>
                       </div>
                       <span className="text-muted-foreground">→</span>
                       <Select
@@ -461,9 +463,11 @@ export function PasswordImportContent() {
 
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={() => setStep('preview')}>
+              <ArrowLeft aria-hidden="true" />
               {t('common.actions.back')}
             </Button>
-            <Button disabled={isLoading} onClick={() => void handleImport()}>
+            <Button loading={isLoading} onClick={() => void handleImport()}>
+              {!isLoading && <Import aria-hidden="true" />}
               {isLoading
                 ? t('pages.passwordImport.importing')
                 : t('pages.passwordImport.importBtn')}
@@ -520,6 +524,7 @@ export function PasswordImportContent() {
             )}
 
             <Button className="w-full" onClick={handleReset}>
+              <RotateCcw aria-hidden="true" />
               {t('pages.passwordImport.importAnother')}
             </Button>
           </CardContent>

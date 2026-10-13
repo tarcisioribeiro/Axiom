@@ -1,27 +1,31 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
+  Building2,
+  Check,
+  Copy,
+  CreditCard,
+  ExternalLink,
   Eye,
   EyeOff,
-  ExternalLink,
   Loader2,
-  Copy,
-  Check,
+  Pencil,
+  Plus,
+  Search,
+  Shapes,
   Star,
+  Trash2,
   Wallet,
-  Building2,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { StoredAccountForm } from '@/components/security/StoredAccountForm';
 import { VaultGuard } from '@/components/security/VaultGuard';
@@ -35,7 +39,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate } from '@/config/constants';
+import { STORED_ACCOUNT_TYPE_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn, copyToClipboard } from '@/lib/utils';
@@ -48,35 +61,31 @@ import type {
   Account,
   Member,
 } from '@/types';
+import { ACCOUNT_TYPES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-type AccountTypeConfig = { badge: string; avatar: string; border: string };
+type AccountTypeConfig = { badge: string; avatar: string };
 
 const ACCOUNT_TYPE_CONFIG: Record<string, AccountTypeConfig> = {
   CC: {
     badge: 'bg-primary/10 text-primary border-primary/25',
     avatar: 'bg-primary/15 text-primary ring-1 ring-primary/25',
-    border: 'border-l-primary/60',
   },
   CS: {
     badge: 'bg-success/10 text-success border-success/25',
     avatar: 'bg-success/15 text-success ring-1 ring-success/25',
-    border: 'border-l-success/60',
   },
   CP: {
     badge: 'bg-info/10 text-info border-info/25',
     avatar: 'bg-info/15 text-info ring-1 ring-info/25',
-    border: 'border-l-info/60',
   },
   CI: {
     badge: 'bg-warning/10 text-warning border-warning/25',
     avatar: 'bg-warning/15 text-warning ring-1 ring-warning/25',
-    border: 'border-l-warning/60',
   },
   OTHER: {
     badge: '',
     avatar: 'bg-muted text-muted-foreground ring-1 ring-border',
-    border: 'border-l-border',
   },
 };
 
@@ -109,6 +118,8 @@ export default function StoredAccounts() {
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [accountTypeFilter, setAccountTypeFilter] = useState('all');
+  const [institutionFilter, setInstitutionFilter] = useState('all');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
@@ -129,8 +140,7 @@ export default function StoredAccounts() {
         };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return {
@@ -173,13 +183,11 @@ export default function StoredAccounts() {
       await storedAccountsService.delete(id);
       toast({
         title: t('pages.storedAccounts.deleted'),
-        description: t('pages.storedAccounts.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -214,12 +222,12 @@ export default function StoredAccounts() {
       setRevealedData(newMap);
       toast({
         title: t('pages.storedAccounts.revealed'),
-        description: t('pages.storedAccounts.revealedDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: t('pages.storedAccounts.revealError'),
-        description: getErrorMessage(error),
+        title: t('pages.storedAccounts.revealError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -230,8 +238,7 @@ export default function StoredAccounts() {
   const handleCopy = async (text: string, label: string) => {
     await copyToClipboard(text);
     toast({
-      title: t('common.messages.copied'),
-      description: t('common.messages.copiedDesc', { label }),
+      title: t('common.messages.copiedDesc', { label }),
     });
   };
 
@@ -244,8 +251,7 @@ export default function StoredAccounts() {
       setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.copyError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.copyError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -263,21 +269,18 @@ export default function StoredAccounts() {
         await storedAccountsService.update(selectedAccount.id, updateData);
         toast({
           title: t('pages.storedAccounts.updated'),
-          description: t('pages.storedAccounts.updatedDesc'),
         });
       } else {
         await storedAccountsService.create(data);
         toast({
           title: t('pages.storedAccounts.created'),
-          description: t('pages.storedAccounts.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -295,15 +298,23 @@ export default function StoredAccounts() {
       );
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
   };
 
+  const institutionOptions = useMemo(
+    () => Array.from(new Set(accounts.map((acc) => acc.institution_name))).sort(),
+    [accounts]
+  );
+
   const filteredAccounts = accounts.filter((acc) => {
     if (showFavoritesOnly && !acc.is_favorite) return false;
+    if (accountTypeFilter !== 'all' && acc.account_type !== accountTypeFilter)
+      return false;
+    if (institutionFilter !== 'all' && acc.institution_name !== institutionFilter)
+      return false;
     return (
       acc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       acc.institution_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -322,18 +333,96 @@ export default function StoredAccounts() {
         </PageHeader>
 
         <FilterBar
-          hasActiveFilters={!!searchTerm || showFavoritesOnly}
+          hasActiveFilters={
+            !!searchTerm ||
+            showFavoritesOnly ||
+            accountTypeFilter !== 'all' ||
+            institutionFilter !== 'all'
+          }
           onClear={() => {
             setSearchTerm('');
             setShowFavoritesOnly(false);
+            setAccountTypeFilter('all');
+            setInstitutionFilter('all');
           }}
+          activeFilters={[
+            ...(accountTypeFilter !== 'all'
+              ? [
+                  {
+                    key: 'accountType',
+                    label: `${t('pages.storedAccounts.allTypes')}: ${t(`pages.storedAccounts.accountTypes.${accountTypeFilter}`)}`,
+                    onRemove: () => setAccountTypeFilter('all'),
+                  },
+                ]
+              : []),
+            ...(institutionFilter !== 'all'
+              ? [
+                  {
+                    key: 'institution',
+                    label: `${t('pages.storedAccounts.allInstitutions')}: ${translate('institutions', institutionFilter)}`,
+                    onRemove: () => setInstitutionFilter('all'),
+                  },
+                ]
+              : []),
+          ]}
         >
-          <SearchInput
-            placeholder={t('pages.storedAccounts.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            className="w-52 sm:w-64"
-          />
+          <FilterField label={t('common.filterLabels.search')} icon={Search}>
+            <SearchInput
+              placeholder={t('pages.storedAccounts.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="w-52 sm:w-64"
+            />
+          </FilterField>
+          <FilterField label={t('common.fields.type')} icon={Shapes}>
+            <Select value={accountTypeFilter} onValueChange={setAccountTypeFilter}>
+              <SelectTrigger
+                className="w-44"
+                aria-label={t('pages.storedAccounts.allTypes')}
+                startIcon={<CreditCard className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.storedAccounts.allTypes')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('pages.storedAccounts.allTypes')}
+                </SelectItem>
+                {ACCOUNT_TYPES.map(({ value }) => {
+                  const Icon = STORED_ACCOUNT_TYPE_ICONS[value] ?? Building2;
+                  return (
+                    <SelectItem
+                      key={value}
+                      value={value}
+                      icon={<Icon className="h-4 w-4" />}
+                    >
+                      {t(`pages.storedAccounts.accountTypes.${value}`)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </FilterField>
+          <FilterField label={t('common.fields.institution')} icon={Building2}>
+            <Select value={institutionFilter} onValueChange={setInstitutionFilter}>
+              <SelectTrigger
+                className="w-48"
+                aria-label={t('pages.storedAccounts.allInstitutions')}
+                startIcon={<Building2 className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.storedAccounts.allInstitutions')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('pages.storedAccounts.allInstitutions')}
+                </SelectItem>
+                {institutionOptions.map((institution) => (
+                  <SelectItem key={institution} value={institution}>
+                    {translate('institutions', institution)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterField>
           <Button
             variant={showFavoritesOnly ? 'default' : 'outline'}
             size="sm"
@@ -349,273 +438,279 @@ export default function StoredAccounts() {
         {!isLoading && filteredAccounts.length === 0 ? (
           <EmptyState
             icon={<Building2 className="text-muted-foreground h-12 w-12" />}
-            message={
+            title={
               searchTerm
                 ? t('pages.storedAccounts.emptySearch')
                 : t('pages.storedAccounts.emptySearch')
             }
           />
         ) : (
-          <div className="gap-md grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-            {filteredAccounts.map((acc) => {
-              const typeCfg =
-                ACCOUNT_TYPE_CONFIG[acc.account_type] ?? DEFAULT_ACCOUNT_TYPE;
-              const revealed = revealedData.get(acc.id);
-              const initials = getInstitutionInitials(acc.institution_name);
+          <PaginatedSlide
+            key={`${searchTerm}-${accountTypeFilter}-${institutionFilter}-${showFavoritesOnly}`}
+            items={filteredAccounts}
+            pageSize={GRID_PAGE_SIZE}
+            className="gap-md grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+          >
+            {(pageItems) =>
+              pageItems.map((acc) => {
+                const typeCfg =
+                  ACCOUNT_TYPE_CONFIG[acc.account_type] ?? DEFAULT_ACCOUNT_TYPE;
+                const revealed = revealedData.get(acc.id);
+                const initials = getInstitutionInitials(acc.institution_name);
 
-              return (
-                <Card
-                  key={acc.id}
-                  className={cn('overflow-hidden border-l-2', typeCfg.border)}
-                >
-                  <CardHeader className="pb-3">
-                    {/* Institution row */}
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={cn(
-                          'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-sm font-bold',
-                          typeCfg.avatar
-                        )}
-                      >
-                        {initials}
+                return (
+                  <Card key={acc.id} className="overflow-hidden">
+                    <CardHeader className="pb-3">
+                      {/* Institution row */}
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={cn(
+                            'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-sm font-bold',
+                            typeCfg.avatar
+                          )}
+                        >
+                          {initials}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate leading-tight font-semibold">
+                            {acc.name}
+                          </p>
+                          <p className="text-muted-foreground truncate text-sm">
+                            {translate('institutions', acc.institution_name)}
+                          </p>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={cn('shrink-0 text-xs', typeCfg.badge)}
+                        >
+                          {translate('accountTypes', acc.account_type)}
+                        </Badge>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate leading-tight font-semibold">
-                          {acc.name}
-                        </p>
-                        <p className="text-muted-foreground truncate text-sm">
-                          {translate('institutions', acc.institution_name)}
-                        </p>
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className={cn('shrink-0 text-xs', typeCfg.badge)}
-                      >
-                        {translate('accountTypes', acc.account_type)}
-                      </Badge>
-                    </div>
-                  </CardHeader>
+                    </CardHeader>
 
-                  <CardContent className="space-y-3 pt-0">
-                    {/* Account details */}
-                    <div className="space-y-sm bg-muted/40 py-sm rounded-lg px-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                          {t('pages.storedAccounts.columns.number')}
-                        </span>
-                        <span className="font-mono">
-                          {revealed?.account_number ?? acc.account_number_masked}
-                        </span>
-                      </div>
-                      {acc.agency && (
+                    <CardContent className="space-y-3 pt-0">
+                      {/* Account details */}
+                      <div className="space-y-sm bg-muted/40 py-sm rounded-lg px-3">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                            {t('pages.storedAccounts.columns.agency')}
+                            {t('pages.storedAccounts.columns.number')}
                           </span>
-                          <span className="font-mono">{acc.agency}</span>
+                          <span>
+                            {revealed?.account_number ?? acc.account_number_masked}
+                          </span>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Passwords section */}
-                    {revealed ? (
-                      <div className="space-y-sm border-primary/20 bg-primary/5 py-sm rounded-lg border px-3">
-                        <div className="gap-sm flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                            {t('pages.storedAccounts.password1')}
-                          </span>
-                          <div className="gap-xs flex items-center">
-                            <span className="font-mono">
-                              {revealed.password ||
-                                t('pages.storedAccounts.noPassword')}
+                        {acc.agency && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                              {t('pages.storedAccounts.columns.agency')}
                             </span>
-                            {revealed.password && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
-                                onClick={() =>
-                                  handleCopy(
-                                    revealed.password!,
-                                    t('pages.storedAccounts.password1')
-                                  )
-                                }
-                                aria-label={t('common.actions.copy')}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            )}
+                            <span>{acc.agency}</span>
                           </div>
-                        </div>
-                        <div className="gap-sm flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                            {t('pages.storedAccounts.password2')}
-                          </span>
-                          <div className="gap-xs flex items-center">
-                            <span className="font-mono">
-                              {revealed.password2 ||
-                                t('pages.storedAccounts.noPassword')}
-                            </span>
-                            {revealed.password2 && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
-                                onClick={() =>
-                                  handleCopy(
-                                    revealed.password2!,
-                                    t('pages.storedAccounts.password2')
-                                  )
-                                }
-                                aria-label={t('common.actions.copy')}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-muted/40 py-sm rounded-lg px-3">
-                        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                          {t('pages.storedAccounts.columns.passwords')}
-                        </p>
-                        <p className="text-muted-foreground mt-0.5 font-mono text-sm">
-                          ••••••••
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Footer: finance link + actions */}
-                    <div className="gap-sm pt-xs flex items-center justify-between">
-                      <div className="min-w-0">
-                        {acc.finance_account_name && (
-                          <button
-                            className="text-primary flex items-center gap-0.5 truncate text-xs hover:underline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              void navigate('/accounts');
-                            }}
-                          >
-                            <ExternalLink className="h-2.5 w-2.5 shrink-0" />
-                            {acc.finance_account_name}
-                          </button>
                         )}
                       </div>
-                      <div className="flex shrink-0 items-center gap-0.5">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() => handleReveal(acc.id)}
-                          disabled={revealingId === acc.id}
-                          title={
-                            revealed
-                              ? t('common.actions.hide')
-                              : t('common.actions.reveal')
-                          }
-                          aria-label={
-                            revealed
-                              ? t('common.actions.hide')
-                              : t('common.actions.reveal')
-                          }
-                        >
-                          {revealingId === acc.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : revealed ? (
-                            <EyeOff className="h-3.5 w-3.5" />
-                          ) : (
-                            <Eye className="h-3.5 w-3.5" />
+
+                      {/* Passwords section */}
+                      {revealed ? (
+                        <div className="space-y-sm border-primary/20 bg-primary/5 py-sm rounded-lg border px-3">
+                          <div className="gap-sm flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                              {t('pages.storedAccounts.password1')}
+                            </span>
+                            <div className="gap-xs flex items-center">
+                              <span>
+                                {revealed.password ||
+                                  t('pages.storedAccounts.noPassword')}
+                              </span>
+                              {revealed.password && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
+                                  onClick={() =>
+                                    handleCopy(
+                                      revealed.password!,
+                                      t('pages.storedAccounts.password1')
+                                    )
+                                  }
+                                  aria-label={t('common.actions.copy')}
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="gap-sm flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                              {t('pages.storedAccounts.password2')}
+                            </span>
+                            <div className="gap-xs flex items-center">
+                              <span>
+                                {revealed.password2 ||
+                                  t('pages.storedAccounts.noPassword')}
+                              </span>
+                              {revealed.password2 && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
+                                  onClick={() =>
+                                    handleCopy(
+                                      revealed.password2!,
+                                      t('pages.storedAccounts.password2')
+                                    )
+                                  }
+                                  aria-label={t('common.actions.copy')}
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-muted/40 py-sm rounded-lg px-3">
+                          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                            {t('pages.storedAccounts.columns.passwords')}
+                          </p>
+                          <p className="text-muted-foreground mt-0.5 text-sm">
+                            ••••••••
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Footer: finance link + actions */}
+                      <div className="gap-sm pt-xs flex items-center justify-between">
+                        <div className="min-w-0">
+                          {acc.finance_account_name && (
+                            <button
+                              className="text-primary flex items-center gap-0.5 truncate text-xs hover:underline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void navigate('/accounts');
+                              }}
+                            >
+                              <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                              {acc.finance_account_name}
+                            </button>
                           )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className={cn(
-                            'h-8 w-8 p-0',
-                            copiedId === acc.id && 'text-success'
-                          )}
-                          onClick={() => void handleCopyAccountNumber(acc.id)}
-                          disabled={copyingId === acc.id}
-                          title={
-                            copiedId === acc.id
-                              ? t('common.messages.copied')
-                              : t('pages.storedAccounts.copyAccountNumber')
-                          }
-                          aria-label={t('pages.storedAccounts.copyAccountNumber')}
-                        >
-                          {copyingId === acc.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : copiedId === acc.id ? (
-                            <Check className="h-3.5 w-3.5" />
-                          ) : (
-                            <Copy className="h-3.5 w-3.5" />
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className={cn(
-                            'h-8 w-8 p-0',
-                            acc.is_favorite && 'text-warning'
-                          )}
-                          onClick={() => void handleToggleFavorite(acc.id)}
-                          title={t('common.actions.favorite')}
-                          aria-label={t('common.actions.favorite')}
-                        >
-                          <Star
-                            className={cn(
-                              'h-3.5 w-3.5',
-                              acc.is_favorite && 'fill-current'
+                        </div>
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleReveal(acc.id)}
+                            disabled={revealingId === acc.id}
+                            title={
+                              revealed
+                                ? t('common.actions.hide')
+                                : t('common.actions.reveal')
+                            }
+                            aria-label={
+                              revealed
+                                ? t('common.actions.hide')
+                                : t('common.actions.reveal')
+                            }
+                          >
+                            {revealingId === acc.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : revealed ? (
+                              <EyeOff className="h-3.5 w-3.5" />
+                            ) : (
+                              <Eye className="h-3.5 w-3.5" />
                             )}
-                            aria-hidden="true"
-                          />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() => handleEdit(acc)}
-                          title={t('common.actions.edit')}
-                          aria-label={t('common.actions.edit')}
-                        >
-                          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() => handleDelete(acc.id)}
-                          title={t('common.actions.delete')}
-                          aria-label={t('common.actions.delete')}
-                        >
-                          <Trash2
-                            className="text-destructive h-3.5 w-3.5"
-                            aria-hidden="true"
-                          />
-                        </Button>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={cn(
+                              'h-8 w-8 p-0',
+                              copiedId === acc.id && 'text-success'
+                            )}
+                            onClick={() => void handleCopyAccountNumber(acc.id)}
+                            disabled={copyingId === acc.id}
+                            title={
+                              copiedId === acc.id
+                                ? t('common.messages.copied')
+                                : t('pages.storedAccounts.copyAccountNumber')
+                            }
+                            aria-label={t('pages.storedAccounts.copyAccountNumber')}
+                          >
+                            {copyingId === acc.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : copiedId === acc.id ? (
+                              <Check className="h-3.5 w-3.5" />
+                            ) : (
+                              <Copy className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={cn(
+                              'h-8 w-8 p-0',
+                              acc.is_favorite && 'text-warning'
+                            )}
+                            onClick={() => void handleToggleFavorite(acc.id)}
+                            title={t('common.actions.favorite')}
+                            aria-label={t('common.actions.favorite')}
+                          >
+                            <Star
+                              className={cn(
+                                'h-3.5 w-3.5',
+                                acc.is_favorite && 'fill-current'
+                              )}
+                              aria-hidden="true"
+                            />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleEdit(acc)}
+                            title={t('common.actions.edit')}
+                            aria-label={t('common.actions.edit')}
+                          >
+                            <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleDelete(acc.id)}
+                            title={t('common.actions.delete')}
+                            aria-label={t('common.actions.delete')}
+                          >
+                            <Trash2
+                              className="text-destructive h-3.5 w-3.5"
+                              aria-hidden="true"
+                            />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            }
+          </PaginatedSlide>
         )}
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="custom-scrollbar max-w-2xl">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle mode={selectedAccount ? 'edit' : 'create'}>
                 {selectedAccount
                   ? t('pages.storedAccounts.editTitle')
                   : t('pages.storedAccounts.newTitle')}
               </DialogTitle>
-              <DialogDescription>
-                {selectedAccount
-                  ? t('pages.storedAccounts.editDesc')
-                  : t('pages.storedAccounts.newDesc')}
-              </DialogDescription>
+              <VisuallyHidden>
+                <DialogDescription>
+                  {selectedAccount
+                    ? t('pages.storedAccounts.editDesc')
+                    : t('pages.storedAccounts.newDesc')}
+                </DialogDescription>
+              </VisuallyHidden>
             </DialogHeader>
             <StoredAccountForm
               account={selectedAccount}

@@ -76,13 +76,23 @@ def update_goal_progress_on_instance_complete(
 
 @receiver(post_save, sender="personal_planning.TaskInstance")
 def award_xp_on_task_completion(sender, instance, created, **kwargs):
-    """Concede XP ao membro quando uma tarefa é concluída."""
-    if instance.status != "completed":
-        return
+    """Concede XP ao concluir a tarefa; desconta se ela for desmarcada depois.
 
-    # Só processa a primeira vez que o status se torna "completed"
+    `xp_awarded` (persistido na instância) registra quanto XP foi creditado
+    pela conclusão atual, pra saber exatamente quanto descontar se o status
+    voltar para pending/in_progress — sem isso, marcar/desmarcar repetidas
+    vezes gera XP infinito.
+    """
     prev_status = getattr(instance, "_prev_status", None)
-    if not created and prev_status == "completed":
+    became_completed = (
+        instance.status == "completed" and prev_status != "completed"
+    )
+    left_completed = (
+        not created
+        and prev_status == "completed"
+        and instance.status != "completed"
+    )
+    if not became_completed and not left_completed:
         return
 
     try:
@@ -92,43 +102,63 @@ def award_xp_on_task_completion(sender, instance, created, **kwargs):
             member=instance.owner,
             defaults={"created_by": instance.created_by},
         )
-        profile.tasks_completed_total += 1
-        profile.save(update_fields=["tasks_completed_total", "updated_at"])
 
-        xp = 10 + (5 if instance.priority in ("high", "critical") else 0)
-        profile.add_xp(xp, "task_completed", f"Tarefa: {instance.task_name}")
-        profile.update_streak(instance.scheduled_date)
+        if became_completed:
+            if instance.xp_awarded:
+                return  # já premiada; evita duplicar em corrida de saves
+            profile.tasks_completed_total += 1
+            profile.save(update_fields=["tasks_completed_total", "updated_at"])
 
-        # Badge de marcos de tarefas
-        for milestone, slug, name, reward in [
-            (10, "tasks_10", "Iniciante", 20),
-            (50, "tasks_50", "Consistente", 100),
-            (100, "tasks_100", "Dedicado", 250),
-            (500, "tasks_500", "Mestre das Rotinas", 1000),
-        ]:
-            if profile.tasks_completed_total == milestone:
-                from personal_planning.models import Badge, UserBadge
+            xp = 10 + (5 if instance.priority in ("high", "critical") else 0)
+            profile.add_xp(
+                xp, "task_completed", f"Tarefa: {instance.task_name}"
+            )
+            profile.update_streak(instance.scheduled_date)
+            type(instance).objects.filter(pk=instance.pk).update(xp_awarded=xp)
 
-                badge, _ = Badge.objects.get_or_create(
-                    slug=slug,
-                    defaults={
-                        "name": name,
-                        "description": f"Concluiu {milestone} tarefas",
-                        "category": "completion",
-                        "icon": "CheckCircle",
-                        "xp_reward": reward,
-                        "created_by": instance.created_by,
-                    },
-                )
-                _, earned = UserBadge.objects.get_or_create(
-                    profile=profile,
-                    badge=badge,
-                    defaults={"created_by": instance.created_by},
-                )
-                if earned:
-                    profile.add_xp(
-                        reward, "badge_earned", f"Badge: {badge.name}"
+            # Badge de marcos de tarefas
+            for milestone, slug, name, reward in [
+                (10, "tasks_10", "Iniciante", 20),
+                (50, "tasks_50", "Consistente", 100),
+                (100, "tasks_100", "Dedicado", 250),
+                (500, "tasks_500", "Mestre das Rotinas", 1000),
+            ]:
+                if profile.tasks_completed_total == milestone:
+                    from personal_planning.models import Badge, UserBadge
+
+                    badge, _ = Badge.objects.get_or_create(
+                        slug=slug,
+                        defaults={
+                            "name": name,
+                            "description": f"Concluiu {milestone} tarefas",
+                            "category": "completion",
+                            "icon": "CheckCircle",
+                            "xp_reward": reward,
+                            "created_by": instance.created_by,
+                        },
                     )
+                    _, earned = UserBadge.objects.get_or_create(
+                        profile=profile,
+                        badge=badge,
+                        defaults={"created_by": instance.created_by},
+                    )
+                    if earned:
+                        profile.add_xp(
+                            reward, "badge_earned", f"Badge: {badge.name}"
+                        )
+        else:
+            if not instance.xp_awarded:
+                return  # nada a descontar (instância antiga, sem xp_awarded)
+            profile.tasks_completed_total = max(
+                0, profile.tasks_completed_total - 1
+            )
+            profile.save(update_fields=["tasks_completed_total", "updated_at"])
+            profile.add_xp(
+                -instance.xp_awarded,
+                "task_uncompleted",
+                f"Tarefa desfeita: {instance.task_name}",
+            )
+            type(instance).objects.filter(pk=instance.pk).update(xp_awarded=0)
     except Exception:
         pass
 

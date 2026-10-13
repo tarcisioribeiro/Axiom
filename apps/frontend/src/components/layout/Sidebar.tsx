@@ -89,7 +89,7 @@ function NavLink({ item, isCollapsed, indent = 'md', onClick }: NavLinkProps) {
   const Icon = item.icon;
 
   const base = cn(
-    'relative flex items-center gap-3 rounded-lg transition duration-150',
+    'relative flex items-center gap-3 rounded-lg transition duration-fast',
     active
       ? 'bg-primary/10 font-medium text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
       : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground',
@@ -119,7 +119,6 @@ function NavLink({ item, isCollapsed, indent = 'md', onClick }: NavLinkProps) {
             initial={{ opacity: 0, width: 0 }}
             animate={{ opacity: 1, width: 'auto' }}
             exit={{ opacity: 0, width: 0 }}
-            transition={{ duration: 0.15 }}
             className="truncate"
           >
             {t(item.titleKey)}
@@ -260,7 +259,7 @@ export const Sidebar = () => {
               onClick={() => handleModuleClick(module.id)}
               aria-label={t(module.titleKey)}
               className={cn(
-                'relative flex h-10 w-10 items-center justify-center rounded-lg transition duration-150',
+                'duration-fast relative flex h-10 w-10 items-center justify-center rounded-lg transition',
                 hasActiveItem
                   ? 'text-primary font-medium'
                   : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
@@ -280,7 +279,7 @@ export const Sidebar = () => {
             aria-expanded={isExpanded}
             aria-controls={`module-${module.id}`}
             className={cn(
-              'px-md py-sm flex w-full items-center gap-3 rounded-lg text-sm transition duration-200',
+              'px-md py-sm duration-normal flex w-full items-center gap-3 rounded-lg text-sm transition',
               hasActiveItem
                 ? 'text-primary font-medium'
                 : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
@@ -296,7 +295,7 @@ export const Sidebar = () => {
             )}
             <ChevronDown
               className={cn(
-                'h-4 w-4 shrink-0 transition-transform duration-200',
+                'duration-normal h-4 w-4 shrink-0 transition-transform',
                 isExpanded ? 'rotate-0' : 'rotate-90'
               )}
               aria-hidden="true"
@@ -309,7 +308,7 @@ export const Sidebar = () => {
           <div
             id={`module-${module.id}`}
             className={cn(
-              'grid transition duration-200 ease-in-out',
+              'duration-normal grid transition ease-in-out',
               isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
             )}
           >
@@ -340,7 +339,7 @@ export const Sidebar = () => {
                         aria-expanded={isSubExpanded}
                         aria-controls={`submodule-${subModule.id}`}
                         className={cn(
-                          'px-md py-sm flex w-full items-center gap-3 rounded-lg text-sm transition duration-150',
+                          'px-md py-sm duration-fast flex w-full items-center gap-3 rounded-lg text-sm transition',
                           isSubExpanded
                             ? 'bg-primary/10 text-primary font-medium'
                             : hasSubActiveItem
@@ -350,7 +349,7 @@ export const Sidebar = () => {
                       >
                         <SubIcon
                           className={cn(
-                            'h-4 w-4 shrink-0 transition-colors duration-150',
+                            'duration-fast h-4 w-4 shrink-0 transition-colors',
                             isSubExpanded ? 'text-primary' : ''
                           )}
                           aria-hidden="true"
@@ -360,7 +359,7 @@ export const Sidebar = () => {
                         </span>
                         <ChevronDown
                           className={cn(
-                            'h-3 w-3 shrink-0 transition-transform duration-200',
+                            'duration-normal h-3 w-3 shrink-0 transition-transform',
                             isSubExpanded ? 'rotate-0' : 'rotate-90'
                           )}
                           aria-hidden="true"
@@ -370,7 +369,7 @@ export const Sidebar = () => {
                       <div
                         id={`submodule-${subModule.id}`}
                         className={cn(
-                          'grid transition duration-200 ease-in-out',
+                          'duration-normal grid transition ease-in-out',
                           isSubExpanded
                             ? 'grid-rows-[1fr] opacity-100'
                             : 'grid-rows-[0fr] opacity-0'
@@ -430,7 +429,7 @@ export const Sidebar = () => {
           isCollapsed && !isMobile ? 'justify-center' : 'justify-between'
         )}
       >
-        <Link to="/" className="gap-sm flex items-center" aria-label={t('nav.home')}>
+        <div className="gap-sm flex items-center">
           <div className="ring-border/50 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg ring-1">
             <img
               src={icon}
@@ -445,14 +444,13 @@ export const Sidebar = () => {
                 initial={{ opacity: 0, width: 0 }}
                 animate={{ opacity: 1, width: 'auto' }}
                 exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.15 }}
                 className="text-foreground text-lg font-semibold tracking-tight"
               >
                 Axiom
               </motion.span>
             )}
           </AnimatePresence>
-        </Link>
+        </div>
 
         {/* Mobile close button */}
         {isMobile && (
@@ -469,7 +467,7 @@ export const Sidebar = () => {
       {/* Navigation */}
       <nav
         ref={navRef}
-        className="custom-scrollbar flex-1 overflow-y-auto"
+        className="flex-1 overflow-y-auto"
         aria-label={t('layout.mainMenu')}
       >
         {isCollapsed && !isMobile ? (
@@ -482,163 +480,116 @@ export const Sidebar = () => {
 
             <div className="my-sm border-border/40 border-t" />
 
-            <p className="px-md pb-xs text-muted-foreground/60 text-2xs font-semibold tracking-widest uppercase">
-              {t('layout.sectionModules')}
-            </p>
-
             {navModules.map((module) => renderModule(module))}
           </div>
         )}
       </nav>
 
-      {/* User profile — dropdown with Settings + Logout */}
-      {user && (
+      {/* Rodapé: foto (menu de Configurações/Sair), versão, recolher e atalho */}
+      <div
+        className={cn(
+          'mt-sm border-border/40 gap-xs flex items-center border-t pt-3',
+          isCollapsed && !isMobile ? 'flex-col justify-center' : 'justify-between'
+        )}
+      >
         <div
           className={cn(
-            'mt-sm border-border/40 pt-sm border-t',
-            isCollapsed && !isMobile ? 'flex justify-center' : ''
+            'gap-xs flex items-center',
+            isCollapsed && !isMobile && 'flex-col'
           )}
         >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              {isCollapsed && !isMobile ? (
-                <Tooltip
-                  content={
-                    `${user.first_name} ${user.last_name}`.trim() || user.username
-                  }
-                  side="right"
-                >
-                  <button
-                    className="bg-primary/10 ring-border/50 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 transition-opacity hover:opacity-80"
-                    aria-label={t('layout.userMenu')}
-                  >
-                    {user.profile_photo ? (
-                      <img
-                        src={user.profile_photo}
-                        alt=""
-                        className="h-full w-full object-cover"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <span className="text-primary text-xs font-semibold">
-                        {(
-                          user.first_name?.[0] ??
-                          user.username?.[0] ??
-                          '?'
-                        ).toUpperCase()}
-                      </span>
-                    )}
-                  </button>
-                </Tooltip>
-              ) : (
+          {user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <button
-                  className="gap-sm px-sm py-xs hover:bg-muted/60 flex w-full items-center rounded-lg transition-colors"
+                  className="bg-primary/10 ring-border/50 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 transition-opacity hover:opacity-80"
                   aria-label={t('layout.userMenu')}
                 >
-                  <div className="bg-primary/10 ring-border/50 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1">
-                    {user.profile_photo ? (
-                      <img
-                        src={user.profile_photo}
-                        alt=""
-                        className="h-full w-full object-cover"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <span className="text-primary text-xs font-semibold">
-                        {(
-                          user.first_name?.[0] ??
-                          user.username?.[0] ??
-                          '?'
-                        ).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1 text-left">
-                    <p className="text-foreground truncate text-sm font-medium">
-                      {`${user.first_name} ${user.last_name}`.trim() || user.username}
-                    </p>
-                    <p className="text-muted-foreground truncate text-xs">
-                      {user.username}
-                    </p>
-                  </div>
+                  {user.profile_photo ? (
+                    <img
+                      src={user.profile_photo}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <span className="text-primary text-xs font-semibold">
+                      {(
+                        user.first_name?.[0] ??
+                        user.username?.[0] ??
+                        '?'
+                      ).toUpperCase()}
+                    </span>
+                  )}
                 </button>
-              )}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-52">
-              <DropdownMenuItem
-                onClick={() => void navigate('/settings/profile')}
-                className="gap-sm"
-              >
-                <Settings className="h-4 w-4" aria-hidden="true" />
-                {t('layout.userSettings')}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={logout}
-                className="gap-sm text-destructive focus:text-destructive"
-              >
-                <LogOut className="h-4 w-4" aria-hidden="true" />
-                {t('layout.logout')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-52">
+                <DropdownMenuItem
+                  onClick={() => void navigate('/settings/profile')}
+                  className="gap-sm"
+                >
+                  <Settings className="h-4 w-4" aria-hidden="true" />
+                  {t('layout.userSettings')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={logout}
+                  className="gap-sm text-destructive focus:text-destructive"
+                >
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
+                  {t('layout.logout')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
-      {/* Version info (desktop expanded only) */}
-      {!isMobile && !isCollapsed && (
-        <div className="mt-sm gap-xs flex items-center justify-center">
-          <span className="text-muted-foreground/40 text-2xs font-mono select-none">
-            v{APP_VERSION}
-          </span>
-          {!IS_PRODUCTION && (
-            <span
-              className={cn(
-                'px-xs text-2xs rounded py-px font-bold tracking-wide uppercase select-none',
-                APP_ENV === 'staging'
-                  ? 'bg-orange-500/10 text-orange-500'
-                  : 'bg-sky-500/10 text-sky-500'
+          {!isMobile && !isCollapsed && (
+            <>
+              <span className="text-muted-foreground/40 text-2xs select-none">
+                v{APP_VERSION}
+              </span>
+              {!IS_PRODUCTION && (
+                <span
+                  className={cn(
+                    'px-xs text-2xs rounded py-px font-bold tracking-wide uppercase select-none',
+                    APP_ENV === 'staging'
+                      ? 'bg-orange-500/10 text-orange-500'
+                      : 'bg-sky-500/10 text-sky-500'
+                  )}
+                >
+                  {APP_ENV}
+                </span>
               )}
-            >
-              {APP_ENV}
-            </span>
+            </>
           )}
         </div>
-      )}
 
-      {/* Collapse toggle (desktop only) */}
-      {!isMobile && (
-        <div
-          className={cn(
-            'mt-sm border-border/40 border-t pt-3',
-            isCollapsed ? 'flex justify-center' : ''
-          )}
-        >
-          <Tooltip
-            content={
-              isCollapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')
-            }
-            side="right"
-          >
-            <PlainButton
-              onClick={toggleCollapsed}
-              aria-label={
+        {!isMobile && (
+          <div className={cn('gap-xs flex items-center', isCollapsed && 'flex-col')}>
+            <Tooltip
+              content={
                 isCollapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')
               }
-              className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+              side="right"
             >
-              {isCollapsed ? (
-                <PanelLeft className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
-              )}
-            </PlainButton>
-          </Tooltip>
-          {!isCollapsed && (
-            <p className="mt-xs text-muted-foreground/60 text-center text-xs">⌘B</p>
-          )}
-        </div>
-      )}
+              <PlainButton
+                onClick={toggleCollapsed}
+                aria-label={
+                  isCollapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')
+                }
+                className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+              >
+                {isCollapsed ? (
+                  <PanelLeft className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
+                )}
+              </PlainButton>
+            </Tooltip>
+            {!isCollapsed && <p className="text-muted-foreground/60 text-xs">⌘B</p>}
+          </div>
+        )}
+      </div>
     </>
   );
 
@@ -652,7 +603,6 @@ export const Sidebar = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
             onClick={close}
             aria-hidden="true"
           />
@@ -666,7 +616,7 @@ export const Sidebar = () => {
           'z-sidebar fixed inset-y-0 left-0 md:sticky md:top-0',
           'border-border/50 bg-card flex h-screen flex-col border-r',
           // desktop width transition
-          'transition-[width,padding] duration-300 ease-in-out',
+          'duration-medium transition-[width,padding] ease-in-out',
           isCollapsed && !isMobile ? 'p-sm w-[3.75rem]' : 'p-md w-64',
           // mobile slide
           'transform md:transform-none',

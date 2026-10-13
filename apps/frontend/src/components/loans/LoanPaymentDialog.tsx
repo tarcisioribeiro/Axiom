@@ -1,3 +1,4 @@
+import { CalendarDays, FileText, Loader2, Save, Wallet, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -46,7 +47,7 @@ export function LoanPaymentDialog({
   const [form, setForm] = useState({
     value: '',
     account: '',
-    date: new Date().toISOString().split('T')[0],
+    date: formatLocalDate(new Date()),
     notes: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,8 +58,7 @@ export function LoanPaymentDialog({
     if (!loan) return;
     if (!form.value || !form.account || !form.date) {
       toast({
-        title: t('pages.loans.payment.title'),
-        description: t('common.messages.fillRequired'),
+        title: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
@@ -72,15 +72,13 @@ export function LoanPaymentDialog({
         notes: form.notes,
       });
       toast({
-        title: t('pages.loans.payment.success'),
-        description: t('pages.loans.payment.successDesc'),
+        title: t('pages.loans.payment.successDesc'),
       });
       onSuccess?.();
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -92,7 +90,7 @@ export function LoanPaymentDialog({
     <Dialog open={!!loan} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.loans.payment.title')}</DialogTitle>
+          <DialogTitle icon={Wallet}>{t('pages.loans.payment.title')}</DialogTitle>
           <DialogDescription>
             {loan?.description} — {t('pages.loans.remainingBalance')}{' '}
             {formatCurrency(remaining)}
@@ -100,14 +98,20 @@ export function LoanPaymentDialog({
         </DialogHeader>
         <div className="space-y-md">
           <div className="space-y-xs">
-            <Label>{t('pages.loans.payment.value')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.loans.payment.value')} *
+            </Label>
             <CurrencyInput
               value={form.value}
               onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.loans.payment.account')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.loans.payment.account')} *
+            </Label>
             <Select
               value={form.account}
               onValueChange={(v) => setForm((f) => ({ ...f, account: v }))}
@@ -125,7 +129,10 @@ export function LoanPaymentDialog({
             </Select>
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.loans.payment.date')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.loans.payment.date')} *
+            </Label>
             <DatePicker
               value={form.date}
               onChange={(date) =>
@@ -134,18 +141,27 @@ export function LoanPaymentDialog({
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.loans.payment.notes')}</Label>
+            <Label className="gap-xs flex items-center">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.loans.payment.notes')}
+            </Label>
             <Input
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              placeholder={t('common.fields.notes')}
+              placeholder={t('common.placeholders.notes')}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button onClick={() => void handleSubmit()} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
               {isSubmitting
                 ? t('common.actions.saving')
                 : t('pages.loans.payment.submit')}

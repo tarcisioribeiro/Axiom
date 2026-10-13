@@ -255,7 +255,7 @@ Cada agente define `ollama_model`, `anthropic_model`, `groq_model` e `openai_mod
 class FinanceAgent(BaseAgent):
     ollama_model = "qwen2.5:7b"
     anthropic_model = "claude-haiku-4-5-20251001"
-    groq_model = "llama-3.1-8b-instant"
+    groq_model = "openai/gpt-oss-120b"
     openai_model = "gpt-4o-mini"
 ```
 
@@ -539,7 +539,7 @@ AgentEmbedding  [schema: vectors.agent_embeddings]
 | `OLLAMA_MODEL` | `mistral:7b-instruct` | Modelo global de chat (fallback) |
 | `OLLAMA_EMBED_MODEL` | `nomic-embed-text` | Modelo de embeddings |
 | `GROQ_API_KEY` | — | Chave da API Groq |
-| `GROQ_MODEL` | `llama-3.1-8b-instant` | Modelo Groq |
+| `GROQ_MODEL` | `openai/gpt-oss-120b` | Modelo Groq |
 | `ANTHROPIC_API_KEY` | — | Chave da API Anthropic |
 | `ANTHROPIC_MODEL` | `claude-haiku-4-5-20251001` | Modelo Anthropic |
 | `OPENAI_API_KEY` | — | Chave da API OpenAI |
@@ -556,7 +556,7 @@ As variáveis `LLM_PROVIDER`, `OLLAMA_MODEL`, `ANTHROPIC_MODEL`, `GROQ_API_KEY` 
 | Provider | Chat | Embedding | Observações |
 |---|---|---|---|
 | Ollama (self-hosted) | `qwen2.5:7b` ou `mistral:7b-instruct` | `nomic-embed-text` | Requer GPU ou RAM ≥ 8 GB; roda fora do cluster k8s |
-| Groq | `llama-3.1-8b-instant` | via Ollama | Gratuito com limite de tokens/min |
+| Groq | `openai/gpt-oss-120b` | via Ollama | Gratuito com limite de tokens/min |
 | Anthropic | `claude-haiku-4-5-20251001` | via Ollama | Mais rápido e barato; Sonnet para análises complexas |
 | OpenAI | `gpt-4o-mini` | via Ollama | `gpt-4o` para análises complexas |
 

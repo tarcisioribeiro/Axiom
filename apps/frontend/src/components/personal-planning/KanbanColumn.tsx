@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import type { TaskCard, KanbanStatus } from '@/types';
 
 import { KanbanCard } from './KanbanCard';
@@ -52,7 +53,7 @@ export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnP
   };
 
   return (
-    <div className="flex max-h-[calc(100vh-14rem)] flex-col">
+    <div className="flex max-h-[var(--kanban-max-h,calc(100vh-14rem))] flex-col">
       <div
         className={`${getHeaderColor()} ${getHeaderTextColor()} px-md flex-shrink-0 rounded-t-lg py-3`}
       >
@@ -73,9 +74,6 @@ export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnP
             {cards.length}
           </span>
         </div>
-        <p className="text-sm opacity-90">
-          {t('pages.todayTasks.taskCount', { count: cards.length })}
-        </p>
       </div>
 
       <div
@@ -98,7 +96,7 @@ export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnP
                   exit={{ opacity: 0 }}
                   className="py-xl text-center"
                 >
-                  <p className="text-sm">{t('pages.todayTasks.emptyColumn')}</p>
+                  <EmptyState title={t('pages.todayTasks.emptyColumn')} />
                 </motion.div>
               ) : (
                 cards.map((card) => <KanbanCard key={card.id} card={card} />)

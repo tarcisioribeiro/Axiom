@@ -3,6 +3,8 @@ import {
   CheckCircle,
   Copy,
   ExternalLink,
+  Eye,
+  EyeOff,
   KeyRound,
   Loader2,
 } from 'lucide-react';
@@ -92,9 +94,6 @@ export default function ShareCredential() {
             <KeyRound className="text-primary h-7 w-7" />
           </div>
           <h1 className="text-2xl font-bold">{t('pages.shareCredential.title')}</h1>
-          <p className="mt-xs text-muted-foreground text-sm">
-            {t('pages.shareCredential.subtitle')}
-          </p>
         </div>
 
         {/* Loading */}
@@ -138,6 +137,7 @@ export default function ShareCredential() {
                     {credential.username}
                   </code>
                   <Button
+                    aria-label={t('common.actions.copy')}
                     size="sm"
                     variant="ghost"
                     onClick={() => handleCopy(credential.username)}
@@ -160,11 +160,17 @@ export default function ShareCredential() {
                     variant="ghost"
                     onClick={() => setShowPassword((v) => !v)}
                   >
+                    {showPassword ? (
+                      <EyeOff aria-hidden="true" />
+                    ) : (
+                      <Eye aria-hidden="true" />
+                    )}
                     {showPassword
                       ? t('common.actions.hide')
                       : t('common.actions.reveal')}
                   </Button>
                   <Button
+                    aria-label={t('common.actions.copy')}
                     size="sm"
                     variant={copied ? 'default' : 'ghost'}
                     onClick={() => handleCopy(credential.password)}
@@ -196,7 +202,7 @@ export default function ShareCredential() {
 
         {/* Expired / revoked / exhausted (410) */}
         {state === 'expired' && (
-          <Card className="border-destructive/50">
+          <Card>
             <CardContent className="flex flex-col items-center gap-3 py-10">
               <AlertTriangle className="text-destructive h-10 w-10" />
               <p className="text-center font-semibold">
@@ -211,7 +217,7 @@ export default function ShareCredential() {
 
         {/* Not found (404) */}
         {state === 'not_found' && (
-          <Card className="border-destructive/50">
+          <Card>
             <CardContent className="flex flex-col items-center gap-3 py-10">
               <AlertTriangle className="text-destructive h-10 w-10" />
               <p className="text-center font-semibold">
@@ -226,7 +232,7 @@ export default function ShareCredential() {
 
         {/* Generic error */}
         {state === 'error' && (
-          <Card className="border-destructive/50">
+          <Card>
             <CardContent className="flex flex-col items-center gap-3 py-10">
               <AlertTriangle className="text-destructive h-10 w-10" />
               <p className="text-center font-semibold">

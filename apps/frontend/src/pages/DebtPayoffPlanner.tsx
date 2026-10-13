@@ -15,9 +15,11 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
@@ -40,26 +42,20 @@ const URGENCY_BADGE_CLASS: Record<DebtPayoffPlanDebt['urgency'], string> = {
   low: 'bg-muted text-muted-foreground',
 };
 
-const PRIORITY_BORDER_CLASS: Record<number, string> = {
-  1: 'border-l-destructive',
-  2: 'border-l-warning',
-  3: 'border-l-accent',
-};
-const DEFAULT_PRIORITY_BORDER = 'border-l-muted-foreground';
-
-function getPriorityBorderColor(priority: number): string {
-  return PRIORITY_BORDER_CLASS[priority] ?? DEFAULT_PRIORITY_BORDER;
-}
-
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
+interface DebtPayoffPlannerProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
 export default function DebtPayoffPlanner({
   embedded = false,
-}: {
-  embedded?: boolean;
-}) {
+  headerTarget,
+}: DebtPayoffPlannerProps) {
   const { t } = useTranslation();
   const [strategy, setStrategy] = useState<Strategy>('snowball');
   const [extraMonthly, setExtraMonthly] = useState(0);
@@ -111,30 +107,23 @@ export default function DebtPayoffPlanner({
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
+  const header = (
+    <PageHeader
+      title={t('pages.debtPayoff.title')}
+      icon={<TrendingDown className="text-destructive h-6 w-6" />}
+    />
+  );
+
   return (
     <Wrapper>
-      <PageHeader
-        title={t('pages.debtPayoff.title')}
-        description={t('pages.debtPayoff.description')}
-        icon={<TrendingDown className="text-destructive h-6 w-6" />}
-      />
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       {isLoading ? (
         <div className="text-muted-foreground flex h-64 items-center justify-center">
           {t('common.actions.loading')}
         </div>
       ) : activeDebts.length === 0 ? (
-        <div className="gap-md flex h-64 flex-col items-center justify-center text-center">
-          <Trophy className="text-success h-16 w-16 opacity-60" />
-          <div>
-            <p className="text-success text-lg font-semibold">
-              {t('pages.debtPayoff.noDebts')}
-            </p>
-            <p className="text-muted-foreground text-sm">
-              {t('pages.debtPayoff.noDebtsDesc')}
-            </p>
-          </div>
-        </div>
+        <EmptyState title={t('pages.debtPayoff.noDebts')} icon={<Trophy />} />
       ) : (
         <div className="space-y-lg">
           {/* Summary stats */}
@@ -299,10 +288,7 @@ export default function DebtPayoffPlanner({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ delay: idx * 0.05 }}
-                        className={cn(
-                          'bg-card p-md rounded-lg border border-l-4',
-                          getPriorityBorderColor(debt.priority)
-                        )}
+                        className="bg-card p-md rounded-lg border"
                       >
                         <div className="gap-sm flex items-start justify-between">
                           <div className="gap-sm flex items-start">

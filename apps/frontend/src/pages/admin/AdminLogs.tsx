@@ -1,21 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  RefreshCw,
-  ScrollText,
-  Search,
-  X,
-} from 'lucide-react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { CalendarDays, Filter, RefreshCw, ScrollText, User, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
+import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { DatePicker } from '@/components/ui/date-picker';
-import { PlainButton } from '@/components/ui/plain-button';
-import i18n from '@/i18n';
+import { PageSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn, formatLocalDate } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
 
@@ -51,6 +53,7 @@ export default function AdminLogs() {
         date_to: appliedFilters.dateTo || undefined,
       }),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 
   const applyFilters = () => {
@@ -73,13 +76,6 @@ export default function AdminLogs() {
     <PageContainer>
       <PageHeader
         title={t('pages.adminLogs.title')}
-        subtitle={
-          data
-            ? t('pages.adminLogs.subtitle', {
-                records: data.count.toLocaleString(i18n.language),
-              })
-            : t('pages.adminLogs.loading')
-        }
         icon={<ScrollText />}
         actions={
           <button
@@ -93,140 +89,97 @@ export default function AdminLogs() {
         }
       />
 
-      {/* Filters */}
-      <div className="border-border bg-card p-md rounded-lg border">
-        <div className="gap-sm mb-3 flex items-center">
-          <Filter className="text-muted-foreground h-4 w-4" />
-          <span className="text-foreground text-sm font-medium">
-            {t('pages.adminLogs.filters')}
-          </span>
-          {hasFilters && (
-            <button
-              onClick={clearFilters}
-              className="gap-xs text-muted-foreground hover:text-foreground ml-auto flex items-center text-xs"
-            >
-              <X className="h-3 w-3" /> {t('pages.adminLogs.clearFilters')}
-            </button>
-          )}
-        </div>
-        <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-4">
-          <div className="relative">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder={t('pages.adminLogs.userPlaceholder')}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="border-border bg-background py-sm pl-xl text-foreground focus:ring-primary w-full rounded-lg border pr-3 text-sm focus:ring-2 focus:outline-none"
-            />
-          </div>
-          <select
-            value={action}
-            onChange={(e) => setAction(e.target.value)}
-            className="border-border bg-background py-sm text-foreground focus:ring-primary rounded-lg border px-3 text-sm focus:ring-2 focus:outline-none"
+      <FilterBar hasActiveFilters={hasFilters} onClear={clearFilters}>
+        <FilterField label={t('common.filterLabels.user')} icon={User}>
+          <SearchInput
+            placeholder={t('pages.adminLogs.userPlaceholder')}
+            value={username}
+            onValueChange={setUsername}
+          />
+        </FilterField>
+        <FilterField label={t('common.filterLabels.action')} icon={Zap}>
+          <Select
+            value={action || 'all'}
+            onValueChange={(v) => setAction(v === 'all' ? '' : v)}
           >
-            <option value="">{t('pages.adminLogs.allActions')}</option>
-            {Object.keys(ACTION_KEYS).map((k) => (
-              <option key={k} value={k}>
-                {t(`pages.adminLogs.actions.${k}`)}
-              </option>
-            ))}
-          </select>
-          <DatePicker
-            value={dateFrom}
-            onChange={(date) => setDateFrom(date ? formatLocalDate(date) : '')}
-            clearable
+            <SelectTrigger aria-label={t('pages.adminLogs.allActions')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.adminLogs.allActions')}</SelectItem>
+              {Object.keys(ACTION_KEYS).map((k) => (
+                <SelectItem key={k} value={k}>
+                  {t(`pages.adminLogs.actions.${k}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
+          <DateRangeFilter
+            startDate={dateFrom}
+            endDate={dateTo}
+            onStartChange={(date) => setDateFrom(date ? formatLocalDate(date) : '')}
+            onEndChange={(date) => setDateTo(date ? formatLocalDate(date) : '')}
           />
-          <DatePicker
-            value={dateTo}
-            onChange={(date) => setDateTo(date ? formatLocalDate(date) : '')}
-            clearable
-          />
-        </div>
-        <button
-          onClick={applyFilters}
-          className="bg-primary px-md py-sm text-primary-foreground hover:bg-primary/90 mt-3 rounded-lg text-sm font-medium"
-        >
+        </FilterField>
+        <Button size="sm" onClick={applyFilters}>
+          <Filter aria-hidden="true" />
           {t('pages.adminLogs.applyFilters')}
-        </button>
-      </div>
+        </Button>
+      </FilterBar>
 
-      {/* Table */}
-      <div className="border-border bg-card overflow-hidden rounded-lg border">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-border bg-secondary/50 border-b">
-                <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                  {t('pages.adminLogs.columns.datetime')}
-                </th>
-                <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                  {t('pages.adminLogs.columns.user')}
-                </th>
-                <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                  {t('pages.adminLogs.columns.action')}
-                </th>
-                <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                  {t('pages.adminLogs.columns.model')}
-                </th>
-                <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                  {t('pages.adminLogs.columns.description')}
-                </th>
-                <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                  {t('pages.adminLogs.columns.ip')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="text-muted-foreground py-12 text-center">
-                    <RefreshCw className="mb-sm mx-auto h-6 w-6 animate-spin" />
-                    {t('pages.adminLogs.loadingLogs')}
-                  </td>
+      <PageSlide page={page} totalPages={totalPages} onPageChange={setPage}>
+        <div className="border-border bg-card overflow-hidden rounded-lg border">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-border bg-secondary/50 border-b">
+                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
+                    {t('pages.adminLogs.columns.datetime')}
+                  </th>
+                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
+                    {t('pages.adminLogs.columns.user')}
+                  </th>
+                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
+                    {t('pages.adminLogs.columns.action')}
+                  </th>
+                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
+                    {t('pages.adminLogs.columns.model')}
+                  </th>
+                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
+                    {t('pages.adminLogs.columns.description')}
+                  </th>
+                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
+                    {t('pages.adminLogs.columns.ip')}
+                  </th>
                 </tr>
-              ) : data?.results.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-muted-foreground py-12 text-center">
-                    {t('pages.adminLogs.noLogs')}
-                  </td>
-                </tr>
-              ) : (
-                data?.results.map((log) => <LogRow key={log.id} log={log} />)
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="border-border px-md flex items-center justify-between border-t py-3">
-            <p className="text-muted-foreground text-sm">
-              {t('pages.adminLogs.page', {
-                page,
-                total: totalPages,
-                records: data?.count.toLocaleString(i18n.language),
-              })}
-            </p>
-            <div className="gap-sm flex items-center">
-              <PlainButton
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="border-border p-sm text-muted-foreground hover:bg-accent rounded-lg border disabled:opacity-40"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </PlainButton>
-              <PlainButton
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="border-border p-sm text-muted-foreground hover:bg-accent rounded-lg border disabled:opacity-40"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </PlainButton>
-            </div>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="text-muted-foreground py-12 text-center">
+                      <RefreshCw className="mb-sm mx-auto h-6 w-6 animate-spin" />
+                      {t('pages.adminLogs.loadingLogs')}
+                    </td>
+                  </tr>
+                ) : data?.results.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-muted-foreground py-12 text-center">
+                      <EmptyState
+                        icon={<ScrollText className="h-6 w-6" />}
+                        title={t('pages.adminLogs.noLogs')}
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  data?.results.map((log) => <LogRow key={log.id} log={log} />)
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
-      </div>
+        </div>
+      </PageSlide>
     </PageContainer>
   );
 }

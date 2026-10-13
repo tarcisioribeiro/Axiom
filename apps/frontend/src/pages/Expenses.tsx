@@ -1,31 +1,32 @@
 /* eslint-disable max-lines */
 import {
-  Plus,
+  CalendarDays,
+  CheckCircle2,
+  CircleDot,
+  Download,
+  GitFork,
   Pencil,
+  Plus,
+  Search,
+  Tag,
   Trash2,
   TrendingDown,
-  Download,
-  CheckCircle2,
-  Clock,
-  Tag,
-  CircleDot,
-  GitFork,
 } from 'lucide-react';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable } from '@/components/common/DataTable';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { ExportModal } from '@/components/common/ExportModal';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
+import { TransactionsTabsNav } from '@/components/common/TransactionsTabsNav';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
 import { ExpenseSplitsModal } from '@/components/expenses/ExpenseSplitsModal';
 import { ReceiptButton } from '@/components/receipts';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -40,8 +41,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
-import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { EXPENSE_CATEGORY_ICONS, PAYMENT_STATUS_ICONS } from '@/config/icons';
+import { useCurrentMember } from '@/hooks/use-current-member';
 import { useExpensesPage } from '@/hooks/use-expenses-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
@@ -56,6 +59,8 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
 export default function Expenses({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  // Pré-carrega para o modal do formulário já abrir completo (sem campo surgindo depois).
+  useCurrentMember();
   const [splitExpense, setSplitExpense] = useState<Expense | null>(null);
   const {
     expenses,
@@ -91,51 +96,10 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
     handleSubmit,
     handleRedistributedSuccess,
     handleExport,
-    totalExpenses,
     hasActiveFilters,
     columns,
     prefillExpenseData,
-  } = useExpensesPage({ onAfterCreate: setSplitExpense });
-
-  const BREAKDOWN_COLORS = [
-    'bg-primary',
-    'bg-success',
-    'bg-warning',
-    'bg-info',
-    'bg-accent',
-    'bg-destructive',
-  ] as const;
-
-  const { paidCount, paidAmount, pendingCount, pendingAmount } = useMemo(() => {
-    const filtered = expenses.filter(
-      (e) => !e.related_transfer && !e.is_transfer_generated && !e.is_initial_balance
-    );
-    const paid = filtered.filter((e) => e.payed);
-    const pending = filtered.filter((e) => !e.payed);
-    return {
-      paidCount: paid.length,
-      paidAmount: paid.reduce((s, e) => s + parseFloat(e.value), 0),
-      pendingCount: pending.length,
-      pendingAmount: pending.reduce((s, e) => s + parseFloat(e.value), 0),
-    };
-  }, [expenses]);
-
-  const categoryBreakdown = useMemo(() => {
-    const groups: Record<string, number> = {};
-    for (const e of expenses.filter(
-      (e) => !e.related_transfer && !e.is_transfer_generated && !e.is_initial_balance
-    )) {
-      groups[e.category] = (groups[e.category] ?? 0) + parseFloat(e.value);
-    }
-    const total = Object.values(groups).reduce((s, v) => s + v, 0);
-    return Object.entries(groups)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 6)
-      .map(([cat, amount]) => ({
-        cat,
-        pct: total > 0 ? (amount / total) * 100 : 0,
-      }));
-  }, [expenses]);
+  } = useExpensesPage();
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
@@ -157,6 +121,8 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
           </Button>
         </div>
       </PageHeader>
+
+      {embedded && <TransactionsTabsNav />}
 
       <FilterBar
         hasActiveFilters={hasActiveFilters}
@@ -200,138 +166,75 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={t('pages.expenses.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-44"
-        />
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger
-            className="w-40"
-            aria-label={t('pages.expenses.allCategories')}
-            startIcon={<Tag className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.expenses.allCategories')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.expenses.allCategories')}</SelectItem>
-            {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
-              const Icon = EXPENSE_CATEGORY_ICONS[key];
-              return (
-                <SelectItem
-                  key={key}
-                  value={key}
-                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
-                >
-                  {label}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger
-            className="w-36"
-            aria-label={t('pages.expenses.allStatus')}
-            startIcon={<CircleDot className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.expenses.allStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.expenses.allStatus')}</SelectItem>
-            <SelectItem value="paid">{t('common.status.paid')}</SelectItem>
-            <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
-          </SelectContent>
-        </Select>
-        <DateRangeFilter
-          startDate={startDate}
-          endDate={endDate}
-          onStartChange={setStartDate}
-          onEndChange={setEndDate}
-        />
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.expenses.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-44"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.expenses.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.expenses.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.expenses.allCategories')}</SelectItem>
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
+                const Icon = EXPENSE_CATEGORY_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {label}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.expenses.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.expenses.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.expenses.allStatus')}</SelectItem>
+              <SelectItem
+                value="paid"
+                icon={<PAYMENT_STATUS_ICONS.paid className="h-4 w-4" />}
+              >
+                {t('common.status.paid')}
+              </SelectItem>
+              <SelectItem
+                value="pending"
+                icon={<PAYMENT_STATUS_ICONS.pending className="h-4 w-4" />}
+              >
+                {t('common.status.pending')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartChange={setStartDate}
+            onEndChange={setEndDate}
+          />
+        </FilterField>
       </FilterBar>
-
-      <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
-        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.expenses.stats.totalAmount')}
-            </p>
-            <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
-              <TrendingDown className="text-destructive h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-destructive text-2xl font-bold">
-              {formatCurrency(totalExpenses)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.expenses.stats.entriesCount', { count: expenses.length })}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-success/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.expenses.stats.paid')}</p>
-            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-              <CheckCircle2 className="text-success h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">{paidCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {formatCurrency(paidAmount)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-warning/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.expenses.stats.pending')}</p>
-            <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
-              <Clock className="text-warning h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-warning text-2xl font-bold">{pendingCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {formatCurrency(pendingAmount)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {categoryBreakdown.length > 1 && (
-        <div className="bg-card p-md rounded-lg border">
-          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            {t('pages.expenses.byCategory')}
-          </p>
-          <div className="bg-muted flex h-2 overflow-hidden rounded-full">
-            {categoryBreakdown.map(({ cat, pct }, i) => (
-              <div
-                key={cat}
-                className={`h-full transition-[width] ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
-                style={{ width: `${pct}%` }}
-                title={`${translateCategory(cat, 'expense')}: ${pct.toFixed(1)}%`}
-              />
-            ))}
-          </div>
-          <div className="mt-sm gap-md flex flex-wrap">
-            {categoryBreakdown.map(({ cat, pct }, i) => (
-              <div key={cat} className="gap-xs flex items-center">
-                <span
-                  className={`h-2 w-2 shrink-0 rounded-full ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
-                />
-                <span className="text-muted-foreground text-xs">
-                  {translateCategory(cat, 'expense')} · {Math.round(pct)}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <DataTable
         data={expenses}
@@ -341,7 +244,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
         rowClassName={(expense) => (expense.payed ? 'opacity-60' : '')}
         emptyState={{
           icon: <TrendingDown className="text-muted-foreground h-12 w-12" />,
-          message: t('pages.expenses.emptyState'),
+          title: t('pages.expenses.emptyState'),
         }}
         pagination={{
           page,
@@ -374,7 +277,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
                 </span>
               </div>
             </div>
-            <div className="mt-sm gap-xs flex items-center justify-end">
+            <div className="mt-sm gap-xs flex items-center justify-center">
               {expense.payed && (
                 <ReceiptButton
                   source={{ type: 'expense', data: expense }}
@@ -401,7 +304,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
           </div>
         )}
         actions={(expense) => (
-          <div className="gap-sm flex items-center justify-end">
+          <div className="gap-sm flex items-center justify-center">
             {expense.payed && (
               <ReceiptButton
                 source={{ type: 'expense', data: expense }}
@@ -443,7 +346,6 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
         open={isExportModalOpen}
         onOpenChange={setIsExportModalOpen}
         title={t('pages.expenses.exportTitle')}
-        description={t('pages.expenses.exportDesc')}
         onExport={handleExport}
         initialDateFrom={startDate}
         initialDateTo={endDate}
@@ -458,18 +360,20 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={selectedExpense ? 'edit' : 'create'}>
               {selectedExpense
                 ? t('pages.expenses.editTitle')
                 : t('pages.expenses.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedExpense
-                ? t('pages.expenses.editDesc')
-                : t('pages.expenses.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedExpense
+                  ? t('pages.expenses.editDesc')
+                  : t('pages.expenses.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <ExpenseForm
             expense={selectedExpense}

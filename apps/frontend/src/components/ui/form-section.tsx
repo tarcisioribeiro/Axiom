@@ -6,6 +6,8 @@ interface FormSectionProps {
   icon?: IconComponent;
   children: React.ReactNode;
   className?: string;
+  /** Classes da área de conteúdo (abaixo do título). */
+  contentClassName?: string;
 }
 
 export function FormSection({
@@ -13,6 +15,7 @@ export function FormSection({
   icon: Icon,
   children,
   className,
+  contentClassName,
 }: FormSectionProps) {
   return (
     <div className={cn('space-y-md', className)}>
@@ -23,7 +26,7 @@ export function FormSection({
         </span>
         <div className="bg-border/50 h-px flex-1" />
       </div>
-      <div className="space-y-md">{children}</div>
+      <div className={cn('space-y-md', contentClassName)}>{children}</div>
     </div>
   );
 }

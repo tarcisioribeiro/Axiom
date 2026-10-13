@@ -1,6 +1,7 @@
 """Popula o catálogo de intervenções de bem-estar emocional."""
 
 from django.core.management.base import BaseCommand
+from django.db import connection, transaction
 
 from personal_planning.models import WellnessIntervention
 
@@ -262,14 +263,24 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         created = 0
-        for data in INTERVENTIONS:
-            _, new = WellnessIntervention.objects.get_or_create(
-                title=data["title"],
-                is_global=True,
-                defaults={**data, "is_global": True},
-            )
-            if new:
-                created += 1
+        with transaction.atomic():
+            # Roda a cada subida da API (entrypoint.sh); em produção várias
+            # réplicas sobem juntas e get_or_create não é atômico entre
+            # processos. O lock serializa o seed até o fim da transação.
+            if connection.vendor == "postgresql":
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT pg_advisory_xact_lock(hashtext(%s))",
+                        ["seed_wellness_interventions"],
+                    )
+            for data in INTERVENTIONS:
+                _, new = WellnessIntervention.objects.get_or_create(
+                    title=data["title"],
+                    is_global=True,
+                    defaults={**data, "is_global": True},
+                )
+                if new:
+                    created += 1
         self.stdout.write(
             self.style.SUCCESS(
                 f"{created} intervenções criadas"

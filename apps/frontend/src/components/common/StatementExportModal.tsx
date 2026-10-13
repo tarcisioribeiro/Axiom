@@ -1,4 +1,4 @@
-import { FileText, Loader2, Download } from 'lucide-react';
+import { CalendarDays, Download, FileText, Loader2, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -45,8 +45,7 @@ export function StatementExportModal({
 
     if (!from || !to) {
       toast({
-        title: t('pages.dashboard.statementModal.invalidPeriodTitle'),
-        description: t('pages.dashboard.statementModal.invalidPeriodDesc'),
+        title: t('pages.dashboard.statementModal.invalidPeriodDesc'),
         variant: 'destructive',
       });
       return;
@@ -54,8 +53,7 @@ export function StatementExportModal({
 
     if (from > to) {
       toast({
-        title: t('pages.dashboard.statementModal.invalidPeriodTitle'),
-        description: t('pages.dashboard.statementModal.invalidRangeDesc'),
+        title: t('pages.dashboard.statementModal.invalidRangeDesc'),
         variant: 'destructive',
       });
       return;
@@ -66,12 +64,10 @@ export function StatementExportModal({
       onOpenChange(false);
       toast({
         title: t('pages.dashboard.statementModal.successTitle'),
-        description: t('pages.dashboard.statementModal.successDesc'),
       });
     } catch {
       toast({
-        title: t('pages.dashboard.statementModal.errorTitle'),
-        description: t('pages.dashboard.statementModal.errorDesc'),
+        title: t('pages.dashboard.statementModal.errorDesc'),
         variant: 'destructive',
       });
     }
@@ -105,25 +101,25 @@ export function StatementExportModal({
         <div className="space-y-md">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-xs">
-              <Label className="text-sm">
+              <Label className="gap-xs flex items-center text-sm">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.dashboard.statementModal.dateFrom')}
               </Label>
               <DatePicker
                 value={dateFrom}
                 onChange={setDateFrom}
                 placeholder={t('pages.dashboard.statementModal.dateFromPlaceholder')}
-                clearable
               />
             </div>
             <div className="space-y-xs">
-              <Label className="text-sm">
+              <Label className="gap-xs flex items-center text-sm">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.dashboard.statementModal.dateTo')}
               </Label>
               <DatePicker
                 value={dateTo}
                 onChange={setDateTo}
                 placeholder={t('pages.dashboard.statementModal.dateToPlaceholder')}
-                clearable
               />
             </div>
           </div>
@@ -140,12 +136,13 @@ export function StatementExportModal({
           </div>
         </div>
 
-        <div className="gap-sm pt-sm flex justify-end">
+        <div className="dialog-footer gap-sm pt-sm flex justify-end">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isGenerating}
           >
+            <X className="h-4 w-4" />
             {t('pages.dashboard.statementModal.cancelBtn')}
           </Button>
           <Button onClick={handleExport} disabled={isGenerating} className="gap-sm">

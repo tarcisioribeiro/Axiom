@@ -413,6 +413,66 @@ class MealTypeViewTest(BaseWorkoutNutritionTestCase):
         response = self.client.post(url, self._meal_type_data())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_create_meal_type_allowed_below_limit(self):
+        for i in range(5):
+            MealType.objects.create(
+                name=f"Refeição {i}", order=i, owner=self.member
+            )
+        url = reverse("meal-type-list-create")
+        response = self.client.post(url, self._meal_type_data())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_meal_type_blocked_at_limit(self):
+        for i in range(5):
+            MealType.objects.create(
+                name=f"Refeição {i}", order=i, owner=self.member
+            )
+        MealType.objects.create(
+            name="Inativa", order=5, owner=self.member, is_active=False
+        )
+        url = reverse("meal-type-list-create")
+        response = self.client.post(url, self._meal_type_data())
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(MealType.objects.filter(owner=self.member).count(), 6)
+
+    def test_create_meal_type_duplicate_name_and_time_blocked(self):
+        MealType.objects.create(
+            name="Almoço", order=1, owner=self.member, suggested_time="12:00"
+        )
+        url = reverse("meal-type-list-create")
+        data = self._meal_type_data()
+        data.update({"name": "  almoço ", "suggested_time": "12:00"})
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_meal_type_same_name_different_time_allowed(self):
+        MealType.objects.create(
+            name="Almoço", order=1, owner=self.member, suggested_time="12:00"
+        )
+        url = reverse("meal-type-list-create")
+        data = self._meal_type_data()
+        data.update({"name": "Almoço", "suggested_time": "13:00"})
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_meal_type_duplicate_without_time_blocked(self):
+        MealType.objects.create(name="Lanche", order=1, owner=self.member)
+        url = reverse("meal-type-list-create")
+        data = self._meal_type_data()
+        data.update({"name": "lanche"})
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_meal_type_keeps_own_name_and_time_allowed(self):
+        mt = MealType.objects.create(
+            name="Jantar", order=1, owner=self.member, suggested_time="19:00"
+        )
+        url = reverse("meal-type-detail", kwargs={"pk": mt.pk})
+        response = self.client.patch(
+            url, {"name": "Jantar", "suggested_time": "19:00"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_retrieve_meal_type(self):
         mt = MealType.objects.create(name="Almoço", order=2, owner=self.member)
         url = reverse("meal-type-detail", kwargs={"pk": mt.pk})

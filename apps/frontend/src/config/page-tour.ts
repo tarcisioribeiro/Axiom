@@ -17,8 +17,6 @@ const EXACT: Record<string, string> = {
   '/members': 'members',
   '/budgets': 'budgets',
   '/webhooks': 'webhooks',
-  '/bank-reconciliation': 'bankReconciliation',
-  '/bank-reconciliation/import': 'bankImport',
   '/vaults': 'vaults',
   '/vaults/simulator': 'vaultSimulator',
   '/financial-goals': 'financialGoals',
@@ -62,7 +60,6 @@ const EXACT: Record<string, string> = {
   '/planning/nutrition': 'nutrition',
   '/planning/journey': 'journey',
   '/planning/week': 'week',
-  '/planning/analytics': 'planningAnalytics',
   '/planning/body-metrics': 'bodyMetrics',
   '/planning/weekly-planning': 'weeklyPlanning',
   '/planning/emotional-wellness': 'emotionalWellness',
@@ -73,13 +70,21 @@ const EXACT: Record<string, string> = {
 };
 
 const PATTERNS: [RegExp, string][] = [
-  [/^\/members\/[^/]+\/report$/, 'memberReport'],
   [/^\/bank-reconciliation\/[^/]+$/, 'bankReconciliationDetail'],
 ];
 
+/** Páginas com abas (ex.: `/transactions/expenses`) não têm entrada própria em
+ * `EXACT` — sobe um nível de cada vez até achar a página "pai". */
 export function getTourKey(pathname: string): string | undefined {
   const path = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
-  return EXACT[path] ?? PATTERNS.find(([re]) => re.test(path))?.[1];
+  let current = path;
+  while (current) {
+    if (EXACT[current]) return EXACT[current];
+    const lastSlash = current.lastIndexOf('/');
+    if (lastSlash <= 0) break;
+    current = current.slice(0, lastSlash);
+  }
+  return PATTERNS.find(([re]) => re.test(path))?.[1];
 }
 
 const hiddenKey = (tourKey: string) => `axiom-tour-hidden:${tourKey}`;

@@ -9,6 +9,8 @@ import {
   Repeat,
   Tag,
   Wallet,
+  Save,
+  X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -115,6 +118,7 @@ export function PayableForm({
           value: 0,
           paid_value: 0,
           date: formatLocalDate(new Date()),
+          due_date: formatLocalDate(new Date()),
           category: 'others',
           status: 'active',
           is_cumulative: false,
@@ -149,13 +153,12 @@ export function PayableForm({
             <Wallet className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.payables.form.descriptionLabel')}
           </Label>
-          <input
+          <Input
             id="description"
             value={formData.description}
             onChange={(e) => set({ description: e.target.value })}
             required
             placeholder={t('pages.payables.form.descriptionPlaceholder')}
-            className="border-border/70 bg-background py-xs placeholder:text-muted-foreground/50 focus-visible:border-ring/50 focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 text-sm shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           />
         </div>
       </FormSection>
@@ -224,7 +227,6 @@ export function PayableForm({
             <DatePicker
               value={formData.date ?? undefined}
               onChange={(date) => set({ date: date ? formatLocalDate(date) : '' })}
-              placeholder={t('common.actions.select')}
             />
           </div>
 
@@ -354,26 +356,25 @@ export function PayableForm({
               id="notes"
               value={formData.notes ?? ''}
               onChange={(e) => set({ notes: e.target.value })}
-              rows={3}
+              rows={1}
               placeholder={t('pages.payables.form.notesPlaceholder')}
             />
           </div>
         </div>
       </FormSection>
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <>
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-              {t('common.actions.saving')}
-            </>
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            t('common.actions.save')
+            <Save className="h-4 w-4" />
           )}
+          {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>
     </form>

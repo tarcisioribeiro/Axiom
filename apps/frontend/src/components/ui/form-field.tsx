@@ -1,4 +1,4 @@
-import { Check, X, Loader2 } from 'lucide-react';
+import { Check, X, Loader2, type LucideIcon } from 'lucide-react';
 import * as React from 'react';
 
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,8 @@ type ValidationState = 'idle' | 'validating' | 'valid' | 'invalid';
 interface FormFieldProps {
   id: string;
   label: string;
+  /** Ícone à esquerda do rótulo (todo rótulo tem ícone). */
+  icon: LucideIcon;
   error?: string;
   required?: boolean;
   description?: string;
@@ -26,8 +28,8 @@ interface FormFieldProps {
  * FormField wrapper que adiciona acessibilidade e feedback visual automaticamente.
  *
  * Features:
- * - aria-describedby linkando campo a mensagem de erro/descricao
- * - aria-invalid quando ha erro
+ * - aria-describedby linkando campo a descricao
+ * - aria-invalid e borda vermelha quando ha erro (a mensagem vai para toast, ver notifyFormErrors)
  * - aria-required quando campo e obrigatorio
  * - IDs consistentes para label, erro e descricao
  * - Ícone de feedback de validação (check verde / X vermelho / spinner)
@@ -38,6 +40,7 @@ interface FormFieldProps {
  * <FormField
  *   id="email"
  *   label="Email"
+ *   icon={Mail}
  *   error={errors.email?.message}
  *   isValid={!errors.email && touchedFields.email}
  *   required
@@ -49,6 +52,7 @@ interface FormFieldProps {
 export function FormField({
   id,
   label,
+  icon: Icon,
   error,
   required,
   description,
@@ -58,7 +62,6 @@ export function FormField({
   validationState,
   hideValidationIcon = false,
 }: FormFieldProps) {
-  const errorId = `${id}-error`;
   const descriptionId = `${id}-description`;
 
   // Determina estado de validação
@@ -72,7 +75,6 @@ export function FormField({
 
   // Constroi aria-describedby baseado nas props presentes
   const describedByParts: string[] = [];
-  if (error) describedByParts.push(errorId);
   if (description) describedByParts.push(descriptionId);
   const ariaDescribedBy =
     describedByParts.length > 0 ? describedByParts.join(' ') : undefined;
@@ -118,7 +120,8 @@ export function FormField({
   return (
     <div className={cn('space-y-sm', className)}>
       <div className="flex items-center justify-between">
-        <Label htmlFor={id}>
+        <Label htmlFor={id} className="gap-xs flex items-center">
+          <Icon className="text-muted-foreground h-3.5 w-3.5" />
           {label}
           {required && (
             <span className="ml-xs text-destructive" aria-hidden="true">
@@ -134,17 +137,6 @@ export function FormField({
       {description && !error && (
         <p id={descriptionId} className="text-muted-foreground text-sm">
           {description}
-        </p>
-      )}
-
-      {error && (
-        <p
-          id={errorId}
-          className="animate-in slide-in-from-top-1 text-destructive text-sm duration-200"
-          role="alert"
-          aria-live="polite"
-        >
-          {error}
         </p>
       )}
     </div>

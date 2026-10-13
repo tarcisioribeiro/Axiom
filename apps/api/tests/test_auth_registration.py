@@ -1,9 +1,8 @@
 """
-Tests for user registration validation paths, member financial reports,
-admin purge endpoint, and auth current-user edge cases.
+Tests for user registration validation paths, admin purge endpoint,
+and auth current-user edge cases.
 """
 
-from datetime import date
 from decimal import Decimal
 
 from django.contrib.auth.models import User
@@ -45,137 +44,6 @@ class BasePush2TestCase(APITestCase):
             is_active=True,
             current_balance=Decimal("10000.00"),
         )
-
-
-# ---------------------------------------------------------------------------
-# Member financial report with member-linked data
-# ---------------------------------------------------------------------------
-
-
-class MemberFinancialReportWithDataTest(BasePush2TestCase):
-    def setUp(self):
-        super().setUp()
-        from expenses.models import Expense
-        from revenues.models import Revenue
-
-        Expense.objects.create(
-            description="Member Rent",
-            value=Decimal("1200.00"),
-            date=date.today(),
-            horary="10:00:00",
-            category="bills and services",
-            account=self.account,
-            payed=True,
-            member=self.member,
-            created_by=self.user,
-        )
-        Expense.objects.create(
-            description="Member Food",
-            value=Decimal("300.00"),
-            date=date.today(),
-            horary="12:00:00",
-            category="food and drink",
-            account=self.account,
-            payed=True,
-            member=self.member,
-            created_by=self.user,
-        )
-        Revenue.objects.create(
-            description="Member Salary",
-            value=Decimal("5000.00"),
-            date=date.today(),
-            horary="09:00:00",
-            category="salary",
-            account=self.account,
-            received=True,
-            member=self.member,
-            created_by=self.user,
-        )
-        from datetime import time
-
-        from loans.models import Loan
-        from payables.models import Payable
-        from transfers.models import Transfer
-
-        benefited = Member.objects.create(
-            name="CSV Benefited",
-            document_hash="b" * 64,
-            phone="11900000011",
-            sex="M",
-        )
-        Loan.objects.create(
-            description="CSV Loan Benefited",
-            value=Decimal("2000.00"),
-            payed_value=Decimal("0.00"),
-            date=date.today(),
-            horary=time(9, 0),
-            category="loans",
-            account=self.account,
-            benefited=self.member,
-            creditor=benefited,
-            payed=False,
-            status="active",
-            created_by=self.user,
-        )
-        Loan.objects.create(
-            description="CSV Loan Creditor",
-            value=Decimal("1000.00"),
-            payed_value=Decimal("0.00"),
-            date=date.today(),
-            horary=time(10, 0),
-            category="loans",
-            account=self.account,
-            benefited=benefited,
-            creditor=self.member,
-            payed=False,
-            status="active",
-            created_by=self.user,
-        )
-        Payable.objects.create(
-            description="CSV Payable",
-            value=Decimal("500.00"),
-            paid_value=Decimal("0.00"),
-            date=date.today(),
-            category="bills and services",
-            member=self.member,
-            status="active",
-            created_by=self.user,
-        )
-        dest_account = Account.objects.create(
-            account_name="CSV Dest",
-            institution_name="NUB",
-            account_type="CS",
-            is_active=True,
-        )
-        Transfer.objects.create(
-            description="CSV Transfer",
-            value=Decimal("200.00"),
-            date=date.today(),
-            horary="11:00:00",
-            category="pix",
-            origin_account=self.account,
-            destiny_account=dest_account,
-            transfered=False,
-            fee=Decimal("0.00"),
-            member=self.member,
-            created_by=self.user,
-        )
-
-    def test_member_financial_report_json_with_data(self):
-        """Exercises category_totals loop when expenses exist."""
-        url = reverse("member-financial-report", args=[self.member.pk])
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Response should contain financial summary sections
-        self.assertIsInstance(response.data, dict)
-        self.assertIn("expenses", response.data)
-
-    def test_member_financial_report_csv_with_data(self):
-        """Exercises _generate_csv + category_totals loop."""
-        url = reverse("member-financial-report", args=[self.member.pk])
-        response = self.client.get(url, {"export_format": "csv"})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("text/csv", response.get("Content-Type", ""))
 
 
 # ---------------------------------------------------------------------------

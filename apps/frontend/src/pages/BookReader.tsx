@@ -13,6 +13,7 @@ import {
   PanelRight,
   Plus,
   Save,
+  Shapes,
   Sun,
   X,
 } from 'lucide-react';
@@ -36,6 +37,7 @@ interface BookReaderProps {
   onClose?: () => void;
 }
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +54,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { API_CONFIG } from '@/config/constants';
 import { useTheme } from '@/hooks/use-theme';
 import { useToast } from '@/hooks/use-toast';
+import { formatLocalDate } from '@/lib/utils';
 import { bookHighlightsService } from '@/services/book-highlights-service';
 import { booksService } from '@/services/books-service';
 import { membersService } from '@/services/members-service';
@@ -241,8 +244,7 @@ function AnnotationForm({
       toast({ title: t('pages.bookReader.annotationSaved') });
     } catch (err) {
       toast({
-        title: t('pages.bookReader.annotationError'),
-        description: getErrorMessage(err),
+        title: t('pages.bookReader.annotationError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     } finally {
@@ -251,7 +253,7 @@ function AnnotationForm({
   };
 
   return (
-    <div className="bg-background space-y-3 rounded-lg border p-3 shadow-sm">
+    <div className="bg-background space-y-3 rounded-lg border p-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">
           {t('pages.bookReader.newAnnotation')}
@@ -271,7 +273,8 @@ function AnnotationForm({
       />
       <div className="gap-sm flex">
         <div className="flex-1">
-          <Label className="mb-xs block text-xs">
+          <Label className="gap-xs mb-xs flex items-center text-xs">
+            <Shapes className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.bookReader.typeLabel')}
           </Label>
           <Select value={type} onValueChange={setType}>
@@ -286,7 +289,8 @@ function AnnotationForm({
           </Select>
         </div>
         <div className="flex-1">
-          <Label className="mb-xs block text-xs">
+          <Label className="gap-xs mb-xs flex items-center text-xs">
+            <Palette className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.bookReader.colorLabel')}
           </Label>
           <Select value={color} onValueChange={setColor}>
@@ -308,6 +312,7 @@ function AnnotationForm({
       </div>
       <div className="gap-sm flex justify-end">
         <Button variant="ghost" size="sm" onClick={onCancel}>
+          <X aria-hidden="true" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -316,9 +321,9 @@ function AnnotationForm({
           onClick={() => void handleSave()}
         >
           {isSaving ? (
-            <Loader2 className="mr-xs h-3 w-3 animate-spin" />
+            <Loader2 className="h-3 w-3 animate-spin" />
           ) : (
-            <Save className="mr-xs h-3 w-3" />
+            <Save className="h-3 w-3" />
           )}
           {t('common.actions.save')}
         </Button>
@@ -670,8 +675,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
         };
       } catch (err) {
         toast({
-          title: 'Erro ao carregar livro',
-          description: getErrorMessage(err),
+          title: t('common.messages.loadError', { reason: getErrorMessage(err) }),
           variant: 'destructive',
         });
         return null;
@@ -723,7 +727,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
           } else {
             const created = await readingsService.create({
               book: parseInt(bookId),
-              reading_date: new Date().toISOString().split('T')[0],
+              reading_date: formatLocalDate(new Date()),
               reading_time: 0,
               pages_read: 0,
               current_page: page,
@@ -781,8 +785,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
       setAnnotations((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
       toast({
-        title: 'Erro ao remover',
-        description: getErrorMessage(err),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     }
@@ -804,6 +807,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
           {t('pages.bookReader.fileNotFound')}
         </p>
         <Button variant="outline" onClick={handleClose}>
+          <X aria-hidden="true" />
           Fechar
         </Button>
       </div>
@@ -844,6 +848,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
         {fileType === 'pdf' && (
           <div className="gap-xs flex shrink-0 items-center">
             <Button
+              aria-label={t('common.table.previousPage')}
               variant="ghost"
               size="icon"
               className="h-8 w-8"
@@ -857,6 +862,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
               <Input
                 className="h-7 w-14 text-center text-sm"
                 value={pageInput}
+                placeholder="1"
                 onChange={(e) => setPageInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') goToPdfPage(parseInt(pageInput) || 1);
@@ -873,6 +879,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
               </span>
             </div>
             <Button
+              aria-label={t('common.table.nextPage')}
               variant="ghost"
               size="icon"
               className="h-8 w-8"
@@ -1053,11 +1060,10 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
               )}
 
               {annotations.length === 0 && !showAnnotationForm && (
-                <div className="gap-sm py-xl flex flex-col items-center text-center text-sm opacity-50">
-                  <Highlighter className="h-8 w-8" />
-                  <p>{t('pages.bookReader.noAnnotations')}</p>
-                  <p className="text-xs">Clique em + para adicionar.</p>
-                </div>
+                <EmptyState
+                  title={t('pages.bookReader.noAnnotations')}
+                  icon={<Highlighter />}
+                />
               )}
 
               {annotations.map((a) => (
@@ -1078,7 +1084,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
                     </div>
                     <PlainButton
                       onClick={() => void handleDeleteAnnotation(a.id)}
-                      className="text-muted-foreground hover:text-destructive shrink-0 rounded p-0.5"
+                      className="text-destructive hover:text-destructive shrink-0 rounded p-0.5"
                       aria-label={t('pages.bookReader.removeAnnotation')}
                     >
                       <X className="h-3 w-3" />

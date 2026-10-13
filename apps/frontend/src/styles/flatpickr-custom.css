@@ -23,9 +23,10 @@
   visibility: hidden;
   position: absolute;
   transition:
-    opacity 150ms ease,
-    transform 150ms ease;
-  transform: translateY(-4px);
+    opacity var(--duration-medium) var(--ease-out),
+    transform var(--duration-medium) var(--ease-out);
+  transform: translateY(-8px) scale(0.95);
+  transform-origin: top center;
   /* Garante posicionamento acima de outros elementos */
   z-index: 9999 !important;
   margin-top: 4px;
@@ -52,7 +53,7 @@
 .flatpickr-calendar.open {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 /* Quando o calendário abre para cima (espaço insuficiente embaixo) */
@@ -178,6 +179,12 @@
 .flatpickr-months .flatpickr-next-month:hover {
   background: hsl(var(--accent) / 0.15);
   color: hsl(var(--foreground));
+}
+
+/* Mês fora de minDate/maxDate: o flatpickr só marca a seta, não a esconde */
+.flatpickr-months .flatpickr-prev-month.flatpickr-disabled,
+.flatpickr-months .flatpickr-next-month.flatpickr-disabled {
+  visibility: hidden;
 }
 
 .flatpickr-months .flatpickr-prev-month svg,

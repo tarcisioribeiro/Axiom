@@ -1,17 +1,28 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { PiggyBank, Plus, Sparkles, TrendingUp, Vault, Zap } from 'lucide-react';
+import { Building2, Plus, Search, Vault, Wallet, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { VaultApplyYieldDialog } from '@/components/vaults/VaultApplyYieldDialog';
 import { VaultCard } from '@/components/vaults/VaultCard';
 import { VaultContributionsDialog } from '@/components/vaults/VaultContributionsDialog';
+import { VaultDetailModal } from '@/components/vaults/VaultDetailModal';
 import { VaultFormDialog } from '@/components/vaults/VaultFormDialog';
 import { VaultGenerateDialog } from '@/components/vaults/VaultGenerateDialog';
 import {
@@ -22,7 +33,6 @@ import { VaultSimulatorDialog } from '@/components/vaults/VaultSimulatorDialog';
 import { VaultTransactionsDialog } from '@/components/vaults/VaultTransactionsDialog';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/formatters';
 import { accountsService } from '@/services/accounts-service';
 import { vaultsService } from '@/services/vaults-service';
 import type { Account, Vault as VaultType } from '@/types';
@@ -38,10 +48,14 @@ export default function Vaults() {
   const queryClient = useQueryClient();
 
   const [selectedVault, setSelectedVault] = useState<VaultType | undefined>();
+  const [detailVault, setDetailVault] = useState<VaultType | undefined>();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [accountFilter, setAccountFilter] = useState('all');
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [isApplyYieldOpen, setIsApplyYieldOpen] = useState(false);
   const [isTransactionsOpen, setIsTransactionsOpen] = useState(false);
   const [isContributionsOpen, setIsContributionsOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
@@ -58,8 +72,7 @@ export default function Vaults() {
         return { vaults: vaultsData, accounts: accountsData };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { vaults: EMPTY_VAULTS, accounts: EMPTY_ACCOUNTS };
@@ -74,8 +87,7 @@ export default function Vaults() {
   const handleCreate = () => {
     if (accounts.length === 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.vaults.noAccountMsg'),
+        title: t('pages.vaults.noAccountMsg'),
         variant: 'destructive',
       });
       return;
@@ -93,8 +105,7 @@ export default function Vaults() {
     const vault = vaults.find((v) => v.id === id);
     if (vault && parseFloat(vault.current_balance) > 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.vaults.cannotDeleteWithBalance'),
+        title: t('pages.vaults.cannotDeleteWithBalance'),
         variant: 'destructive',
       });
       return;
@@ -108,152 +119,160 @@ export default function Vaults() {
       await vaultsService.delete(id);
       toast({
         title: t('pages.vaults.deleted'),
-        description: t('pages.vaults.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
   };
 
-  const handleApplyYield = async (vault: VaultType) => {
-    try {
-      const response = await vaultsService.applyYield(vault.id);
-      toast(
-        response.yield_applied > 0
-          ? {
-              title: t('pages.vaults.yieldApplied'),
-              description: t('pages.vaults.yieldAppliedDesc', {
-                amount: formatCurrency(response.yield_applied),
-              }),
-            }
-          : {
-              title: t('pages.vaults.noYield'),
-              description: t('pages.vaults.noYieldDesc'),
-            }
-      );
-      void refresh();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    }
+  const filteredVaults = vaults.filter((vault) => {
+    if (
+      searchTerm &&
+      !vault.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+      return false;
+    if (accountFilter !== 'all' && String(vault.account) !== accountFilter)
+      return false;
+    return true;
+  });
+
+  const hasActiveFilters = searchTerm !== '' || accountFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setAccountFilter('all');
   };
 
   const totalBalance = vaults.reduce(
     (sum, v) => sum + parseFloat(v.current_balance),
     0
   );
-  const totalYield = vaults.reduce(
-    (sum, v) => sum + parseFloat(v.accumulated_yield),
-    0
-  );
-  const totalPendingYield = vaults.reduce((sum, v) => sum + v.pending_yield, 0);
 
   return (
     <PageContainer>
       <PageHeader title={t('pages.vaults.title')} icon={<Vault />}>
         <div className="gap-sm flex items-center">
           <Button variant="outline" onClick={() => setIsGenerateOpen(true)}>
-            <Zap className="mr-sm h-4 w-4" />
+            <Zap className="h-4 w-4" />
             {t('pages.vaults.recurringContributions.generateBtn')}
           </Button>
           <Button onClick={handleCreate}>
-            <Plus className="mr-sm h-4 w-4" />
+            <Plus className="h-4 w-4" />
             {t('pages.vaults.newBtn')}
           </Button>
         </div>
       </PageHeader>
-
-      <div className="mb-lg gap-md grid grid-cols-1 md:grid-cols-3">
-        <Card className="border-t-success border-t-2">
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-sm font-medium">
-              <PiggyBank className="text-success h-4 w-4" />
-              {t('pages.vaults.totalBalance')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">
-              {formatCurrency(totalBalance)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-t-2 border-t-amber-500">
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-sm font-medium">
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              {t('pages.vaults.totalYield')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-              {formatCurrency(totalYield)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-t-info border-t-2">
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-sm font-medium">
-              <TrendingUp className="text-info h-4 w-4" />
-              {t('pages.vaults.pendingYield')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-info text-2xl font-bold">
-              {formatCurrency(totalPendingYield)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {isLoading ? (
         <LoadingState />
       ) : vaults.length === 0 ? (
         <EmptyState
           icon={<Vault className="text-muted-foreground h-12 w-12" />}
-          message={t('pages.vaults.emptyState')}
+          title={t('pages.vaults.emptyState')}
         />
       ) : (
-        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-          {vaults.map((vault, index) => (
-            <VaultCard
-              key={vault.id}
-              vault={vault}
-              index={index}
-              totalBalance={totalBalance}
-              onDeposit={(v) => {
-                setSelectedVault(v);
-                setIsDepositOpen(true);
-              }}
-              onWithdraw={(v) => {
-                setSelectedVault(v);
-                setIsWithdrawOpen(true);
-              }}
-              onApplyYield={(v) => void handleApplyYield(v)}
-              onTransactions={(v) => {
-                setSelectedVault(v);
-                setIsTransactionsOpen(true);
-              }}
-              onContributions={(v) => {
-                setSelectedVault(v);
-                setIsContributionsOpen(true);
-              }}
-              onSimulator={(v) => {
-                setSelectedVault(v);
-                setIsSimulatorOpen(true);
-              }}
-              onEdit={handleEdit}
-              onDelete={(id) => void handleDelete(id)}
+        <>
+          <FilterBar
+            hasActiveFilters={hasActiveFilters}
+            onClear={clearFilters}
+            activeFilters={[
+              ...(accountFilter !== 'all'
+                ? [
+                    {
+                      key: 'account',
+                      label: `${t('pages.vaults.allAccounts')}: ${
+                        accounts.find((a) => String(a.id) === accountFilter)
+                          ?.account_name ?? accountFilter
+                      }`,
+                      onRemove: () => setAccountFilter('all'),
+                    },
+                  ]
+                : []),
+            ]}
+          >
+            <FilterField label={t('common.filterLabels.search')} icon={Search}>
+              <SearchInput
+                placeholder={t('pages.vaults.searchPlaceholder')}
+                value={searchTerm}
+                onValueChange={setSearchTerm}
+                className="w-44"
+              />
+            </FilterField>
+            <FilterField label={t('common.fields.account')} icon={Wallet}>
+              <Select value={accountFilter} onValueChange={setAccountFilter}>
+                <SelectTrigger
+                  className="w-48"
+                  aria-label={t('pages.vaults.allAccounts')}
+                  startIcon={<Building2 className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('pages.vaults.allAccounts')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('pages.vaults.allAccounts')}</SelectItem>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={String(account.id)}>
+                      {account.account_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+          </FilterBar>
+
+          {filteredVaults.length === 0 ? (
+            <EmptyState
+              icon={<Vault className="text-muted-foreground h-12 w-12" />}
+              title={t('pages.vaults.emptyState')}
             />
-          ))}
-        </div>
+          ) : (
+            <PaginatedSlide
+              items={filteredVaults}
+              pageSize={GRID_PAGE_SIZE}
+              className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+            >
+              {(pageItems) =>
+                pageItems.map((vault, index) => (
+                  <VaultCard
+                    key={vault.id}
+                    vault={vault}
+                    index={index}
+                    onOpenDetail={(v) => setDetailVault(v)}
+                    onDeposit={(v) => {
+                      setSelectedVault(v);
+                      setIsDepositOpen(true);
+                    }}
+                    onWithdraw={(v) => {
+                      setSelectedVault(v);
+                      setIsWithdrawOpen(true);
+                    }}
+                    onApplyYield={(v) => {
+                      setSelectedVault(v);
+                      setIsApplyYieldOpen(true);
+                    }}
+                    onTransactions={(v) => {
+                      setSelectedVault(v);
+                      setIsTransactionsOpen(true);
+                    }}
+                    onContributions={(v) => {
+                      setSelectedVault(v);
+                      setIsContributionsOpen(true);
+                    }}
+                    onSimulator={(v) => {
+                      setSelectedVault(v);
+                      setIsSimulatorOpen(true);
+                    }}
+                    onEdit={handleEdit}
+                    onDelete={(id) => void handleDelete(id)}
+                  />
+                ))
+              }
+            </PaginatedSlide>
+          )}
+        </>
       )}
 
       <VaultFormDialog
@@ -262,6 +281,11 @@ export default function Vaults() {
         selectedVault={selectedVault}
         accounts={accounts}
         onSuccess={() => void refresh()}
+      />
+      <VaultDetailModal
+        vault={detailVault ?? null}
+        totalBalance={totalBalance}
+        onClose={() => setDetailVault(undefined)}
       />
       <VaultDepositDialog
         open={isDepositOpen}
@@ -272,6 +296,12 @@ export default function Vaults() {
       <VaultWithdrawDialog
         open={isWithdrawOpen}
         onOpenChange={setIsWithdrawOpen}
+        vault={selectedVault}
+        onSuccess={() => void refresh()}
+      />
+      <VaultApplyYieldDialog
+        open={isApplyYieldOpen}
+        onOpenChange={setIsApplyYieldOpen}
         vault={selectedVault}
         onSuccess={() => void refresh()}
       />

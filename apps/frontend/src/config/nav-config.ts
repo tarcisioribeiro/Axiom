@@ -88,7 +88,6 @@ export const navModules: NavModule[] = [
     icon: Calendar,
     topItems: [
       { titleKey: 'nav.dashboard', href: '/planning/dashboard', icon: LayoutDashboard },
-      { titleKey: 'nav.items.journey', href: '/planning/journey', icon: Trophy },
     ],
     subModules: [
       {
@@ -141,6 +140,7 @@ export const navModules: NavModule[] = [
             href: '/planning/emotional-wellness',
             icon: Heart,
           },
+          { titleKey: 'nav.items.journey', href: '/planning/journey', icon: Trophy },
         ],
       },
     ],
@@ -201,11 +201,6 @@ export const navModules: NavModule[] = [
           },
           { titleKey: 'nav.items.vaults', href: '/vaults', icon: Vault },
           { titleKey: 'nav.items.loans', href: '/loans', icon: HandCoins },
-          {
-            titleKey: 'nav.items.bankReconciliation',
-            href: '/bank-reconciliation',
-            icon: Scale,
-          },
           {
             titleKey: 'nav.items.financeAgenda',
             href: '/finance/agenda',

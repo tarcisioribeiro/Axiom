@@ -1,16 +1,19 @@
 /* eslint-disable max-lines */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Wallet,
   ArrowLeftRight,
+  Eye,
   FileUp,
+  Loader2,
+  Pencil,
+  Plus,
   RefreshCw,
-  Banknote,
-  ShieldCheck,
-  Building2,
+  Search,
+  Shapes,
+  Trash2,
+  Upload,
+  Wallet,
+  X,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,9 +21,10 @@ import { useNavigate } from 'react-router';
 
 import { AccountForm } from '@/components/accounts/AccountForm';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,14 +37,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FileInput } from '@/components/ui/file-input';
 import { Label } from '@/components/ui/label';
-import { translate } from '@/config/constants';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { translate, TRANSLATIONS } from '@/config/constants';
+import { ACCOUNT_TYPE_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { getErrorMessage } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
+import { ValidationError } from '@/services/api-errors';
 import { bankReconciliationService } from '@/services/bank-reconciliation-service';
 import type { Account, AccountFormData, BankStatementImport } from '@/types';
 
@@ -65,6 +80,9 @@ function ImportStatusBadge({ status }: { status: BankStatementImport['status'] }
   );
 }
 
+/** 4 cards por linha × 2 linhas por página. */
+const ACCOUNTS_PAGE_SIZE = 8;
+
 export default function Accounts() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -75,6 +93,7 @@ export default function Accounts() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   // Bank reconciliation state
   const [reconciliationAccount, setReconciliationAccount] = useState<
@@ -86,6 +105,9 @@ export default function Accounts() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<
+    Record<string, string[]> | undefined
+  >();
 
   // ── Query ──────────────────────────────────────────────────────────────────
   const { data: accounts = [], isLoading } = useQuery({
@@ -104,14 +126,13 @@ export default function Accounts() {
       void invalidateAccounts();
       toast({
         title: t('pages.accounts.created'),
-        description: t('pages.accounts.createdDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
+      setFieldErrors(error instanceof ValidationError ? error.errors : undefined);
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -124,14 +145,13 @@ export default function Accounts() {
       void invalidateAccounts();
       toast({
         title: t('pages.accounts.updated'),
-        description: t('pages.accounts.updatedDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
+      setFieldErrors(error instanceof ValidationError ? error.errors : undefined);
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -143,13 +163,11 @@ export default function Accounts() {
       void invalidateAccounts();
       toast({
         title: t('pages.accounts.deleted'),
-        description: t('pages.accounts.deletedDesc'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -158,73 +176,36 @@ export default function Accounts() {
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const filteredAccounts = useMemo(() => {
-    if (!searchTerm) return accounts;
-    const q = searchTerm.toLowerCase();
-    return accounts.filter(
-      (a) =>
+    return accounts.filter((a) => {
+      const q = searchTerm.toLowerCase();
+      const matchesSearch =
+        !searchTerm ||
         a.account_name.toLowerCase().includes(q) ||
         translate('institutions', a.institution).toLowerCase().includes(q) ||
-        (a.account_number_masked ?? '').toLowerCase().includes(q)
-    );
-  }, [accounts, searchTerm]);
+        (a.account_number_masked ?? '').toLowerCase().includes(q);
+      const matchesType = typeFilter === 'all' || a.account_type === typeFilter;
+      return matchesSearch && matchesType;
+    });
+  }, [accounts, searchTerm, typeFilter]);
 
-  const ACCOUNT_TYPE_COLORS: Record<
-    string,
-    { border: string; icon: string; bg: string }
-  > = {
-    CC: { border: 'border-l-info', icon: 'text-info', bg: 'bg-info/5' },
-    CS: { border: 'border-l-success', icon: 'text-success', bg: 'bg-success/5' },
-    FG: { border: 'border-l-warning', icon: 'text-warning', bg: 'bg-warning/5' },
-    VA: { border: 'border-l-accent', icon: 'text-accent', bg: 'bg-accent/5' },
-    VR: { border: 'border-l-accent', icon: 'text-accent', bg: 'bg-accent/5' },
-    CP: { border: 'border-l-primary', icon: 'text-primary', bg: 'bg-primary/5' },
+  const ACCOUNT_TYPE_COLORS: Record<string, { icon: string; bg: string }> = {
+    CC: { icon: 'text-info', bg: 'bg-info/5' },
+    CS: { icon: 'text-success', bg: 'bg-success/5' },
+    FG: { icon: 'text-warning', bg: 'bg-warning/5' },
+    VA: { icon: 'text-accent', bg: 'bg-accent/5' },
+    VR: { icon: 'text-accent', bg: 'bg-accent/5' },
+    CP: { icon: 'text-primary', bg: 'bg-primary/5' },
   };
-
-  const BALANCE_DIST_COLORS = [
-    'bg-info',
-    'bg-success',
-    'bg-primary',
-    'bg-warning',
-    'bg-accent',
-    'bg-destructive',
-  ] as const;
-
-  const { totalBalance, totalAvailable, totalReserved } = useMemo(() => {
-    const balance = accounts.reduce((s, a) => s + parseFloat(a.balance), 0);
-    const reserved = accounts.reduce(
-      (s, a) => s + parseFloat(a.deposited_in_vaults ?? '0'),
-      0
-    );
-    const available = accounts.reduce(
-      (s, a) =>
-        s +
-        parseFloat(a.available_balance ?? a.balance) +
-        parseFloat(a.overdraft_limit ?? '0'),
-      0
-    );
-    return {
-      totalBalance: balance,
-      totalAvailable: available,
-      totalReserved: reserved,
-    };
-  }, [accounts]);
-
-  const balanceDistribution = useMemo(() => {
-    const positiveAccounts = accounts.filter((a) => parseFloat(a.balance) > 0);
-    const totalPositive = positiveAccounts.reduce(
-      (s, a) => s + parseFloat(a.balance),
-      0
-    );
-    return { positiveAccounts, totalPositive };
-  }, [accounts]);
 
   const handleCreate = () => {
     setSelectedAccount(undefined);
+    setFieldErrors(undefined);
     setIsDialogOpen(true);
   };
 
   const handleEdit = (account: Account) => {
     setSelectedAccount(account);
+    setFieldErrors(undefined);
     setIsDialogOpen(true);
   };
 
@@ -252,8 +233,7 @@ export default function Accounts() {
       setImports(all.filter((imp) => imp.account === account.id));
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -311,121 +291,59 @@ export default function Accounts() {
         </Button>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
-        <SearchInput
-          placeholder={t('pages.accounts.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-52 sm:w-64"
-        />
+      <FilterBar
+        hasActiveFilters={!!searchTerm || typeFilter !== 'all'}
+        onClear={() => {
+          setSearchTerm('');
+          setTypeFilter('all');
+        }}
+        activeFilters={[
+          ...(typeFilter !== 'all'
+            ? [
+                {
+                  key: 'type',
+                  label: `${t('common.fields.type')}: ${translate('accountTypes', typeFilter)}`,
+                  onRemove: () => setTypeFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.accounts.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.type')} icon={Shapes}>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.accounts.allTypes')}
+              startIcon={<Wallet className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.accounts.allTypes')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.accounts.allTypes')}</SelectItem>
+              {Object.keys(TRANSLATIONS.accountTypes).map((key) => {
+                const Icon = ACCOUNT_TYPE_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {translate('accountTypes', key)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
       </FilterBar>
-
-      <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
-        <Card
-          className={`overflow-hidden border-t-2 ${totalBalance >= 0 ? 'border-t-success/60' : 'border-t-destructive/60'}`}
-        >
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.accounts.stats.totalBalance')}
-            </p>
-            <div
-              className={`p-sm rounded-lg ring-1 ${totalBalance >= 0 ? 'bg-success/10 ring-success/20' : 'bg-destructive/10 ring-destructive/20'}`}
-            >
-              <Banknote
-                className={`h-4 w-4 ${totalBalance >= 0 ? 'text-success' : 'text-destructive'}`}
-              />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-2xl font-bold ${totalBalance >= 0 ? 'text-success' : 'text-destructive'}`}
-            >
-              {formatCurrency(totalBalance)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.accounts.stats.accountsCount', { count: accounts.length })}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className={`overflow-hidden border-t-2 ${totalAvailable >= 0 ? 'border-t-info/60' : 'border-t-destructive/60'}`}
-        >
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.accounts.stats.availableBalance')}
-            </p>
-            <div
-              className={`p-sm rounded-lg ring-1 ${totalAvailable >= 0 ? 'bg-info/10 ring-info/20' : 'bg-destructive/10 ring-destructive/20'}`}
-            >
-              <ShieldCheck
-                className={`h-4 w-4 ${totalAvailable >= 0 ? 'text-info' : 'text-destructive'}`}
-              />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-2xl font-bold ${totalAvailable >= 0 ? 'text-info' : 'text-destructive'}`}
-            >
-              {formatCurrency(totalAvailable)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {totalReserved > 0
-                ? t('pages.accounts.stats.reservedInVaults', {
-                    amount: formatCurrency(totalReserved),
-                  })
-                : t('pages.accounts.stats.overdraftIncluded')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-primary/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.accounts.stats.count')}</p>
-            <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
-              <Building2 className="text-primary h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-primary text-2xl font-bold">{accounts.length}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.accounts.stats.institutionsSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {balanceDistribution.positiveAccounts.length > 1 && (
-        <div className="bg-card p-md rounded-lg border">
-          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            {t('pages.accounts.balanceDistribution')}
-          </p>
-          <div className="bg-muted flex h-2 overflow-hidden rounded-full">
-            {balanceDistribution.positiveAccounts.map((acc, i) => (
-              <div
-                key={acc.id}
-                className={`h-full transition-[width] ${BALANCE_DIST_COLORS[i % BALANCE_DIST_COLORS.length]}`}
-                style={{
-                  width: `${(parseFloat(acc.balance) / balanceDistribution.totalPositive) * 100}%`,
-                }}
-                title={`${acc.account_name}: ${formatCurrency(acc.balance)}`}
-              />
-            ))}
-          </div>
-          <div className="mt-sm gap-md flex flex-wrap">
-            {balanceDistribution.positiveAccounts.map((acc, i) => (
-              <div key={acc.id} className="gap-xs flex items-center">
-                <span
-                  className={`h-2 w-2 shrink-0 rounded-full ${BALANCE_DIST_COLORS[i % BALANCE_DIST_COLORS.length]}`}
-                />
-                <span className="text-muted-foreground text-xs">
-                  {acc.account_name} · {formatCurrency(acc.balance)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {isLoading ? (
         <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -436,166 +354,197 @@ export default function Accounts() {
       ) : filteredAccounts.length === 0 ? (
         <EmptyState
           icon={<Wallet className="text-muted-foreground h-12 w-12" />}
-          message={t('pages.accounts.emptyState')}
+          title={t('pages.accounts.emptyState')}
         />
       ) : (
-        <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredAccounts.map((account) => {
-            const balance = parseFloat(account.balance);
-            const overdraft = parseFloat(account.overdraft_limit ?? '0');
-            const available = balance + overdraft;
-            const reservedInVaults = parseFloat(account.deposited_in_vaults ?? '0');
-            const availableForSpending = parseFloat(
-              account.available_balance ?? account.balance
-            );
-            const typeColors = ACCOUNT_TYPE_COLORS[account.account_type];
-            const initials = account.account_name
-              .split(' ')
-              .slice(0, 2)
-              .map((w) => w[0])
-              .join('')
-              .toUpperCase();
-            return (
-              <Card
-                key={account.id}
-                className={`overflow-hidden transition-shadow hover:shadow-md ${typeColors ? `border-l-4 ${typeColors.border}` : ''}`}
-              >
-                <CardHeader className="pb-sm">
-                  <div className="gap-sm flex items-start justify-between">
-                    <div className="gap-sm flex items-center">
-                      <div
-                        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${typeColors ? `${typeColors.bg} ${typeColors.icon}` : 'bg-muted text-muted-foreground'}`}
-                      >
-                        {initials}
+        <PaginatedSlide
+          key={`${searchTerm}-${typeFilter}`}
+          items={filteredAccounts}
+          pageSize={ACCOUNTS_PAGE_SIZE}
+          className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          {(pageItems) =>
+            pageItems.map((account) => {
+              const balance = parseFloat(account.balance);
+              const overdraft = parseFloat(account.overdraft_limit ?? '0');
+              const available = balance + overdraft;
+              const reservedInVaults = parseFloat(account.deposited_in_vaults ?? '0');
+              const availableForSpending = parseFloat(
+                account.available_balance ?? account.balance
+              );
+              const typeColors = ACCOUNT_TYPE_COLORS[account.account_type];
+              const initials = account.account_name
+                .split(' ')
+                .slice(0, 2)
+                .map((w) => w[0])
+                .join('')
+                .toUpperCase();
+              return (
+                <Card
+                  key={account.id}
+                  className="flex flex-col overflow-hidden transition-colors"
+                >
+                  <CardHeader className="pb-sm">
+                    <div className="gap-sm flex items-start justify-between">
+                      <div className="gap-sm flex items-center">
+                        <div
+                          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${typeColors ? `${typeColors.bg} ${typeColors.icon}` : 'bg-muted text-muted-foreground'}`}
+                        >
+                          {initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate leading-tight font-semibold">
+                            {account.account_name}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {translate('institutions', account.institution)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="truncate leading-tight font-semibold">
-                          {account.account_name}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          {translate('institutions', account.institution)}
-                        </p>
-                      </div>
+                      <Badge variant="secondary" className="shrink-0 text-xs">
+                        {translate('accountTypes', account.account_type)}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="shrink-0 text-xs">
-                      {translate('accountTypes', account.account_type)}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {account.account_number_masked && (
-                    <p className="text-muted-foreground font-mono text-xs">
-                      {account.account_number_masked}
-                    </p>
-                  )}
-                  <div className="bg-muted/30 rounded-lg p-3 text-center">
-                    <p className="text-muted-foreground text-xs">
-                      {t('pages.accounts.columns.balance')}
-                    </p>
-                    <p
-                      className={`text-xl font-bold ${balance >= 0 ? 'text-success' : 'text-destructive'}`}
-                    >
-                      {formatCurrency(account.balance)}
-                    </p>
-                    {overdraft > 0 && (
-                      <p
-                        className={`text-xs ${available >= 0 ? 'text-muted-foreground' : 'text-destructive'}`}
-                      >
-                        {t('pages.accounts.available', {
-                          value: formatCurrency(String(available)),
-                        })}
+                  </CardHeader>
+                  <CardContent className="gap-md flex flex-1 flex-col">
+                    {account.account_number_masked && (
+                      <p className="text-muted-foreground text-xs">
+                        {account.account_number_masked}
                       </p>
                     )}
-                    {reservedInVaults > 0 && (
-                      <div className="mt-xs border-border/60 pt-xs space-y-0.5 border-t">
-                        <p className="text-muted-foreground text-xs">
-                          {t('pages.accounts.reservedInVaults', {
-                            value: formatCurrency(String(reservedInVaults)),
-                          })}
-                        </p>
-                        <p
-                          className={`text-xs font-medium ${availableForSpending >= 0 ? 'text-info' : 'text-destructive'}`}
-                        >
-                          {t('pages.accounts.availableForSpending', {
-                            value: formatCurrency(String(availableForSpending)),
-                          })}
-                        </p>
+                    <div className="bg-muted/30 my-auto rounded-lg p-3 text-center">
+                      <p className="text-muted-foreground text-xs">
+                        {t('pages.accounts.columns.balance')}
+                      </p>
+                      <p
+                        className={`text-xl font-bold ${balance >= 0 ? 'text-success' : 'text-destructive'}`}
+                      >
+                        {formatCurrency(account.balance)}
+                      </p>
+                      {/* Sempre 2 linhas (reserva ou cheque especial, ou espaço
+                          invisível), para todos os cards terem a altura do maior. */}
+                      <div
+                        className={`mt-xs pt-xs space-y-0.5 border-t ${reservedInVaults > 0 ? 'border-border/60' : 'border-transparent'}`}
+                      >
+                        {overdraft > 0 && (
+                          <p
+                            className={`text-xs ${available >= 0 ? 'text-muted-foreground' : 'text-destructive'}`}
+                          >
+                            {t('pages.accounts.available', {
+                              value: formatCurrency(String(available)),
+                            })}
+                          </p>
+                        )}
+                        {reservedInVaults > 0 && (
+                          <>
+                            <p className="text-muted-foreground text-xs">
+                              {t('pages.accounts.reservedInVaults', {
+                                value: formatCurrency(String(reservedInVaults)),
+                              })}
+                            </p>
+                            <p
+                              className={`text-xs font-medium ${availableForSpending >= 0 ? 'text-info' : 'text-destructive'}`}
+                            >
+                              {t('pages.accounts.availableForSpending', {
+                                value: formatCurrency(String(availableForSpending)),
+                              })}
+                            </p>
+                          </>
+                        )}
+                        {Array.from(
+                          {
+                            length: Math.max(
+                              0,
+                              2 -
+                                (overdraft > 0 ? 1 : 0) -
+                                (reservedInVaults > 0 ? 2 : 0)
+                            ),
+                          },
+                          (_, i) => (
+                            <p key={i} aria-hidden="true" className="invisible text-xs">
+                              &nbsp;
+                            </p>
+                          )
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="pt-sm flex items-center justify-between border-t">
-                    <span className="text-muted-foreground text-xs">
-                      {formatDate(account.created_at)}
-                    </span>
-                    <div className="gap-xs flex">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => void openReconciliation(account)}
-                        title={t('pages.accounts.bankReconciliation')}
-                        aria-label={t('pages.accounts.bankReconciliation')}
-                      >
-                        <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleEdit(account)}
-                        title={t('common.actions.edit')}
-                        aria-label={t('common.actions.edit')}
-                      >
-                        <Pencil className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleDelete(account.id)}
-                        title={t('common.actions.delete')}
-                        aria-label={t('common.actions.delete')}
-                      >
-                        <Trash2
-                          className="text-destructive h-4 w-4"
-                          aria-hidden="true"
-                        />
-                      </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                    <div className="pt-sm mt-auto flex items-center justify-between border-t">
+                      <span className="text-muted-foreground text-xs">
+                        {formatDate(account.created_at)}
+                      </span>
+                      <div className="gap-xs flex">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => void openReconciliation(account)}
+                          title={t('pages.accounts.bankReconciliation')}
+                          aria-label={t('pages.accounts.bankReconciliation')}
+                        >
+                          <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => handleEdit(account)}
+                          title={t('common.actions.edit')}
+                          aria-label={t('common.actions.edit')}
+                        >
+                          <Pencil className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => handleDelete(account.id)}
+                          title={t('common.actions.delete')}
+                          aria-label={t('common.actions.delete')}
+                        >
+                          <Trash2
+                            className="text-destructive h-4 w-4"
+                            aria-hidden="true"
+                          />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={selectedAccount ? 'edit' : 'create'}>
               {selectedAccount
                 ? t('pages.accounts.editTitle')
                 : t('pages.accounts.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedAccount
-                ? t('pages.accounts.editDesc')
-                : t('pages.accounts.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedAccount
+                  ? t('pages.accounts.editDesc')
+                  : t('pages.accounts.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <AccountForm
             account={selectedAccount}
             onSubmit={handleSubmit}
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
+            fieldErrors={fieldErrors}
           />
         </DialogContent>
       </Dialog>
 
       {/* Bank Reconciliation dialog */}
       <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen}>
-        <DialogContent className="custom-scrollbar max-w-3xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle className="gap-sm flex items-center">
               <ArrowLeftRight className="h-5 w-5" />
@@ -603,14 +552,16 @@ export default function Accounts() {
                 account: reconciliationAccount?.account_name,
               })}
             </DialogTitle>
-            <DialogDescription>
-              {t('pages.accounts.bankReconciliationDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.accounts.bankReconciliationDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
 
           <div className="flex justify-end">
             <Button size="sm" onClick={() => setIsUploadOpen(true)}>
-              <FileUp className="mr-sm h-4 w-4" />
+              <FileUp className="h-4 w-4" />
               {t('pages.accounts.importStatement')}
             </Button>
           </div>
@@ -623,7 +574,6 @@ export default function Accounts() {
             <EmptyState
               icon={<ArrowLeftRight className="text-muted-foreground h-12 w-12" />}
               title={t('pages.accounts.noImports')}
-              message={t('pages.accounts.noImportsDesc')}
             />
           ) : (
             <div className="rounded-md border">
@@ -677,6 +627,7 @@ export default function Accounts() {
                             void navigate(`/bank-reconciliation/${imp.id}`);
                           }}
                         >
+                          <Eye aria-hidden="true" />
                           {t('pages.bankReconciliation.viewBtn')}
                         </Button>
                       </td>
@@ -686,6 +637,13 @@ export default function Accounts() {
               </table>
             </div>
           )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReconciliationOpen(false)}>
+              <X className="h-4 w-4" />
+              {t('common.actions.cancel')}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -693,18 +651,17 @@ export default function Accounts() {
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('pages.accounts.imports.dialogTitle')}</DialogTitle>
+            <DialogTitle icon={Upload}>
+              {t('pages.accounts.imports.dialogTitle')}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={(e) => void handleUploadSubmit(e)} className="space-y-md">
             <div className="space-y-sm">
-              <Label htmlFor="upload-file">Arquivo (.ofx ou .csv)</Label>
-              <input
-                id="upload-file"
-                type="file"
-                accept=".ofx,.csv"
-                className="text-muted-foreground file:mr-md file:bg-primary/10 file:px-md file:py-sm file:text-primary hover:file:bg-primary/20 block w-full text-sm file:rounded-md file:border-0 file:text-sm file:font-semibold"
-                onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
-              />
+              <Label className="gap-xs flex items-center" htmlFor="upload-file">
+                <Upload className="text-muted-foreground h-3.5 w-3.5" />
+                Arquivo (.ofx ou .csv)
+              </Label>
+              <FileInput id="upload-file" accept=".ofx,.csv" onChange={setUploadFile} />
               {uploadFile && (
                 <p className="text-muted-foreground text-xs">
                   {uploadFile.name} — formato:{' '}
@@ -721,9 +678,15 @@ export default function Accounts() {
                 onClick={() => setIsUploadOpen(false)}
                 disabled={uploadLoading}
               >
+                <X className="h-4 w-4" />
                 Cancelar
               </Button>
               <Button type="submit" disabled={uploadLoading || !uploadFile}>
+                {uploadLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
                 {uploadLoading ? 'Importando...' : 'Importar'}
               </Button>
             </DialogFooter>

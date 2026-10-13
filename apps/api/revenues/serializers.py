@@ -1,10 +1,35 @@
 from rest_framework import serializers
 
+from accounts.models import WALLET_ACCOUNT_TYPE
 from expenses.serializers import TagSerializer
 from revenues.models import FixedRevenue, FixedRevenueGenerationLog, Revenue
 
+WALLET_FORBIDDEN_CATEGORIES = {"ticket", "income", "cashback"}
+
+
+def validate_wallet_category(serializer, attrs):
+    """Receitas na Carteira Móvel não aceitam Vale, Rendimentos e Cashback."""
+    account = attrs.get(
+        "account", getattr(serializer.instance, "account", None)
+    )
+    category = attrs.get(
+        "category", getattr(serializer.instance, "category", None)
+    )
+    if (
+        account
+        and account.account_type == WALLET_ACCOUNT_TYPE
+        and category in WALLET_FORBIDDEN_CATEGORIES
+    ):
+        raise serializers.ValidationError(
+            {"category": "Categoria não permitida para a Carteira Móvel."}
+        )
+
 
 class RevenueSerializer(serializers.ModelSerializer):
+    def validate(self, attrs):
+        validate_wallet_category(self, attrs)
+        return attrs
+
     account_name = serializers.CharField(
         source="account.account_name", read_only=True
     )
@@ -118,6 +143,10 @@ class FixedRevenueCreateUpdateSerializer(serializers.ModelSerializer):
         if not 1 <= value <= 31:
             raise serializers.ValidationError("O dia deve estar entre 1 e 31")
         return value
+
+    def validate(self, attrs):
+        validate_wallet_category(self, attrs)
+        return attrs
 
 
 class FixedRevenueValueSerializer(serializers.Serializer):

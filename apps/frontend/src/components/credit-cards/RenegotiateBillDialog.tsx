@@ -1,4 +1,4 @@
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, Handshake, Hash, RefreshCw, Wallet, X } from 'lucide-react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -11,9 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { translate } from '@/config/constants';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency } from '@/lib/formatters';
 import type { CreditCardBill, RenegotiateBillFormData } from '@/types';
 
@@ -36,7 +37,6 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
   const remaining = parseFloat(bill.total_amount) - parseFloat(bill.paid_amount);
 
   const {
-    register,
     handleSubmit,
     control,
     formState: { errors },
@@ -63,15 +63,20 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="custom-scrollbar max-h-[90vh] max-w-lg overflow-y-auto">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{t('pages.creditCardBills.renegotiateTitle')}</DialogTitle>
+          <DialogTitle icon={Handshake}>
+            {t('pages.creditCardBills.renegotiateTitle')}
+          </DialogTitle>
           <DialogDescription>
             {t('pages.creditCardBills.renegotiateDesc')}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+        <form
+          onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+          className="space-y-lg"
+        >
           {/* Resumo */}
           <div className="bg-muted/50 p-md space-y-3 rounded-lg">
             <h4 className="text-muted-foreground text-sm font-semibold">
@@ -118,7 +123,8 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
           {/* Campos */}
           <div className="space-y-md">
             <div className="space-y-sm">
-              <Label htmlFor="total_with_interest">
+              <Label className="gap-xs flex items-center" htmlFor="total_with_interest">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCardBills.renegotiateForm.totalWithInterestLabel')}
               </Label>
               <Controller
@@ -139,46 +145,45 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
                     value={field.value}
                     onBlur={field.onBlur}
                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    aria-invalid={!!errors.total_with_interest}
                   />
                 )}
               />
-              {errors.total_with_interest && (
-                <p className="text-destructive text-xs">
-                  {errors.total_with_interest.message}
-                </p>
-              )}
               <p className="text-muted-foreground text-xs">
                 {t('pages.creditCardBills.renegotiateForm.totalWithInterestHint')}
               </p>
             </div>
 
             <div className="space-y-sm">
-              <Label htmlFor="installments">
+              <Label className="gap-xs flex items-center" htmlFor="installments">
+                <Hash className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCardBills.renegotiateForm.installmentsLabel')}
               </Label>
-              <Input
-                id="installments"
-                type="number"
-                min="1"
-                max="48"
-                placeholder={t(
-                  'pages.creditCardBills.renegotiateForm.installmentsPlaceholder'
-                )}
-                {...register('installments', {
-                  valueAsNumber: true,
+              <Controller
+                control={control}
+                name="installments"
+                rules={{
                   required: t(
                     'pages.creditCardBills.renegotiateForm.installmentsRequired'
                   ),
                   min: { value: 1, message: '' },
                   max: { value: 48, message: '' },
-                })}
-                disabled={isLoading}
+                }}
+                render={({ field }) => (
+                  <NumberStepper
+                    id="installments"
+                    disabled={isLoading}
+                    placeholder={t(
+                      'pages.creditCardBills.renegotiateForm.installmentsPlaceholder'
+                    )}
+                    min={1}
+                    max={48}
+                    value={field.value}
+                    onChange={field.onChange}
+                    aria-invalid={!!errors.installments}
+                  />
+                )}
               />
-              {errors.installments && (
-                <p className="text-destructive text-xs">
-                  {errors.installments.message}
-                </p>
-              )}
             </div>
           </div>
 
@@ -206,13 +211,14 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
             <p>{t('pages.creditCardBills.renegotiateForm.billWillBePaid')}</p>
           </div>
 
-          <div className="gap-sm pt-md flex justify-end border-t">
+          <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading} className="gap-sm">

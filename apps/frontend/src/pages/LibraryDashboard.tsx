@@ -45,6 +45,7 @@ import {
 
 import { ChartContainer } from '@/components/charts';
 import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -444,7 +445,7 @@ export default function LibraryDashboard() {
           >
             <Timer className="h-4 w-4" />
             {timerRunning ? (
-              <span className="text-primary font-mono">{timerDisplay}</span>
+              <span className="text-primary">{timerDisplay}</span>
             ) : (
               t('pages.libraryDashboard.studyTimer')
             )}
@@ -463,10 +464,10 @@ export default function LibraryDashboard() {
 
       {/* Study Timer Panel */}
       {timerOpen && (
-        <div className="border-border bg-card px-lg py-md flex items-center justify-between rounded-lg border shadow-sm">
+        <div className="border-border bg-card px-lg py-md flex items-center justify-between rounded-lg border">
           <div className="gap-md flex items-center">
             <div className="text-center">
-              <p className="text-foreground font-mono text-4xl font-bold tabular-nums">
+              <p className="text-foreground text-4xl font-bold tabular-nums">
                 {timerDisplay}
               </p>
               <p className="mt-xs text-muted-foreground text-xs">
@@ -477,6 +478,11 @@ export default function LibraryDashboard() {
             </div>
             <div className="gap-sm flex">
               <PlainButton
+                aria-label={t(
+                  timerRunning
+                    ? 'pages.libraryDashboard.studyTimerPause'
+                    : 'pages.libraryDashboard.studyTimerStart'
+                )}
                 onClick={() => setTimerRunning((v) => !v)}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-9 w-9 items-center justify-center rounded-full"
               >
@@ -487,6 +493,7 @@ export default function LibraryDashboard() {
                 )}
               </PlainButton>
               <PlainButton
+                aria-label={t('common.actions.reset')}
                 onClick={() => {
                   setTimerRunning(false);
                   setTimerSeconds(timerMode === 'study' ? 25 * 60 : 5 * 60);
@@ -533,13 +540,13 @@ export default function LibraryDashboard() {
         >
           <div className="gap-md flex flex-col">
             {/* Métricas Principais */}
-            <Card>
+            <Card className="flex flex-col">
               <CardHeader className="pb-sm">
                 <CardTitle className="text-sm font-medium">
                   {t('pages.libraryDashboard.overview')}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex flex-1 flex-col items-center justify-center text-center">
                 <div className="gap-md grid grid-cols-2 sm:grid-cols-5">
                   <div className="gap-xs flex flex-col">
                     <div className="gap-sm text-muted-foreground flex items-center">
@@ -675,14 +682,14 @@ export default function LibraryDashboard() {
 
       {/* Análise do Mês */}
       {stats?.monthly_comparison && (
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader className="pb-sm">
             <CardTitle className="gap-sm flex items-center text-sm font-medium">
               <TrendingUp className="text-primary h-4 w-4" />
               {t('pages.libraryDashboard.monthAnalysis.title')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-1 flex-col items-center justify-center text-center">
             <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
               <div className="gap-xs flex flex-col">
                 <div className="gap-sm text-muted-foreground flex items-center">
@@ -1068,9 +1075,6 @@ export default function LibraryDashboard() {
       <Card>
         <CardHeader>
           <CardTitle>{t('pages.libraryDashboard.contentDistribution')}</CardTitle>
-          <p className="text-sm">
-            {t('pages.libraryDashboard.contentDistributionDesc')}
-          </p>
         </CardHeader>
         <CardContent>
           <ChartContainer
@@ -1088,13 +1092,13 @@ export default function LibraryDashboard() {
       </Card>
 
       {/* Block 2: Estatísticas Gerais */}
-      <Card>
+      <Card className="flex flex-col">
         <CardHeader className="pb-sm">
           <CardTitle className="text-sm font-medium">
             {t('pages.libraryDashboard.generalStats')}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-1 flex-col items-center justify-center text-center">
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
             <div className="gap-xs flex flex-col">
               <div className="gap-sm text-muted-foreground flex items-center">
@@ -1344,9 +1348,6 @@ export default function LibraryDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.contentDistribution')}</CardTitle>
-            <p className="text-sm">
-              {t('pages.libraryDashboard.contentDistributionDesc')}
-            </p>
           </CardHeader>
           <CardContent>
             <ChartContainer
@@ -1371,13 +1372,13 @@ export default function LibraryDashboard() {
         open={sections.stats}
         onToggle={() => toggle('stats')}
       >
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader className="pb-sm">
             <CardTitle className="text-sm font-medium">
               {t('pages.libraryDashboard.generalStats')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-1 flex-col items-center justify-center text-center">
             <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
               <div className="gap-xs flex flex-col">
                 <div className="gap-sm text-muted-foreground flex items-center">
@@ -1636,9 +1637,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.monthlyComparison')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.monthlyComparisonDesc')}
-              </p>
             </CardHeader>
             <CardContent>
               {stats?.monthly_comparison &&
@@ -1745,15 +1743,10 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.topGenresByTime')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.topGenresByTimeDesc')}
-              </p>
             </CardHeader>
             <CardContent>
               {!translatedTopGenresByTime || translatedTopGenresByTime.length === 0 ? (
-                <div className="flex h-32 items-center justify-center text-sm">
-                  {t('pages.libraryDashboard.noReadings')}
-                </div>
+                <EmptyState title={t('pages.libraryDashboard.noReadings')} />
               ) : (
                 <div className="space-y-3">
                   {translatedTopGenresByTime.map((item, index) => {
@@ -1804,9 +1797,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.genreDistribution')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.genreDistributionDesc')}
-              </p>
             </CardHeader>
             <CardContent>
               <ChartContainer
@@ -1829,7 +1819,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.readingStatus')}</CardTitle>
-              <p className="text-sm">{t('pages.libraryDashboard.readingStatusDesc')}</p>
             </CardHeader>
             <CardContent>
               <ChartContainer
@@ -1861,9 +1850,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.readingTimeline')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.readingTimelineDesc')}
-              </p>
             </CardHeader>
             <CardContent>
               <ChartContainer
@@ -1927,7 +1913,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.topAuthors')}</CardTitle>
-              <p className="text-sm">{t('pages.libraryDashboard.topAuthorsDesc')}</p>
             </CardHeader>
             <CardContent>
               <ChartContainer
@@ -1959,9 +1944,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.ratingDistribution')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.ratingDistributionDesc')}
-              </p>
             </CardHeader>
             <CardContent>
               <ChartContainer
@@ -1984,9 +1966,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.distributions')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.distributionsDescExtended')}
-              </p>
             </CardHeader>
             <CardContent>
               <div className="gap-lg grid grid-cols-1 md:grid-cols-3">

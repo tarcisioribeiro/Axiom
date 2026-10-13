@@ -1,15 +1,24 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import { CalendarDays, CreditCard, Store, Tag, Wallet } from 'lucide-react';
+import {
+  CalendarDays,
+  CreditCard,
+  Store,
+  Tag,
+  Wallet,
+  Loader2,
+  Save,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -17,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { StatusToggle } from '@/components/ui/status-toggle';
 import { Textarea } from '@/components/ui/textarea';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
@@ -53,32 +63,33 @@ export const FixedExpenseForm = ({
 
   // Valores iniciais direto no useForm: setValue em useEffect pós-montagem não
   // refletia nos Selects (Categoria/Cartão ficavam vazios na edição).
-  const { register, handleSubmit, setValue, watch } = useForm<FixedExpenseFormData>({
-    defaultValues: fixedExpense
-      ? {
-          description: fixedExpense.description,
-          default_value: parseFloat(fixedExpense.default_value),
-          due_day: fixedExpense.due_day,
-          category: fixedExpense.category,
-          account: fixedExpense.credit_card ? undefined : fixedExpense.account,
-          credit_card: fixedExpense.credit_card,
-          merchant: fixedExpense.merchant,
-          notes: fixedExpense.notes,
-          member: fixedExpense.member,
-          is_active: fixedExpense.is_active,
-          allow_value_edit: fixedExpense.allow_value_edit,
-        }
-      : {
-          description: '',
-          default_value: 0,
-          due_day: 1,
-          category: '',
-          account: accounts[0]?.id,
-          credit_card: undefined,
-          is_active: true,
-          allow_value_edit: true,
-        },
-  });
+  const { control, register, handleSubmit, setValue, watch } =
+    useForm<FixedExpenseFormData>({
+      defaultValues: fixedExpense
+        ? {
+            description: fixedExpense.description,
+            default_value: parseFloat(fixedExpense.default_value),
+            due_day: fixedExpense.due_day,
+            category: fixedExpense.category,
+            account: fixedExpense.credit_card ? undefined : fixedExpense.account,
+            credit_card: fixedExpense.credit_card,
+            merchant: fixedExpense.merchant,
+            notes: fixedExpense.notes,
+            member: fixedExpense.member,
+            is_active: fixedExpense.is_active,
+            allow_value_edit: fixedExpense.allow_value_edit,
+          }
+        : {
+            description: '',
+            default_value: 0,
+            due_day: 1,
+            category: '',
+            account: accounts[0]?.id,
+            credit_card: undefined,
+            is_active: true,
+            allow_value_edit: true,
+          },
+    });
 
   useEffect(() => {
     if (fixedExpense) return;
@@ -188,18 +199,28 @@ export const FixedExpenseForm = ({
             />
           </div>
 
-          <div className="space-y-sm">
-            <Label htmlFor="due_day" className="gap-xs flex items-center">
+          <div className="space-y-sm flex flex-col items-center">
+            <Label
+              htmlFor="due_day"
+              className="gap-xs flex items-center justify-center"
+            >
               <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.fixedExpenses.form.dueDayLabel')}
             </Label>
-            <Input
-              id="due_day"
-              type="number"
-              min="1"
-              max="31"
-              {...register('due_day', { required: true, valueAsNumber: true })}
-              disabled={isLoading}
+            <Controller
+              control={control}
+              name="due_day"
+              rules={{ required: true }}
+              render={({ field }) => (
+                <NumberStepper
+                  id="due_day"
+                  disabled={isLoading}
+                  min={1}
+                  max={31}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
           </div>
         </div>
@@ -222,7 +243,7 @@ export const FixedExpenseForm = ({
                     type="button"
                     onClick={() => selectPaymentType(type)}
                     disabled={isLoading}
-                    className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition duration-150 ${
+                    className={`gap-xs duration-fast flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition ${
                       paymentType === type
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
@@ -234,9 +255,6 @@ export const FixedExpenseForm = ({
                 );
               })}
             </div>
-            <p className="text-muted-foreground text-xs">
-              {t('pages.fixedExpenses.form.paymentTypeHint')}
-            </p>
           </div>
 
           {paymentType === 'account' ? (
@@ -288,9 +306,6 @@ export const FixedExpenseForm = ({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-muted-foreground text-xs">
-                {t('pages.fixedExpenses.form.creditCardHint')}
-              </p>
             </div>
           )}
         </div>
@@ -298,7 +313,7 @@ export const FixedExpenseForm = ({
 
       {/* Seção: Configuração */}
       <FormSection title={t('common.form.sections.paymentConfig')} icon={Tag}>
-        <div className="space-y-md">
+        <div className="gap-md grid grid-cols-1 items-start md:grid-cols-3">
           <div className="space-y-sm">
             <Label className="gap-xs flex items-center">
               <Tag className="text-muted-foreground h-3.5 w-3.5" />
@@ -308,51 +323,59 @@ export const FixedExpenseForm = ({
               {...register('notes')}
               placeholder={t('pages.fixedExpenses.form.notesPlaceholder')}
               disabled={isLoading}
-              rows={3}
+              rows={1}
             />
           </div>
 
           <div className="space-y-sm">
-            <div className="gap-sm flex items-center">
-              <Checkbox
-                id="is_active"
-                checked={watchedIsActive}
-                onCheckedChange={(checked) => setValue('is_active', !!checked)}
-                disabled={isLoading}
-              />
-              <Label htmlFor="is_active" className="cursor-pointer">
-                {t('pages.fixedExpenses.form.isActiveLabel')}
-              </Label>
-            </div>
-            <p className="text-muted-foreground ml-6 text-xs">
-              {t('pages.fixedExpenses.form.isActiveHint')}
-            </p>
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.fixedExpenses.form.isActiveLabel')}
+            </Label>
+            <StatusToggle
+              value={watchedIsActive ? 'true' : 'false'}
+              options={[
+                {
+                  value: 'true',
+                  label: t('common.status.active'),
+                  accentColor: 'success',
+                },
+                { value: 'false', label: t('common.status.inactive') },
+              ]}
+              onChange={(v) => setValue('is_active', v === 'true')}
+              disabled={isLoading}
+            />
           </div>
 
           <div className="space-y-sm">
-            <div className="gap-sm flex items-center">
-              <Checkbox
-                id="allow_value_edit"
-                checked={watchedAllowValueEdit}
-                onCheckedChange={(checked) => setValue('allow_value_edit', !!checked)}
-                disabled={isLoading}
-              />
-              <Label htmlFor="allow_value_edit" className="cursor-pointer">
-                {t('pages.fixedExpenses.form.allowValueEditLabel')}
-              </Label>
-            </div>
-            <p className="text-muted-foreground ml-6 text-xs">
-              {t('pages.fixedExpenses.form.allowValueEditHint')}
-            </p>
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.fixedExpenses.form.allowValueEditLabel')}
+            </Label>
+            <StatusToggle
+              value={watchedAllowValueEdit ? 'true' : 'false'}
+              options={[
+                { value: 'true', label: t('common.actions.yes') },
+                { value: 'false', label: t('common.actions.no') },
+              ]}
+              onChange={(v) => setValue('allow_value_edit', v === 'true')}
+              disabled={isLoading}
+            />
           </div>
         </div>
       </FormSection>
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
           {isLoading
             ? t('common.actions.saving')
             : fixedExpense

@@ -2,7 +2,44 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { transitions } from '@/lib/animations/transitions';
 import { cn } from '@/lib/utils';
+
+/**
+ * Expandir/recolher padrão (altura + fade) para toggles tipo "Ver detalhes".
+ * Uso: `<Collapse open={expanded}>…</Collapse>` no lugar de `{expanded && …}`.
+ */
+export function Collapse({
+  open,
+  children,
+  className,
+}: {
+  open: boolean;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <AnimatePresence initial={false}>
+      {open && (
+        <motion.div
+          // overflow só fica hidden durante a animação — aberto, não corta
+          // focus ring/sombra do conteúdo
+          initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
+          animate={{
+            height: 'auto',
+            opacity: 1,
+            transitionEnd: { overflow: 'visible' },
+          }}
+          exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
+          transition={transitions.normal}
+          className={className}
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
 
 interface CollapsibleSectionProps {
   title: string;
@@ -40,26 +77,15 @@ export function CollapsibleSection({
         </div>
         <ChevronDown
           className={cn(
-            'text-muted-foreground h-4 w-4 shrink-0 transition-transform duration-200',
+            'text-muted-foreground duration-normal h-4 w-4 shrink-0 transition-transform',
             open && 'rotate-180'
           )}
         />
       </button>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="content"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="overflow-hidden"
-          >
-            <div className="border-border p-md border-t">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Collapse open={open}>
+        <div className="border-border p-md border-t">{children}</div>
+      </Collapse>
     </div>
   );
 }

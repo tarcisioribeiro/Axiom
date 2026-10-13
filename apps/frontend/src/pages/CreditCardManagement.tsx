@@ -1,47 +1,71 @@
-import { CreditCard, Receipt } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { CreditCard, Plus, Receipt } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useBreadcrumbExtraStore } from '@/stores/breadcrumb-extra-store';
+import { useTabRoute } from '@/hooks/use-tab-route';
+import { useToast } from '@/hooks/use-toast';
+import { accountsService } from '@/services/accounts-service';
 
 import CreditCardBills from './CreditCardBills';
 import CreditCards from './CreditCards';
 
-const TAB_KEY = 'creditCardManagement.activeTab';
-
-const TAB_LABEL_KEYS: Record<string, string> = {
-  cards: 'pages.creditCards.title',
-  bills: 'pages.creditCardBills.title',
-};
+const TABS = ['cards', 'bills'] as const;
 
 export default function CreditCardManagement() {
   const { t } = useTranslation();
-  const setExtraLabel = useBreadcrumbExtraStore((s) => s.setExtraLabel);
-
-  const storedTab = localStorage.getItem(TAB_KEY);
-  const defaultTab = storedTab === 'expenses' ? 'cards' : (storedTab ?? 'cards');
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [activeTab, setActiveTab] = useTabRoute('/credit-cards', TABS, 'cards');
   const [billsCardFilter, setBillsCardFilter] = useState<string>();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const billCreateRef = useRef<() => void>(undefined);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    setExtraLabel(t(TAB_LABEL_KEYS[defaultTab] ?? 'pages.creditCards.title'));
-    return () => setExtraLabel(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => accountsService.getAll(),
+  });
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    localStorage.setItem(TAB_KEY, value);
-    setExtraLabel(t(TAB_LABEL_KEYS[value] ?? 'pages.creditCards.title'));
+  const handleCreate = () => {
+    if (accounts.length === 0) {
+      toast({
+        title: t('pages.creditCards.noAccountMsg'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    setIsCreateOpen(true);
   };
+
+  const isBillsTab = activeTab === 'bills';
 
   return (
     <PageContainer className="flex flex-1 flex-col">
+      <PageHeader
+        title={t(
+          isBillsTab ? 'pages.creditCardBills.title' : 'pages.creditCards.title'
+        )}
+        icon={isBillsTab ? <Receipt /> : <CreditCard />}
+        action={
+          isBillsTab
+            ? {
+                label: t('pages.creditCardBills.newBtn'),
+                icon: <Plus className="h-4 w-4" />,
+                onClick: () => billCreateRef.current?.(),
+              }
+            : {
+                label: t('pages.creditCards.newBtn'),
+                icon: <Plus className="h-4 w-4" />,
+                onClick: handleCreate,
+              }
+        }
+      />
+
       <Tabs
         value={activeTab}
-        onValueChange={handleTabChange}
+        onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">
@@ -58,14 +82,17 @@ export default function CreditCardManagement() {
         <TabsContent value="cards" className="mt-0 flex-1">
           <CreditCards
             embedded
+            isCreateOpen={isCreateOpen}
+            onCreateOpenChange={setIsCreateOpen}
             onShowBills={(cardId) => {
               setBillsCardFilter(String(cardId));
-              handleTabChange('bills');
+              setActiveTab('bills');
             }}
           />
         </TabsContent>
         <TabsContent value="bills" className="mt-0 flex-1">
           <CreditCardBills
+            createRef={billCreateRef}
             key={billsCardFilter}
             embedded
             initialCardFilter={billsCardFilter}

@@ -74,6 +74,45 @@ def _send_email_notification(notification: Notification) -> None:
         )
 
 
+def upsert_notification(
+    member, notification_type, content_type, object_id, defaults
+):
+    """Creates or revives a Notification, returning (notification, created).
+
+    `Notification.objects` (ActiveManager) filters `is_deleted=False`, but
+    the unique_together constraint (owner, notification_type, content_type,
+    object_id) doesn't — so a plain `get_or_create` can't see a previously
+    soft-deleted row and collides with the DB constraint when the same
+    notification becomes due again (e.g. a task goes back to pending after
+    being resolved). Looks up via `all_objects` and revives soft-deleted
+    rows instead of trying to insert a duplicate.
+    """
+    existing = Notification.all_objects.filter(
+        owner=member,
+        notification_type=notification_type,
+        content_type=content_type,
+        object_id=object_id,
+    ).first()
+    if existing is None:
+        notification = Notification.objects.create(
+            owner=member,
+            notification_type=notification_type,
+            content_type=content_type,
+            object_id=object_id,
+            **defaults,
+        )
+        return notification, True
+    if existing.is_deleted:
+        for field, value in defaults.items():
+            setattr(existing, field, value)
+        existing.is_deleted = False
+        existing.deleted_at = None
+        existing.deleted_by = None
+        existing.save()
+        return existing, True
+    return existing, False
+
+
 def dispatch_notification(notification: Notification) -> None:
     """Dispatches a notification according to the owner's channel preference.
 

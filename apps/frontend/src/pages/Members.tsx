@@ -2,31 +2,33 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
-  BarChart3,
+  Banknote,
+  CheckCircle2,
+  CircleDot,
+  HandCoins,
+  Mail,
   Pencil,
+  Phone,
   Plus,
+  Search,
+  Shield,
   Trash2,
   Users,
-  Banknote,
-  HandCoins,
-  UserCheck,
-  Phone,
-  Mail,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { MemberForm } from '@/components/members/MemberForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +36,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
@@ -71,14 +82,36 @@ function MemberInitials({ name, sex }: { name: string; sex: string }) {
 
 const EMPTY_MEMBERS: Member[] = [];
 
+/** Desktop (lg+): 8 cards por página; demais telas mantêm o padrão da grade. */
+const DESKTOP_QUERY = '(min-width: 1024px)';
+const DESKTOP_PAGE_SIZE = 8;
+
+function useMembersPageSize() {
+  const [pageSize, setPageSize] = useState(() =>
+    window.matchMedia(DESKTOP_QUERY).matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const handler = (e: MediaQueryListEvent) =>
+      setPageSize(e.matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  return pageSize;
+}
+
 export default function Members() {
+  const membersPageSize = useMembersPageSize();
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState('all');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -96,8 +129,7 @@ export default function Members() {
         return { members: data, currentUserMemberId };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { members: EMPTY_MEMBERS, currentUserMemberId: null };
@@ -123,21 +155,18 @@ export default function Members() {
         await membersService.update(selectedMember.id, data);
         toast({
           title: t('pages.members.updated'),
-          description: t('pages.members.updatedDesc'),
         });
       } else {
         await membersService.create(data);
         toast({
           title: t('pages.members.created'),
-          description: t('pages.members.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -158,33 +187,41 @@ export default function Members() {
       await membersService.delete(id);
       toast({
         title: t('pages.members.deleted'),
-        description: t('pages.members.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
   };
 
   const filteredMembers = useMemo(() => {
-    if (!searchTerm) return members;
-    const q = searchTerm.toLowerCase();
-    return members.filter(
-      (m) =>
-        m.name.toLowerCase().includes(q) ||
-        m.document.toLowerCase().includes(q) ||
-        m.phone.toLowerCase().includes(q) ||
-        (m.email ?? '').toLowerCase().includes(q)
-    );
-  }, [members, searchTerm]);
+    let result = members;
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter(
+        (m) =>
+          m.name.toLowerCase().includes(q) ||
+          m.document.toLowerCase().includes(q) ||
+          m.phone.toLowerCase().includes(q) ||
+          (m.email ?? '').toLowerCase().includes(q)
+      );
+    }
+    if (statusFilter !== 'all')
+      result = result.filter((m) => m.active === (statusFilter === 'active'));
+    if (roleFilter === 'creditor') result = result.filter((m) => m.is_creditor);
+    if (roleFilter === 'benefited') result = result.filter((m) => m.is_benefited);
+    return result;
+  }, [members, searchTerm, statusFilter, roleFilter]);
 
-  const creditorCount = members.filter((m) => m.is_creditor).length;
-  const beneficiaryCount = members.filter((m) => m.is_benefited).length;
-  const activeCount = members.filter((m) => m.active).length;
+  const hasExtraFilters = statusFilter !== 'all' || roleFilter !== 'all';
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setRoleFilter('all');
+  };
 
   if (isLoading) return <LoadingState />;
 
@@ -203,252 +240,262 @@ export default function Members() {
         </Button>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
-        <SearchInput
-          placeholder={t('pages.members.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-52 sm:w-64"
-        />
+      <FilterBar
+        hasActiveFilters={!!searchTerm || hasExtraFilters}
+        onClear={clearAllFilters}
+        activeFilters={[
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${
+                    statusFilter === 'active'
+                      ? t('common.status.active')
+                      : t('common.status.inactive')
+                  }`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+          ...(roleFilter !== 'all'
+            ? [
+                {
+                  key: 'role',
+                  label:
+                    roleFilter === 'creditor'
+                      ? t('common.fields.is_creditor')
+                      : t('common.fields.is_benefited'),
+                  onRemove: () => setRoleFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.members.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.members.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.members.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.members.allStatus')}</SelectItem>
+              <SelectItem
+                value="active"
+                icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+              >
+                {t('common.status.active')}
+              </SelectItem>
+              <SelectItem
+                value="inactive"
+                icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+              >
+                {t('common.status.inactive')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.role')} icon={Shield}>
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.members.allRoles')}
+              startIcon={<Users className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.members.allRoles')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.members.allRoles')}</SelectItem>
+              <SelectItem value="creditor" icon={<Banknote className="h-4 w-4" />}>
+                {t('common.fields.is_creditor')}
+              </SelectItem>
+              <SelectItem value="benefited" icon={<HandCoins className="h-4 w-4" />}>
+                {t('common.fields.is_benefited')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
       </FilterBar>
-
-      {/* Stat cards */}
-      {members.length > 0 && (
-        <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
-          <Card className="border-t-primary/60 overflow-hidden border-t-2">
-            <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-              <p className="text-sm font-medium">{t('pages.members.title')}</p>
-              <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
-                <Users className="text-primary h-4 w-4" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-primary text-2xl font-bold">{members.length}</div>
-              <p className="mt-xs text-muted-foreground text-xs">
-                {t('pages.members.stats.registeredSubtitle')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-t-success/60 overflow-hidden border-t-2">
-            <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-              <p className="text-sm font-medium">{t('pages.members.stats.active')}</p>
-              <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-                <UserCheck className="text-success h-4 w-4" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-success text-2xl font-bold">{activeCount}</div>
-              <p className="mt-xs text-muted-foreground text-xs">
-                {t('pages.members.stats.activeSubtitle')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden border-t-2 border-t-blue-500/60">
-            <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-              <p className="text-sm font-medium">
-                {t('pages.members.stats.creditors')}
-              </p>
-              <div className="p-sm rounded-lg bg-blue-500/10 ring-1 ring-blue-500/20">
-                <Banknote className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {creditorCount}
-              </div>
-              <p className="mt-xs text-muted-foreground text-xs">
-                {t('pages.members.stats.creditorsSubtitle')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden border-t-2 border-t-emerald-500/60">
-            <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-              <p className="text-sm font-medium">
-                {t('pages.members.stats.beneficiaries')}
-              </p>
-              <div className="p-sm rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/20">
-                <HandCoins className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {beneficiaryCount}
-              </div>
-              <p className="mt-xs text-muted-foreground text-xs">
-                {t('pages.members.stats.beneficiariesSubtitle')}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {filteredMembers.length === 0 ? (
         <EmptyState
           icon={<Users className="text-muted-foreground h-12 w-12" />}
-          message={
-            searchTerm ? t('pages.members.emptySearch') : t('pages.members.emptyState')
+          title={
+            searchTerm || hasExtraFilters
+              ? t('pages.members.emptySearch')
+              : t('pages.members.emptyState')
           }
         />
       ) : (
-        <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredMembers.map((member) => {
-            const isCurrentUser = currentUserMemberId === member.id;
-            return (
-              <Card
-                key={member.id}
-                className={cn(
-                  'overflow-hidden transition-shadow hover:shadow-md',
-                  isCurrentUser && 'ring-primary/40 ring-2',
-                  !member.active && 'opacity-60'
-                )}
-              >
-                {/* Header com avatar e nome */}
-                <div className="from-muted/50 p-md flex items-start gap-3 bg-gradient-to-r to-transparent">
-                  <MemberInitials name={member.name} sex={member.sex} />
-                  <div className="min-w-0 flex-1">
-                    <div className="gap-sm flex items-center">
-                      <p className="truncate leading-tight font-semibold">
-                        {member.name}
+        <PaginatedSlide
+          key={`${searchTerm}-${statusFilter}-${roleFilter}`}
+          items={filteredMembers}
+          pageSize={membersPageSize}
+          centerList
+          className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          {(pageItems) =>
+            pageItems.map((member) => {
+              const isCurrentUser = currentUserMemberId === member.id;
+              return (
+                <Card
+                  key={member.id}
+                  className={cn(
+                    'flex flex-col overflow-hidden transition-colors',
+                    isCurrentUser && 'ring-primary/40 ring-2',
+                    !member.active && 'opacity-60'
+                  )}
+                >
+                  {/* Header com avatar e nome */}
+                  <div className="from-muted/50 p-md flex items-start gap-3 bg-gradient-to-r to-transparent">
+                    <MemberInitials name={member.name} sex={member.sex} />
+                    <div className="min-w-0 flex-1">
+                      <div className="gap-sm flex items-center">
+                        <p className="truncate leading-tight font-semibold">
+                          {member.name}
+                        </p>
+                        {isCurrentUser && (
+                          <Badge
+                            variant="secondary"
+                            className="px-sm text-2xs shrink-0 py-0"
+                          >
+                            Você
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-muted-foreground text-xs">
+                        {format(new Date(member.created_at), 'dd/MM/yyyy')}
                       </p>
-                      {isCurrentUser && (
-                        <Badge
-                          variant="secondary"
-                          className="px-sm text-2xs shrink-0 py-0"
-                        >
-                          Você
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-muted-foreground text-xs">
-                      {format(new Date(member.created_at), 'dd/MM/yyyy')}
-                    </p>
-                    {/* Papéis */}
-                    <div className="mt-sm gap-xs flex flex-wrap">
-                      {member.is_creditor && (
-                        <span className="gap-xs px-sm text-2xs inline-flex items-center rounded-full bg-blue-500/10 py-0.5 font-semibold text-blue-600 ring-1 ring-blue-500/20 dark:text-blue-400">
-                          <Banknote className="h-2.5 w-2.5" />
-                          {t('pages.members.form.isCreditor')}
-                        </span>
-                      )}
-                      {member.is_benefited && (
-                        <span className="gap-xs px-sm text-2xs inline-flex items-center rounded-full bg-emerald-500/10 py-0.5 font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
-                          <HandCoins className="h-2.5 w-2.5" />
-                          {t('pages.members.form.isBenefited')}
-                        </span>
-                      )}
-                      {!member.is_creditor && !member.is_benefited && (
-                        <span className="text-muted-foreground text-2xs">
-                          {t('pages.members.noRole')}
-                        </span>
-                      )}
+                      {/* Papéis */}
+                      <div className="mt-sm gap-xs flex flex-wrap">
+                        {member.is_creditor && (
+                          <span className="gap-xs px-sm text-2xs inline-flex items-center rounded-full bg-blue-500/10 py-0.5 font-semibold text-blue-600 ring-1 ring-blue-500/20 dark:text-blue-400">
+                            <Banknote className="h-2.5 w-2.5" />
+                            {t('pages.members.form.isCreditor')}
+                          </span>
+                        )}
+                        {member.is_benefited && (
+                          <span className="gap-xs px-sm text-2xs inline-flex items-center rounded-full bg-emerald-500/10 py-0.5 font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
+                            <HandCoins className="h-2.5 w-2.5" />
+                            {t('pages.members.form.isBenefited')}
+                          </span>
+                        )}
+                        {!member.is_creditor && !member.is_benefited && (
+                          <span className="text-muted-foreground text-2xs">
+                            {t('pages.members.noRole')}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Dados de contato */}
-                <CardContent className="space-y-sm py-3">
-                  {member.phone && (
-                    <div className="gap-sm text-muted-foreground flex items-center text-xs">
-                      <Phone className="h-3 w-3 shrink-0" />
-                      <span>{member.phone}</span>
-                    </div>
-                  )}
-                  {member.email && (
-                    <div className="gap-sm text-muted-foreground flex items-center text-xs">
-                      <Mail className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{member.email}</span>
-                    </div>
-                  )}
-                  {member.document && (
-                    <p className="text-muted-foreground font-mono text-xs">
-                      {member.document}
-                    </p>
-                  )}
-                  {member.monthly_income && (
-                    <div className="bg-muted/50 px-sm py-xs rounded text-xs">
-                      <span className="text-muted-foreground">
-                        {t('pages.members.stats.income')}{' '}
-                      </span>
-                      <span className="font-medium">
-                        {formatCurrency(parseFloat(member.monthly_income))}
-                      </span>
-                    </div>
-                  )}
+                  {/* Dados de contato */}
+                  <CardContent className="space-y-sm flex flex-1 flex-col py-3">
+                    {member.phone && (
+                      <div className="gap-sm text-muted-foreground flex items-center text-xs">
+                        <Phone className="h-3 w-3 shrink-0" />
+                        <span>{member.phone}</span>
+                      </div>
+                    )}
+                    {member.email && (
+                      <div className="gap-sm text-muted-foreground flex items-center text-xs">
+                        <Mail className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{member.email}</span>
+                      </div>
+                    )}
+                    {member.document && (
+                      <p className="text-muted-foreground text-xs">{member.document}</p>
+                    )}
+                    {member.monthly_income && (
+                      <div className="bg-muted/50 px-sm py-xs rounded text-xs">
+                        <span className="text-muted-foreground">
+                          {t('pages.members.stats.income')}{' '}
+                        </span>
+                        <span className="font-medium">
+                          {formatCurrency(parseFloat(member.monthly_income))}
+                        </span>
+                      </div>
+                    )}
 
-                  {/* Actions */}
-                  <div className="pt-sm flex items-center justify-between border-t">
-                    <Badge
-                      variant={member.active ? 'success' : 'outline'}
-                      className="text-xs"
-                    >
-                      {member.active
-                        ? t('common.status.active')
-                        : t('common.status.inactive')}
-                    </Badge>
-                    <div className="gap-xs flex">
-                      {isCurrentUser && (
+                    {/* Actions */}
+                    <div className="pt-sm mt-auto flex items-center justify-between border-t">
+                      <Badge
+                        variant={member.active ? 'success' : 'outline'}
+                        className="gap-xs text-xs"
+                      >
+                        {(() => {
+                          const StatusIcon =
+                            TASK_STATUS_ICONS[member.active ? 'active' : 'inactive'];
+                          return (
+                            <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                          );
+                        })()}
+                        {member.active
+                          ? t('common.status.active')
+                          : t('common.status.inactive')}
+                      </Badge>
+                      <div className="gap-xs flex">
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7"
-                          onClick={() => navigate(`/members/${member.id}/report`)}
-                          aria-label={t('pages.members.viewReport')}
-                          title={t('pages.members.viewReport')}
+                          onClick={() => {
+                            setSelectedMember(member);
+                            setIsDialogOpen(true);
+                          }}
+                          aria-label={t('common.actions.edit')}
+                          title={t('common.actions.edit')}
                         >
-                          <BarChart3 className="h-4 w-4" aria-hidden="true" />
+                          <Pencil className="h-4 w-4" aria-hidden="true" />
                         </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => {
-                          setSelectedMember(member);
-                          setIsDialogOpen(true);
-                        }}
-                        aria-label={t('common.actions.edit')}
-                        title={t('common.actions.edit')}
-                      >
-                        <Pencil className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleDelete(member.id)}
-                        aria-label={t('common.actions.delete')}
-                        title={t('common.actions.delete')}
-                      >
-                        <Trash2
-                          className="text-destructive h-4 w-4"
-                          aria-hidden="true"
-                        />
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => handleDelete(member.id)}
+                          aria-label={t('common.actions.delete')}
+                          title={t('common.actions.delete')}
+                        >
+                          <Trash2
+                            className="text-destructive h-4 w-4"
+                            aria-hidden="true"
+                          />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={selectedMember ? 'edit' : 'create'}>
               {selectedMember
                 ? t('pages.members.editTitle')
                 : t('pages.members.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedMember
-                ? t('pages.members.editDesc')
-                : t('pages.members.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedMember
+                  ? t('pages.members.editDesc')
+                  : t('pages.members.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <MemberForm
             member={selectedMember}

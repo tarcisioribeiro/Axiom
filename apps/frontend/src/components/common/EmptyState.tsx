@@ -1,37 +1,25 @@
 import { motion } from 'framer-motion';
 import React from 'react';
 
-import { Button } from '@/components/ui/button';
 import { emptyStateVariants } from '@/lib/animations';
-
-interface EmptyStateActionObject {
-  label: string;
-  icon?: React.ReactNode;
-  onClick: () => void;
-}
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
-  title?: string;
-  message?: string;
-  description?: string;
-  action?: EmptyStateActionObject | React.ReactNode;
+  title: string;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({
-  icon,
-  title,
-  message,
-  description,
-  action,
-}) => {
-  const text = message ?? description ?? '';
-  return (
+/**
+ * Padrão do app para listas vazias: só ícone + rótulo, sem texto de apoio nem
+ * botões, alinhado ao início do espaço livre da página (`page-fill`); dentro
+ * de cards fica na altura natural (ver index.css).
+ */
+export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title }) => (
+  <div data-empty-state className="page-fill flex flex-1 flex-col">
     <motion.div
       variants={emptyStateVariants}
       initial="initial"
       animate="animate"
-      aria-label={title ?? text}
+      aria-label={title}
       className="gap-md bg-card/50 px-xl flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center"
     >
       {icon && (
@@ -42,24 +30,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           {icon}
         </div>
       )}
-      <div className="space-y-xs">
-        {title && <h3 className="text-base font-semibold">{title}</h3>}
-        {text && <p className="text-muted-foreground text-sm">{text}</p>}
-      </div>
-      {action &&
-        (React.isValidElement(action) ? (
-          action
-        ) : (
-          <Button
-            onClick={(action as EmptyStateActionObject).onClick}
-            variant="outline"
-            size="sm"
-            className="mt-xs"
-          >
-            {(action as EmptyStateActionObject).icon}
-            {(action as EmptyStateActionObject).label}
-          </Button>
-        ))}
+      <h3 className="text-base font-semibold">{title}</h3>
     </motion.div>
-  );
-};
+  </div>
+);

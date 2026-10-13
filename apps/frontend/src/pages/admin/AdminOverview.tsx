@@ -123,7 +123,6 @@ export default function AdminOverview() {
     <PageContainer>
       <PageHeader
         title={t('pages.adminOverview.title')}
-        subtitle={t('pages.adminOverview.subtitle')}
         icon={<Activity />}
         actions={
           <div className="flex items-center gap-3">

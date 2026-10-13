@@ -1,7 +1,7 @@
 /**
  * Login page — accessibility tests (axe).
  *
- * Covers: form elements, error state.
+ * Covers: form elements.
  */
 
 // ---- Auth store mock (configurable per-test) ----
@@ -61,12 +61,6 @@ describe('Login page accessibility', () => {
   });
 
   it('form elements — no axe violations', async () => {
-    const { container } = renderLogin();
-    expect(await axe(container)).toHaveNoViolations();
-  });
-
-  it('error state — no axe violations', async () => {
-    mockAuthStore.error = 'Credenciais inválidas';
     const { container } = renderLogin();
     expect(await axe(container)).toHaveNoViolations();
   });

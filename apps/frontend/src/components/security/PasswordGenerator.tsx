@@ -1,12 +1,25 @@
-import { Copy, RefreshCw, Loader2, Check } from 'lucide-react';
+/* eslint-disable max-lines */
+import {
+  Asterisk,
+  CaseLower,
+  CaseUpper,
+  Check,
+  Copy,
+  EyeOff,
+  Hash,
+  Loader2,
+  RefreshCw,
+  Ruler,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
+import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { cn, copyToClipboard } from '@/lib/utils';
 import { passwordsService } from '@/services/passwords-service';
@@ -58,8 +71,7 @@ export function PasswordGenerator({
   const handleGenerate = async () => {
     if (!uppercase && !lowercase && !numbers && !specialCharacters) {
       toast({
-        title: t('common.passwordStrength.invalidConfig'),
-        description: t('common.passwordStrength.selectCharType'),
+        title: t('common.passwordStrength.selectCharType'),
         variant: 'destructive',
       });
       return;
@@ -80,8 +92,9 @@ export function PasswordGenerator({
       onPasswordGenerated?.(result.password);
     } catch (error: unknown) {
       toast({
-        title: t('pages.passwords.generator.generateError'),
-        description: getErrorMessage(error),
+        title: t('pages.passwords.generator.generateError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -95,16 +108,8 @@ export function PasswordGenerator({
     setCopied(true);
     toast({
       title: t('common.messages.copied'),
-      description: t('pages.passwords.copiedDesc'),
     });
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleLengthChange = (value: string) => {
-    const num = parseInt(value, 10);
-    if (!isNaN(num)) {
-      setLength(Math.min(128, Math.max(8, num)));
-    }
   };
 
   const strengthInfo = strength
@@ -115,26 +120,25 @@ export function PasswordGenerator({
     <div className={cn('space-y-md', compact && 'space-y-3')}>
       {/* Length */}
       <div className="space-y-sm">
-        <Label htmlFor="gen-length">
+        <Label className="gap-xs flex items-center" htmlFor="gen-length">
+          <Ruler className="text-muted-foreground h-3.5 w-3.5" />
           {t('pages.passwords.generator.length', { count: length })}
         </Label>
         <div className="flex items-center gap-3">
-          <input
-            type="range"
+          <Slider
             id="gen-length"
             min={8}
             max={128}
             value={length}
-            onChange={(e) => setLength(parseInt(e.target.value, 10))}
-            className="bg-muted accent-primary h-2 flex-1 cursor-pointer appearance-none rounded-lg"
+            onChange={setLength}
+            className="flex-1"
           />
-          <Input
-            type="number"
-            value={length}
-            onChange={(e) => handleLengthChange(e.target.value)}
-            className="w-20"
+          <NumberStepper
             min={8}
             max={128}
+            aria-label={t('pages.passwords.generator.length', { count: length })}
+            value={length}
+            onChange={(v) => v !== null && setLength(v)}
           />
         </div>
       </div>
@@ -152,7 +156,11 @@ export function PasswordGenerator({
             checked={uppercase}
             onCheckedChange={(checked) => setUppercase(checked === true)}
           />
-          <Label htmlFor="gen-upper" className="cursor-pointer text-sm">
+          <Label
+            htmlFor="gen-upper"
+            className="gap-xs flex cursor-pointer items-center text-sm"
+          >
+            <CaseUpper className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.passwords.generator.uppercase')}
           </Label>
         </div>
@@ -162,7 +170,11 @@ export function PasswordGenerator({
             checked={lowercase}
             onCheckedChange={(checked) => setLowercase(checked === true)}
           />
-          <Label htmlFor="gen-lower" className="cursor-pointer text-sm">
+          <Label
+            htmlFor="gen-lower"
+            className="gap-xs flex cursor-pointer items-center text-sm"
+          >
+            <CaseLower className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.passwords.generator.lowercase')}
           </Label>
         </div>
@@ -172,7 +184,11 @@ export function PasswordGenerator({
             checked={numbers}
             onCheckedChange={(checked) => setNumbers(checked === true)}
           />
-          <Label htmlFor="gen-numbers" className="cursor-pointer text-sm">
+          <Label
+            htmlFor="gen-numbers"
+            className="gap-xs flex cursor-pointer items-center text-sm"
+          >
+            <Hash className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.passwords.generator.numbers')}
           </Label>
         </div>
@@ -182,7 +198,11 @@ export function PasswordGenerator({
             checked={specialCharacters}
             onCheckedChange={(checked) => setSpecialCharacters(checked === true)}
           />
-          <Label htmlFor="gen-special" className="cursor-pointer text-sm">
+          <Label
+            htmlFor="gen-special"
+            className="gap-xs flex cursor-pointer items-center text-sm"
+          >
+            <Asterisk className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.passwords.generator.special')}
           </Label>
         </div>
@@ -192,7 +212,11 @@ export function PasswordGenerator({
             checked={excludeAmbiguous}
             onCheckedChange={(checked) => setExcludeAmbiguous(checked === true)}
           />
-          <Label htmlFor="gen-ambiguous" className="cursor-pointer text-sm">
+          <Label
+            htmlFor="gen-ambiguous"
+            className="gap-xs flex cursor-pointer items-center text-sm"
+          >
+            <EyeOff className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.passwords.generator.excludeAmbiguous')}
           </Label>
         </div>
@@ -202,12 +226,12 @@ export function PasswordGenerator({
       <Button onClick={handleGenerate} disabled={isGenerating} className="w-full">
         {isGenerating ? (
           <>
-            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
             {t('pages.passwords.generator.generating')}
           </>
         ) : (
           <>
-            <RefreshCw className="mr-sm h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
             {t('pages.passwords.generatePassword')}
           </>
         )}
@@ -217,10 +241,16 @@ export function PasswordGenerator({
       {generatedPassword && (
         <div className="space-y-3">
           <div className="gap-sm bg-muted flex items-center rounded-lg p-3">
-            <code className="flex-1 font-mono text-sm break-all select-all">
+            <code className="flex-1 text-sm break-all select-all">
               {generatedPassword}
             </code>
-            <Button size="sm" variant="ghost" onClick={handleCopy} className="shrink-0">
+            <Button
+              aria-label={t('common.actions.copy')}
+              size="sm"
+              variant="ghost"
+              onClick={handleCopy}
+              className="shrink-0"
+            >
               {copied ? (
                 <Check className="h-4 w-4 text-[hsl(var(--success))]" />
               ) : (
@@ -243,7 +273,7 @@ export function PasswordGenerator({
               <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                 <div
                   className={cn(
-                    'h-full rounded-full transition-[width,background-color] duration-300',
+                    'duration-medium h-full rounded-full transition-[width,background-color]',
                     strengthInfo.color,
                     strengthInfo.width
                   )}

@@ -3,23 +3,36 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity,
   CheckCircle2,
+  CircleDot,
   Clock,
   Globe,
+  KeyRound,
   Loader2,
   Pencil,
   Plus,
+  Power,
+  RotateCcw,
+  Save,
+  Search,
   Send,
+  Timer,
   Trash2,
+  Type,
+  Webhook as WebhookIcon,
+  X,
   XCircle,
   Zap,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,7 +46,17 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { API_CONFIG } from '@/config/api-config';
+import { TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/services/api-client';
@@ -77,6 +100,10 @@ export default function Webhooks() {
   const [editingWebhook, setEditingWebhook] = useState<Webhook | null>(null);
   const [form, setForm] = useState<WebhookFormData>(EMPTY_FORM);
   const [deliveriesWebhookId, setDeliveriesWebhookId] = useState<number | null>(null);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [eventFilter, setEventFilter] = useState('all');
 
   const { data: webhooks, isLoading } = useQuery<Webhook[]>({
     queryKey: ['webhooks'],
@@ -188,14 +215,33 @@ export default function Webhooks() {
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
+  const hasActiveFilters =
+    !!searchTerm || statusFilter !== 'all' || eventFilter !== 'all';
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setEventFilter('all');
+  };
+
+  const filteredWebhooks = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return (webhooks ?? []).filter((w) => {
+      if (term && !w.name.toLowerCase().includes(term)) return false;
+      if (statusFilter !== 'all' && w.is_active !== (statusFilter === 'active'))
+        return false;
+      if (eventFilter !== 'all' && !w.events.includes(eventFilter)) return false;
+      return true;
+    });
+  }, [webhooks, searchTerm, statusFilter, eventFilter]);
+
   return (
     <PageContainer>
       <PageHeader
         title={t('webhooks.title')}
-        description={t('webhooks.description')}
+        icon={<WebhookIcon />}
         actions={
           <Button onClick={openCreate}>
-            <Plus className="mr-sm h-md w-md" />
+            <Plus className="h-4 w-4" />
             {t('webhooks.newBtn')}
           </Button>
         }
@@ -204,159 +250,280 @@ export default function Webhooks() {
       {isLoading ? (
         <LoadingState />
       ) : !webhooks?.length ? (
-        <EmptyState
-          icon={<Zap className="h-10 w-10" />}
-          title={t('webhooks.empty')}
-          description={t('webhooks.emptyDesc')}
-          action={
-            <Button onClick={openCreate}>
-              <Plus className="mr-sm h-md w-md" />
-              {t('webhooks.createBtn')}
-            </Button>
-          }
-        />
+        <EmptyState icon={<Zap className="h-10 w-10" />} title={t('webhooks.empty')} />
       ) : (
-        <div className="gap-md grid">
-          {webhooks.map((w) => (
-            <div
-              key={w.id}
-              className="gap-md bg-card p-md flex items-start justify-between rounded-lg border"
+        <>
+          <FilterBar
+            className="mb-md"
+            hasActiveFilters={hasActiveFilters}
+            onClear={clearFilters}
+            activeFilters={[
+              ...(statusFilter !== 'all'
+                ? [
+                    {
+                      key: 'status',
+                      label: `${t('common.fields.status')}: ${
+                        statusFilter === 'active'
+                          ? t('common.status.active')
+                          : t('common.status.inactive')
+                      }`,
+                      onRemove: () => setStatusFilter('all'),
+                    },
+                  ]
+                : []),
+              ...(eventFilter !== 'all'
+                ? [
+                    {
+                      key: 'event',
+                      label: `${t('webhooks.allEvents')}: ${
+                        events?.find((ev) => ev.value === eventFilter)?.label ??
+                        eventFilter
+                      }`,
+                      onRemove: () => setEventFilter('all'),
+                    },
+                  ]
+                : []),
+            ]}
+          >
+            <FilterField label={t('common.filterLabels.search')} icon={Search}>
+              <SearchInput
+                placeholder={t('webhooks.searchPlaceholder')}
+                value={searchTerm}
+                onValueChange={setSearchTerm}
+                className="w-44"
+              />
+            </FilterField>
+            <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger
+                  className="w-36"
+                  aria-label={t('webhooks.allStatus')}
+                  startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('webhooks.allStatus')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('webhooks.allStatus')}</SelectItem>
+                  <SelectItem
+                    value="active"
+                    icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                  >
+                    {t('common.status.active')}
+                  </SelectItem>
+                  <SelectItem
+                    value="inactive"
+                    icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                  >
+                    {t('common.status.inactive')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('common.filterLabels.event')} icon={Zap}>
+              <Select value={eventFilter} onValueChange={setEventFilter}>
+                <SelectTrigger
+                  className="w-44"
+                  aria-label={t('webhooks.allEvents')}
+                  startIcon={<Zap className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('webhooks.allEvents')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('webhooks.allEvents')}</SelectItem>
+                  {(events ?? []).map((ev) => (
+                    <SelectItem key={ev.value} value={ev.value}>
+                      {ev.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+          </FilterBar>
+
+          {filteredWebhooks.length === 0 ? (
+            <EmptyState
+              icon={<Zap className="h-10 w-10" />}
+              title={t('webhooks.empty')}
+            />
+          ) : (
+            <PaginatedSlide
+              items={filteredWebhooks}
+              pageSize={LIST_PAGE_SIZE}
+              className="gap-md grid"
             >
-              <div className="gap-sm flex min-w-0 items-start">
-                <div className="mt-xs bg-primary/10 p-sm rounded-md">
-                  <Globe className="h-md text-primary w-md" />
-                </div>
-                <div className="min-w-0">
-                  <div className="gap-sm flex flex-wrap items-center">
-                    <span className="font-medium">{w.name}</span>
-                    {!w.is_active && (
-                      <Badge variant="secondary">{t('webhooks.inactive')}</Badge>
-                    )}
-                    {statusBadge(w.last_delivery_status, t)}
-                  </div>
-                  <p className="text-muted-foreground max-w-xs truncate text-sm">
-                    {w.url}
-                  </p>
-                  <div className="mt-xs gap-xs flex flex-wrap">
-                    {w.events.slice(0, 4).map((ev) => (
-                      <Badge key={ev} variant="outline" className="text-xs">
-                        {ev}
-                      </Badge>
-                    ))}
-                    {w.events.length > 4 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{w.events.length - 4}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="mt-xs text-muted-foreground text-xs">
-                    {t('webhooks.deliveries', { count: w.delivery_count })}
-                  </p>
-                </div>
-              </div>
+              {(pageItems) => (
+                <>
+                  {pageItems.map((w) => (
+                    <div
+                      key={w.id}
+                      className="gap-md bg-card p-md flex items-start justify-between rounded-lg border"
+                    >
+                      <div className="gap-sm flex min-w-0 items-start">
+                        <div className="mt-xs bg-primary/10 p-sm rounded-md">
+                          <Globe className="h-md text-primary w-md" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="gap-sm flex flex-wrap items-center">
+                            <span className="font-medium">{w.name}</span>
+                            {!w.is_active && (
+                              <Badge variant="secondary" className="gap-xs">
+                                <TASK_STATUS_ICONS.inactive
+                                  className="h-3.5 w-3.5"
+                                  aria-hidden="true"
+                                />
+                                {t('webhooks.inactive')}
+                              </Badge>
+                            )}
+                            {statusBadge(w.last_delivery_status, t)}
+                          </div>
+                          <p className="text-muted-foreground max-w-xs truncate text-sm">
+                            {w.url}
+                          </p>
+                          <div className="mt-xs gap-xs flex flex-wrap">
+                            {w.events.slice(0, 4).map((ev) => (
+                              <Badge key={ev} variant="outline" className="text-xs">
+                                {ev}
+                              </Badge>
+                            ))}
+                            {w.events.length > 4 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{w.events.length - 4}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="mt-xs text-muted-foreground text-xs">
+                            {t('webhooks.deliveries', { count: w.delivery_count })}
+                          </p>
+                        </div>
+                      </div>
 
-              <div className="gap-xs flex shrink-0 items-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title={t('webhooks.viewDeliveries')}
-                  onClick={() =>
-                    setDeliveriesWebhookId(w.id === deliveriesWebhookId ? null : w.id)
-                  }
-                >
-                  <Activity className="h-md w-md" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title={t('webhooks.testBtn')}
-                  onClick={() => testMutation.mutate(w.id)}
-                  disabled={testMutation.isPending}
-                >
-                  <Send className="h-md w-md" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => openEdit(w)}>
-                  <Pencil className="h-md w-md" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive"
-                  onClick={() => handleDelete(w)}
-                >
-                  <Trash2 className="h-md w-md" />
-                </Button>
-              </div>
-            </div>
-          ))}
-
-          {deliveriesWebhookId && (
-            <div className="bg-card p-md rounded-lg border">
-              <h3 className="mb-sm font-medium">{t('webhooks.deliveryHistory')}</h3>
-              {loadingDeliveries ? (
-                <div className="py-md flex justify-center">
-                  <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-                </div>
-              ) : !deliveries?.length ? (
-                <p className="text-muted-foreground text-sm">
-                  {t('webhooks.noDeliveries')}
-                </p>
-              ) : (
-                <div className="space-y-sm">
-                  {deliveries.map((d) => (
-                    <div key={d.id} className="gap-sm flex items-center text-sm">
-                      {d.status === 'success' ? (
-                        <CheckCircle2 className="h-md w-md shrink-0 text-green-500" />
-                      ) : d.status === 'failed' ? (
-                        <XCircle className="h-md text-destructive w-md shrink-0" />
-                      ) : (
-                        <Clock className="h-md text-muted-foreground w-md shrink-0" />
-                      )}
-                      <span className="bg-muted px-xs rounded font-mono text-xs">
-                        {d.event}
-                      </span>
-                      {d.response_status_code && (
-                        <span className="text-muted-foreground">
-                          HTTP {d.response_status_code}
-                        </span>
-                      )}
-                      {d.duration_ms && (
-                        <span className="text-muted-foreground">{d.duration_ms}ms</span>
-                      )}
-                      <span className="text-muted-foreground ml-auto">
-                        {new Date(d.created_at).toLocaleString('pt-BR')}
-                      </span>
-                      {d.error_message && (
-                        <span
-                          className="text-destructive max-w-xs truncate text-xs"
-                          title={d.error_message}
+                      <div className="gap-xs flex shrink-0 items-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title={t('webhooks.viewDeliveries')}
+                          onClick={() =>
+                            setDeliveriesWebhookId(
+                              w.id === deliveriesWebhookId ? null : w.id
+                            )
+                          }
                         >
-                          {d.error_message}
-                        </span>
-                      )}
+                          <Activity className="h-md w-md" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title={t('webhooks.testBtn')}
+                          onClick={() => testMutation.mutate(w.id)}
+                          disabled={testMutation.isPending}
+                        >
+                          <Send className="h-md w-md" />
+                        </Button>
+                        <Button
+                          aria-label={t('common.actions.edit')}
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEdit(w)}
+                        >
+                          <Pencil className="h-md w-md" />
+                        </Button>
+                        <Button
+                          aria-label={t('common.actions.delete')}
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
+                          onClick={() => handleDelete(w)}
+                        >
+                          <Trash2 className="h-md w-md" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
-                </div>
+
+                  {deliveriesWebhookId && (
+                    <div className="bg-card p-md rounded-lg border">
+                      <h3 className="mb-sm font-medium">
+                        {t('webhooks.deliveryHistory')}
+                      </h3>
+                      {loadingDeliveries ? (
+                        <div className="py-md flex justify-center">
+                          <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
+                        </div>
+                      ) : !deliveries?.length ? (
+                        <EmptyState
+                          icon={<Send className="h-6 w-6" />}
+                          title={t('webhooks.noDeliveries')}
+                        />
+                      ) : (
+                        <div className="space-y-sm">
+                          {deliveries.map((d) => (
+                            <div
+                              key={d.id}
+                              className="gap-sm flex items-center text-sm"
+                            >
+                              {d.status === 'success' ? (
+                                <CheckCircle2 className="h-md w-md shrink-0 text-green-500" />
+                              ) : d.status === 'failed' ? (
+                                <XCircle className="h-md text-destructive w-md shrink-0" />
+                              ) : (
+                                <Clock className="h-md text-muted-foreground w-md shrink-0" />
+                              )}
+                              <span className="bg-muted px-xs rounded text-xs">
+                                {d.event}
+                              </span>
+                              {d.response_status_code && (
+                                <span className="text-muted-foreground">
+                                  HTTP {d.response_status_code}
+                                </span>
+                              )}
+                              {d.duration_ms && (
+                                <span className="text-muted-foreground">
+                                  {d.duration_ms}ms
+                                </span>
+                              )}
+                              <span className="text-muted-foreground ml-auto">
+                                {new Date(d.created_at).toLocaleString('pt-BR')}
+                              </span>
+                              {d.error_message && (
+                                <span
+                                  className="text-destructive max-w-xs truncate text-xs"
+                                  title={d.error_message}
+                                >
+                                  {d.error_message}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
-            </div>
+            </PaginatedSlide>
           )}
-        </div>
+        </>
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={editingWebhook ? 'edit' : 'create'}>
               {editingWebhook
                 ? t('webhooks.form.editTitle')
                 : t('webhooks.form.newTitle')}
             </DialogTitle>
-            <DialogDescription>{t('webhooks.form.dialogDesc')}</DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>{t('webhooks.form.dialogDesc')}</DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
 
           <div className="space-y-md py-sm">
             <div className="space-y-xs">
-              <Label>{t('webhooks.form.nameLabel')}</Label>
+              <Label className="gap-xs flex items-center">
+                <Type className="text-muted-foreground h-3.5 w-3.5" />
+                {t('webhooks.form.nameLabel')}
+              </Label>
               <Input
                 placeholder={t('webhooks.form.namePlaceholder')}
                 value={form.name}
@@ -364,15 +531,19 @@ export default function Webhooks() {
               />
             </div>
             <div className="space-y-xs">
-              <Label>{t('webhooks.form.urlLabel')}</Label>
+              <Label className="gap-xs flex items-center">
+                <Globe className="text-muted-foreground h-3.5 w-3.5" />
+                {t('webhooks.form.urlLabel')}
+              </Label>
               <Input
-                placeholder="https://hooks.zapier.com/..."
+                placeholder="https://exemplo.com"
                 value={form.url}
                 onChange={(e) => setForm((p) => ({ ...p, url: e.target.value }))}
               />
             </div>
             <div className="space-y-xs">
-              <Label>
+              <Label className="gap-xs flex items-center">
+                <KeyRound className="text-muted-foreground h-3.5 w-3.5" />
                 {editingWebhook
                   ? t('webhooks.form.secretEditLabel')
                   : t('webhooks.form.secretLabel')}
@@ -387,27 +558,29 @@ export default function Webhooks() {
 
             <div className="gap-sm grid grid-cols-2">
               <div className="space-y-xs">
-                <Label>{t('webhooks.form.timeoutLabel')}</Label>
-                <Input
-                  type="number"
+                <Label className="gap-xs flex items-center">
+                  <Timer className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('webhooks.form.timeoutLabel')}
+                </Label>
+                <NumberStepper
                   min={1}
                   max={60}
+                  aria-label={t('webhooks.form.timeoutLabel')}
                   value={form.timeout_seconds}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, timeout_seconds: +e.target.value }))
-                  }
+                  onChange={(v) => setForm((p) => ({ ...p, timeout_seconds: v ?? 1 }))}
                 />
               </div>
               <div className="space-y-xs">
-                <Label>{t('webhooks.form.maxRetriesLabel')}</Label>
-                <Input
-                  type="number"
+                <Label className="gap-xs flex items-center">
+                  <RotateCcw className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('webhooks.form.maxRetriesLabel')}
+                </Label>
+                <NumberStepper
                   min={0}
                   max={10}
+                  aria-label={t('webhooks.form.maxRetriesLabel')}
                   value={form.max_retries}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, max_retries: +e.target.value }))
-                  }
+                  onChange={(v) => setForm((p) => ({ ...p, max_retries: v ?? 0 }))}
                 />
               </div>
             </div>
@@ -418,12 +591,18 @@ export default function Webhooks() {
                 checked={form.is_active}
                 onCheckedChange={(v) => setForm((p) => ({ ...p, is_active: !!v }))}
               />
-              <Label htmlFor="is_active">{t('webhooks.form.isActiveLabel')}</Label>
+              <Label className="gap-xs flex items-center" htmlFor="is_active">
+                <Power className="text-muted-foreground h-3.5 w-3.5" />
+                {t('webhooks.form.isActiveLabel')}
+              </Label>
             </div>
 
             <div className="space-y-sm">
-              <Label>{t('webhooks.form.eventsLabel')}</Label>
-              <div className="gap-xs p-sm grid max-h-48 grid-cols-1 overflow-y-auto rounded-md border">
+              <Label className="gap-xs flex items-center">
+                <Zap className="text-muted-foreground h-3.5 w-3.5" />
+                {t('webhooks.form.eventsLabel')}
+              </Label>
+              <div className="gap-xs p-sm grid grid-cols-1 rounded-md border sm:grid-cols-2">
                 {(events ?? []).map((ev) => (
                   <div key={ev.value} className="gap-sm flex items-center">
                     <Checkbox
@@ -435,9 +614,7 @@ export default function Webhooks() {
                       htmlFor={`ev-${ev.value}`}
                       className="cursor-pointer text-sm font-normal"
                     >
-                      <span className="text-muted-foreground font-mono text-xs">
-                        {ev.value}
-                      </span>
+                      <span className="text-muted-foreground text-xs">{ev.value}</span>
                       {' — '}
                       {ev.label}
                     </Label>
@@ -449,10 +626,16 @@ export default function Webhooks() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button onClick={handleSubmit} disabled={isSaving}>
-              {isSaving && <Loader2 className="mr-sm h-md w-md animate-spin" />}
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+
               {editingWebhook
                 ? t('webhooks.form.saveBtn')
                 : t('webhooks.form.createBtn')}

@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
@@ -117,7 +118,7 @@ export function IntegrationCard({
           {check.models.map((m) => (
             <span
               key={m}
-              className="bg-card px-sm text-foreground rounded-full py-0.5 font-mono text-xs shadow-sm"
+              className="bg-card px-sm text-foreground rounded-full py-0.5 text-xs shadow-sm"
             >
               {m}
             </span>
@@ -144,16 +145,16 @@ export function OllamaRestartPanel() {
           .map(([pod, result]) => `${pod}: ${result}`)
           .join('\n');
         toast({
-          title: t('pages.adminIntegrations.restartError'),
-          description: details || data.message,
+          title: t('pages.adminIntegrations.restartError', {
+            reason: details || data.message,
+          }),
           variant: 'destructive',
         });
         return;
       }
       setRedirecting(true);
       toast({
-        title: t('pages.adminIntegrations.restartingToast'),
-        description: t('pages.adminIntegrations.restartingDesc'),
+        title: t('pages.adminIntegrations.restartingDesc'),
       });
       setTimeout(() => {
         logout();
@@ -162,8 +163,7 @@ export function OllamaRestartPanel() {
     },
     onError: (err: Error) => {
       toast({
-        title: t('pages.adminIntegrations.restartError'),
-        description: err.message,
+        title: t('pages.adminIntegrations.restartError', { reason: err.message }),
         variant: 'destructive',
       });
     },
@@ -198,15 +198,13 @@ export function EmailTestPanel() {
     mutationFn: (to: string) => adminService.sendTestEmail(to),
     onSuccess: (data) => {
       toast({
-        title: t('pages.adminIntegrations.emailSent'),
-        description: data.message,
+        title: data.message,
       });
       setEmail('');
     },
     onError: (err: Error) => {
       toast({
-        title: t('pages.adminIntegrations.emailError'),
-        description: err.message,
+        title: t('pages.adminIntegrations.emailError', { reason: err.message }),
         variant: 'destructive',
       });
     },
@@ -218,12 +216,12 @@ export function EmailTestPanel() {
         {t('pages.adminIntegrations.sendTestEmail')}
       </p>
       <div className="gap-sm flex">
-        <input
+        <Input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t('pages.adminIntegrations.emailPlaceholder')}
-          className="border-border bg-background py-sm text-foreground focus:ring-primary flex-1 rounded-lg border px-3 text-sm focus:ring-2 focus:outline-none"
+          className="flex-1"
           onKeyDown={(e) => e.key === 'Enter' && email && mutation.mutate(email)}
         />
         <button

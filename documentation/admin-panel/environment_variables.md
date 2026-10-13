@@ -30,7 +30,7 @@ Configurações do sistema de agentes inteligentes (`apps/api/agents/`).
 | `LLM_TIMEOUT_CHAT` | | | `120` | Segundos máximos de espera por uma resposta de chat. Aumente em hardware lento (ex: `300`). |
 | `LLM_TIMEOUT_EMBED` | | | `30` | Segundos máximos de espera por um embedding. |
 | `GROQ_API_KEY` | 🔒 | | — | Chave de API Groq. Obrigatória quando `LLM_PROVIDER=groq`. |
-| `GROQ_MODEL` | | | — | Modelo Groq a utilizar. Exemplo: `llama-3.1-8b-instant`. |
+| `GROQ_MODEL` | | | — | Modelo Groq a utilizar. Exemplo: `openai/gpt-oss-120b`. |
 | `ANTHROPIC_API_KEY` | 🔒 | | — | Chave de API Anthropic. Obrigatória quando `LLM_PROVIDER=anthropic`. Começa com `sk-ant-api03-`. |
 | `ANTHROPIC_MODEL` | | | — | ID do modelo Claude. Consulte a [documentação oficial](https://docs.anthropic.com/en/docs/about-claude/models) para o ID atualizado. Exemplo: `claude-sonnet-4-6`. |
 | `OPENAI_API_KEY` | 🔒 | | — | Chave de API OpenAI. Obrigatória quando `LLM_PROVIDER=openai`. |

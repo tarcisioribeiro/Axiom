@@ -1,6 +1,15 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { Award, BookOpen, Brain, Clock, Flame, PlayCircle, Zap } from 'lucide-react';
+import {
+  Award,
+  BookOpen,
+  Brain,
+  Clock,
+  Eye,
+  Flame,
+  PlayCircle,
+  Zap,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -98,7 +107,6 @@ export default function IntellectToday() {
       <PageContainer>
         <PageHeader
           title={t('pages.intellectToday.title')}
-          subtitle={t('pages.intellectToday.subtitle')}
           icon={<Brain className="text-primary h-6 w-6" />}
         />
 
@@ -175,7 +183,6 @@ export default function IntellectToday() {
               ) : (
                 <EmptyState
                   title={t('pages.intellectToday.noActiveBook')}
-                  description={t('pages.intellectToday.startReading')}
                   icon={<BookOpen className="text-muted-foreground h-8 w-8" />}
                 />
               )}
@@ -220,7 +227,6 @@ export default function IntellectToday() {
               ) : (
                 <EmptyState
                   title={t('pages.intellectToday.noCourse')}
-                  description={t('pages.intellectToday.startCourse')}
                   icon={<PlayCircle className="text-muted-foreground h-8 w-8" />}
                 />
               )}
@@ -323,6 +329,7 @@ export default function IntellectToday() {
                   className="text-xs"
                   onClick={() => void navigate('/intellect/library-dashboard')}
                 >
+                  <Eye aria-hidden="true" />
                   {t('pages.intellectToday.viewAll')}
                 </Button>
               </div>

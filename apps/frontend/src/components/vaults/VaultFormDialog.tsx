@@ -7,11 +7,15 @@ import {
   Sparkles,
   TrendingUp,
   Wallet,
+  Loader2,
+  Save,
+  X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { vaultsService } from '@/services/vaults-service';
@@ -142,21 +147,18 @@ export function VaultFormDialog({
         await vaultsService.update(selectedVault.id, data);
         toast({
           title: t('pages.vaults.updated'),
-          description: t('pages.vaults.updatedDesc'),
         });
       } else {
         await vaultsService.create(data);
         toast({
           title: t('pages.vaults.created'),
-          description: t('pages.vaults.createdDesc'),
         });
       }
       onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -175,12 +177,14 @@ export function VaultFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle mode={selectedVault ? 'edit' : 'create'}>
             {selectedVault ? t('pages.vaults.editTitle') : t('pages.vaults.newTitle')}
           </DialogTitle>
-          <DialogDescription>
-            {selectedVault ? t('pages.vaults.editDesc') : t('pages.vaults.newDesc')}
-          </DialogDescription>
+          <VisuallyHidden>
+            <DialogDescription>
+              {selectedVault ? t('pages.vaults.editDesc') : t('pages.vaults.newDesc')}
+            </DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
 
         <div className="space-y-lg">
@@ -274,29 +278,15 @@ export function VaultFormDialog({
                     <Percent className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.yieldIndexPercentageLabel')}
                   </Label>
-                  <div className="relative">
-                    <Input
-                      id="yield_index_percentage"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.yield_index_percentage ?? ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          yield_index_percentage: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      placeholder="Ex: 120"
-                      className="pr-8"
-                    />
-                    <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-sm">
-                      %
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.vaults.yieldIndexPercentageHint')}
-                  </p>
+                  <DecimalInput
+                    id="yield_index_percentage"
+                    unit="%"
+                    placeholder="Ex.: 120"
+                    value={formData.yield_index_percentage}
+                    onChange={(v) =>
+                      setFormData({ ...formData, yield_index_percentage: v ?? 0 })
+                    }
+                  />
                 </div>
               ) : (
                 <div className="space-y-sm">
@@ -307,29 +297,15 @@ export function VaultFormDialog({
                     <Percent className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.yieldRateLabel')}
                   </Label>
-                  <div className="relative">
-                    <Input
-                      id="annual_yield_rate"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.annual_yield_rate}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          annual_yield_rate: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      placeholder="Ex: 12.00"
-                      className="pr-8"
-                    />
-                    <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-sm">
-                      %
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.vaults.yieldRateHint')}
-                  </p>
+                  <DecimalInput
+                    id="annual_yield_rate"
+                    unit="%"
+                    placeholder="Ex.: 12,00"
+                    value={formData.annual_yield_rate}
+                    onChange={(v) =>
+                      setFormData({ ...formData, annual_yield_rate: v ?? 0 })
+                    }
+                  />
                 </div>
               )}
 
@@ -421,11 +397,6 @@ export function VaultFormDialog({
                 </div>
                 <div>
                   <p className="text-sm font-medium">{t('pages.vaults.activeVault')}</p>
-                  <p className="text-muted-foreground mt-0.5 text-xs">
-                    {formData.is_active
-                      ? t('pages.vaults.activeVaultDesc')
-                      : t('pages.vaults.inactiveVaultDesc')}
-                  </p>
                 </div>
               </button>
 
@@ -439,7 +410,7 @@ export function VaultFormDialog({
                   value={formData.notes || ''}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder={t('pages.vaults.form.notesPlaceholder')}
-                  rows={3}
+                  rows={1}
                 />
               </div>
             </div>
@@ -448,12 +419,18 @@ export function VaultFormDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || !formData.description}
           >
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
             {isSubmitting
               ? t('common.actions.saving')
               : selectedVault

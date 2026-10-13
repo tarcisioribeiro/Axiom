@@ -37,8 +37,15 @@ export const formatCurrency = (value: string | number | null | undefined): strin
  */
 export const formatDate = (date: string | Date, formatStr?: string): string => {
   try {
-    const dateObj = typeof date === 'string' ? parseLocalDate(date) : date;
-    if (!dateObj)
+    // Formatos com hora precisam do timestamp completo; parseLocalDate descarta a hora
+    const withTime = typeof date === 'string' && /[Hh]/.test(formatStr ?? '');
+    const dateObj =
+      typeof date !== 'string'
+        ? date
+        : withTime
+          ? new Date(date)
+          : parseLocalDate(date);
+    if (!dateObj || isNaN(dateObj.getTime()))
       return i18next.language === 'en-US' ? 'Invalid date' : 'Data inválida';
 
     const locale = i18next.language || 'pt-BR';
@@ -101,4 +108,19 @@ export const formatPercentage = (value: number): string => {
   }
 
   return `${(value * 100).toFixed(2)}%`;
+};
+
+/**
+ * Formata CPF (000.000.000-00) ou CNPJ (00.000.000/0000-00).
+ * Valores com outro tamanho voltam como vieram.
+ */
+export const formatDocument = (value: string): string => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length === 11) {
+    return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  }
+  if (digits.length === 14) {
+    return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  }
+  return value;
 };

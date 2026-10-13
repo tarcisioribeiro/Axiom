@@ -44,7 +44,7 @@ Axiom/
 
 **Authentication**: JWT in HttpOnly cookies. `JWTCookieMiddleware` extracts cookies → Authorization header. Access: 15min, refresh: 1h. 2FA: TOTP via `pyotp` (`TOTPDevice` per user; backup codes as SHA-256 hashes).
 
-**Desktop theme sync**: `ThemePreference` (one per user) updated via `PUT /api/v1/theme-sync/` (`Authorization: ThemeSync <token>`, no JWT). Token issued with `manage.py issue_theme_sync_token`. Web app reads via `GET /api/v1/me/theme/` in `hooks/use-desktop-theme-sync.ts` (applies when different from `localStorage.desktopThemeSynced`).
+**Desktop theme sync**: `ThemePreference` (one per user) updated via `PUT /api/v1/theme-sync/` (`Authorization: ThemeSync <token>`, no JWT). Token issued with `manage.py issue_theme_sync_token` or `POST /api/v1/me/theme/sync-token/` (authenticated; used by the dotfiles repo's `setup-env.sh`). Web app reads via `GET /api/v1/me/theme/` in `hooks/use-desktop-theme-sync.ts` (applies when different from `localStorage.desktopThemeSynced`).
 
 **Agents / LLM** (`apps/api/agents/`): Six domain agents selected by `core/router.py`. Endpoints: `/api/v1/agents/` (ask/, stream/, history/, sessions/, status/). **Rule**: `providers/` is the **only** place in `agents/` allowed to import models from other apps — tools, domain agents, and views consume data through it. See `documentation/architecture/agents-llm-boundary.md`.
 
@@ -62,6 +62,14 @@ Axiom/
 
 ### Frontend (React + TypeScript)
 
+**Mudanças visuais**: antes de implementar qualquer mudança visual (layout, espaçamento, posição de elementos, cores, animação, tabelas, modais, etc.), leia `documentation/frontend/design-patterns.md` e descreva como a tela vai ficar (antes → depois) para o usuário confirmar, antes de editar o código. Isso vale mesmo quando o pedido já parece específico — o documento registra decisões anteriores do product owner que a mudança pode contradizer sem querer. Depois de aplicar uma mudança visual nova e confirmada, atualize esse documento com o padrão resultante.
+
+**Testar mudança visual no navegador**: quando a alteração for puramente visual (frontend/web) e o usuário pedir para testá-la, faça o build do frontend com:
+```bash
+docker compose -f infra/docker/docker-compose.yml --project-directory . up frontend --build -d && docker system prune -af
+```
+Depois, usando a extensão claude-in-chrome, abra `localhost:39101` e faça login como usuário comum usando os valores de `AXIOM_LOCAL_USERNAME` e `AXIOM_LOCAL_USER_PASSWORD` do `.env`.
+
 **Stack**: React 19, Vite 7, TypeScript 5.9, TailwindCSS 3, Radix UI, Zustand, React Router v7, Recharts, Framer Motion, React Hook Form + Zod, TanStack Query v5
 
 **Data fetching**: use `useQuery` + `useMutation` (TanStack Query) — not the older `use-crud-page.ts`. Client in `src/lib/query-client.ts`.
@@ -78,9 +86,17 @@ Axiom/
 
 **Design tokens**: prefer semantic spacing (`p-md`, `gap-lg`) over numeric Tailwind (`p-4`). Defined in `index.css`, mapped in `tailwind.config.js`.
 
+**Animation standard**: only `opacity`/`transform`, tokens only — no ad-hoc durations/curves.
+- Tokens (`index.css`, mirrored in `lib/animations/transitions.ts`): `fast` 150ms (hover, click, exits), `normal` 220ms (modal, popover, page, tab, expand), `medium` 350ms (layout), `slow` 600ms (progress/decorative); easing `--ease-out`.
+- CSS: bare `transition-*` already uses `fast` + `ease-out`; override with `duration-{fast,normal,medium,slow}`. Enter/exit: `animate-fade-in/out`, `animate-pop-in/out` (Radix: `data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out`). Click feedback: `active:scale-[0.96]` (built into `Button`).
+- Framer Motion: `MotionConfig` in `App.tsx` defaults every `motion.*` to `transitions.normal` — omit the `transition` prop; use `transitions.fast` only for micro-interactions.
+- Show/hide toggles ("Ver detalhes"): `<Collapse open={x}>…</Collapse>` from `components/ui/collapsible-section` instead of `{x && …}`.
+
 **Common Components** (`components/common/`) — use before creating new ones: `PageContainer`, `EmptyState`, `LoadingState`, `DataTable`, `PageHeader`, `SearchInput`, `StatCard`, `ExportModal`, `StatementExportModal`, `AnimatedPage`, `IconButton`, `ErrorBoundary`, `LanguageSelector`, `ThemeToggle`.
 
-**UI Primitives** (`components/ui/`): `button`, `input`, `select`, `checkbox`, `dialog`, `alert-dialog`, `form-field`, `date-picker`, `dropdown-menu`, `popover`, `badge`, `card`, `progress`, `radio-group`, `star-rating`, `textarea`, `toast`, `toaster`, `tooltip`, `skeleton`, `skeleton-variants`, `scroll-area`, `table`, `label`, `visually-hidden`, `file-input`, `icon-picker`, `circular-progress`, `success-animation`, `currency-input` (BRL, `accentColor` variants), `form-section`, `status-toggle`.
+**UI Primitives** (`components/ui/`): `button`, `input`, `select`, `checkbox`, `dialog`, `alert-dialog`, `form-field`, `date-picker`, `dropdown-menu`, `popover`, `badge`, `card`, `progress`, `radio-group`, `star-rating`, `textarea`, `toast`, `toaster`, `tooltip`, `skeleton`, `skeleton-variants`, `scroll-area`, `table`, `label`, `visually-hidden`, `file-input`, `icon-picker`, `circular-progress`, `success-animation`, `currency-input` (BRL, `accentColor` variants), `form-section`, `status-toggle`, `number-stepper` (integer − / + with ↑/↓ keys, typeable, `optional` for empty), `decimal-input` (pt-BR comma, `unit` suffix, optional `step` − / +), `slider` (styled native range, `tone`, `floor`), `color-picker` (swatch + popover palette + hex). Never use raw `<input type="number|range|color|checkbox">`.
+
+**Dialogs** (rules in `documentation/frontend/design-patterns.md` §2): `DialogHeader` is always sticky and `DialogDescription` is always `sr-only` (primitive enforces both). Title needs an icon: `<DialogTitle mode={x ? 'edit' : 'create'}>` for forms, `<DialogTitle icon={Icon}>` for detail/action. Forms/actions: sticky footer (`DialogFooter` or `.dialog-footer`), "Cancelar" = `variant="outline"` + `X`, "Salvar" = default variant + `Save` (no category colors). Detail: `<DialogCloseFooter>{actions}</DialogCloseFooter>` (Fechar left, actions right). No `max-h-[NNvh]`/fixed heights/inner `overflow-y-auto` — at ≥1920×1080 no dialog may scroll; paginate long lists inside with `PaginatedSlide pinNav={false}` (≤5). No subtitle, no card repeating the title, no helper text under fields/buttons. Validation errors do not render under fields: each message goes to a toast (`notifyFormErrors` from `@/lib/form-errors`, passed as `handleSubmit(onSubmit, notifyFormErrors)`) and the invalid field gets a red border via `aria-invalid` (primitives in `components/ui/` already style it). Live computed values stay. Fields with `NumberStepper` or stepped `DecimalInput` are centered (label + control) automatically via `data-stepper` CSS in `index.css` — don't add `text-center`/`mx-auto` by hand.
 
 **Routing**: `ProtectedRoute` HOC; all protected pages lazy-loaded. Public routes redirect home if authenticated.
 
@@ -106,6 +122,11 @@ $DC logs -f api                           # API logs
 $DC exec api python manage.py <command>   # Management commands
 $DC up -d --build                         # Rebuild after dep changes
 ```
+
+> **Build/rebuild**: when the user asks to build/rebuild the application, run exactly:
+> ```bash
+> docker compose -f infra/docker/docker-compose.yml --project-directory . up --build -d && docker system prune -af
+> ```
 
 > **IMPORTANT**: API container does NOT mount source — code is baked in. After editing host files: `docker cp <file> axiom-api:/app/<path>` for a quick test, or rebuild.
 

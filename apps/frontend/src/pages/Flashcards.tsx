@@ -1,16 +1,33 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Brain, ChevronLeft, Plus, RotateCcw, Star } from 'lucide-react';
+import {
+  BookOpen,
+  Brain,
+  CalendarClock,
+  CheckCircle2,
+  ChevronLeft,
+  CircleDot,
+  FileText,
+  Layers,
+  Loader2,
+  Plus,
+  Save,
+  Search,
+  Star,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { StatCard } from '@/components/common/StatCard';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -21,8 +38,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { FLASHCARD_STATUS_ICONS } from '@/config/icons';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -82,7 +107,7 @@ function FlipCard({
     >
       <div
         className={cn(
-          'absolute inset-0 transition-transform duration-500',
+          'duration-slow absolute inset-0 transition-transform',
           '[transform-style:preserve-3d]',
           flipped ? '[transform:rotateY(180deg)]' : ''
         )}
@@ -109,6 +134,9 @@ export default function Flashcards() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newFront, setNewFront] = useState('');
   const [newBack, setNewBack] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [bookFilter, setBookFilter] = useState('all');
 
   const { data: allCards, isLoading } = useQuery({
     queryKey: ['flashcards'],
@@ -145,12 +173,36 @@ export default function Flashcards() {
 
   const cards = allCards?.results ?? [];
   const due = dueCards?.results ?? [];
-  const totalCount = allCards?.count ?? 0;
   const dueCount = dueCards?.count ?? 0;
-  const masteredCount = cards.filter((c) => c.status === 'mastered').length;
-  const newCount = cards.filter((c) => c.status === 'new').length;
 
   const currentCard = due[reviewIndex] ?? null;
+
+  const bookTitles = Array.from(
+    new Set(cards.map((c) => c.book_title).filter((b): b is string => !!b))
+  );
+
+  const matchesFilters = (card: FlashCard) => {
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      if (!card.front.toLowerCase().includes(q) && !card.back.toLowerCase().includes(q))
+        return false;
+    }
+    if (statusFilter !== 'all' && card.status !== statusFilter) return false;
+    if (bookFilter !== 'all' && card.book_title !== bookFilter) return false;
+    return true;
+  };
+
+  const filteredCards = cards.filter(matchesFilters);
+  const filteredDue = due.filter(matchesFilters);
+
+  const hasActiveFilters =
+    searchTerm !== '' || statusFilter !== 'all' || bookFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setBookFilter('all');
+  };
 
   const handleRating = (rating: number) => {
     if (!currentCard) return;
@@ -192,18 +244,17 @@ export default function Flashcards() {
       <PageContainer>
         <PageHeader
           title={t('pages.flashcards.title')}
-          subtitle={t('pages.flashcards.subtitle')}
           icon={<Brain className="text-primary h-6 w-6" />}
           actions={
             mode === 'list' ? (
               <div className="gap-sm flex">
                 <Button variant="outline" onClick={() => setCreateOpen(true)}>
-                  <Plus className="mr-sm h-4 w-4" />
+                  <Plus className="h-4 w-4" />
                   {t('pages.flashcards.newCard')}
                 </Button>
                 {dueCount > 0 && (
                   <Button onClick={handleStartReview}>
-                    <Star className="mr-sm h-4 w-4" />
+                    <Star className="h-4 w-4" />
                     {t('pages.flashcards.reviewNow')}
                   </Button>
                 )}
@@ -217,38 +268,12 @@ export default function Flashcards() {
                   setFlipped(false);
                 }}
               >
-                <ChevronLeft className="mr-sm h-4 w-4" />
+                <ChevronLeft className="h-4 w-4" />
                 {t('common.actions.back')}
               </Button>
             )
           }
         />
-
-        <div className="gap-md grid grid-cols-2 sm:grid-cols-4">
-          <StatCard
-            title={t('pages.flashcards.stats.total')}
-            value={totalCount}
-            icon={<Brain />}
-          />
-          <StatCard
-            title={t('pages.flashcards.stats.due')}
-            value={dueCount}
-            icon={<RotateCcw />}
-            accentColor="orange"
-          />
-          <StatCard
-            title={t('pages.flashcards.stats.mastered')}
-            value={masteredCount}
-            icon={<Star />}
-            accentColor="green"
-          />
-          <StatCard
-            title={t('pages.flashcards.stats.new')}
-            value={newCount}
-            icon={<Plus />}
-            accentColor="blue"
-          />
-        </div>
 
         {mode === 'review' ? (
           <AnimatePresence mode="wait">
@@ -310,7 +335,6 @@ export default function Flashcards() {
               ) : (
                 <EmptyState
                   title={t('pages.flashcards.emptyReview.title')}
-                  description={t('pages.flashcards.emptyReview.description')}
                   icon={<Star className="text-muted-foreground h-10 w-10" />}
                 />
               )}
@@ -318,85 +342,202 @@ export default function Flashcards() {
           </AnimatePresence>
         ) : (
           <Tabs defaultValue="all">
+            <FilterBar
+              hasActiveFilters={hasActiveFilters}
+              onClear={clearFilters}
+              activeFilters={[
+                ...(statusFilter !== 'all'
+                  ? [
+                      {
+                        key: 'status',
+                        label: `${t('common.fields.status')}: ${t(`pages.flashcards.status.${statusFilter}`)}`,
+                        onRemove: () => setStatusFilter('all'),
+                      },
+                    ]
+                  : []),
+                ...(bookFilter !== 'all'
+                  ? [
+                      {
+                        key: 'book',
+                        label: `${t('pages.flashcards.allBooks')}: ${bookFilter}`,
+                        onRemove: () => setBookFilter('all'),
+                      },
+                    ]
+                  : []),
+              ]}
+            >
+              <FilterField label={t('common.filterLabels.search')} icon={Search}>
+                <SearchInput
+                  placeholder={t('pages.flashcards.searchPlaceholder')}
+                  value={searchTerm}
+                  onValueChange={setSearchTerm}
+                  className="w-44"
+                />
+              </FilterField>
+              <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger
+                    className="w-40"
+                    aria-label={t('pages.flashcards.allStatus')}
+                    startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                  >
+                    <SelectValue placeholder={t('pages.flashcards.allStatus')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t('pages.flashcards.allStatus')}
+                    </SelectItem>
+                    <SelectItem
+                      value="new"
+                      icon={<FLASHCARD_STATUS_ICONS.new className="h-4 w-4" />}
+                    >
+                      {t('pages.flashcards.status.new')}
+                    </SelectItem>
+                    <SelectItem
+                      value="learning"
+                      icon={<FLASHCARD_STATUS_ICONS.learning className="h-4 w-4" />}
+                    >
+                      {t('pages.flashcards.status.learning')}
+                    </SelectItem>
+                    <SelectItem
+                      value="review"
+                      icon={<FLASHCARD_STATUS_ICONS.review className="h-4 w-4" />}
+                    >
+                      {t('pages.flashcards.status.review')}
+                    </SelectItem>
+                    <SelectItem
+                      value="mastered"
+                      icon={<FLASHCARD_STATUS_ICONS.mastered className="h-4 w-4" />}
+                    >
+                      {t('pages.flashcards.status.mastered')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </FilterField>
+              {bookTitles.length > 0 && (
+                <FilterField label={t('common.filterLabels.book')} icon={BookOpen}>
+                  <Select value={bookFilter} onValueChange={setBookFilter}>
+                    <SelectTrigger
+                      className="w-44"
+                      aria-label={t('pages.flashcards.allBooks')}
+                      startIcon={<BookOpen className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.flashcards.allBooks')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.flashcards.allBooks')}
+                      </SelectItem>
+                      {bookTitles.map((title) => (
+                        <SelectItem key={title} value={title}>
+                          {title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FilterField>
+              )}
+            </FilterBar>
             <TabsList className="w-full">
-              <TabsTrigger value="all" className="flex-1">
+              <TabsTrigger value="all" className="gap-xs flex-1">
+                <Layers className="h-4 w-4" />
                 {t('pages.flashcards.stats.total')}
               </TabsTrigger>
-              <TabsTrigger value="due" className="flex-1">
+              <TabsTrigger value="due" className="gap-xs flex-1">
+                <CalendarClock className="h-4 w-4" />
                 {t('pages.flashcards.dueToday')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="mt-md">
-              {cards.length === 0 ? (
+              {filteredCards.length === 0 ? (
                 <EmptyState
                   title={t('pages.flashcards.empty.title')}
-                  description={t('pages.flashcards.empty.description')}
                   icon={<Brain className="text-muted-foreground h-10 w-10" />}
                 />
               ) : (
-                <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3">
-                  {cards.map((card) => (
-                    <Card key={card.id}>
-                      <CardHeader className="pb-xs">
-                        <div className="gap-sm flex items-start justify-between">
-                          <Badge
-                            variant={STATUS_BADGE_VARIANT[card.status]}
-                            className="text-xs"
-                          >
-                            {t(`pages.flashcards.status.${card.status}`)}
-                          </Badge>
-                          {card.book_title && (
-                            <span className="text-muted-foreground max-w-[120px] truncate text-xs">
-                              {card.book_title}
-                            </span>
+                <PaginatedSlide
+                  items={filteredCards}
+                  pageSize={GRID_PAGE_SIZE}
+                  className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  {(pageItems) =>
+                    pageItems.map((card) => (
+                      <Card key={card.id}>
+                        <CardHeader className="pb-xs">
+                          <div className="gap-sm flex items-start justify-between">
+                            <Badge
+                              variant={STATUS_BADGE_VARIANT[card.status]}
+                              className="gap-xs text-xs"
+                            >
+                              {(() => {
+                                const StatusIcon = FLASHCARD_STATUS_ICONS[card.status];
+                                return StatusIcon ? (
+                                  <StatusIcon
+                                    className="h-3.5 w-3.5"
+                                    aria-hidden="true"
+                                  />
+                                ) : null;
+                              })()}
+                              {t(`pages.flashcards.status.${card.status}`)}
+                            </Badge>
+                            {card.book_title && (
+                              <span className="text-muted-foreground max-w-[120px] truncate text-xs">
+                                {card.book_title}
+                              </span>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-sm">
+                          <div>
+                            <p className="mb-xs text-muted-foreground text-xs font-medium">
+                              {t('pages.flashcards.front')}
+                            </p>
+                            <p className="text-sm">{card.front}</p>
+                          </div>
+                          <div className="pt-sm border-t">
+                            <p className="mb-xs text-muted-foreground text-xs font-medium">
+                              {t('pages.flashcards.back')}
+                            </p>
+                            <p className="text-muted-foreground text-sm">{card.back}</p>
+                          </div>
+                          {card.next_review && (
+                            <p className="text-muted-foreground text-xs">
+                              {t('pages.flashcards.nextReview')}:{' '}
+                              {new Date(card.next_review).toLocaleDateString('pt-BR')}
+                            </p>
                           )}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-sm">
-                        <div>
-                          <p className="mb-xs text-muted-foreground text-xs font-medium">
-                            {t('pages.flashcards.front')}
-                          </p>
-                          <p className="text-sm">{card.front}</p>
-                        </div>
-                        <div className="pt-sm border-t">
-                          <p className="mb-xs text-muted-foreground text-xs font-medium">
-                            {t('pages.flashcards.back')}
-                          </p>
-                          <p className="text-muted-foreground text-sm">{card.back}</p>
-                        </div>
-                        {card.next_review && (
-                          <p className="text-muted-foreground text-xs">
-                            {t('pages.flashcards.nextReview')}:{' '}
-                            {new Date(card.next_review).toLocaleDateString('pt-BR')}
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  }
+                </PaginatedSlide>
               )}
             </TabsContent>
 
             <TabsContent value="due" className="mt-md">
-              {due.length === 0 ? (
+              {filteredDue.length === 0 ? (
                 <EmptyState
                   title={t('pages.flashcards.emptyReview.title')}
-                  description={t('pages.flashcards.emptyReview.description')}
                   icon={<Star className="text-muted-foreground h-10 w-10" />}
                 />
               ) : (
-                <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3">
-                  {due.map((card) => (
-                    <Card key={card.id} className="border-warning/30">
-                      <CardContent className="space-y-sm pt-md">
-                        <p className="text-sm font-medium">{card.front}</p>
-                        <p className="text-muted-foreground text-xs">{card.back}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                <PaginatedSlide
+                  items={filteredDue}
+                  pageSize={GRID_PAGE_SIZE}
+                  className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  {(pageItems) =>
+                    pageItems.map((card) => (
+                      <Card key={card.id}>
+                        <CardContent className="space-y-sm pt-md">
+                          <p className="text-sm font-medium">{card.front}</p>
+                          <p className="text-muted-foreground text-xs">{card.back}</p>
+                        </CardContent>
+                      </Card>
+                    ))
+                  }
+                </PaginatedSlide>
               )}
             </TabsContent>
           </Tabs>
@@ -405,39 +546,50 @@ export default function Flashcards() {
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="gap-sm flex items-center">
-                <Brain className="text-primary h-4 w-4" />
-                {t('pages.flashcards.newCard')}
-              </DialogTitle>
+              <DialogTitle mode="create">{t('pages.flashcards.newCard')}</DialogTitle>
             </DialogHeader>
             <form onSubmit={(e) => void handleCreateSubmit(e)} className="space-y-md">
               <div className="space-y-xs">
-                <Label>{t('pages.flashcards.front')}</Label>
+                <Label className="gap-xs flex items-center">
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.flashcards.front')}
+                </Label>
                 <Textarea
                   value={newFront}
+                  placeholder={t('common.placeholders.flashcardFront')}
                   onChange={(e) => setNewFront(e.target.value)}
                   rows={3}
                   required
                 />
               </div>
               <div className="space-y-xs">
-                <Label>{t('pages.flashcards.back')}</Label>
+                <Label className="gap-xs flex items-center">
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.flashcards.back')}
+                </Label>
                 <Textarea
                   value={newBack}
+                  placeholder={t('common.placeholders.flashcardBack')}
                   onChange={(e) => setNewBack(e.target.value)}
                   rows={3}
                   required
                 />
               </div>
-              <div className="gap-sm flex justify-end">
+              <div className="dialog-footer gap-sm flex justify-end">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setCreateOpen(false)}
                 >
+                  <X className="h-4 w-4" />
                   {t('common.actions.cancel')}
                 </Button>
                 <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
                   {createMutation.isPending
                     ? t('common.actions.saving')
                     : t('common.actions.save')}

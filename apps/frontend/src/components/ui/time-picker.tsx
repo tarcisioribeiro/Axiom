@@ -18,6 +18,7 @@ interface TimePickerProps {
   disabled?: boolean;
   className?: string;
   clearable?: boolean;
+  'aria-invalid'?: boolean;
 }
 
 function parseTimeStr(timeStr: string): Date | undefined {
@@ -42,9 +43,10 @@ export function TimePicker({
   disabled = false,
   className,
   clearable = true,
+  'aria-invalid': ariaInvalid,
 }: TimePickerProps) {
   const { t } = useTranslation();
-  const resolvedPlaceholder = placeholder ?? t('common.fields.horary');
+  const resolvedPlaceholder = placeholder ?? t('common.placeholders.time');
   const inputRef = useRef<HTMLInputElement>(null);
   const flatpickrRef = useRef<flatpickr.Instance | null>(null);
   const onChangeRef = useRef(onChange);
@@ -109,13 +111,14 @@ export function TimePicker({
   };
 
   return (
-    <div className={cn('relative w-full', className)}>
+    <div className={cn('relative isolate w-full', className)}>
       <Clock className="text-primary/70 pointer-events-none absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2" />
 
       <input
         ref={inputRef}
         onClick={() => !disabled && flatpickrRef.current?.open()}
         type="text"
+        aria-invalid={ariaInvalid}
         placeholder={resolvedPlaceholder}
         disabled={disabled}
         className={cn(
@@ -124,8 +127,9 @@ export function TimePicker({
           'border-input bg-background rounded-md border',
           'text-foreground placeholder:text-foreground text-sm',
           'focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
-          'transition-all duration-200',
+          'duration-normal transition-all',
           'hover:border-primary/40',
+          'aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-destructive/50 aria-[invalid=true]:ring-2',
           disabled && 'cursor-not-allowed opacity-50'
         )}
       />
@@ -141,7 +145,7 @@ export function TimePicker({
             'flex items-center justify-center',
             'hover:text-destructive',
             'hover:bg-destructive/10',
-            'transition-colors duration-150'
+            'duration-fast transition-colors'
           )}
         >
           <X className="h-3.5 w-3.5" aria-hidden="true" />

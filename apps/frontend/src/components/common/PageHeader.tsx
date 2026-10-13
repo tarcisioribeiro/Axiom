@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
-  description?: string;
   icon?: React.ReactNode;
   action?: {
     label: string;
@@ -15,6 +13,8 @@ interface PageHeaderProps {
   };
   actions?: React.ReactNode;
   children?: React.ReactNode;
+  /** Classe do wrapper de `children`/`actions`. Padrão: `flex items-center gap-3` (bloco colado à direita). */
+  childrenClassName?: string;
 }
 
 type Module = 'finance' | 'security' | 'library' | 'planning' | 'workout' | 'nutrition';
@@ -76,16 +76,13 @@ function getModuleFromPath(pathname: string): Module | null {
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
-  subtitle,
-  description,
   icon,
   action,
   actions,
   children,
+  childrenClassName,
 }) => {
   const { pathname } = useLocation();
-  const subtitleText = subtitle ?? description;
-
   const module = getModuleFromPath(pathname);
   const colors = module ? moduleColors[module] : null;
 
@@ -112,15 +109,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             {icon}
           </div>
         )}
-        <div>
-          <h1 className="heading-1">{title}</h1>
-          {subtitleText && (
-            <p className="text-muted-foreground mt-0.5 text-sm">{subtitleText}</p>
-          )}
-        </div>
+        <h1 className="heading-1">{title}</h1>
       </div>
       {(children || actions || action) && (
-        <div className="flex items-center gap-3">
+        <div className={childrenClassName ?? 'flex items-center gap-3'}>
           {children}
           {actions}
           {action && (

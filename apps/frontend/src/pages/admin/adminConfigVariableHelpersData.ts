@@ -48,8 +48,9 @@ export const VARIABLE_HELPERS: Record<string, VariableHelper> = {
   },
   GROQ_MODEL: {
     hint: 'Modelo Groq a utilizar (API compatível com o formato OpenAI).',
-    example: 'llama-3.1-8b-instant',
-    accepted_values: 'llama-3.1-8b-instant | llama-3.3-70b-versatile | gemma2-9b-it',
+    example: 'openai/gpt-oss-120b',
+    accepted_values:
+      'openai/gpt-oss-120b | openai/gpt-oss-20b | qwen/qwen3.8-27b (lista atual em console.groq.com/docs/models)',
   },
   ANTHROPIC_API_KEY: {
     hint: 'Chave secreta da API Anthropic. Obrigatória quando LLM_PROVIDER=anthropic. Obtida em console.anthropic.com → API Keys. Armazenada criptografada no banco.',

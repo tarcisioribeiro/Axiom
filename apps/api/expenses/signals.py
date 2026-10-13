@@ -22,28 +22,61 @@ FUZZY_MATCH_THRESHOLD = 80
 
 
 def _apply_categorization_rules(user, instance):
-    """Aplica a primeira regra ativa correspondente ao merchant da despesa.
+    """Aplica a primeira regra de automação simples (merchant contém X →
+    definir categoria) correspondente ao merchant da despesa.
 
     Usa fuzzy matching (partial_ratio >= 80) além de substring exata para maior
     cobertura em merchants com erros ortográficos ou variações de nome.
+    Regras de automação mais complexas (múltiplas condições, add_tag, etc.)
+    são aplicadas após a criação por `apply_automation_rules` (post_save).
     """
-    from expenses.models import CategorizationRule
+    from expenses.models import AutomationRule
 
     merchant_lower = instance.merchant.lower()
-    rules = CategorizationRule.objects.filter(
+    rules = AutomationRule.objects.filter(
         owner=user, is_active=True, is_deleted=False
     ).order_by("priority", "created_at")
 
     for rule in rules:
-        rule_lower = rule.merchant_contains.lower()
+        merchant_contains = _simple_merchant_category_rule(rule)
+        if merchant_contains is None:
+            continue
+        merchant_value, category = merchant_contains
+        rule_lower = merchant_value.lower()
         if (
             rule_lower in merchant_lower
             or fuzz.partial_ratio(rule_lower, merchant_lower)
             >= FUZZY_MATCH_THRESHOLD
         ):
-            instance.category = rule.category
+            instance.category = category
             instance.auto_categorized = True
             break
+
+
+def _simple_merchant_category_rule(rule):
+    """Se `rule` segue o padrão simples (uma condição 'merchant contains' +
+    uma ação 'set_category'), retorna (merchant_contains, category).
+    Caso contrário, retorna None.
+    """
+    merchant_condition = next(
+        (
+            c
+            for c in rule.conditions
+            if c.get("field") == "merchant" and c.get("operator") == "contains"
+        ),
+        None,
+    )
+    category_action = next(
+        (a for a in rule.actions if a.get("type") == "set_category"),
+        None,
+    )
+    if not merchant_condition or not category_action:
+        return None
+    merchant_value = merchant_condition.get("value")
+    category = category_action.get("value")
+    if not merchant_value or not category:
+        return None
+    return merchant_value, category
 
 
 @receiver(pre_save, sender="expenses.Expense")
@@ -212,6 +245,13 @@ def apply_automation_rules(sender, instance, created, **kwargs):
 
     category_changed = False
     for rule in rules:
+        # Regras simples (merchant contains → set_category) já foram
+        # tratadas em pre_save por `_apply_categorization_rules`, que só
+        # categoriza quando `category == 'others'` — aplicá-las de novo
+        # aqui sobrescreveria uma categoria definida manualmente pelo
+        # usuário.
+        if _simple_merchant_category_rule(rule) is not None:
+            continue
         if not rule.matches(instance):
             continue
         applied = rule.apply(instance)

@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, House, Loader2, LogIn, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, Link, useNavigate } from 'react-router';
@@ -70,10 +70,12 @@ export default function VerifyEmail() {
                   {t('auth.verifyEmail.successDesc')}
                 </p>
               </div>
-              <Button
-                className="gradient-primary font-semibold text-white"
-                onClick={() => void navigate(isAuthenticated ? '/' : '/login')}
-              >
+              <Button onClick={() => void navigate(isAuthenticated ? '/' : '/login')}>
+                {isAuthenticated ? (
+                  <House aria-hidden="true" />
+                ) : (
+                  <LogIn aria-hidden="true" />
+                )}
                 {isAuthenticated
                   ? t('auth.verifyEmail.goToHome')
                   : t('auth.login.submit')}

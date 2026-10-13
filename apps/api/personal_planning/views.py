@@ -1104,7 +1104,7 @@ class PersonalPlanningDashboardStatsView(APIView):
 
         # Objetivos ativos com progresso
         active_goals_data = []
-        for goal in goals_qs.filter(status="active")[:5]:
+        for goal in goals_qs.filter(status="active"):
             active_goals_data.append(
                 {
                     "title": goal.title,
@@ -1754,11 +1754,11 @@ class PersonalPlanningAnalyticsView(APIView):
 
         user = request.user
         today = timezone.now().date()
-        ninety_days_ago = today - timedelta(days=90)
+        window_start = today - timedelta(days=180)
 
         instances = TaskInstance.objects.filter(
             owner__user=user,
-            scheduled_date__gte=ninety_days_ago,
+            scheduled_date__gte=window_start,
             scheduled_date__lte=today,
             deleted_at__isnull=True,
         ).values("scheduled_date", "status")
@@ -1791,7 +1791,7 @@ class PersonalPlanningAnalyticsView(APIView):
 
         return Response(
             {
-                "period_days": 90,
+                "period_days": 180,
                 "completion_by_weekday": completion_by_weekday,
                 "insights": insights,
             }
@@ -2433,9 +2433,30 @@ class FoodRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         return Food.objects.filter(owner=member, deleted_at__isnull=True)
 
 
+MAX_MEAL_TYPES_PER_USER = 6
+
+
 class MealTypeListCreateView(BaseListCreateView):
     serializer_class = MealTypeSerializer
     create_serializer_class = MealTypeCreateUpdateSerializer
+
+    def perform_create(self, serializer):
+        member = Member.objects.get(user=self.request.user)
+        total = MealType.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).count()
+        if total >= MAX_MEAL_TYPES_PER_USER:
+            raise ValidationError(
+                {
+                    "detail": (
+                        f"Limite de {MAX_MEAL_TYPES_PER_USER} "
+                        "refeições atingido."
+                    )
+                }
+            )
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)

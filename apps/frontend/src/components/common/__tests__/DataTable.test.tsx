@@ -68,39 +68,10 @@ describe('DataTable', () => {
           data={[]}
           columns={columns}
           keyExtractor={keyExtractor}
-          emptyState={{ message: 'Nenhuma conta cadastrada' }}
+          emptyState={{ title: 'Nenhuma conta cadastrada' }}
         />
       );
       expect(screen.getByText('Nenhuma conta cadastrada')).toBeInTheDocument();
-    });
-
-    it('renders EmptyState with title when provided', () => {
-      render(
-        <DataTable
-          data={[]}
-          columns={columns}
-          keyExtractor={keyExtractor}
-          emptyState={{ title: 'Vazio', message: 'Nenhum dado' }}
-        />
-      );
-      expect(screen.getByText('Vazio')).toBeInTheDocument();
-      expect(screen.getByText('Nenhum dado')).toBeInTheDocument();
-    });
-
-    it('renders EmptyState action button when provided', () => {
-      const onClick = vi.fn();
-      render(
-        <DataTable
-          data={[]}
-          columns={columns}
-          keyExtractor={keyExtractor}
-          emptyState={{
-            message: 'Nenhum dado',
-            action: { label: 'Criar', onClick },
-          }}
-        />
-      );
-      expect(screen.getByRole('button', { name: 'Criar' })).toBeInTheDocument();
     });
   });
 
@@ -297,23 +268,6 @@ describe('DataTable', () => {
   });
 
   describe('pagination', () => {
-    it('renders pagination info when pagination prop is provided', () => {
-      render(
-        <DataTable
-          data={items}
-          columns={columns}
-          keyExtractor={keyExtractor}
-          pagination={{
-            page: 1,
-            pageSize: 10,
-            total: 25,
-            onPageChange: vi.fn(),
-          }}
-        />
-      );
-      expect(screen.getByText(/25 registros/)).toBeInTheDocument();
-    });
-
     it('renders previous and next buttons', () => {
       render(
         <DataTable

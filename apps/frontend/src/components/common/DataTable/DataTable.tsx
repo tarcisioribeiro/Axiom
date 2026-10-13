@@ -10,42 +10,18 @@
  * - Estados integrados (loading, empty)
  * - Coluna de ações customizável
  * - Alinhamento de texto por coluna
- * - Suporte a paginação com navegação Anterior/Próximo
- *
- * @example
- * ```tsx
- * const columns: Column<Account>[] = [
- *   { key: 'name', label: 'Nome', render: (item) => <div>{item.name}</div> },
- *   { key: 'balance', label: 'Saldo', align: 'right', render: (item) => formatCurrency(item.balance) },
- * ];
- *
- * <DataTable
- *   data={accounts}
- *   columns={columns}
- *   keyExtractor={(item) => item.id}
- *   isLoading={isLoading}
- *   emptyState={{ message: 'Nenhuma conta encontrada' }}
- *   actions={(item) => <EditButton onClick={() => handleEdit(item)} />}
- * />
- * ```
+ * - Sempre paginado: no servidor (`pagination`) ou no cliente (`pageSize`),
+ *   com a navegação e a transição padrão do app (PageSlide)
  */
 
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  ChevronsUpDown,
-} from 'lucide-react';
-import React, { useCallback, useEffect, useRef } from 'react';
+import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
-import { Button } from '@/components/ui/button';
-import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 
 import { EmptyState } from '../EmptyState';
 import { LoadingState } from '../LoadingState';
+import { LIST_PAGE_SIZE, PageSlide } from '../PaginatedSlide';
 
 export interface Column<T> {
   key: string;
@@ -64,21 +40,20 @@ export interface DataTableProps<T> {
   keyExtractor: (item: T) => string | number;
   isLoading?: boolean;
   density?: DataTableDensity;
-  emptyState?: {
-    icon?: React.ReactNode;
-    title?: string;
-    message: string;
-    action?: {
-      label: string;
-      onClick: () => void;
-    };
-  };
+  emptyState?: React.ComponentProps<typeof EmptyState>;
+  /** Paginação no servidor (`data` já é a página atual). Sem ela, o
+   * DataTable pagina `data` no cliente com `pageSize` itens por página. */
   pagination?: {
     page: number;
     pageSize: number;
     total: number;
     onPageChange: (page: number) => void;
   };
+  pageSize?: number;
+  /** Ver PaginatedSlide: fixa a navegação no rodapé da página (padrão). */
+  pinNav?: boolean;
+  /** Ver PaginatedSlide: centraliza a tabela na vertical acima da navegação. */
+  centerList?: boolean;
   sorting?: {
     column: string | null;
     direction: 'asc' | 'desc' | null;
@@ -86,6 +61,8 @@ export interface DataTableProps<T> {
   };
   actions?: (item: T) => React.ReactNode;
   rowClassName?: (item: T) => string;
+  /** Abre ao clicar na linha (ou Enter). Cliques em botões, links e campos não disparam. */
+  onRowClick?: (item: T) => void;
   /** Row keys that are currently being deleted (fade + collapse animation) */
   deletingKeys?: Set<string | number>;
   /**
@@ -95,6 +72,11 @@ export interface DataTableProps<T> {
   mobileCard?: (item: T) => React.ReactNode;
 }
 
+const INTERACTIVE_SELECTOR =
+  'button, a, input, select, textarea, label, [role="menuitem"], [role="checkbox"], [role="switch"]';
+
+const getAlignClass = (align: Column<unknown>['align'] = 'left') => `text-${align}`;
+
 export function DataTable<T>({
   data,
   columns,
@@ -103,30 +85,50 @@ export function DataTable<T>({
   density = 'comfortable',
   emptyState,
   pagination,
+  pageSize = LIST_PAGE_SIZE,
+  pinNav,
+  centerList,
   sorting,
   actions,
   rowClassName,
+  onRowClick,
   deletingKeys,
   mobileCard,
 }: DataTableProps<T>) {
   const cellPad = density === 'compact' ? 'px-md py-sm' : 'px-lg py-md';
   const { t } = useTranslation();
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
-  const setAgentWidgetHiddenByNav = useAgentWidgetStore((s) => s.setHiddenByNav);
-  useEffect(() => () => setAgentWidgetHiddenByNav(false), [setAgentWidgetHiddenByNav]);
+
+  const [clientPage, setClientPage] = useState(1);
+  const clientTotalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  // Clampa caso a lista encolha (ex.: após excluir ou filtrar).
+  const currentClientPage = Math.min(clientPage, clientTotalPages);
+  const page = pagination?.page ?? currentClientPage;
+  const totalPages = pagination
+    ? Math.max(1, Math.ceil(pagination.total / pagination.pageSize))
+    : clientTotalPages;
+  const onPageChange = pagination?.onPageChange ?? setClientPage;
+  const rows = pagination
+    ? data
+    : data.slice((currentClientPage - 1) * pageSize, currentClientPage * pageSize);
 
   const handleRowKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTableRowElement>, index: number) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        rowRefs.current[Math.min(index + 1, data.length - 1)]?.focus();
+        rowRefs.current[Math.min(index + 1, rows.length - 1)]?.focus();
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         rowRefs.current[Math.max(index - 1, 0)]?.focus();
       }
     },
-    [data.length]
+    [rows.length]
   );
+
+  const handleClick = (e: React.MouseEvent, item: T) => {
+    if (!onRowClick || (e.target as HTMLElement).closest(INTERACTIVE_SELECTOR)) return;
+    onRowClick(item);
+  };
 
   const getAriaSortValue = (columnKey: string): React.AriaAttributes['aria-sort'] => {
     if (sorting?.column !== columnKey) return 'none';
@@ -154,43 +156,38 @@ export function DataTable<T>({
 
   // Empty state
   if (data.length === 0) {
-    if (emptyState) {
-      return <EmptyState {...emptyState} />;
-    }
-    return (
-      <div className="bg-card rounded-lg border p-12 text-center">
-        <p>{t('common.table.noData')}</p>
-      </div>
-    );
+    return <EmptyState title={t('common.table.noData')} {...emptyState} />;
   }
 
   // Render column content
-  const renderColumnContent = (item: T, column: Column<T>) => {
-    if (column.render) {
-      return column.render(item);
-    }
-    return String(item[column.key as keyof T] || '');
-  };
-
-  // Get alignment class
-  const getAlignClass = (align?: 'left' | 'center' | 'right') => {
-    switch (align) {
-      case 'center':
-        return 'text-center';
-      case 'right':
-        return 'text-right';
-      default:
-        return 'text-left';
-    }
-  };
+  const renderColumnContent = (item: T, column: Column<T>) =>
+    column.render ? column.render(item) : String(item[column.key as keyof T] || '');
 
   return (
-    <div className="space-y-md">
+    <PageSlide
+      page={page}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      pinNav={pinNav}
+      centerList={centerList}
+      className="space-y-md"
+    >
       {/* Mobile card list */}
       <div className="bg-card block overflow-hidden rounded-lg border md:hidden">
         <div className="divide-y">
-          {data.map((item) => (
-            <div key={keyExtractor(item)}>
+          {rows.map((item) => (
+            <div
+              key={keyExtractor(item)}
+              className={onRowClick ? 'cursor-pointer' : undefined}
+              role={onRowClick ? 'button' : undefined}
+              tabIndex={onRowClick ? 0 : undefined}
+              onClick={(e) => handleClick(e, item)}
+              onKeyDown={(e) => {
+                if (onRowClick && e.key === 'Enter' && e.target === e.currentTarget) {
+                  onRowClick(item);
+                }
+              }}
+            >
               {mobileCard ? (
                 mobileCard(item)
               ) : (
@@ -209,7 +206,7 @@ export function DataTable<T>({
                     </div>
                   ))}
                   {actions && (
-                    <div className="pt-xs flex justify-end">{actions(item)}</div>
+                    <div className="pt-xs flex justify-center">{actions(item)}</div>
                   )}
                 </div>
               )}
@@ -220,7 +217,7 @@ export function DataTable<T>({
 
       {/* Desktop table */}
       <div className="bg-card hidden overflow-hidden rounded-lg border md:block">
-        <div className="custom-scrollbar overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted/50 border-b">
               <tr>
@@ -252,7 +249,7 @@ export function DataTable<T>({
                 {actions && (
                   <th
                     scope="col"
-                    className={`${cellPad} text-right text-sm font-semibold`}
+                    className={`${cellPad} text-center text-sm font-semibold`}
                   >
                     {t('common.table.actions')}
                   </th>
@@ -261,7 +258,7 @@ export function DataTable<T>({
             </thead>
             <tbody className="divide-y">
               <AnimatePresence initial={false}>
-                {data.map((item, index) => {
+                {rows.map((item, index) => {
                   const key = keyExtractor(item);
                   const isDeleting = deletingKeys?.has(key);
                   return (
@@ -271,15 +268,24 @@ export function DataTable<T>({
                         rowRefs.current[index] = el;
                       }}
                       tabIndex={0}
-                      className={`hover:bg-muted/30 focus:bg-muted/40 transition-colors focus:outline-none ${rowClassName ? rowClassName(item) : ''}`}
-                      onKeyDown={(e) => handleRowKeyDown(e, index)}
+                      className={`hover:bg-muted/30 focus:bg-muted/40 transition-colors focus:outline-none ${onRowClick ? 'cursor-pointer' : ''} ${rowClassName ? rowClassName(item) : ''}`}
+                      onClick={(e: React.MouseEvent) => handleClick(e, item)}
+                      onKeyDown={(e) => {
+                        handleRowKeyDown(e, index);
+                        if (
+                          onRowClick &&
+                          e.key === 'Enter' &&
+                          e.target === e.currentTarget
+                        ) {
+                          onRowClick(item);
+                        }
+                      }}
                       animate={
                         isDeleting
                           ? { opacity: 0.4, scale: 0.99 }
                           : { opacity: 1, scale: 1 }
                       }
                       exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                      transition={{ duration: 0.2 }}
                       layout
                     >
                       {columns.map((column) => (
@@ -293,7 +299,7 @@ export function DataTable<T>({
                         </td>
                       ))}
                       {actions && (
-                        <td className={`${cellPad} text-right`}>{actions(item)}</td>
+                        <td className={`${cellPad} text-center`}>{actions(item)}</td>
                       )}
                     </motion.tr>
                   );
@@ -303,54 +309,6 @@ export function DataTable<T>({
           </table>
         </div>
       </div>
-
-      {pagination &&
-        (() => {
-          const totalPages = Math.ceil(pagination.total / pagination.pageSize);
-          const isFirst = pagination.page <= 1;
-          const isLast = pagination.page >= totalPages;
-          const currentCount = Math.min(
-            pagination.pageSize,
-            pagination.total - (pagination.page - 1) * pagination.pageSize
-          );
-          return (
-            <div className="flex items-center justify-between">
-              <p className="text-muted-foreground text-sm">
-                {t('common.table.showing', {
-                  count: currentCount,
-                  total: pagination.total,
-                })}
-              </p>
-              <div
-                className="gap-sm flex items-center"
-                onMouseEnter={() => setAgentWidgetHiddenByNav(true)}
-                onMouseLeave={() => setAgentWidgetHiddenByNav(false)}
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  aria-label={t('common.table.previousPage')}
-                  disabled={isFirst}
-                  onClick={() => pagination.onPageChange(pagination.page - 1)}
-                >
-                  <ChevronLeft />
-                </Button>
-                <span className="text-muted-foreground text-sm" aria-live="polite">
-                  {t('common.table.pageOf', { page: pagination.page, totalPages })}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  aria-label={t('common.table.nextPage')}
-                  disabled={isLast}
-                  onClick={() => pagination.onPageChange(pagination.page + 1)}
-                >
-                  <ChevronRight />
-                </Button>
-              </div>
-            </div>
-          );
-        })()}
-    </div>
+    </PageSlide>
   );
 }

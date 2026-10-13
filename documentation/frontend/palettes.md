@@ -64,21 +64,6 @@
 | Red        | `#FB4934` |
 | Orange     | `#FE8019` |
 
-## Cyberpunk (Dark Theme)
-
-| Role       | Hex       |
-|------------|-----------|
-| Background | `#0D0D1A` |
-| Foreground | `#E0E0FF` |
-| Selection  | `#1A1A2E` |
-| Comment    | `#5A5A8A` |
-| Magenta    | `#FF00FF` |
-| Cyan       | `#00FFFF` |
-| Green      | `#00FF9C` |
-| Yellow     | `#FFE600` |
-| Blue       | `#0066FF` |
-| Red        | `#FF003C` |
-| Orange     | `#FF6600` |
 
 ## Everforest (Dark Theme)
 
@@ -96,21 +81,6 @@
 | Red        | `#E67E80` |
 | Orange     | `#DBBC7F` |
 
-## Flat Remix (Dark Theme)
-
-| Role       | Hex       |
-|------------|-----------|
-| Background | `#383C4A` |
-| Foreground | `#D3DAE3` |
-| Selection  | `#4B5162` |
-| Comment    | `#7C818C` |
-| Blue       | `#5294E2` |
-| Purple     | `#B98EAD` |
-| Green      | `#5BC0A0` |
-| Yellow     | `#F9C859` |
-| Cyan       | `#5BC0CF` |
-| Red        | `#EC6A88` |
-| Orange     | `#F9C859` |
 
 ## Alucard (Light Theme)
 
@@ -144,21 +114,6 @@
 | Red        | `#D20F39` |
 | Peach      | `#FE640B` |
 
-## Rosé Pine Dawn (Light Theme)
-
-| Role       | Hex       |
-|------------|-----------|
-| Background | `#FAF4ED` |
-| Foreground | `#575279` |
-| Selection  | `#DFDAD9` |
-| Comment    | `#9893A5` |
-| Iris       | `#907AA9` |
-| Love       | `#B4637A` |
-| Pine       | `#286983` |
-| Gold       | `#EA9D34` |
-| Foam       | `#56949F` |
-| Rose       | `#D7827E` |
-| Highlight  | `#F2E9E1` |
 
 ## Everforest Light (Light Theme)
 
@@ -184,42 +139,26 @@
 | Foreground | `#3C3836` |
 | Selection  | `#D5C4A1` |
 | Comment    | `#928374` |
-| Yellow     | `#D79921` |
+| Orange     | `#D65D0E` |
 | Purple     | `#B16286` |
 | Green      | `#98971A` |
 | Aqua       | `#689D6A` |
 | Blue       | `#458588` |
 | Red        | `#CC241D` |
-| Orange     | `#D65D0E` |
+| Yellow     | `#D79921` |
 
-## Solarized Light (Light Theme)
-
-| Role       | Hex       |
-|------------|-----------|
-| Background | `#FDF6E3` |
-| Foreground | `#657B83` |
-| Selection  | `#EEE8D5` |
-| Comment    | `#93A1A1` |
-| Blue       | `#268BD2` |
-| Magenta    | `#D33682` |
-| Green      | `#859900` |
-| Yellow     | `#B58900` |
-| Cyan       | `#2AA198` |
-| Red        | `#DC322F` |
-| Orange     | `#CB4B16` |
-
-## Nord Light (Light Theme)
+## Tokyo Day (Light Theme)
 
 | Role       | Hex       |
 |------------|-----------|
-| Background | `#ECEFF4` |
-| Foreground | `#2E3440` |
-| Selection  | `#D8DEE9` |
-| Comment    | `#4C566A` |
-| Blue       | `#5E81AC` |
-| Purple     | `#B48EAD` |
-| Green      | `#A3BE8C` |
-| Yellow     | `#EBCB8B` |
-| Cyan       | `#88C0D0` |
-| Red        | `#BF616A` |
-| Teal       | `#8FBCBB` |
+| Background | `#E1E2E7` |
+| Foreground | `#3760BF` |
+| Selection  | `#B7C1E3` |
+| Comment    | `#848CB5` |
+| Blue       | `#2E7DE9` |
+| Purple     | `#9854F1` |
+| Green      | `#587539` |
+| Yellow     | `#8C6C3E` |
+| Cyan       | `#007197` |
+| Red        | `#F52A65` |
+| Orange     | `#B15C00` |

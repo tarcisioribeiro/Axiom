@@ -34,18 +34,6 @@ export default {
           'Helvetica Neue',
           'sans-serif',
         ],
-        /* Monospace — SF Mono on macOS, Cascadia Code on Windows 11, JetBrains Mono fallback */
-        mono: [
-          'ui-monospace',
-          'SFMono-Regular',
-          'SF Mono',
-          'Cascadia Code',
-          'Cascadia Mono',
-          'JetBrains Mono',
-          'Consolas',
-          'Liberation Mono',
-          'monospace',
-        ],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -111,95 +99,30 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      // Padrão global: só opacity/transform (compositor), deltas relativos ao
+      // estado final — não repetem o translate de centralização do elemento.
       keyframes: {
-        'dialog-overlay-show': {
-          from: { opacity: '0' },
-          to: { opacity: '1' },
-        },
-        'dialog-overlay-hide': {
-          from: { opacity: '1' },
-          to: { opacity: '0' },
-        },
-        'dialog-content-show': {
-          from: {
-            opacity: '0',
-            transform: 'translate(-50%, -48%) scale(0.96)',
-          },
-          to: {
-            opacity: '1',
-            transform: 'translate(-50%, -50%) scale(1)',
-          },
-        },
-        'dialog-content-hide': {
-          from: {
-            opacity: '1',
-            transform: 'translate(-50%, -50%) scale(1)',
-          },
-          to: {
-            opacity: '0',
-            transform: 'translate(-50%, -48%) scale(0.96)',
-          },
-        },
-        'slide-up-fade': {
-          from: {
-            opacity: '0',
-            transform: 'translate(-50%, -45%) scale(0.95)',
-          },
-          to: {
-            opacity: '1',
-            transform: 'translate(-50%, -50%) scale(1)',
-          },
-        },
-        'slide-down-fade': {
-          from: {
-            opacity: '0',
-            transform: 'translate(-50%, -55%) scale(0.95)',
-          },
-          to: {
-            opacity: '1',
-            transform: 'translate(-50%, -50%) scale(1)',
-          },
-        },
-        'bounce-in': {
-          '0%': {
-            opacity: '0',
-            transform: 'translate(-50%, -50%) scale(0.92)',
-          },
-          '50%': {
-            transform: 'translate(-50%, -50%) scale(1.03)',
-          },
-          '70%': {
-            transform: 'translate(-50%, -50%) scale(0.98)',
-          },
-          '100%': {
-            opacity: '1',
-            transform: 'translate(-50%, -50%) scale(1)',
-          },
-        },
-        'shake': {
-          '0%, 100%': { transform: 'translate(-50%, -50%) translateX(0)' },
-          '10%, 30%, 50%, 70%, 90%': { transform: 'translate(-50%, -50%) translateX(-4px)' },
-          '20%, 40%, 60%, 80%': { transform: 'translate(-50%, -50%) translateX(4px)' },
+        'fade-in': { from: { opacity: '0' } },
+        'fade-out': { to: { opacity: '0' } },
+        'pop-in': { from: { opacity: '0', transform: 'scale(0.95)' } },
+        'pop-out': { to: { opacity: '0', transform: 'scale(0.95)' } },
+        shake: {
+          '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-4px)' },
+          '20%, 40%, 60%, 80%': { transform: 'translateX(4px)' },
         },
       },
       animation: {
-        'dialog-overlay-show': 'dialog-overlay-show 200ms var(--ease-out)',
-        'dialog-overlay-hide': 'dialog-overlay-hide 200ms var(--ease-out)',
-        'dialog-content-show': 'dialog-content-show 250ms var(--ease-out)',
-        'dialog-content-hide': 'dialog-content-hide 250ms var(--ease-out)',
-        'slide-up-fade': 'slide-up-fade 300ms var(--ease-out)',
-        'slide-down-fade': 'slide-down-fade 300ms var(--ease-out)',
-        'bounce-in': 'bounce-in 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-        'shake': 'shake 400ms cubic-bezier(0.36, 0.07, 0.19, 0.97)',
+        'fade-in': 'fade-in var(--duration-normal) var(--ease-out)',
+        'fade-out': 'fade-out var(--duration-fast) ease-in forwards',
+        'pop-in': 'pop-in var(--duration-normal) var(--ease-out)',
+        'pop-out': 'pop-out var(--duration-fast) ease-in forwards',
+        shake: 'shake 400ms cubic-bezier(0.36, 0.07, 0.19, 0.97)',
       },
       transitionDuration: {
         fast: 'var(--duration-fast)',
         normal: 'var(--duration-normal)',
         medium: 'var(--duration-medium)',
         slow: 'var(--duration-slow)',
-        150: '150ms',
-        250: '250ms',
-        500: '500ms',
       },
       transitionTimingFunction: {
         spring: 'var(--ease-spring)',

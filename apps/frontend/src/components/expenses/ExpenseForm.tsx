@@ -4,10 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   AlertCircle,
   CalendarDays,
-  ChevronDown,
-  ChevronUp,
   Clock,
-  GitFork,
   Link2,
   Loader2,
   Sparkles,
@@ -15,16 +12,13 @@ import {
   Tag,
   Wallet,
   X,
+  Save,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import {
-  ExpenseOCRUpload,
-  type OCRResult,
-} from '@/components/expenses/ExpenseOCRUpload';
 import { RecalculationPreviewDialog } from '@/components/payables/RecalculationPreviewDialog';
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
@@ -44,26 +38,25 @@ import { StatusToggle } from '@/components/ui/status-toggle';
 import { TimePicker } from '@/components/ui/time-picker';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { useCurrentMember } from '@/hooks/use-current-member';
 import { useToast } from '@/hooks/use-toast';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
-import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { expenseSchema } from '@/lib/validations';
 import { accountsService } from '@/services/accounts-service';
-import { categorizationRulesService } from '@/services/categorization-rules-service';
+import { automationRulesService } from '@/services/automation-rules-service';
 import type { CategorySuggestion } from '@/services/expenses-service';
 import { expensesService } from '@/services/expenses-service';
-import { membersService } from '@/services/members-service';
 import { payableInstallmentsService } from '@/services/payable-installments-service';
 import type {
   Account,
-  CategorizationRule,
+  AutomationRule,
   Expense,
   ExpenseFormData,
   FixedExpense,
   Loan,
-  Member,
   Payable,
   RecalculationPreview,
 } from '@/types';
@@ -82,7 +75,7 @@ interface ExpenseFormProps {
   loans?: Loan[];
   payables?: Payable[];
   fixedExpenses?: FixedExpense[];
-  onSubmit: (data: ExpenseFormData, splitOnCreate?: boolean) => void;
+  onSubmit: (data: ExpenseFormData) => void;
   /** Called when the redistribution flow (requirement 7) commits the
    * Expense itself via the atomic redistribute-after-payment endpoint —
    * the parent should treat this the same as a successful onSubmit
@@ -91,6 +84,21 @@ interface ExpenseFormProps {
   onRedistributedSuccess?: () => void;
   onCancel: () => void;
   isLoading?: boolean;
+}
+
+/** Extrai o padrão simples (merchant contém X → definir categoria Y) de uma
+ * AutomationRule, usado para sugestão instantânea de categoria ao digitar o
+ * estabelecimento. Regras mais complexas (múltiplas condições, add_tag,
+ * etc.) retornam null e só são aplicadas pelo motor de automação no backend. */
+function extractSimpleMerchantRule(
+  rule: AutomationRule
+): { merchantContains: string; category: string } | null {
+  const condition = rule.conditions.find(
+    (c) => c.field === 'merchant' && c.operator === 'contains'
+  );
+  const action = rule.actions.find((a) => a.type === 'set_category');
+  if (!condition?.value || !action?.value) return null;
+  return { merchantContains: condition.value, category: action.value };
 }
 
 export const ExpenseForm: React.FC<ExpenseFormProps> = ({
@@ -107,12 +115,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
-  const [categorizationRules, setCategorizationRules] = useState<CategorizationRule[]>(
-    []
-  );
-  const [linksOpen, setLinksOpen] = useState(false);
-  const [splitOnCreate, setSplitOnCreate] = useState(false);
+  const { data: currentUserMember = null } = useCurrentMember();
+  const [categorizationRules, setCategorizationRules] = useState<AutomationRule[]>([]);
   const [redistributePreview, setRedistributePreview] =
     useState<RecalculationPreview | null>(null);
   const [pendingRedistributeData, setPendingRedistributeData] =
@@ -163,29 +167,23 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   });
 
   useEffect(() => {
-    const loadCurrentUserMember = async () => {
-      try {
-        const member = await membersService.getCurrentUserMember();
-        setCurrentUserMember(member);
-        if (!expense) setValue('member', member.id);
-      } catch (error) {
-        logger.error('Erro ao carregar membro do usuário:', error);
-      }
-    };
+    if (currentUserMember && !expense) setValue('member', currentUserMember.id);
+  }, [currentUserMember, expense, setValue]);
+
+  useEffect(() => {
     const loadRules = async () => {
       try {
-        const data = await categorizationRulesService.getAll();
+        const data = await automationRulesService.getAll();
         const rules = Array.isArray(data)
           ? data
-          : ((data as { results: CategorizationRule[] }).results ?? []);
+          : ((data as { results: AutomationRule[] }).results ?? []);
         setCategorizationRules(rules.filter((r) => r.is_active));
       } catch {
         // rules are optional
       }
     };
-    void loadCurrentUserMember();
     void loadRules();
-  }, [expense, setValue]);
+  }, []);
 
   const eligibleLoans = useMemo(() => {
     if (!loans || !currentUserMember) return [];
@@ -268,19 +266,20 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       // Verificação heurística local (feedback imediato, sem chamada de rede)
       if (categorizationRules.length > 0) {
-        const matched = categorizationRules.find(
-          (rule) =>
-            lower.includes(rule.merchant_contains.toLowerCase()) ||
-            rule.merchant_contains.toLowerCase().includes(lower)
-        );
+        const matched = categorizationRules.find((rule) => {
+          const simple = extractSimpleMerchantRule(rule);
+          if (!simple) return false;
+          const merchantContains = simple.merchantContains.toLowerCase();
+          return lower.includes(merchantContains) || merchantContains.includes(lower);
+        });
         if (matched) {
+          const category = extractSimpleMerchantRule(matched)?.category;
           const currentCategory = getValues('category');
           if (
-            !currentCategory ||
-            currentCategory === 'others' ||
-            currentCategory === ''
+            category &&
+            (!currentCategory || currentCategory === 'others' || currentCategory === '')
           ) {
-            setValue('category', matched.category);
+            setValue('category', category);
           }
           return; // Regra local encontrada — sem necessidade de chamar API
         }
@@ -381,8 +380,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       setRedistributePreview(preview);
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -411,8 +409,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       onRedistributedSuccess?.();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -437,37 +434,25 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       }
     }
 
-    onSubmit(data, !expense && splitOnCreate);
+    onSubmit(data);
   };
 
-  const selectedAccount = accounts.find((a) => a.id === watchedAccount);
   const eligibleFixedExpenses = fixedExpenses ?? [];
   const hasEligibleLinks =
     eligibleLoans.length > 0 ||
     eligiblePayables.length > 0 ||
     eligibleFixedExpenses.length > 0;
 
-  const handleOCRResult = (result: OCRResult) => {
-    if (result.merchant) setValue('description', result.merchant);
-    if (result.value) {
-      const num = parseFloat(result.value.replace(',', '.'));
-      if (!isNaN(num)) setValue('value', num);
-    }
-    if (result.date) setValue('date', result.date);
-    if (result.merchant) handleMerchantChange(result.merchant);
-  };
-
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg" noValidate>
-      {!expense && (
-        <div className="flex items-center justify-end">
-          <ExpenseOCRUpload onResult={handleOCRResult} />
-        </div>
-      )}
+    <form
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+      className="space-y-lg"
+      noValidate
+    >
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm md:col-span-2">
+          <div className="space-y-sm">
             <Label htmlFor="description" className="gap-xs flex items-center">
               <Store className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.descriptionLabel')}
@@ -475,21 +460,16 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <Input
               id="description"
               {...register('description')}
+              aria-invalid={!!errors.description}
               placeholder={t('pages.expenses.form.descriptionPlaceholder')}
               disabled={isLoading}
             />
-            {errors.description && (
-              <p className="text-destructive text-sm">{errors.description.message}</p>
-            )}
           </div>
 
-          <div className="space-y-sm md:col-span-2">
+          <div className="space-y-sm">
             <Label htmlFor="merchant" className="gap-xs flex items-center">
               <Store className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.merchantLabel')}
-              <span className="text-muted-foreground/70 ml-1 text-xs">
-                ({t('common.actions.none').toLowerCase()})
-              </span>
             </Label>
             <Input
               id="merchant"
@@ -498,16 +478,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               placeholder={t('pages.expenses.form.merchantPlaceholder')}
               disabled={isLoading}
             />
-            <p className="text-muted-foreground text-xs">
-              {t('pages.expenses.form.merchantHint')}
-            </p>
           </div>
         </div>
       </FormSection>
 
       {/* Seção: Valores & Data */}
       <FormSection title={t('common.form.sections.values')} icon={Wallet}>
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-sm">
             <Label htmlFor="value" className="gap-xs flex items-center">
               <Wallet className="text-muted-foreground h-3.5 w-3.5" />
@@ -518,11 +495,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               accentColor="destructive"
               value={watchedValue}
               onChange={(e) => setValue('value', parseFloat(e.target.value) || 0)}
+              aria-invalid={!!errors.value}
               disabled={isLoading}
             />
-            {errors.value && (
-              <p className="text-destructive text-sm">{errors.value.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -556,12 +531,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <DatePicker
               value={watchedDate}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
+              aria-invalid={!!errors.date}
               placeholder={t('common.fields.selectDate')}
               disabled={isLoading}
             />
-            {errors.date && (
-              <p className="text-destructive text-sm">{errors.date.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -572,11 +545,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <TimePicker
               value={watchedHorary}
               onChange={(t) => setValue('horary', t ?? '')}
+              aria-invalid={!!errors.horary}
               disabled={isLoading}
             />
-            {errors.horary && (
-              <p className="text-destructive text-sm">{errors.horary.message}</p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -598,7 +569,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   setAiSuggestion(null);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-invalid={!!errors.category}>
                   <SelectValue placeholder={t('common.actions.select')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -650,9 +621,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 </PlainButton>
               </div>
             )}
-            {errors.category && (
-              <p className="text-destructive text-sm">{errors.category.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -664,7 +632,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               value={watchedAccount?.toString() || ''}
               onValueChange={(v) => v && setValue('account', parseInt(v))}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.account}>
                 <SelectValue placeholder={t('common.actions.select')} />
               </SelectTrigger>
               <SelectContent>
@@ -678,157 +646,119 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {selectedAccount && (
-              <p className="text-muted-foreground text-xs">
-                {t('pages.expenses.form.balanceInfo', {
-                  value: formatCurrency(selectedAccount.available_balance),
-                })}
-              </p>
-            )}
-            {errors.account && (
-              <p className="text-destructive text-sm">{errors.account.message}</p>
-            )}
           </div>
         </div>
       </FormSection>
 
-      {/* Seção: Vínculos (colapsável) */}
+      {/* Seção: Vínculos */}
       {hasEligibleLinks && (
-        <div className="space-y-md">
-          <button
-            type="button"
-            onClick={() => setLinksOpen((o) => !o)}
-            className="gap-xs flex w-full items-center text-left"
-          >
-            <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-            <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-              {t('common.form.sections.links')}
-            </span>
-            <div className="bg-border/50 h-px flex-1" />
-            {linksOpen ? (
-              <ChevronUp className="text-muted-foreground h-3.5 w-3.5" />
-            ) : (
-              <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
+        <FormSection title={t('common.form.sections.links')} icon={Link2}>
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+            {eligibleLoans.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.expenses.form.relatedLoanLabel')}
+                </Label>
+                <Select
+                  value={watchedRelatedLoan?.toString() || 'none'}
+                  onValueChange={(v) => {
+                    setValue('related_loan', v === 'none' ? null : parseInt(v));
+                    if (v !== 'none') {
+                      setValue('related_payable', null);
+                      setValue('fixed_expense_template', null);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.fields.select_optional')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {eligibleLoans.map((loan) => (
+                      <SelectItem key={loan.id} value={loan.id.toString()}>
+                        {loan.description} — {formatCurrency(loan.remaining_balance)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
-          </button>
 
-          {linksOpen && (
-            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-              {eligibleLoans.length > 0 && (
-                <div className="space-y-sm">
-                  <Label className="gap-xs flex items-center">
-                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.expenses.form.relatedLoanLabel')}
-                  </Label>
-                  <Select
-                    value={watchedRelatedLoan?.toString() || 'none'}
-                    onValueChange={(v) => {
-                      setValue('related_loan', v === 'none' ? null : parseInt(v));
-                      if (v !== 'none') {
-                        setValue('related_payable', null);
-                        setValue('fixed_expense_template', null);
-                      }
-                    }}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('common.fields.select_optional')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{t('common.actions.none')}</SelectItem>
-                      {eligibleLoans.map((loan) => (
-                        <SelectItem key={loan.id} value={loan.id.toString()}>
-                          {loan.description} — {formatCurrency(loan.remaining_balance)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.expenses.form.relatedLoanHint')}
-                  </p>
-                </div>
-              )}
+            {eligiblePayables.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.expenses.form.relatedPayableLabel')}
+                </Label>
+                <Select
+                  value={watchedRelatedPayable?.toString() || 'none'}
+                  onValueChange={(v) => {
+                    setValue('related_payable', v === 'none' ? null : parseInt(v));
+                    if (v !== 'none') {
+                      setValue('related_loan', null);
+                      setValue('fixed_expense_template', null);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.fields.select_optional')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {eligiblePayables.map((payable) => (
+                      <SelectItem key={payable.id} value={payable.id.toString()}>
+                        {payable.description} —{' '}
+                        {formatCurrency(payable.remaining_value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-              {eligiblePayables.length > 0 && (
-                <div className="space-y-sm">
-                  <Label className="gap-xs flex items-center">
-                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.expenses.form.relatedPayableLabel')}
-                  </Label>
-                  <Select
-                    value={watchedRelatedPayable?.toString() || 'none'}
-                    onValueChange={(v) => {
-                      setValue('related_payable', v === 'none' ? null : parseInt(v));
-                      if (v !== 'none') {
-                        setValue('related_loan', null);
-                        setValue('fixed_expense_template', null);
-                      }
-                    }}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('common.fields.select_optional')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{t('common.actions.none')}</SelectItem>
-                      {eligiblePayables.map((payable) => (
-                        <SelectItem key={payable.id} value={payable.id.toString()}>
-                          {payable.description} —{' '}
-                          {formatCurrency(payable.remaining_value)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.expenses.form.relatedPayableHint')}
-                  </p>
-                </div>
-              )}
-
-              {eligibleFixedExpenses.length > 0 && (
-                <div className="space-y-sm">
-                  <Label className="gap-xs flex items-center">
-                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.expenses.form.relatedFixedExpenseLabel')}
-                  </Label>
-                  <Select
-                    value={watchedFixedExpenseTemplate?.toString() || 'none'}
-                    onValueChange={(v) => {
-                      setValue(
-                        'fixed_expense_template',
-                        v === 'none' ? null : parseInt(v)
-                      );
-                      if (v !== 'none') {
-                        setValue('related_loan', null);
-                        setValue('related_payable', null);
-                      }
-                    }}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('common.fields.select_optional')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{t('common.actions.none')}</SelectItem>
-                      {eligibleFixedExpenses.map((fixedExpense) => (
-                        <SelectItem
-                          key={fixedExpense.id}
-                          value={fixedExpense.id.toString()}
-                        >
-                          {fixedExpense.description} —{' '}
-                          {formatCurrency(fixedExpense.default_value)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.expenses.form.relatedFixedExpenseHint')}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+            {eligibleFixedExpenses.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.expenses.form.relatedFixedExpenseLabel')}
+                </Label>
+                <Select
+                  value={watchedFixedExpenseTemplate?.toString() || 'none'}
+                  onValueChange={(v) => {
+                    setValue(
+                      'fixed_expense_template',
+                      v === 'none' ? null : parseInt(v)
+                    );
+                    if (v !== 'none') {
+                      setValue('related_loan', null);
+                      setValue('related_payable', null);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.fields.select_optional')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {eligibleFixedExpenses.map((fixedExpense) => (
+                      <SelectItem
+                        key={fixedExpense.id}
+                        value={fixedExpense.id.toString()}
+                      >
+                        {fixedExpense.description} —{' '}
+                        {formatCurrency(fixedExpense.default_value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+        </FormSection>
       )}
 
       {/* Alertas de saldo */}
@@ -888,38 +818,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         </div>
       )}
 
-      {/* Toggle: Dividir despesa — only for new expenses */}
-      {!expense && (
-        <div className="gap-sm border-border px-md py-sm flex items-center rounded-md border border-dashed">
-          <GitFork className="text-muted-foreground h-4 w-4 shrink-0" />
-          <div className="flex flex-1 flex-col gap-0.5">
-            <span className="text-sm font-medium">
-              {t('pages.expenses.form.splitToggle')}
-            </span>
-            <span className="text-muted-foreground text-xs">
-              {t('pages.expenses.form.splitToggleHint')}
-            </span>
-          </div>
-          <PlainButton
-            type="button"
-            role="switch"
-            aria-checked={splitOnCreate}
-            onClick={() => setSplitOnCreate((v) => !v)}
-            className={`focus-visible:ring-ring relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none ${
-              splitOnCreate ? 'bg-primary' : 'bg-input'
-            }`}
-          >
-            <span
-              className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${
-                splitOnCreate ? 'translate-x-[18px]' : 'translate-x-[3px]'
-              }`}
-            />
-          </PlainButton>
-        </div>
-      )}
-
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -931,15 +832,15 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           }
         >
           {isLoading ? (
-            <>
-              <Loader2 className="mr-xs h-4 w-4 animate-spin" />
-              {t('common.actions.saving')}
-            </>
-          ) : expense ? (
-            t('common.actions.update')
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            t('common.actions.create')
+            <Save className="h-4 w-4" />
           )}
+          {isLoading
+            ? t('common.actions.saving')
+            : expense
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
 

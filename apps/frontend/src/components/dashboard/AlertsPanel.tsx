@@ -8,18 +8,19 @@ import {
   PiggyBank,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { alertKey } from '@/hooks/use-dismissed-alerts';
 import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import type { FinancialAlert } from '@/types';
 
 interface AlertsPanelProps {
   alerts: FinancialAlert[];
+  onDismiss: (key: string) => void;
 }
 
 type TranslateFn = (key: string, opts?: Record<string, unknown>) => string;
@@ -117,20 +118,10 @@ const severityConfig = {
   },
 } as const;
 
-export function AlertsPanel({ alerts }: AlertsPanelProps) {
+export function AlertsPanel({ alerts, onDismiss }: AlertsPanelProps) {
   const { t } = useTranslation();
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
-  const visibleAlerts = alerts.filter((alert, index) => {
-    const key = `${alert.type}-${index}`;
-    return !dismissed.has(key);
-  });
-
-  if (visibleAlerts.length === 0) return null;
-
-  const handleDismiss = (key: string) => {
-    setDismissed((prev) => new Set(prev).add(key));
-  };
+  if (alerts.length === 0) return null;
 
   return (
     <Card>
@@ -139,14 +130,14 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
           <AlertTriangle className="text-warning h-5 w-5" />
           <CardTitle>{t('pages.dashboard.financialAlerts.title')}</CardTitle>
           <span className="bg-destructive px-sm text-destructive-foreground ml-auto rounded-full py-0.5 text-xs font-semibold">
-            {visibleAlerts.length}
+            {alerts.length}
           </span>
         </div>
       </CardHeader>
       <CardContent>
         <ul className="space-y-sm">
-          {visibleAlerts.map((alert, index) => {
-            const key = `${alert.type}-${index}`;
+          {alerts.map((alert) => {
+            const key = alertKey(alert);
             const config = severityConfig[alert.severity] ?? severityConfig.info;
             const TypeIcon = typeIconMap[alert.type] ?? AlertCircle;
             const typeLabel = t(`pages.dashboard.financialAlerts.types.${alert.type}`, {
@@ -193,7 +184,7 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
                   size="icon"
                   className="text-muted-foreground hover:text-foreground h-6 w-6 shrink-0"
                   title={t('pages.dashboard.financialAlerts.dismiss')}
-                  onClick={() => handleDismiss(key)}
+                  onClick={() => onDismiss(key)}
                 >
                   <X className="h-3 w-3" />
                 </Button>
