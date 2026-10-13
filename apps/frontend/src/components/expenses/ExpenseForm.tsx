@@ -38,18 +38,17 @@ import { StatusToggle } from '@/components/ui/status-toggle';
 import { TimePicker } from '@/components/ui/time-picker';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { useCurrentMember } from '@/hooks/use-current-member';
 import { useToast } from '@/hooks/use-toast';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
-import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { expenseSchema } from '@/lib/validations';
 import { accountsService } from '@/services/accounts-service';
 import { automationRulesService } from '@/services/automation-rules-service';
 import type { CategorySuggestion } from '@/services/expenses-service';
 import { expensesService } from '@/services/expenses-service';
-import { membersService } from '@/services/members-service';
 import { payableInstallmentsService } from '@/services/payable-installments-service';
 import type {
   Account,
@@ -58,7 +57,6 @@ import type {
   ExpenseFormData,
   FixedExpense,
   Loan,
-  Member,
   Payable,
   RecalculationPreview,
 } from '@/types';
@@ -117,7 +115,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
+  const { data: currentUserMember = null } = useCurrentMember();
   const [categorizationRules, setCategorizationRules] = useState<AutomationRule[]>([]);
   const [redistributePreview, setRedistributePreview] =
     useState<RecalculationPreview | null>(null);
@@ -169,15 +167,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   });
 
   useEffect(() => {
-    const loadCurrentUserMember = async () => {
-      try {
-        const member = await membersService.getCurrentUserMember();
-        setCurrentUserMember(member);
-        if (!expense) setValue('member', member.id);
-      } catch (error) {
-        logger.error('Erro ao carregar membro do usuário:', error);
-      }
-    };
+    if (currentUserMember && !expense) setValue('member', currentUserMember.id);
+  }, [currentUserMember, expense, setValue]);
+
+  useEffect(() => {
     const loadRules = async () => {
       try {
         const data = await automationRulesService.getAll();
@@ -189,9 +182,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         // rules are optional
       }
     };
-    void loadCurrentUserMember();
     void loadRules();
-  }, [expense, setValue]);
+  }, []);
 
   const eligibleLoans = useMemo(() => {
     if (!loans || !currentUserMember) return [];

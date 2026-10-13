@@ -12,7 +12,7 @@ import {
   Save,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -38,18 +38,10 @@ import {
   translate,
 } from '@/config/constants';
 import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
+import { useCurrentMember } from '@/hooks/use-current-member';
 import { formatCurrency } from '@/lib/formatters';
-import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
-import { membersService } from '@/services/members-service';
-import type {
-  Account,
-  FixedRevenue,
-  Loan,
-  Member,
-  Revenue,
-  RevenueFormData,
-} from '@/types';
+import type { Account, FixedRevenue, Loan, Revenue, RevenueFormData } from '@/types';
 
 export interface RevenuePrefillData {
   description?: string;
@@ -79,8 +71,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
   isLoading = false,
 }) => {
   const { t } = useTranslation();
-  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
-  const [eligibleLoans, setEligibleLoans] = useState<Loan[]>([]);
+  const { data: currentUserMember = null } = useCurrentMember();
   const [linksOpen, setLinksOpen] = useState(false);
 
   const { register, handleSubmit, setValue, watch } = useForm<RevenueFormData>({
@@ -111,29 +102,21 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
   });
 
   useEffect(() => {
-    const loadCurrentUserMember = async () => {
-      try {
-        const member = await membersService.getCurrentUserMember();
-        setCurrentUserMember(member);
-        if (!revenue) setValue('member', member.id);
-      } catch (error) {
-        logger.error('Erro ao carregar membro do usuário:', error);
-      }
-    };
-    void loadCurrentUserMember();
-  }, [revenue, setValue]);
+    if (currentUserMember && !revenue) setValue('member', currentUserMember.id);
+  }, [currentUserMember, revenue, setValue]);
 
-  useEffect(() => {
-    if (loans && currentUserMember) {
-      const filtered = loans.filter(
-        (loan) =>
-          loan.creditor === currentUserMember.id &&
-          loan.status !== 'paid' &&
-          loan.status !== 'cancelled'
-      );
-      setEligibleLoans(filtered);
-    }
-  }, [loans, currentUserMember]);
+  const eligibleLoans = useMemo(
+    () =>
+      loans && currentUserMember
+        ? loans.filter(
+            (loan) =>
+              loan.creditor === currentUserMember.id &&
+              loan.status !== 'paid' &&
+              loan.status !== 'cancelled'
+          )
+        : [],
+    [loans, currentUserMember]
+  );
 
   useEffect(() => {
     if (!revenue && prefillData) {

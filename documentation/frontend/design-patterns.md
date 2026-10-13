@@ -7,10 +7,10 @@ Padrões de UI/UX definidos pelo product owner desde 25/08/2026. Toda mudança v
 ## 1. Escopo e convenções
 
 - **Escopo:** todas as regras valem **apenas para o app web, usado em navegadores** (`apps/frontend`). O app mobile (Flutter, `apps/mobile`) não segue este documento.
-- **Resolução de referência:** desktop com **1920×1080 ou maior, navegador em tela cheia**. As regras marcadas com **[desktop]** só são obrigatórias nessa condição. Em telas menores, modais e listas podem ter barra de rolagem.
+- **Resolução de referência:** monitor 1920×1080 (ou maior) com a barra de tarefas do sistema e o navegador **não maximizado**, com abas, barra de endereço e barra de favoritos. Isso deixa uma **viewport útil de ~1920×900 px**. As regras marcadas com **[desktop]** são medidas com a viewport em **880 px de altura** (margem de segurança). Em viewports menores, modais e listas podem ter barra de rolagem.
 - **Legenda:**
   - **[regra]**: padrão global, vale para todas as telas e módulos.
-  - **[desktop]**: regra global obrigatória em ≥ 1920×1080, tela cheia.
+  - **[desktop]**: regra global obrigatória com viewport ≥ 880 px de altura.
   - **[pontual]**: pedido isolado, aplicar onde couber.
   - **Status**: situação no código na data da versão.
 
@@ -33,6 +33,8 @@ Há três tipos de modal:
 - **[regra]** Sem textos de apoio em modais, campos ou botões (descrições, dicas, textos abaixo de campos e botões).
 - **[regra]** Todo botão do rodapé tem ícone à esquerda do texto.
 - **[pontual]** Modal pode abrir por cima de outro modal.
+- **[regra]** Ao fechar, o modal sai inteiro, com o conteúdo e a largura que estavam na tela. O `DialogContent` congela o último conteúdo e a `className` durante a animação de saída, então pode limpar o item selecionado no mesmo `onOpenChange` (`open={!!item}` + `setItem(undefined)`), inclusive quando a largura depende dele (`max-w-5xl` vs `max-w-xl`), sem sobrar um modal "vazio" ou mais estreito.
+- **[regra]** O modal abre já completo: dado de que um campo depende (ex.: membro atual para "Empréstimo Relacionado") vem de query em cache pré-carregada na página (`useCurrentMember()`), não de `useEffect` no formulário — senão o campo surge depois e o modal "cresce" na abertura.
 
 ### 2.2 Modal de formulário (inclusão/edição)
 

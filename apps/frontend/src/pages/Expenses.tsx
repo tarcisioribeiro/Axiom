@@ -41,6 +41,7 @@ import {
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS, PAYMENT_STATUS_ICONS } from '@/config/icons';
+import { useCurrentMember } from '@/hooks/use-current-member';
 import { useExpensesPage } from '@/hooks/use-expenses-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
@@ -55,6 +56,8 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
 export default function Expenses({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  // Pré-carrega para o modal do formulário já abrir completo (sem campo surgindo depois).
+  useCurrentMember();
   const [splitExpense, setSplitExpense] = useState<Expense | null>(null);
   const {
     expenses,

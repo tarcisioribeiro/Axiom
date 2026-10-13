@@ -39,6 +39,7 @@ import {
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { REVENUE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { PAYMENT_STATUS_ICONS, REVENUE_CATEGORY_ICONS } from '@/config/icons';
+import { useCurrentMember } from '@/hooks/use-current-member';
 import { useRevenuesPage } from '@/hooks/use-revenues-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
@@ -52,6 +53,8 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
 export default function Revenues({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  // Pré-carrega para o modal do formulário já abrir completo (sem campo surgindo depois).
+  useCurrentMember();
   const {
     revenues,
     accounts,

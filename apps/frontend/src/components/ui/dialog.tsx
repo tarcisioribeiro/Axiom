@@ -7,7 +7,14 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const Dialog = DialogPrimitive.Root;
+// `open` do Root, lido pelo DialogContent para congelar o conteúdo durante a saída.
+const DialogOpenContext = React.createContext<boolean | undefined>(undefined);
+
+const Dialog = (props: React.ComponentProps<typeof DialogPrimitive.Root>) => (
+  <DialogOpenContext.Provider value={props.open}>
+    <DialogPrimitive.Root {...props} />
+  </DialogOpenContext.Provider>
+);
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
 const DialogClose = DialogPrimitive.Close;
@@ -52,27 +59,38 @@ interface DialogContentProps
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, size, onInteractOutside, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(dialogContentVariants({ size }), className)}
-      onInteractOutside={(e) => {
-        // Prevent dialog close when clicking inside a Flatpickr calendar
-        // (the calendar is appended to document.body, outside the dialog DOM)
-        if ((e.target as Element)?.closest?.('.flatpickr-calendar')) {
-          e.preventDefault();
-          return;
-        }
-        onInteractOutside?.(e);
-      }}
-      {...props}
-    >
-      {children}
-    </DialogPrimitive.Content>
-  </DialogPortal>
-));
+>(({ className, children, size, onInteractOutside, ...props }, ref) => {
+  // Ao fechar, o chamador costuma limpar o estado (`setSelected(undefined)`) junto;
+  // mantém o último conteúdo e a largura (className derivada desse estado) até a
+  // animação de saída terminar, senão sobra um modal "vazio" ou mais estreito.
+  const open = React.useContext(DialogOpenContext);
+  const classes = cn(dialogContentVariants({ size }), className);
+  const [shown, setShown] = React.useState({ children, classes });
+  if (open !== false && (shown.children !== children || shown.classes !== classes))
+    setShown({ children, classes });
+  const closing = open === false;
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        ref={ref}
+        className={closing ? shown.classes : classes}
+        onInteractOutside={(e) => {
+          // Prevent dialog close when clicking inside a Flatpickr calendar
+          // (the calendar is appended to document.body, outside the dialog DOM)
+          if ((e.target as Element)?.closest?.('.flatpickr-calendar')) {
+            e.preventDefault();
+            return;
+          }
+          onInteractOutside?.(e);
+        }}
+        {...props}
+      >
+        {closing ? shown.children : children}
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  );
+});
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 /** Sempre fixo no topo do modal (ver `.dialog-header-sticky` em index.css). */
