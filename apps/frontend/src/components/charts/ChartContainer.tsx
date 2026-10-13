@@ -3,6 +3,7 @@ import { BarChart2, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useChartType } from '@/hooks/use-chart-type';
 import type {
@@ -105,16 +106,8 @@ export const ChartContainer = ({
   // Empty state
   if (!data || data.length === 0) {
     return (
-      <div
-        className="gap-sm text-muted-foreground flex flex-col items-center justify-center"
-        style={{ height }}
-      >
-        <div className="bg-muted/50 flex h-12 w-12 items-center justify-center rounded-lg">
-          <BarChart2 className="h-6 w-6 opacity-40" />
-        </div>
-        <p className="text-muted-foreground text-center text-sm">
-          {resolvedEmptyMessage}
-        </p>
+      <div className="flex flex-col justify-center" style={{ height }}>
+        <EmptyState icon={<BarChart2 />} title={resolvedEmptyMessage} />
       </div>
     );
   }
@@ -151,7 +144,6 @@ export const ChartContainer = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
         >
           {chartType === 'pie' && enabledTypes.includes('pie') && (
             <EnhancedPieChart

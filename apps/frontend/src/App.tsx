@@ -15,6 +15,7 @@ import { Layout } from './components/layout/Layout';
 import { PlanningLayout } from './components/layout/PlanningLayout';
 import { AlertDialogProvider } from './components/providers/AlertDialogProvider';
 import { Toaster } from './components/ui/toaster';
+import { transitions } from './lib/animations/transitions';
 import { queryClient } from './lib/query-client';
 // Eager load (páginas públicas carregadas imediatamente)
 import ForgotPassword from './pages/ForgotPassword';
@@ -37,7 +38,6 @@ const CreditCardManagement = lazy(() => import('./pages/CreditCardManagement'));
 const Transfers = lazy(() => import('./pages/Transfers'));
 const Loans = lazy(() => import('./pages/Loans'));
 const Members = lazy(() => import('./pages/Members'));
-const MemberFinancialReport = lazy(() => import('./pages/MemberFinancialReport'));
 
 // Security Module
 const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard'));
@@ -85,9 +85,7 @@ const NotificationPreferences = lazy(() => import('./pages/NotificationPreferenc
 const UserProfile = lazy(() => import('./pages/UserProfile'));
 
 // Bank Reconciliation
-const BankReconciliation = lazy(() => import('./pages/BankReconciliation'));
 const BankReconciliationDetail = lazy(() => import('./pages/BankReconciliationDetail'));
-const BankStatementImport = lazy(() => import('./pages/BankStatementImport'));
 
 // Vault Simulator
 const VaultSimulator = lazy(() => import('./pages/VaultSimulator'));
@@ -102,9 +100,7 @@ const DailyReflections = lazy(() => import('./pages/DailyReflections'));
 const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
 const NutritionPage = lazy(() => import('./pages/NutritionPage'));
 const BodyMetrics = lazy(() => import('./pages/BodyMetrics'));
-const PersonalAnalytics = lazy(() => import('./pages/PersonalAnalytics'));
 const WeeklyPlanning = lazy(() => import('./pages/WeeklyPlanning'));
-const OnboardingWizard = lazy(() => import('./pages/OnboardingWizard'));
 
 // Finance merged pages
 const RulesAndTagsPage = lazy(() => import('./pages/RulesAndTagsPage'));
@@ -207,26 +203,50 @@ function AnimatedRoutes() {
         />
         <Route
           path="/transactions"
+          element={<Navigate to="/transactions/expenses" replace />}
+        />
+        <Route
+          path="/transactions/:tab"
           element={
             <PageWrapper>
               <Transactions />
             </PageWrapper>
           }
         />
-        <Route path="/expenses" element={<Navigate to="/transactions" replace />} />
-        <Route path="/revenues" element={<Navigate to="/transactions" replace />} />
+        <Route
+          path="/expenses"
+          element={<Navigate to="/transactions/expenses" replace />}
+        />
+        <Route
+          path="/revenues"
+          element={<Navigate to="/transactions/revenues" replace />}
+        />
         <Route
           path="/recurring"
+          element={<Navigate to="/recurring/fixed-expenses" replace />}
+        />
+        <Route
+          path="/recurring/:tab"
           element={
             <PageWrapper>
               <RecurringItems />
             </PageWrapper>
           }
         />
-        <Route path="/fixed-expenses" element={<Navigate to="/recurring" replace />} />
-        <Route path="/fixed-revenues" element={<Navigate to="/recurring" replace />} />
+        <Route
+          path="/fixed-expenses"
+          element={<Navigate to="/recurring/fixed-expenses" replace />}
+        />
+        <Route
+          path="/fixed-revenues"
+          element={<Navigate to="/recurring/fixed-revenues" replace />}
+        />
         <Route
           path="/finance/rules-tags"
+          element={<Navigate to="/finance/rules-tags/automation-rules" replace />}
+        />
+        <Route
+          path="/finance/rules-tags/:tab"
           element={
             <PageWrapper>
               <RulesAndTagsPage />
@@ -235,15 +255,22 @@ function AnimatedRoutes() {
         />
         <Route
           path="/categorization-rules"
-          element={<Navigate to="/finance/rules-tags" replace />}
+          element={<Navigate to="/finance/rules-tags/automation-rules" replace />}
         />
         <Route
           path="/automation-rules"
-          element={<Navigate to="/finance/rules-tags" replace />}
+          element={<Navigate to="/finance/rules-tags/automation-rules" replace />}
         />
-        <Route path="/tags" element={<Navigate to="/finance/rules-tags" replace />} />
+        <Route
+          path="/tags"
+          element={<Navigate to="/finance/rules-tags/tags" replace />}
+        />
         <Route
           path="/credit-cards"
+          element={<Navigate to="/credit-cards/cards" replace />}
+        />
+        <Route
+          path="/credit-cards/:tab"
           element={
             <PageWrapper>
               <CreditCardManagement />
@@ -252,11 +279,11 @@ function AnimatedRoutes() {
         />
         <Route
           path="/credit-card-bills"
-          element={<Navigate to="/credit-cards" replace />}
+          element={<Navigate to="/credit-cards/bills" replace />}
         />
         <Route
           path="/credit-card-expenses"
-          element={<Navigate to="/transactions" replace />}
+          element={<Navigate to="/transactions/credit-card-expenses" replace />}
         />
         <Route
           path="/transfers"
@@ -274,16 +301,20 @@ function AnimatedRoutes() {
             </PageWrapper>
           }
         />
+        <Route path="/bills" element={<Navigate to="/bills/payables" replace />} />
         <Route
-          path="/bills"
+          path="/bills/:tab"
           element={
             <PageWrapper>
               <PayablesReceivables />
             </PageWrapper>
           }
         />
-        <Route path="/payables" element={<Navigate to="/bills" replace />} />
-        <Route path="/receivables" element={<Navigate to="/bills" replace />} />
+        <Route path="/payables" element={<Navigate to="/bills/payables" replace />} />
+        <Route
+          path="/receivables"
+          element={<Navigate to="/bills/receivables" replace />}
+        />
         <Route
           path="/members"
           element={
@@ -292,16 +323,6 @@ function AnimatedRoutes() {
             </PageWrapper>
           }
         />
-        <Route
-          path="/members/:id/report"
-          element={
-            <PageWrapper>
-              <MemberFinancialReport />
-            </PageWrapper>
-          }
-        />
-
-        {/* Security Module routes */}
         <Route
           path="/security/dashboard"
           element={
@@ -386,6 +407,15 @@ function AnimatedRoutes() {
         <Route
           path="/library/books"
           element={
+            <Navigate
+              to={{ pathname: '/library/books/books', search: location.search }}
+              replace
+            />
+          }
+        />
+        <Route
+          path="/library/books/:tab"
+          element={
             <PageWrapper>
               <Books />
             </PageWrapper>
@@ -449,10 +479,13 @@ function AnimatedRoutes() {
         />
         {/* Personal Planning Module routes — wrapped in contextual sidebar */}
         <Route path="/planning" element={<PlanningLayout />}>
-          <Route index element={<Navigate to="/planning/tasks-goals" replace />} />
+          <Route
+            index
+            element={<Navigate to="/planning/tasks-goals/daily" replace />}
+          />
           <Route
             path="today"
-            element={<Navigate to="/planning/tasks-goals" replace />}
+            element={<Navigate to="/planning/tasks-goals/daily" replace />}
           />
           <Route
             path="dashboard"
@@ -464,6 +497,18 @@ function AnimatedRoutes() {
           />
           <Route
             path="tasks-goals"
+            element={<Navigate to="/planning/tasks-goals/daily" replace />}
+          />
+          <Route
+            path="tasks-goals/:tab"
+            element={
+              <PageWrapper>
+                <TasksAndGoals />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="tasks-goals/:tab/:subtab"
             element={
               <PageWrapper>
                 <TasksAndGoals />
@@ -472,23 +517,23 @@ function AnimatedRoutes() {
           />
           <Route
             path="routine-tasks"
-            element={<Navigate to="/planning/tasks-goals" replace />}
+            element={<Navigate to="/planning/tasks-goals/routine" replace />}
           />
           <Route
             path="goals"
-            element={<Navigate to="/planning/tasks-goals" replace />}
+            element={<Navigate to="/planning/tasks-goals/goals" replace />}
           />
           <Route
             path="daily"
-            element={<Navigate to="/planning/tasks-goals" replace />}
+            element={<Navigate to="/planning/tasks-goals/daily" replace />}
           />
           <Route
             path="today-tasks"
-            element={<Navigate to="/planning/tasks-goals" replace />}
+            element={<Navigate to="/planning/tasks-goals/daily" replace />}
           />
           <Route
             path="daily-checklist"
-            element={<Navigate to="/planning/tasks-goals" replace />}
+            element={<Navigate to="/planning/tasks-goals/daily" replace />}
           />
           <Route
             path="reflections"
@@ -500,6 +545,10 @@ function AnimatedRoutes() {
           />
           <Route
             path="workout"
+            element={<Navigate to="/planning/workout/today" replace />}
+          />
+          <Route
+            path="workout/:tab"
             element={
               <PageWrapper>
                 <WorkoutPage />
@@ -508,6 +557,10 @@ function AnimatedRoutes() {
           />
           <Route
             path="nutrition"
+            element={<Navigate to="/planning/nutrition/log" replace />}
+          />
+          <Route
+            path="nutrition/:tab"
             element={
               <PageWrapper>
                 <NutritionPage />
@@ -527,14 +580,6 @@ function AnimatedRoutes() {
             element={<Navigate to="/planning/weekly-planning" replace />}
           />
           <Route
-            path="analytics"
-            element={
-              <PageWrapper>
-                <PersonalAnalytics />
-              </PageWrapper>
-            }
-          />
-          <Route
             path="body-metrics"
             element={
               <PageWrapper>
@@ -551,15 +596,11 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="setup"
-            element={
-              <PageWrapper>
-                <OnboardingWizard />
-              </PageWrapper>
-            }
+            path="emotional-wellness"
+            element={<Navigate to="/planning/emotional-wellness/dashboard" replace />}
           />
           <Route
-            path="emotional-wellness"
+            path="emotional-wellness/:tab"
             element={
               <PageWrapper>
                 <EmotionalWellness />
@@ -588,28 +629,12 @@ function AnimatedRoutes() {
           }
         />
 
-        {/* Bank Reconciliation */}
-        <Route
-          path="/bank-reconciliation"
-          element={
-            <PageWrapper>
-              <BankReconciliation />
-            </PageWrapper>
-          }
-        />
+        {/* Bank Reconciliation — acessada só pelas contas em /accounts */}
         <Route
           path="/bank-reconciliation/:importId"
           element={
             <PageWrapper>
               <BankReconciliationDetail />
-            </PageWrapper>
-          }
-        />
-        <Route
-          path="/bank-reconciliation/import"
-          element={
-            <PageWrapper>
-              <BankStatementImport />
             </PageWrapper>
           }
         />
@@ -643,6 +668,10 @@ function AnimatedRoutes() {
         {/* Finance merged pages */}
         <Route
           path="/finance/agenda"
+          element={<Navigate to="/finance/agenda/calendar" replace />}
+        />
+        <Route
+          path="/finance/agenda/:tab"
           element={
             <PageWrapper>
               <FinanceAgendaPage />
@@ -651,6 +680,10 @@ function AnimatedRoutes() {
         />
         <Route
           path="/finance/analytics"
+          element={<Navigate to="/finance/analytics/spending-insights" replace />}
+        />
+        <Route
+          path="/finance/analytics/:tab"
           element={
             <PageWrapper>
               <FinanceAnalyticsPage />
@@ -659,6 +692,10 @@ function AnimatedRoutes() {
         />
         <Route
           path="/finance/financial-health"
+          element={<Navigate to="/finance/financial-health/net-worth" replace />}
+        />
+        <Route
+          path="/finance/financial-health/:tab"
           element={
             <PageWrapper>
               <FinancialHealthPage />
@@ -669,31 +706,31 @@ function AnimatedRoutes() {
         {/* Finance extras — kept for direct access + backward-compat redirects */}
         <Route
           path="/finance/calendar"
-          element={<Navigate to="/finance/agenda" replace />}
+          element={<Navigate to="/finance/agenda/calendar" replace />}
         />
         <Route
           path="/finance/monthly-planner"
-          element={<Navigate to="/finance/agenda" replace />}
+          element={<Navigate to="/finance/agenda/monthly-planner" replace />}
         />
         <Route
           path="/finance/spending-insights"
-          element={<Navigate to="/finance/analytics" replace />}
+          element={<Navigate to="/finance/analytics/spending-insights" replace />}
         />
         <Route
           path="/finance/month-comparison"
-          element={<Navigate to="/finance/analytics" replace />}
+          element={<Navigate to="/finance/analytics/month-comparison" replace />}
         />
         <Route
           path="/finance/net-worth"
-          element={<Navigate to="/finance/financial-health" replace />}
+          element={<Navigate to="/finance/financial-health/net-worth" replace />}
         />
         <Route
           path="/finance/debt-payoff"
-          element={<Navigate to="/finance/financial-health" replace />}
+          element={<Navigate to="/finance/financial-health/debt-payoff" replace />}
         />
         <Route
           path="/finance/subscriptions"
-          element={<Navigate to="/recurring" replace />}
+          element={<Navigate to="/recurring/fixed-expenses" replace />}
         />
 
         {/* Agents */}
@@ -815,7 +852,7 @@ function App() {
     // sem depender de useReducedMotion() manual em cada um dos ~38 arquivos
     // que usam motion.*. O fallback CSS abaixo cobre apenas animação via
     // classes/keyframes do Tailwind, que o Framer Motion não usa.
-    <MotionConfig reducedMotion="user">
+    <MotionConfig reducedMotion="user" transition={transitions.normal}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <EnvironmentBanner />

@@ -58,6 +58,7 @@ from expenses.models import Expense, FixedExpense
 from loans.models import Loan
 from members.models import Member
 from payables.models import Payable
+from receivables.models import Receivable
 from revenues.models import Revenue
 
 _TEST_FERNET_KEY = Fernet.generate_key().decode()
@@ -435,6 +436,16 @@ class BalanceForecastViewTest(_DashboardCoverageBaseTestCase):
             created_by=self.user,
         )
 
+        Receivable.objects.create(
+            description="Software sale",
+            value=Decimal("4000.00"),
+            received_value=Decimal("1000.00"),
+            date=date.today(),
+            category="salary",
+            status="active",
+            created_by=self.user,
+        )
+
         url = reverse("balance-forecast")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -442,7 +453,9 @@ class BalanceForecastViewTest(_DashboardCoverageBaseTestCase):
         self.assertEqual(response.data["loans_to_receive"], 800.0)
         self.assertEqual(response.data["loans_to_pay"], 400.0)
         self.assertEqual(response.data["pending_payables"], 250.0)
-        self.assertIn("summary", response.data)
+        self.assertEqual(response.data["pending_receivables"], 3000.0)
+        # receitas 200 + empréstimos 800 + recebíveis 3000
+        self.assertEqual(response.data["summary"]["total_income"], 4000.0)
 
     def test_forecast_without_member(self):
         # user with no linked Member -> loans_to_receive/pay stay at 0

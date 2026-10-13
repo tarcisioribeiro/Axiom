@@ -14,14 +14,16 @@ from notifications.serializers import (
     NotificationPreferenceSerializer,
     NotificationSerializer,
 )
+from notifications.services import upsert_notification
 
 
 def _generate_notifications(member):
     """
     Gera notificações para o membro, consultando tarefas, payables, loans e
     bills.
-    Usa get_or_create para evitar duplicatas (unique_together).
-    Limpa notificações de itens já resolvidos.
+    Usa upsert_notification (notifications.services) para evitar duplicatas
+    (unique_together) e revalidar notificações soft-deletadas sem colidir
+    com a constraint. Limpa notificações de itens já resolvidos.
     """
     today = timezone.now().date()
     soon = today + timedelta(days=3)
@@ -36,12 +38,12 @@ def _generate_notifications(member):
         status__in=["pending", "in_progress"],
     )
     for task in today_tasks:
-        Notification.objects.get_or_create(
-            owner=member,
-            notification_type="task_today",
-            content_type="task_instance",
-            object_id=task.id,
-            defaults={
+        upsert_notification(
+            member,
+            "task_today",
+            "task_instance",
+            task.id,
+            {
                 "title": f"Tarefa do dia: {task.task_name}",
                 "message": task.task_description or "",
                 "due_date": task.scheduled_date,
@@ -56,12 +58,12 @@ def _generate_notifications(member):
         status__in=["pending", "in_progress"],
     )
     for task in overdue_tasks:
-        Notification.objects.get_or_create(
-            owner=member,
-            notification_type="task_overdue",
-            content_type="task_instance",
-            object_id=task.id,
-            defaults={
+        upsert_notification(
+            member,
+            "task_overdue",
+            "task_instance",
+            task.id,
+            {
                 "title": f"Tarefa atrasada: {task.task_name}",
                 "message": (
                     f"Programada para"
@@ -95,12 +97,12 @@ def _generate_notifications(member):
         status="active",
     )
     for payable in due_soon_payables:
-        Notification.objects.get_or_create(
-            owner=member,
-            notification_type="payable_due_soon",
-            content_type="payable",
-            object_id=payable.id,
-            defaults={
+        upsert_notification(
+            member,
+            "payable_due_soon",
+            "payable",
+            payable.id,
+            {
                 "title": f"Vencimento próximo: {payable.description}",
                 "message": f'Vence em {payable.due_date.strftime("%d/%m/%Y")}',
                 "due_date": payable.due_date,
@@ -115,12 +117,12 @@ def _generate_notifications(member):
         status__in=["active", "overdue"],
     )
     for payable in overdue_payables:
-        Notification.objects.get_or_create(
-            owner=member,
-            notification_type="payable_overdue",
-            content_type="payable",
-            object_id=payable.id,
-            defaults={
+        upsert_notification(
+            member,
+            "payable_overdue",
+            "payable",
+            payable.id,
+            {
                 "title": f"Valor a pagar atrasado: {payable.description}",
                 "message": (
                     "Venceu em " + payable.due_date.strftime("%d/%m/%Y")
@@ -154,12 +156,12 @@ def _generate_notifications(member):
         status="active",
     )
     for loan in due_soon_loans:
-        Notification.objects.get_or_create(
-            owner=member,
-            notification_type="loan_due_soon",
-            content_type="loan",
-            object_id=loan.id,
-            defaults={
+        upsert_notification(
+            member,
+            "loan_due_soon",
+            "loan",
+            loan.id,
+            {
                 "title": (
                     "Empréstimo próximo do vencimento: " + loan.description
                 ),
@@ -175,12 +177,12 @@ def _generate_notifications(member):
         status__in=["active", "overdue"],
     )
     for loan in overdue_loans:
-        Notification.objects.get_or_create(
-            owner=member,
-            notification_type="loan_overdue",
-            content_type="loan",
-            object_id=loan.id,
-            defaults={
+        upsert_notification(
+            member,
+            "loan_overdue",
+            "loan",
+            loan.id,
+            {
                 "title": f"Empréstimo atrasado: {loan.description}",
                 "message": f'Venceu em {loan.due_date.strftime("%d/%m/%Y")}',
                 "due_date": loan.due_date,
@@ -213,12 +215,12 @@ def _generate_notifications(member):
         status__in=["open", "closed"],
     )
     for bill in due_soon_bills:
-        Notification.objects.get_or_create(
-            owner=member,
-            notification_type="bill_due_soon",
-            content_type="bill",
-            object_id=bill.id,
-            defaults={
+        upsert_notification(
+            member,
+            "bill_due_soon",
+            "bill",
+            bill.id,
+            {
                 "title": (
                     "Fatura próxima do vencimento: " + bill.credit_card.name
                 ),
@@ -234,12 +236,12 @@ def _generate_notifications(member):
         status__in=["open", "closed"],
     )
     for bill in overdue_bills:
-        Notification.objects.get_or_create(
-            owner=member,
-            notification_type="bill_overdue",
-            content_type="bill",
-            object_id=bill.id,
-            defaults={
+        upsert_notification(
+            member,
+            "bill_overdue",
+            "bill",
+            bill.id,
+            {
                 "title": f"Fatura atrasada: {bill.credit_card.name}",
                 "message": f'Venceu em {bill.due_date.strftime("%d/%m/%Y")}',
                 "due_date": bill.due_date,
@@ -279,12 +281,12 @@ def _generate_notifications(member):
 
         if actual_pct >= 100:
             achieved_goal_ids.append(goal.id)
-            Notification.objects.get_or_create(
-                owner=member,
-                notification_type="reading_goal_achieved",
-                content_type="reading_goal",
-                object_id=goal.id,
-                defaults={
+            upsert_notification(
+                member,
+                "reading_goal_achieved",
+                "reading_goal",
+                goal.id,
+                {
                     "title": f"Meta de leitura {current_year} concluída!",
                     "message": (
                         f"Parabéns! Você leu {goal.books_read_this_year}"
@@ -294,12 +296,12 @@ def _generate_notifications(member):
                 },
             )
         elif lag >= 20:
-            Notification.objects.get_or_create(
-                owner=member,
-                notification_type="reading_goal_behind",
-                content_type="reading_goal",
-                object_id=goal.id,
-                defaults={
+            upsert_notification(
+                member,
+                "reading_goal_behind",
+                "reading_goal",
+                goal.id,
+                {
                     "title": f"Meta de leitura {current_year} atrasada",
                     "message": (
                         f"Você leu {goal.books_read_this_year}"

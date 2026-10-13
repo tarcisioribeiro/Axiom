@@ -29,7 +29,10 @@ logger = logging.getLogger(__name__)
 
 _GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 # Groq aposenta modelos com frequência — sobrescreva via GROQ_MODEL no admin.
+# Se o GROQ_MODEL configurado for aposentado, _groq_model() cai neste default.
 GROQ_DEFAULT_MODEL = "openai/gpt-oss-120b"
+_GROQ_MODELS_CACHE_KEY = "llm:groq_models"
+_GROQ_MODELS_CACHE_TTL = 3600
 _OPENAI_BASE_URL = "https://api.openai.com/v1"
 
 _FALLBACK_ERROR: dict[str, str] = {
@@ -57,6 +60,44 @@ def _get_anthropic_client() -> Any:
 
 # ── Helpers
 # ───────────────────────────────────────────────────────────────────
+
+
+def _fetch_groq_models() -> list[str]:
+    """Lista os modelos do Groq e guarda no cache (pode levantar exceção)."""
+    from django.core.cache import cache as django_cache
+
+    resp = requests.get(
+        f"{_GROQ_BASE_URL}/models",
+        headers={"Authorization": f"Bearer {_cfg('GROQ_API_KEY')}"},
+        timeout=5,
+    )
+    resp.raise_for_status()
+    ids = [m["id"] for m in resp.json().get("data", [])]
+    django_cache.set(
+        _GROQ_MODELS_CACHE_KEY, ids, timeout=_GROQ_MODELS_CACHE_TTL
+    )
+    return ids
+
+
+def _groq_model() -> str:
+    """GROQ_MODEL configurado; se aposentado no Groq, GROQ_DEFAULT_MODEL."""
+    from django.core.cache import cache as django_cache
+
+    model = _cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)
+    ids = django_cache.get(_GROQ_MODELS_CACHE_KEY)
+    if ids is None:
+        try:
+            ids = _fetch_groq_models()
+        except requests.RequestException:
+            return model
+    if ids and model not in ids and GROQ_DEFAULT_MODEL in ids:
+        logger.warning(
+            "GROQ_MODEL '%s' não existe mais no Groq — usando '%s'",
+            model,
+            GROQ_DEFAULT_MODEL,
+        )
+        return GROQ_DEFAULT_MODEL
+    return model
 
 
 def _error_message(language: str = "pt-BR") -> str:
@@ -414,9 +455,8 @@ class LLMClient:
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> str:
         groq_api_key = _cfg("GROQ_API_KEY", "")
-        groq_model = _cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
-        effective_model = model or groq_model
+        effective_model = model or _groq_model()
         resp = requests.post(
             f"{_GROQ_BASE_URL}/chat/completions",
             headers={
@@ -439,9 +479,8 @@ class LLMClient:
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> Generator[str, None, None]:
         groq_api_key = _cfg("GROQ_API_KEY", "")
-        groq_model = _cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
-        effective_model = model or groq_model
+        effective_model = model or _groq_model()
         resp = requests.post(
             f"{_GROQ_BASE_URL}/chat/completions",
             headers={
@@ -638,16 +677,16 @@ class LLMClient:
         try:
             if provider == "groq":
                 model = _cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)
-                resp = requests.get(
-                    f"{_GROQ_BASE_URL}/models",
-                    headers={"Authorization": f"Bearer {_cfg(key_name)}"},
-                    timeout=5,
-                )
-                if resp.status_code == 401:
-                    return ["GROQ_API_KEY inválida"]
-                resp.raise_for_status()
-                ids = {m["id"] for m in resp.json().get("data", [])}
-                if model not in ids:
+                try:
+                    ids = _fetch_groq_models()
+                except requests.HTTPError as exc:
+                    if (
+                        exc.response is not None
+                        and exc.response.status_code == 401
+                    ):
+                        return ["GROQ_API_KEY inválida"]
+                    raise
+                if model not in ids and GROQ_DEFAULT_MODEL not in ids:
                     return [
                         f"modelo '{model}' não existe mais no Groq"
                         " — atualize GROQ_MODEL"
@@ -701,6 +740,12 @@ class LLMClient:
             label = "Provider" if i == 0 else "Fallback"
             for problem in cls._provider_problems(provider):
                 warnings.append(f"{label} '{provider}': {problem}.")
+        configured = _cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)
+        if "groq" in providers and _groq_model() != configured:
+            warnings.append(
+                f"GROQ_MODEL '{configured}' não existe mais no Groq — usando"
+                f" '{GROQ_DEFAULT_MODEL}'; atualize GROQ_MODEL."
+            )
         if len(providers) == 1:
             warnings.append(
                 "Nenhum fallback configurado (LLM_FALLBACK_PROVIDERS vazio)."
@@ -722,7 +767,7 @@ class LLMClient:
     def list_models(cls) -> list[str]:
         provider = _cfg("LLM_PROVIDER", "ollama")
         if provider == "groq":
-            return [_cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)]
+            return [_groq_model()]
         if provider == "openai":
             return [_cfg("OPENAI_MODEL", "gpt-4o-mini")]
         ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")

@@ -1,4 +1,4 @@
-import { FileText, Image, Loader2 } from 'lucide-react';
+import { FileText, Image, Loader2, Receipt, X } from 'lucide-react';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -57,17 +57,17 @@ export function ReceiptPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        size="lg"
-        className="custom-scrollbar max-h-[90vh] overflow-y-auto"
-      >
+      <DialogContent size="lg">
         <DialogHeader>
-          <DialogTitle>{t('receipt.title', { typeLabel: data.typeLabel })}</DialogTitle>
+          <DialogTitle className="gap-sm flex items-center">
+            <Receipt className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
+            {t('receipt.title', { typeLabel: data.typeLabel })}
+          </DialogTitle>
         </DialogHeader>
 
         {/* Receipt Preview (scaled for display) */}
-        <div className="custom-scrollbar bg-muted p-md flex justify-center overflow-auto rounded-lg">
-          <div className="origin-top scale-[0.65] transform">
+        <div className="bg-muted p-md flex justify-center overflow-auto rounded-lg">
+          <div style={{ zoom: 0.65 }}>
             <ReceiptTemplate data={data} />
           </div>
         </div>
@@ -96,14 +96,22 @@ export function ReceiptPreviewDialog({
         <DialogFooter className="gap-sm flex-col sm:flex-row">
           <Button
             variant="outline"
+            onClick={() => handleOpenChange(false)}
+            className="w-full sm:mr-auto sm:w-auto"
+          >
+            <X className="h-4 w-4" />
+            {t('common.actions.close')}
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => handleExport('png')}
             disabled={isGenerating}
             className="w-full sm:w-auto"
           >
             {isGenerating ? (
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Image className="mr-sm h-4 w-4" />
+              <Image className="h-4 w-4" />
             )}
             {t('receipt.button.exportPng')}
           </Button>
@@ -113,9 +121,9 @@ export function ReceiptPreviewDialog({
             className="w-full sm:w-auto"
           >
             {isGenerating ? (
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <FileText className="mr-sm h-4 w-4" />
+              <FileText className="h-4 w-4" />
             )}
             {t('receipt.button.exportPdf')}
           </Button>

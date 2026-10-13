@@ -1,12 +1,28 @@
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Check, ChevronDown, ChevronUp } from 'lucide-react';
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
 
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
-const SelectValue = SelectPrimitive.Value;
+
+/** Valor do Select; sem `placeholder`, mostra "Selecione". */
+const SelectValue = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Value>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Value>
+>(({ placeholder, ...props }, ref) => {
+  const { t } = useTranslation();
+  return (
+    <SelectPrimitive.Value
+      ref={ref}
+      placeholder={placeholder ?? t('common.placeholders.select')}
+      {...props}
+    />
+  );
+});
+SelectValue.displayName = SelectPrimitive.Value.displayName;
 
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
@@ -17,7 +33,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      'border-border/70 bg-background py-sm ring-offset-background placeholder:text-muted-foreground/50 focus-visible:border-ring/50 focus-visible:ring-ring flex h-9 w-full items-center justify-between rounded-md border px-3 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+      'border-border/70 bg-background py-sm ring-offset-background placeholder:text-muted-foreground/50 focus-visible:border-ring/50 focus-visible:ring-ring aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-destructive/50 flex h-9 w-full items-center justify-between rounded-md border px-3 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:ring-2',
       className
     )}
     {...props}
@@ -75,7 +91,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 border-border/60 bg-popover/95 text-popover-foreground relative z-50 max-h-96 min-w-[8rem] origin-[--radix-popper-transform-origin] overflow-hidden rounded-lg border shadow-lg backdrop-blur-sm',
+        'data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out border-border/60 bg-popover/95 text-popover-foreground relative z-50 max-h-96 min-w-[8rem] origin-(--radix-popper-transform-origin) overflow-hidden rounded-lg border shadow-lg backdrop-blur-sm',
         position === 'popper' &&
           'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
         className

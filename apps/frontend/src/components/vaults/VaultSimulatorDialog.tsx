@@ -1,18 +1,27 @@
-import { Calculator, TrendingUp } from 'lucide-react';
+import {
+  Calculator,
+  Percent,
+  PiggyBank,
+  Timer,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import type { SimulatorScenarioResult } from '@/services/vault-simulator-service';
@@ -68,8 +77,9 @@ export function VaultSimulatorDialog({
       setResults(data.scenarios);
     } catch (err) {
       toast({
-        title: t('pages.vaultSimulator.simulationError'),
-        description: getErrorMessage(err),
+        title: t('pages.vaultSimulator.simulationError', {
+          reason: getErrorMessage(err),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -84,17 +94,22 @@ export function VaultSimulatorDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
-            <TrendingUp className="h-5 w-5" />
-            {t('pages.vaultSimulator.title')} — {vault?.description}
+            <TrendingUp className="h-5 w-5" aria-hidden="true" />
+            {t('pages.vaultSimulator.title')}
           </DialogTitle>
-          <DialogDescription>{t('pages.vaults.simulatorDesc')}</DialogDescription>
+          <DialogDescription className="sr-only">
+            {t('pages.vaults.simulatorDesc')}
+          </DialogDescription>
         </DialogHeader>
         <div className="gap-md grid sm:grid-cols-2">
           <div className="space-y-xs">
-            <Label className="text-xs">{t('pages.vaultSimulator.initialAmount')}</Label>
+            <Label className="gap-xs flex items-center text-xs">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.vaultSimulator.initialAmount')}
+            </Label>
             <CurrencyInput
               min="0"
               value={initialAmount}
@@ -102,7 +117,8 @@ export function VaultSimulatorDialog({
             />
           </div>
           <div className="space-y-xs">
-            <Label className="text-xs">
+            <Label className="gap-xs flex items-center text-xs">
+              <PiggyBank className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.vaultSimulator.monthlyDeposit')}
             </Label>
             <CurrencyInput
@@ -112,35 +128,43 @@ export function VaultSimulatorDialog({
             />
           </div>
           <div className="space-y-xs">
-            <Label className="text-xs">{t('pages.vaultSimulator.annualRate')}</Label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              value={annualRate}
-              onChange={(e) => setAnnualRate(e.target.value)}
+            <Label className="gap-xs flex items-center justify-center text-xs">
+              <Percent className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.vaultSimulator.annualRate')}
+            </Label>
+            <DecimalInput
+              unit="%"
               placeholder="12,00"
+              aria-label={t('pages.vaultSimulator.annualRate')}
+              value={annualRate}
+              onChange={(v) => setAnnualRate(v === null ? '' : String(v))}
+              className="mx-auto"
             />
           </div>
           <div className="space-y-xs">
-            <Label className="text-xs">{t('pages.vaultSimulator.termMonths')}</Label>
-            <Input
-              type="number"
-              min="1"
-              max="600"
-              step="1"
-              value={months}
-              onChange={(e) => setMonths(e.target.value)}
+            <Label className="gap-xs flex items-center text-xs">
+              <Timer className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.vaultSimulator.termMonths')}
+            </Label>
+            <NumberStepper
+              min={1}
+              max={600}
+              optional
               placeholder="12"
+              aria-label={t('pages.vaultSimulator.termMonths')}
+              value={months === '' ? null : Number(months)}
+              onChange={(v) => setMonths(v === null ? '' : String(v))}
             />
           </div>
         </div>
-        <Button onClick={() => void handleSimulate()} disabled={isSimulating}>
-          <Calculator className="mr-sm h-4 w-4" />
-          {isSimulating
-            ? t('pages.vaultSimulator.calculating')
-            : t('pages.vaultSimulator.calculate')}
-        </Button>
+        <div className="flex justify-center">
+          <Button onClick={() => void handleSimulate()} disabled={isSimulating}>
+            <Calculator className="h-4 w-4" aria-hidden="true" />
+            {isSimulating
+              ? t('pages.vaultSimulator.calculating')
+              : t('pages.vaultSimulator.calculate')}
+          </Button>
+        </div>
         {results && results.length > 0 && (
           <div className="p-md space-y-3 rounded-lg border">
             {results.map((s, idx) => (
@@ -209,6 +233,7 @@ export function VaultSimulatorDialog({
             )}
           </div>
         )}
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

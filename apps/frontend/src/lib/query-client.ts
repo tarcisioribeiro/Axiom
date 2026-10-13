@@ -64,8 +64,7 @@ export const queryClient = new QueryClient({
         lastErrorShownAt = now;
         playErrorSound();
         toast({
-          title: 'Erro ao carregar dados',
-          description: getErrorMessage(error),
+          title: `Não foi possível carregar os dados. ${getErrorMessage(error)}`,
           variant: 'destructive',
         });
       }

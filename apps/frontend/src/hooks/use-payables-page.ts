@@ -51,8 +51,7 @@ export function usePayablesPage(): UsePayablesPageReturn {
         };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { payables: [] as Payable[], currentUserMember: null };
@@ -82,13 +81,11 @@ export function usePayablesPage(): UsePayablesPageReturn {
       await payablesService.delete(payable.id);
       toast({
         title: t('pages.payables.deleted'),
-        description: t('pages.payables.deletedDesc'),
       });
       void queryClient.invalidateQueries({ queryKey: ['payables'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -102,21 +99,18 @@ export function usePayablesPage(): UsePayablesPageReturn {
         await payablesService.update(selectedPayable.id, dataToSend);
         toast({
           title: t('pages.payables.updated'),
-          description: t('pages.payables.updatedDesc'),
         });
       } else {
         await payablesService.create(dataToSend);
         toast({
           title: t('pages.payables.created'),
-          description: t('pages.payables.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void queryClient.invalidateQueries({ queryKey: ['payables'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

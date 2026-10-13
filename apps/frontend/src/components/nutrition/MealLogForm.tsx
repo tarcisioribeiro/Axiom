@@ -2,21 +2,33 @@
 import {
   CalendarDays,
   CheckCircle2,
+  Clock,
+  Flame,
   Loader2,
   Moon,
+  Save,
   StickyNote,
   Sun,
   Sunrise,
   UtensilsCrossed,
+  X,
   Zap,
 } from 'lucide-react';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/ui/date-picker';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { FormSection } from '@/components/ui/form-section';
 import { Label } from '@/components/ui/label';
 import {
@@ -29,8 +41,9 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { TimePicker } from '@/components/ui/time-picker';
 import { useToast } from '@/hooks/use-toast';
-import { cn, formatLocalDate } from '@/lib/utils';
-import type { MealLog, MealLogFormData, MealType } from '@/types/nutrition';
+import { optionCalories } from '@/lib/nutrition-calories';
+import { cn, formatLocalDate, formatQuantity } from '@/lib/utils';
+import type { MealLog, MealLogFormData, MealType, MenuOption } from '@/types/nutrition';
 
 interface MealLogFormProps {
   log?: MealLog;
@@ -68,7 +81,8 @@ export function MealLogForm({
 }: MealLogFormProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const today = prefillDate ?? new Date().toISOString().slice(0, 10);
+  const today = prefillDate ?? formatLocalDate(new Date());
+  const nowTime = new Date().toTimeString().split(' ')[0].substring(0, 5);
   const initialMealType = mealTypes.find(
     (mt) => mt.id === (log?.meal_type ?? prefillMealTypeId)
   );
@@ -88,7 +102,7 @@ export function MealLogForm({
       date: log?.date ?? today,
       time: log
         ? timeInputValue(log.time)
-        : timeInputValue(initialMealType?.suggested_time),
+        : timeInputValue(initialMealType?.suggested_time) || nowTime,
       notes: log?.notes ?? '',
       owner: ownerId,
     },
@@ -98,7 +112,7 @@ export function MealLogForm({
   // so a later meal-type change can safely replace it without clobbering a
   // time the user picked manually.
   const autoFilledTimeRef = useRef<string | null>(
-    log ? null : timeInputValue(initialMealType?.suggested_time) || null
+    log ? null : timeInputValue(initialMealType?.suggested_time) || nowTime
   );
 
   useEffect(() => {
@@ -116,6 +130,7 @@ export function MealLogForm({
     }
   }, [log, ownerId, reset]);
 
+  const [detailOption, setDetailOption] = useState<MenuOption | null>(null);
   const selectedMealTypeId = watch('meal_type');
   const isFreeMeal = watch('is_free_meal');
   const selectedMenuOption = watch('menu_option');
@@ -130,219 +145,239 @@ export function MealLogForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
-      {/* Header */}
-      <div className="gap-md bg-category-nutrition/10 px-md py-sm ring-category-nutrition/20 flex items-center rounded-lg ring-1">
-        <div className="bg-category-nutrition/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-          <CheckCircle2 className="text-category-nutrition h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-category-nutrition text-sm font-semibold">
-            {log
-              ? t('pages.nutritionLog.editLogTitle')
-              : t('pages.nutritionLog.newLogTitle')}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {selectedMealType?.name ?? t('pages.nutritionLog.newLogDesc')}
-          </p>
-        </div>
-      </div>
-
-      {/* Data e hora */}
-      <FormSection title="Data & Hora" icon={CalendarDays}>
-        <div className="gap-sm grid grid-cols-2">
-          <div className="space-y-xs">
-            <Label className="text-muted-foreground text-xs">
-              {t('pages.nutritionLog.logDate')}
-            </Label>
-            <DatePicker
-              value={watch('date')}
-              onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
-              disabled={isLoading}
-            />
-          </div>
-          <div className="space-y-xs">
-            <Label className="text-muted-foreground text-xs">
-              {t('pages.nutritionLog.logTime')}
-            </Label>
-            <TimePicker
-              value={watch('time') || undefined}
-              onChange={(t) => {
-                setValue('time', t ?? '');
-                autoFilledTimeRef.current = null;
-              }}
-              disabled={isLoading}
-            />
-          </div>
-        </div>
-      </FormSection>
-
-      {/* Tipo de refeição */}
-      <FormSection title={t('pages.nutritionLog.mealType')} icon={UtensilsCrossed}>
-        <Select
-          value={selectedMealTypeId ? String(selectedMealTypeId) : ''}
-          onValueChange={(v) => {
-            setValue('meal_type', Number(v));
-            setValue('menu_option', undefined);
-
-            const currentTime = watch('time');
-            if (!currentTime || currentTime === autoFilledTimeRef.current) {
-              const newMealType = mealTypes.find((mt) => mt.id === Number(v));
-              const suggested = timeInputValue(newMealType?.suggested_time);
-              autoFilledTimeRef.current = suggested || null;
-              setValue('time', suggested);
-            }
-          }}
-        >
-          <SelectTrigger className={cn(errors.meal_type && 'border-destructive')}>
-            <SelectValue placeholder={t('pages.nutritionLog.mealTypePlaceholder')} />
-          </SelectTrigger>
-          <SelectContent>
-            {mealTypes.map((mt) => (
-              <SelectItem key={mt.id} value={String(mt.id)}>
-                <span className="gap-sm flex items-center">
-                  {getPeriodIcon(mt.suggested_time)}
-                  {mt.name}
-                  {mt.suggested_time && (
-                    <span className="text-muted-foreground text-xs">
-                      {mt.suggested_time.slice(0, 5)}
-                    </span>
-                  )}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FormSection>
-
-      {/* Refeição livre */}
-      <div
-        className={cn(
-          'gap-sm p-sm flex items-start rounded-lg border-2 transition',
-          isFreeMeal ? 'border-primary/30 bg-primary/5' : 'border-border bg-card'
-        )}
-      >
-        <Checkbox
-          id="free-meal"
-          checked={isFreeMeal}
-          onCheckedChange={(v) => {
-            setValue('is_free_meal', Boolean(v));
-            if (v) setValue('menu_option', undefined);
-          }}
-          className="mt-0.5"
-        />
-        <div>
-          <Label htmlFor="free-meal" className="gap-xs flex items-center font-medium">
-            <Zap className="text-primary h-3.5 w-3.5" />
-            {t('pages.nutritionLog.isFreeMeal')}
-          </Label>
-          <p className="text-muted-foreground text-xs">
-            {t('pages.nutritionLog.isFreeMealDesc')}
-          </p>
-        </div>
-      </div>
-
-      {/* Opções de cardápio */}
-      {selectedMealType && !isFreeMeal && selectedMealType.options.length > 0 && (
-        <FormSection title={t('pages.nutritionLog.menuOption')} icon={CheckCircle2}>
-          <div className="gap-sm grid">
-            {selectedMealType.options.map((opt) => {
-              const isSelected = selectedMenuOption === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() =>
-                    setValue('menu_option', isSelected ? undefined : opt.id)
-                  }
-                  className={cn(
-                    'p-sm rounded-lg border-2 text-left transition',
-                    isSelected
-                      ? 'bg-category-nutrition/8 border-category-nutrition/50 ring-category-nutrition/20 ring-1'
-                      : 'border-border bg-card hover:border-category-nutrition/30 hover:bg-category-nutrition/5'
-                  )}
-                >
-                  <div className="mb-xs gap-xs flex items-center">
-                    <div
-                      className={cn(
-                        'flex h-5 w-5 items-center justify-center rounded-full border-2 transition',
-                        isSelected
-                          ? 'border-category-nutrition bg-category-nutrition'
-                          : 'border-border'
-                      )}
-                    >
-                      {isSelected && (
-                        <svg
-                          width="8"
-                          height="8"
-                          viewBox="0 0 8 8"
-                          fill="none"
-                          className="text-white"
-                        >
-                          <path
-                            d="M1.5 4L3 5.5L6.5 2"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                    <p className="text-sm font-semibold">{opt.name}</p>
-                  </div>
-                  {opt.ingredients.length > 0 && (
-                    <ul className="ml-xs space-y-0.5">
-                      {opt.ingredients.map((ing) => (
-                        <li
-                          key={ing.id}
-                          className="gap-xs text-muted-foreground flex items-center text-xs"
-                        >
-                          <span className="bg-category-nutrition/40 h-1 w-1 rounded-full" />
-                          {ing.is_optional && (
-                            <span className="italic opacity-60">[opt.]</span>
-                          )}
-                          <span>
-                            {ing.food_name}
-                            {ing.quantity
-                              ? ` — ${ing.quantity} ${t(`units.${ing.unit}`)}`
-                              : ''}
-                            {ing.notes ? ` (${ing.notes})` : ''}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </button>
-              );
-            })}
+    <>
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+        {/* Data e hora */}
+        <FormSection title="Data & Hora" icon={CalendarDays}>
+          <div className="gap-sm grid grid-cols-2">
+            <div className="space-y-xs">
+              <Label className="gap-xs text-muted-foreground flex items-center text-xs">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.nutritionLog.logDate')}
+              </Label>
+              <DatePicker
+                value={watch('date')}
+                onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-xs">
+              <Label className="gap-xs text-muted-foreground flex items-center text-xs">
+                <Clock className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.nutritionLog.logTime')}
+              </Label>
+              <TimePicker
+                value={watch('time') || undefined}
+                onChange={(t) => {
+                  setValue('time', t ?? '');
+                  autoFilledTimeRef.current = null;
+                }}
+                disabled={isLoading}
+              />
+            </div>
           </div>
         </FormSection>
-      )}
 
-      {/* Observações */}
-      <FormSection title={t('pages.nutritionLog.logNotes')} icon={StickyNote}>
-        <Textarea
-          placeholder={t('pages.nutritionLog.logNotesPlaceholder')}
-          rows={2}
-          {...register('notes')}
-          className="resize-none"
-        />
-      </FormSection>
+        {/* Tipo de refeição */}
+        <FormSection title={t('pages.nutritionLog.mealType')} icon={UtensilsCrossed}>
+          <Select
+            value={selectedMealTypeId ? String(selectedMealTypeId) : ''}
+            onValueChange={(v) => {
+              setValue('meal_type', Number(v));
+              setValue('menu_option', undefined);
 
-      <div className="gap-sm border-border pt-md flex justify-end border-t">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          {t('common.actions.cancel')}
-        </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-category-nutrition hover:bg-category-nutrition/90"
+              const currentTime = watch('time');
+              if (!currentTime || currentTime === autoFilledTimeRef.current) {
+                const newMealType = mealTypes.find((mt) => mt.id === Number(v));
+                const suggested = timeInputValue(newMealType?.suggested_time);
+                autoFilledTimeRef.current = suggested || null;
+                setValue('time', suggested);
+              }
+            }}
+          >
+            <SelectTrigger
+              disabled={prefillMealTypeId !== undefined || isLoading}
+              className={cn(errors.meal_type && 'border-destructive')}
+            >
+              <SelectValue placeholder={t('pages.nutritionLog.mealTypePlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              {mealTypes.map((mt) => (
+                <SelectItem key={mt.id} value={String(mt.id)}>
+                  <span className="gap-sm flex items-center">
+                    {getPeriodIcon(mt.suggested_time)}
+                    {mt.name}
+                    {mt.suggested_time && (
+                      <span className="text-muted-foreground text-xs">
+                        {mt.suggested_time.slice(0, 5)}
+                      </span>
+                    )}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormSection>
+
+        {/* Refeição livre */}
+        <div
+          className={cn(
+            'gap-sm p-sm flex items-start rounded-lg border-2 transition',
+            isFreeMeal ? 'border-primary/30 bg-primary/5' : 'border-border bg-card'
+          )}
         >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {t('common.actions.save')}
-        </Button>
-      </div>
-    </form>
+          <Checkbox
+            id="free-meal"
+            checked={isFreeMeal}
+            onCheckedChange={(v) => {
+              setValue('is_free_meal', Boolean(v));
+              if (v) setValue('menu_option', undefined);
+            }}
+            className="mt-0.5"
+          />
+          <div>
+            <Label htmlFor="free-meal" className="gap-xs flex items-center font-medium">
+              <Zap className="text-primary h-3.5 w-3.5" />
+              {t('pages.nutritionLog.isFreeMeal')}
+            </Label>
+          </div>
+        </div>
+
+        {/* Opções de cardápio */}
+        {selectedMealType && !isFreeMeal && selectedMealType.options.length > 0 && (
+          <FormSection title={t('pages.nutritionLog.menuOption')} icon={CheckCircle2}>
+            <div className="gap-sm grid">
+              {selectedMealType.options.map((opt) => {
+                const isSelected = selectedMenuOption === opt.id;
+                return (
+                  <div
+                    key={opt.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setDetailOption(opt)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setDetailOption(opt);
+                      }
+                    }}
+                    className={cn(
+                      'gap-sm p-sm flex cursor-pointer items-center rounded-lg border transition',
+                      isSelected
+                        ? 'border-primary/60 bg-primary/5'
+                        : 'border-border bg-card hover:border-primary/40'
+                    )}
+                  >
+                    {/* Só o checkbox seleciona; o clique nele não abre o detalhe */}
+                    <div
+                      role="presentation"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <Checkbox
+                        aria-label={opt.name}
+                        checked={isSelected}
+                        onCheckedChange={(v) =>
+                          setValue('menu_option', v ? opt.id : undefined)
+                        }
+                      />
+                    </div>
+                    <span className="text-sm font-medium">{opt.name}</span>
+                    {(() => {
+                      const kcal = optionCalories(opt);
+                      return kcal != null && kcal > 0 ? (
+                        <span className="ml-auto inline-flex shrink-0 items-center gap-0.5 text-xs text-orange-500">
+                          <Flame className="h-3 w-3" />
+                          {kcal} kcal
+                        </span>
+                      ) : null;
+                    })()}
+                  </div>
+                );
+              })}
+            </div>
+          </FormSection>
+        )}
+
+        {/* Observações */}
+        <FormSection title={t('pages.nutritionLog.logNotes')} icon={StickyNote}>
+          <Textarea
+            placeholder={t('pages.nutritionLog.logNotesPlaceholder')}
+            rows={1}
+            {...register('notes')}
+            className="resize-none"
+          />
+        </FormSection>
+
+        <div className="dialog-footer gap-sm border-border pt-md flex justify-end border-t">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isLoading}
+          >
+            <X className="h-4 w-4" />
+            {t('common.actions.cancel')}
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+
+            {t('common.actions.save')}
+          </Button>
+        </div>
+      </form>
+
+      <Dialog
+        open={detailOption !== null}
+        onOpenChange={(open) => !open && setDetailOption(null)}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle icon={UtensilsCrossed}>{detailOption?.name}</DialogTitle>
+            <DialogDescription className="sr-only">
+              {t('pages.nutritionLog.menuOption')}
+            </DialogDescription>
+          </DialogHeader>
+          {detailOption && detailOption.ingredients.length > 0 ? (
+            <ul className="space-y-xs">
+              {detailOption.ingredients.map((ing) => (
+                <li
+                  key={ing.id}
+                  className="gap-xs text-muted-foreground flex items-center text-sm"
+                >
+                  <span className="bg-category-nutrition/40 h-1 w-1 rounded-full" />
+                  {ing.is_optional && <span className="italic opacity-60">[opt.]</span>}
+                  <span>
+                    {ing.food_name}
+                    {ing.quantity
+                      ? ` — ${formatQuantity(t, ing.quantity, ing.unit)}`
+                      : ''}
+                    {ing.notes ? ` (${ing.notes})` : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              {t('pages.nutritionMealTypes.noIngredients')}
+            </p>
+          )}
+          <DialogFooter className="sm:justify-start">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDetailOption(null)}
+            >
+              <X className="h-4 w-4" />
+              {t('common.actions.close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

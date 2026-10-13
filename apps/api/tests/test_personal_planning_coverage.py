@@ -447,6 +447,75 @@ class TaskInstanceBulkUpdateTest(BasePlanningCoverageTestCase):
         self.assertEqual(len(response.data["errors"]), 1)
 
 
+class TaskInstanceXPRevokeTest(BasePlanningCoverageTestCase):
+    """O XP creditado ao concluir uma tarefa deve ser descontado se ela for
+    desmarcada depois — sem isso, marcar/desmarcar repetidamente farma XP
+    infinito (ver signals.award_xp_on_task_completion)."""
+
+    def setUp(self):
+        super().setUp()
+        self.task = RoutineTask.objects.create(
+            name="XP Task",
+            category="health",
+            periodicity="daily",
+            owner=self.member,
+        )
+        self.instance = TaskInstance.objects.create(
+            owner=self.member,
+            template=self.task,
+            task_name=self.task.name,
+            scheduled_date=date.today(),
+            status="pending",
+        )
+
+    def _set_status(self, new_status):
+        url = reverse("task-instance-bulk-update")
+        response = self.client.post(
+            url,
+            {"updates": [{"id": str(self.instance.pk), "status": new_status}]},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.instance.refresh_from_db()
+
+    def test_xp_is_revoked_when_task_is_uncompleted(self):
+        from personal_planning.models import GamificationProfile
+
+        self._set_status("completed")
+        self.assertEqual(self.instance.xp_awarded, 10)
+        profile = GamificationProfile.objects.get(member=self.member)
+        self.assertEqual(profile.total_xp, 10)
+        self.assertEqual(profile.tasks_completed_total, 1)
+
+        self._set_status("pending")
+        self.assertEqual(self.instance.xp_awarded, 0)
+        profile.refresh_from_db()
+        self.assertEqual(profile.total_xp, 0)
+        self.assertEqual(profile.tasks_completed_total, 0)
+
+    def test_repeated_toggling_does_not_farm_xp(self):
+        from personal_planning.models import GamificationProfile
+
+        for _ in range(3):
+            self._set_status("completed")
+            self._set_status("pending")
+
+        profile = GamificationProfile.objects.get(member=self.member)
+        self.assertEqual(profile.total_xp, 0)
+        self.assertEqual(profile.tasks_completed_total, 0)
+
+    def test_kanban_drag_back_to_doing_also_revokes_xp(self):
+        """Arrastar o card de volta pro kanban usa o mesmo bulk-update."""
+        from personal_planning.models import GamificationProfile
+
+        self._set_status("completed")
+        self._set_status("in_progress")
+
+        profile = GamificationProfile.objects.get(member=self.member)
+        self.assertEqual(profile.total_xp, 0)
+        self.assertEqual(self.instance.xp_awarded, 0)
+
+
 class TaskInstanceStatusUpdateTest(BasePlanningCoverageTestCase):
     def test_status_update_not_found(self):
         url = reverse("task-instance-status-update", args=[999999])
@@ -543,9 +612,9 @@ class AnalyticsInsightsTest(BasePlanningCoverageTestCase):
             owner=self.member,
         )
         today = date.today()
-        # Build 90 days worth of data so weekday buckets have entries with
+        # Build 180 days worth of data so weekday buckets have entries with
         # clearly different completion rates (best/worst/weekend insights).
-        for i in range(90):
+        for i in range(180):
             day = today - timedelta(days=i)
             wd = day.weekday()
             # Weekdays (0-4) mostly completed, weekends (5,6) mostly not.
@@ -560,7 +629,7 @@ class AnalyticsInsightsTest(BasePlanningCoverageTestCase):
         url = reverse("personal-planning-analytics")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["period_days"], 90)
+        self.assertEqual(response.data["period_days"], 180)
         self.assertEqual(len(response.data["completion_by_weekday"]), 7)
         # Some insight should have been generated given the strong skew.
         self.assertIsInstance(response.data["insights"], list)

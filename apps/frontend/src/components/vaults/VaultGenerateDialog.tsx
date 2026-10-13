@@ -1,3 +1,4 @@
+import { CalendarDays, Loader2, Repeat, Save, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -67,8 +68,7 @@ export function VaultGenerateDialog({
       setIsGenerating(true);
       const result = await vaultsService.generateContributions(generateMonth);
       toast({
-        title: t('pages.vaults.recurringContributions.generateSuccess'),
-        description: t('pages.vaults.recurringContributions.generateSuccessDesc', {
+        title: t('pages.vaults.recurringContributions.generateSuccessDesc', {
           count: result.generated_count,
         }),
       });
@@ -76,8 +76,9 @@ export function VaultGenerateDialog({
       onSuccess();
     } catch (error: unknown) {
       toast({
-        title: t('pages.vaults.recurringContributions.generateError'),
-        description: getErrorMessage(error),
+        title: t('pages.vaults.recurringContributions.generateError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -89,7 +90,7 @@ export function VaultGenerateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle icon={Repeat}>
             {t('pages.vaults.recurringContributions.generateTitle')}
           </DialogTitle>
           <DialogDescription>
@@ -98,7 +99,10 @@ export function VaultGenerateDialog({
         </DialogHeader>
         <div className="space-y-md">
           <div>
-            <Label>{t('pages.vaults.recurringContributions.generateMonth')}</Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.vaults.recurringContributions.generateMonth')}
+            </Label>
             <div className="mt-xs gap-sm flex">
               <Select
                 value={String(selectedMonth)}
@@ -135,9 +139,15 @@ export function VaultGenerateDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button onClick={() => void handleGenerate()} disabled={isGenerating}>
+            {isGenerating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
             {isGenerating
               ? t('common.actions.saving')
               : t('pages.vaults.recurringContributions.generateConfirm')}

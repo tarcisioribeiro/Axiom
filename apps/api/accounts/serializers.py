@@ -1,9 +1,14 @@
+import os
 from decimal import Decimal
 from typing import Any
 
 from rest_framework import serializers
 
-from accounts.models import Account
+from accounts.models import (
+    WALLET_ACCOUNT_TYPE,
+    Account,
+    compute_account_number_hash,
+)
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -71,6 +76,51 @@ class AccountSerializer(serializers.ModelSerializer):
                     )
                 }
             )
+        request = self.context.get("request")
+        account_number = attrs.get("account_number")
+        number_hash: str | None
+        if account_number:
+            number_hash = compute_account_number_hash(
+                account_number, os.getenv("ENCRYPTION_KEY", "")
+            )
+        else:
+            number_hash = getattr(self.instance, "account_number_hash", None)
+        institution = attrs.get(
+            "institution_name",
+            getattr(self.instance, "institution_name", None),
+        )
+        if number_hash and institution and request:
+            duplicates = Account.objects.filter(
+                created_by=request.user,
+                institution_name=institution,
+                account_number_hash=number_hash,
+                is_deleted=False,
+            )
+            if self.instance:
+                duplicates = duplicates.exclude(pk=self.instance.pk)
+            if duplicates.exists():
+                raise serializers.ValidationError(
+                    {
+                        "account_number": (
+                            "Já existe conta com esta instituição e número."
+                        )
+                    }
+                )
+        account_type = attrs.get(
+            "account_type", getattr(self.instance, "account_type", None)
+        )
+        if account_type == WALLET_ACCOUNT_TYPE and request:
+            wallets = Account.objects.filter(
+                created_by=request.user,
+                account_type=WALLET_ACCOUNT_TYPE,
+                is_deleted=False,
+            )
+            if self.instance:
+                wallets = wallets.exclude(pk=self.instance.pk)
+            if wallets.exists():
+                raise serializers.ValidationError(
+                    {"account_type": "Só é permitida uma Carteira Móvel."}
+                )
         return attrs
 
     def create(self, validated_data: dict[str, Any]) -> Account:

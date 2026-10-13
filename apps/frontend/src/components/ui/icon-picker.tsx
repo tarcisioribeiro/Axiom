@@ -395,9 +395,15 @@ interface IconPickerProps {
   value?: string | null;
   onChange: (value: string | null) => void;
   className?: string;
+  'aria-invalid'?: boolean;
 }
 
-export function IconPicker({ value, onChange, className }: IconPickerProps) {
+export function IconPicker({
+  value,
+  onChange,
+  className,
+  'aria-invalid': ariaInvalid,
+}: IconPickerProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -427,11 +433,15 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn('w-full justify-start', className)}
+          aria-invalid={ariaInvalid}
+          className={cn(
+            'aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-destructive/50 w-full justify-start aria-[invalid=true]:ring-2',
+            className
+          )}
         >
           {SelectedIcon ? (
             <>
-              <SelectedIcon className="mr-sm h-4 w-4" />
+              <SelectedIcon className="h-4 w-4" />
               {value}
             </>
           ) : (
@@ -462,7 +472,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                 setOpen(false);
               }}
             >
-              <MoreHorizontal className="mr-sm h-4 w-4 opacity-50" />
+              <MoreHorizontal className="h-4 w-4 opacity-50" />
               Sem ícone
             </Button>
 

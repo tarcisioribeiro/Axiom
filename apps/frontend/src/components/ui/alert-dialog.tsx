@@ -13,22 +13,19 @@ const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 
 const AlertDialogPortal = AlertDialogPrimitive.Portal;
 
-const alertDialogOverlayVariants = cva(
-  'fixed inset-0 z-50 transition-all duration-200',
-  {
-    variants: {
-      blur: {
-        none: 'bg-black/80',
-        sm: 'bg-black/60 backdrop-blur-sm',
-        md: 'bg-black/50 backdrop-blur-md',
-        lg: 'bg-black/40 backdrop-blur-lg',
-      },
+const alertDialogOverlayVariants = cva('fixed inset-0 z-50', {
+  variants: {
+    blur: {
+      none: 'bg-black/80',
+      sm: 'bg-black/60 backdrop-blur-sm',
+      md: 'bg-black/50 backdrop-blur-md',
+      lg: 'bg-black/40 backdrop-blur-lg',
     },
-    defaultVariants: {
-      blur: 'md',
-    },
-  }
-);
+  },
+  defaultVariants: {
+    blur: 'md',
+  },
+});
 
 interface AlertDialogOverlayProps
   extends
@@ -42,7 +39,7 @@ const AlertDialogOverlay = React.forwardRef<
   <AlertDialogPrimitive.Overlay
     className={cn(
       alertDialogOverlayVariants({ blur }),
-      'data-[state=closed]:animate-dialog-overlay-hide data-[state=open]:animate-dialog-overlay-show',
+      'data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in',
       className
     )}
     {...props}
@@ -56,16 +53,9 @@ const alertDialogContentVariants = cva(
   {
     variants: {
       animation: {
-        default:
-          'data-[state=open]:animate-dialog-content-show data-[state=closed]:animate-dialog-content-hide',
-        slideUp:
-          'data-[state=open]:animate-slide-up-fade data-[state=closed]:animate-dialog-content-hide',
-        slideDown:
-          'data-[state=open]:animate-slide-down-fade data-[state=closed]:animate-dialog-content-hide',
-        bounce:
-          'data-[state=open]:animate-bounce-in data-[state=closed]:animate-dialog-content-hide',
-        shake:
-          'data-[state=open]:animate-shake data-[state=closed]:animate-dialog-content-hide',
+        default: 'data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out',
+        // erro: chacoalha em vez do pop padrão
+        shake: 'data-[state=open]:animate-shake data-[state=closed]:animate-pop-out',
       },
       variant: {
         default: '',

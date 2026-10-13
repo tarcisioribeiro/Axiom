@@ -27,7 +27,7 @@ export function LogRow({ log }: { log: AdminLog }) {
     <tr className="border-border hover:bg-accent/30 border-b transition-colors">
       <td className="px-md text-muted-foreground py-3 text-xs whitespace-nowrap">
         <div>{date.toLocaleDateString(i18n.language)}</div>
-        <div className="font-mono">{date.toLocaleTimeString(i18n.language)}</div>
+        <div>{date.toLocaleTimeString(i18n.language)}</div>
       </td>
       <td className="px-md py-3">
         <span className="text-foreground font-medium">{log.username ?? '—'}</span>
@@ -41,7 +41,7 @@ export function LogRow({ log }: { log: AdminLog }) {
       <td className="px-md text-foreground max-w-xs py-3 text-sm">
         <span className="line-clamp-2">{log.description}</span>
       </td>
-      <td className="px-md text-muted-foreground py-3 font-mono text-xs whitespace-nowrap">
+      <td className="px-md text-muted-foreground py-3 text-xs whitespace-nowrap">
         {log.ip_address ?? '—'}
       </td>
     </tr>

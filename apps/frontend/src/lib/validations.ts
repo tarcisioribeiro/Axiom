@@ -99,7 +99,7 @@ export const accountSchema = z
       .string()
       .min(1, requiredError('Nome da conta'))
       .max(255, maxError('Nome', 255)),
-    account_type: z.enum(['CC', 'CS', 'FG', 'VA', 'VR', 'CP'], {
+    account_type: z.enum(['CC', 'CS', 'FG', 'VA', 'VR', 'CP', 'CM'], {
       message: 'Selecione um tipo de conta válido',
     }),
     institution: z.enum(
@@ -273,7 +273,7 @@ export const transferSchema = z
   .object({
     value: z.number({ message: numberError('Valor') }).positive(positiveError('Valor')),
     date: z.string().min(1, requiredError('Data')),
-    transfer_type: z.enum(['doc', 'ted', 'pix'], {
+    transfer_type: z.enum(['doc', 'ted', 'pix', 'withdrawal'], {
       message: 'Selecione um tipo de transferência válido',
     }),
     description: z
@@ -770,7 +770,7 @@ export const routineTaskSchema = z
       .max(24, 'Maximo 24 ocorrencias'),
     interval_hours: z
       .number()
-      .min(1, 'Intervalo minimo de 1 hora')
+      .min(0, 'Intervalo minimo de 0 horas')
       .max(23, 'Intervalo maximo de 23 horas')
       .optional()
       .nullable(),

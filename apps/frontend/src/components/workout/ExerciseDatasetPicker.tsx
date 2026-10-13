@@ -1,19 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
-import { Dumbbell } from 'lucide-react';
+import { ChevronDown, Dumbbell, ImageIcon, Loader2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { apiClient } from '@/services/api-client';
 import { exerciseService } from '@/services/workout-service';
 import type { PaginatedResponse } from '@/types';
@@ -25,7 +28,8 @@ interface ExerciseDatasetPickerProps {
   onSelect: (entry: ExerciseDatasetEntry) => void;
 }
 
-const SKELETON_ITEMS = Array.from({ length: 8 }, (_, i) => i);
+const PICKER_PAGE_SIZE = 8;
+const SKELETON_ITEMS = Array.from({ length: PICKER_PAGE_SIZE }, (_, i) => i);
 
 export function ExerciseDatasetPicker({
   open,
@@ -101,10 +105,15 @@ export function ExerciseDatasetPicker({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent size="lg">
         <DialogHeader>
-          <DialogTitle>{t('pages.exercises.picker.title')}</DialogTitle>
-          <DialogDescription>
-            {t('pages.exercises.picker.description')}
-          </DialogDescription>
+          <DialogTitle className="gap-sm flex items-center">
+            <ImageIcon className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
+            {t('pages.exercises.picker.title')}
+          </DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>
+              {t('pages.exercises.picker.description')}
+            </DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
 
         <SearchInput
@@ -113,7 +122,7 @@ export function ExerciseDatasetPicker({
           placeholder={t('pages.exercises.picker.searchPlaceholder')}
         />
 
-        <div className="max-h-[55vh] overflow-y-auto">
+        <div>
           {showSkeleton ? (
             <div className="gap-sm grid grid-cols-3 sm:grid-cols-4">
               {SKELETON_ITEMS.map((i) => (
@@ -121,20 +130,25 @@ export function ExerciseDatasetPicker({
               ))}
             </div>
           ) : showEmpty ? (
-            <EmptyState
-              title={t('pages.exercises.picker.empty')}
-              message={t('pages.exercises.picker.emptyDesc')}
-            />
+            <EmptyState title={t('pages.exercises.picker.empty')} />
           ) : (
-            <div className="gap-sm grid grid-cols-3 sm:grid-cols-4">
-              {results.map((entry) => (
-                <ExerciseDatasetPickerItem
-                  key={entry.id}
-                  entry={entry}
-                  onSelect={() => onSelect(entry)}
-                />
-              ))}
-            </div>
+            <PaginatedSlide
+              key={query}
+              items={results}
+              pageSize={PICKER_PAGE_SIZE}
+              pinNav={false}
+              className="gap-sm grid grid-cols-3 sm:grid-cols-4"
+            >
+              {(pageEntries) =>
+                pageEntries.map((entry) => (
+                  <ExerciseDatasetPickerItem
+                    key={entry.id}
+                    entry={entry}
+                    onSelect={() => onSelect(entry)}
+                  />
+                ))
+              }
+            </PaginatedSlide>
           )}
         </div>
 
@@ -144,10 +158,17 @@ export function ExerciseDatasetPicker({
             variant="outline"
             onClick={() => void handleLoadMore()}
             disabled={isLoadingMore}
+            className="mx-auto"
           >
+            {isLoadingMore ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
             {t('pages.exercises.picker.loadMore')}
           </Button>
         )}
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

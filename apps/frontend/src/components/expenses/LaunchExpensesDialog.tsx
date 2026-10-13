@@ -1,8 +1,10 @@
-/* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
+import { CalendarDays, CalendarPlus, ListChecks, Loader2, X } from 'lucide-react';
+/* eslint-disable max-lines */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MaskedCurrencyInput } from '@/components/ui/currency-input';
@@ -15,7 +17,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -23,11 +24,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
-import { creditCardsService } from '@/services/credit-cards-service';
 import { fixedExpensesService } from '@/services/fixed-expenses-service';
 import type { FixedExpense, BulkGenerateRequest } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -71,13 +72,6 @@ export const LaunchExpensesDialog = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { showAlert } = useAlertDialog();
-
-  const { data: creditCards = [] } = useQuery({
-    queryKey: ['credit-cards', 'list'],
-    queryFn: () => creditCardsService.getAll(),
-    enabled: isOpen,
-    staleTime: 0,
-  });
 
   const { data: fullyGeneratedMonths = [] } = useQuery({
     queryKey: ['fixedExpenses', 'generatedMonths'],
@@ -191,8 +185,7 @@ export const LaunchExpensesDialog = ({
           : '';
 
       toast({
-        title: t('pages.fixedExpenses.launchDialog.success'),
-        description: `${createdDesc}${skippedNotice}`,
+        title: `${createdDesc}${skippedNotice}`,
       });
 
       if (response.blocked_cards.length > 0) {
@@ -214,8 +207,9 @@ export const LaunchExpensesDialog = ({
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('pages.fixedExpenses.launchDialog.error'),
-        description: getErrorMessage(error),
+        title: t('pages.fixedExpenses.launchDialog.error', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -223,43 +217,22 @@ export const LaunchExpensesDialog = ({
     }
   };
 
-  const totalValue = selectedExpenses.reduce(
-    (sum, exp) => sum + (expenseValues[exp.id] || parseFloat(exp.default_value)),
-    0
-  );
-
-  // Total do lote por cartão vs. limite disponível (atual - utilizado). O
-  // backend aplica a mesma regra e não lança as despesas do cartão sem limite.
-  const totalsByCard: Record<number, number> = {};
-  selectedExpenses.forEach((exp) => {
-    if (!exp.credit_card) return;
-    totalsByCard[exp.credit_card] =
-      (totalsByCard[exp.credit_card] ?? 0) +
-      (expenseValues[exp.id] || parseFloat(exp.default_value));
-  });
-  const cardTotals = Object.entries(totalsByCard).map(([id, total]) => {
-    const card = creditCards.find((c) => c.id === Number(id));
-    const available = card?.available_credit ?? 0;
-    return {
-      id,
-      name: card?.name ?? '',
-      total,
-      available,
-      missing: Math.max(0, total - available),
-    };
-  });
-
   const bounds = validMonth ? monthBounds(validMonth) : null;
   const noMonthsAvailable = monthOptions.length === 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-4xl">
+      <DialogContent className="max-w-6xl">
         <DialogHeader>
-          <DialogTitle>{t('pages.fixedExpenses.launchDialog.title')}</DialogTitle>
-          <DialogDescription>
-            {t('pages.fixedExpenses.launchDialog.desc')}
-          </DialogDescription>
+          <DialogTitle className="gap-sm flex items-center">
+            <CalendarPlus className="text-primary h-5 w-5" aria-hidden="true" />
+            {t('pages.fixedExpenses.launchDialog.title')}
+          </DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>
+              {t('pages.fixedExpenses.launchDialog.desc')}
+            </DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
 
         {noMonthsAvailable ? (
@@ -270,7 +243,10 @@ export const LaunchExpensesDialog = ({
           <div className="space-y-md">
             {/* Month selector */}
             <div className="space-y-sm">
-              <Label>{t('pages.fixedExpenses.launchDialog.selectMonth')}</Label>
+              <Label className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.fixedExpenses.launchDialog.selectMonth')}
+              </Label>
               <Select value={validMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger>
                   <SelectValue
@@ -292,7 +268,8 @@ export const LaunchExpensesDialog = ({
             {/* Expense list with editable values + dates */}
             <div className="space-y-sm">
               <div className="flex items-center justify-between">
-                <Label>
+                <Label className="gap-xs flex items-center">
+                  <ListChecks className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.fixedExpenses.launchDialog.expensesLabel', {
                     selected: selectedExpenses.length,
                     total: fixedExpenses.length,
@@ -306,120 +283,91 @@ export const LaunchExpensesDialog = ({
                   />
                   <label
                     htmlFor="select-all"
-                    className="cursor-pointer text-sm font-medium"
+                    className="gap-xs flex cursor-pointer items-center text-sm font-medium"
                   >
+                    <ListChecks className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.fixedExpenses.launchDialog.selectAll')}
                   </label>
                 </div>
               </div>
-              <ScrollArea className="p-md h-[400px] rounded-md border">
-                <div className="space-y-3">
-                  {fixedExpenses.map((exp) => (
-                    <div
-                      key={exp.id}
-                      className={`gap-md flex items-center rounded-lg border p-3 transition-colors ${
-                        selectedExpenseIds.has(exp.id)
-                          ? 'bg-background'
-                          : 'bg-muted/50 opacity-60'
-                      }`}
-                    >
-                      <Checkbox
-                        checked={selectedExpenseIds.has(exp.id)}
-                        onCheckedChange={() => toggleExpenseSelection(exp.id)}
-                        disabled={isSubmitting}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{exp.description}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {t('pages.fixedExpenses.launchDialog.dueDate', {
-                            day: exp.due_day,
-                            account: exp.account_name,
-                          })}
-                        </p>
-                      </div>
-                      <div className="w-48 shrink-0">
-                        <DatePicker
-                          value={dateFor(exp)}
-                          minDate={bounds?.min}
-                          maxDate={bounds?.max}
-                          clearable={false}
-                          floating
-                          disabled={isSubmitting || !selectedExpenseIds.has(exp.id)}
-                          onChange={(date) =>
-                            setExpenseDates((prev) => ({
-                              ...prev,
-                              [exp.id]: date ? formatLocalDate(date) : '',
-                            }))
-                          }
-                        />
-                      </div>
-                      <div className="w-40 shrink-0">
-                        {exp.allow_value_edit ? (
-                          <MaskedCurrencyInput
-                            value={
-                              expenseValues[exp.id] ?? parseFloat(exp.default_value)
-                            }
-                            onValueChange={(v) => handleValueChange(exp.id, v)}
-                            disabled={isSubmitting || !selectedExpenseIds.has(exp.id)}
+              <div className="p-md rounded-md border">
+                <PaginatedSlide items={fixedExpenses} pageSize={5} pinNav={false}>
+                  {(pageItems) => (
+                    <div className="space-y-3">
+                      {pageItems.map((exp) => (
+                        <div
+                          key={exp.id}
+                          className={`gap-md flex items-center rounded-lg border p-3 transition-colors ${
+                            selectedExpenseIds.has(exp.id)
+                              ? 'bg-background'
+                              : 'bg-muted/50 opacity-60'
+                          }`}
+                        >
+                          <Checkbox
+                            checked={selectedExpenseIds.has(exp.id)}
+                            onCheckedChange={() => toggleExpenseSelection(exp.id)}
+                            disabled={isSubmitting}
                           />
-                        ) : (
-                          <div className="text-right font-semibold">
-                            {formatCurrency(exp.default_value)}
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-medium">{exp.description}</p>
+                            <p className="text-muted-foreground text-sm whitespace-nowrap">
+                              {t('pages.fixedExpenses.launchDialog.dueDate', {
+                                day: exp.due_day,
+                                account: exp.account_name,
+                              })}
+                            </p>
                           </div>
-                        )}
-                      </div>
+                          <div className="w-48 shrink-0">
+                            <DatePicker
+                              value={dateFor(exp)}
+                              minDate={bounds?.min}
+                              maxDate={bounds?.max}
+                              floating
+                              disabled={isSubmitting || !selectedExpenseIds.has(exp.id)}
+                              onChange={(date) =>
+                                setExpenseDates((prev) => ({
+                                  ...prev,
+                                  [exp.id]: date ? formatLocalDate(date) : '',
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="w-40 shrink-0">
+                            {exp.allow_value_edit ? (
+                              <MaskedCurrencyInput
+                                value={
+                                  expenseValues[exp.id] ?? parseFloat(exp.default_value)
+                                }
+                                onValueChange={(v) => handleValueChange(exp.id, v)}
+                                disabled={
+                                  isSubmitting || !selectedExpenseIds.has(exp.id)
+                                }
+                              />
+                            ) : (
+                              <div className="text-right font-semibold">
+                                {formatCurrency(exp.default_value)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
-
-            {cardTotals.length > 0 && (
-              <div className="space-y-sm p-md rounded-lg border">
-                <Label>{t('pages.fixedExpenses.launchDialog.cardTotals')}</Label>
-                {cardTotals.map((c) => (
-                  <div key={c.id} className="text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{c.name}</span>
-                      <span>
-                        {t('pages.fixedExpenses.launchDialog.cardTotalLine', {
-                          total: formatCurrency(c.total),
-                          available: formatCurrency(c.available),
-                        })}
-                      </span>
-                    </div>
-                    {c.missing > 0 && (
-                      <p className="text-destructive mt-xs text-xs">
-                        {t('pages.fixedExpenses.launchDialog.insufficientLimit', {
-                          missing: formatCurrency(c.missing),
-                        })}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                  )}
+                </PaginatedSlide>
               </div>
-            )}
-
-            {/* Total */}
-            <div className="bg-muted p-md flex items-center justify-between rounded-lg">
-              <span className="font-semibold">
-                {t('pages.fixedExpenses.launchDialog.total')}
-              </span>
-              <span className="text-destructive text-2xl font-bold">
-                {formatCurrency(totalValue)}
-              </span>
             </div>
           </div>
         )}
 
         {/* Actions */}
-        <div className="gap-sm flex justify-end">
+        <div className="dialog-footer gap-sm flex justify-end">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={isSubmitting}
           >
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           {!noMonthsAvailable && (
@@ -427,6 +375,11 @@ export const LaunchExpensesDialog = ({
               onClick={handleSubmit}
               disabled={isSubmitting || !validMonth || selectedExpenses.length === 0}
             >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CalendarPlus className="h-4 w-4" />
+              )}
               {isSubmitting
                 ? t('pages.fixedExpenses.launchDialog.generating')
                 : t('pages.fixedExpenses.launchDialog.generateBtn', {

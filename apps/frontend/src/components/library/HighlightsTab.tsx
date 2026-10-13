@@ -1,10 +1,26 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { BookMarked, Download, Edit, Trash2 } from 'lucide-react';
+import {
+  Bookmark,
+  BookMarked,
+  BookOpen,
+  Download,
+  Edit,
+  Hash,
+  Loader2,
+  Palette,
+  Quote,
+  Save,
+  Search,
+  Shapes,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +34,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -26,6 +43,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { bookHighlightsService } from '@/services/book-highlights-service';
@@ -35,11 +53,11 @@ import type { Book, BookHighlight, BookHighlightFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 const COLOR_CLASSES: Record<string, string> = {
-  yellow: 'border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20',
-  green: 'border-green-400 bg-green-50 dark:bg-green-950/20',
-  blue: 'border-blue-400 bg-blue-50 dark:bg-blue-950/20',
-  pink: 'border-pink-400 bg-pink-50 dark:bg-pink-950/20',
-  orange: 'border-orange-400 bg-orange-50 dark:bg-orange-950/20',
+  yellow: 'bg-yellow-50 dark:bg-yellow-950/20',
+  green: 'bg-green-50 dark:bg-green-950/20',
+  blue: 'bg-blue-50 dark:bg-blue-950/20',
+  pink: 'bg-pink-50 dark:bg-pink-950/20',
+  orange: 'bg-orange-50 dark:bg-orange-950/20',
 };
 
 const TYPE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
@@ -94,7 +112,10 @@ function HighlightForm({
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
       <div className="space-y-sm">
-        <Label htmlFor="hl-book">{t('pages.highlights.form.bookLabel')}</Label>
+        <Label className="gap-xs flex items-center" htmlFor="hl-book">
+          <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
+          {t('pages.highlights.form.bookLabel')}
+        </Label>
         <Select value={bookId} onValueChange={setBookId}>
           <SelectTrigger id="hl-book">
             <SelectValue placeholder={t('pages.highlights.form.bookPlaceholder')} />
@@ -110,7 +131,10 @@ function HighlightForm({
       </div>
 
       <div className="space-y-sm">
-        <Label htmlFor="hl-text">{t('pages.highlights.form.textLabel')}</Label>
+        <Label className="gap-xs flex items-center" htmlFor="hl-text">
+          <Quote className="text-muted-foreground h-3.5 w-3.5" />
+          {t('pages.highlights.form.textLabel')}
+        </Label>
         <Textarea
           id="hl-text"
           value={text}
@@ -123,7 +147,10 @@ function HighlightForm({
 
       <div className="gap-md grid grid-cols-2">
         <div className="space-y-sm">
-          <Label htmlFor="hl-type">{t('pages.highlights.form.typeLabel')}</Label>
+          <Label className="gap-xs flex items-center" htmlFor="hl-type">
+            <Shapes className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.highlights.form.typeLabel')}
+          </Label>
           <Select
             value={highlightType}
             onValueChange={(v) => setHighlightType(v as typeof highlightType)}
@@ -145,7 +172,10 @@ function HighlightForm({
           </Select>
         </div>
         <div className="space-y-sm">
-          <Label htmlFor="hl-color">{t('pages.highlights.form.colorLabel')}</Label>
+          <Label className="gap-xs flex items-center" htmlFor="hl-color">
+            <Palette className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.highlights.form.colorLabel')}
+          </Label>
           <Select value={color} onValueChange={(v) => setColor(v as typeof color)}>
             <SelectTrigger id="hl-color">
               <SelectValue />
@@ -173,18 +203,24 @@ function HighlightForm({
 
       <div className="gap-md grid grid-cols-2">
         <div className="space-y-sm">
-          <Label htmlFor="hl-page">{t('pages.highlights.form.pageLabel')}</Label>
-          <Input
+          <Label className="gap-xs flex items-center" htmlFor="hl-page">
+            <Hash className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.highlights.form.pageLabel')}
+          </Label>
+          <NumberStepper
             id="hl-page"
-            type="number"
             min={1}
-            value={pageNumber}
-            onChange={(e) => setPageNumber(e.target.value)}
+            optional
             placeholder={t('pages.highlights.form.pagePlaceholder')}
+            value={pageNumber === '' ? null : Number(pageNumber)}
+            onChange={(v) => setPageNumber(v === null ? '' : String(v))}
           />
         </div>
         <div className="space-y-sm">
-          <Label htmlFor="hl-chapter">{t('pages.highlights.form.chapterLabel')}</Label>
+          <Label className="gap-xs flex items-center" htmlFor="hl-chapter">
+            <Bookmark className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.highlights.form.chapterLabel')}
+          </Label>
           <Input
             id="hl-chapter"
             value={chapter}
@@ -194,11 +230,17 @@ function HighlightForm({
         </div>
       </div>
 
-      <div className="gap-sm pt-sm flex justify-end">
+      <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading || !bookId || !text.trim()}>
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
           {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>
@@ -238,8 +280,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
         return { highlights: highlightsData, books: booksData, ownerId: member.id };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { highlights: EMPTY_HIGHLIGHTS, books: EMPTY_BOOKS, ownerId: 0 };
@@ -272,8 +313,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -294,8 +334,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -315,8 +354,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       URL.revokeObjectURL(url);
     } catch (error: unknown) {
       toast({
-        title: t('pages.highlights.exportError'),
-        description: getErrorMessage(error),
+        title: t('pages.highlights.exportError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -338,12 +376,19 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
   return (
     <div className="space-y-md">
       <div className="gap-sm flex items-center">
-        <SearchInput
-          placeholder={t('pages.highlights.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="max-w-sm"
-        />
+        <FilterBar
+          className="flex-1"
+          hasActiveFilters={!!searchTerm}
+          onClear={() => setSearchTerm('')}
+        >
+          <FilterField label={t('common.filterLabels.search')} icon={Search}>
+            <SearchInput
+              placeholder={t('pages.highlights.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+            />
+          </FilterField>
+        </FilterBar>
         {highlights.length > 0 && (
           <Button
             variant="outline"
@@ -351,7 +396,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
             onClick={() => void handleExportAll()}
             disabled={isExporting}
           >
-            <Download className="mr-sm h-4 w-4" />
+            <Download className="h-4 w-4" />
             {isExporting
               ? t('pages.highlights.exportingBtn')
               : t('pages.highlights.exportBtn')}
@@ -362,7 +407,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       {filtered.length === 0 ? (
         <EmptyState
           icon={<BookMarked className="text-muted-foreground h-12 w-12" />}
-          message={
+          title={
             searchTerm
               ? t('pages.highlights.emptySearch')
               : t('pages.highlights.emptyState')
@@ -373,7 +418,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
           {filtered.map((h) => {
             const colorClass = COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow;
             return (
-              <div key={h.id} className={`p-md rounded-lg border-l-4 ${colorClass}`}>
+              <div key={h.id} className={`p-md rounded-lg border ${colorClass}`}>
                 <div className="mb-sm gap-sm flex items-start justify-between">
                   <div className="gap-sm flex flex-wrap items-center">
                     <Badge variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}>
@@ -393,6 +438,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
                   </div>
                   <div className="gap-xs flex shrink-0">
                     <Button
+                      aria-label={t('common.actions.edit')}
                       variant="ghost"
                       size="sm"
                       className="h-7 w-7 p-0"
@@ -401,6 +447,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
                       <Edit className="h-3.5 w-3.5" />
                     </Button>
                     <Button
+                      aria-label={t('common.actions.delete')}
                       variant="ghost"
                       size="sm"
                       className="text-destructive hover:text-destructive h-7 w-7 p-0"
@@ -426,8 +473,10 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       >
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{t('pages.highlights.newTitle')}</DialogTitle>
-            <DialogDescription>{t('pages.highlights.newDesc')}</DialogDescription>
+            <DialogTitle mode="create">{t('pages.highlights.newTitle')}</DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>{t('pages.highlights.newDesc')}</DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <HighlightForm
             books={books}
@@ -443,8 +492,10 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{t('pages.highlights.editTitle')}</DialogTitle>
-            <DialogDescription>{t('pages.highlights.editDesc')}</DialogDescription>
+            <DialogTitle mode="edit">{t('pages.highlights.editTitle')}</DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>{t('pages.highlights.editDesc')}</DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <HighlightForm
             highlight={editingHighlight}

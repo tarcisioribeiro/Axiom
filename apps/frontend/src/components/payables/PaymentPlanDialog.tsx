@@ -1,3 +1,13 @@
+import {
+  CalendarClock,
+  CalendarDays,
+  Hash,
+  Loader2,
+  RefreshCw,
+  Save,
+  Wallet,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,8 +21,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -82,15 +92,13 @@ export function PaymentPlanDialog({
         first_due_date: firstDueDate || undefined,
       });
       toast({
-        title: t('pages.payables.form.paymentPlanCreated'),
-        description: t('pages.payables.form.paymentPlanCreatedDesc'),
+        title: t('pages.payables.form.paymentPlanCreatedDesc'),
       });
       onSuccess?.();
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -102,23 +110,32 @@ export function PaymentPlanDialog({
     <Dialog open={!!payable} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.payables.form.paymentPlanTitle')}</DialogTitle>
+          <DialogTitle icon={CalendarClock}>
+            {t('pages.payables.form.paymentPlanTitle')}
+          </DialogTitle>
           <DialogDescription>
             {payable.description} — {t('pages.payables.form.paymentPlanDesc')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-md">
           <div className="space-y-xs">
-            <Label>{t('pages.payables.form.installmentsCountLabel')} *</Label>
-            <Input
-              type="number"
+            <Label className="gap-xs flex items-center">
+              <Hash className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.form.installmentsCountLabel')} *
+            </Label>
+            <NumberStepper
               min={2}
-              value={installments}
-              onChange={(e) => setInstallments(e.target.value)}
+              optional
+              aria-label={t('pages.payables.form.installmentsCountLabel')}
+              value={installments === '' ? null : Number(installments)}
+              onChange={(v) => setInstallments(v === null ? '' : String(v))}
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.payables.form.accountLabel')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.form.accountLabel')} *
+            </Label>
             <Select value={account} onValueChange={setAccount}>
               <SelectTrigger>
                 <SelectValue placeholder={t('common.fields.selectAccount')} />
@@ -133,7 +150,10 @@ export function PaymentPlanDialog({
             </Select>
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.payables.form.paymentFrequencyLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <RefreshCw className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.form.paymentFrequencyLabel')}
+            </Label>
             <Select value={frequency} onValueChange={setFrequency}>
               <SelectTrigger>
                 <SelectValue />
@@ -148,10 +168,12 @@ export function PaymentPlanDialog({
             </Select>
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.payables.form.firstInstallmentLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.form.firstInstallmentLabel')}
+            </Label>
             <DatePicker
               value={firstDueDate}
-              clearable={false}
               onChange={(date) => setFirstDueDate(date ? formatLocalDate(date) : '')}
             />
             <p className="text-muted-foreground text-xs">
@@ -169,12 +191,18 @@ export function PaymentPlanDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || !account || count < 2}
           >
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
             {isSubmitting ? t('common.actions.saving') : t('common.actions.create')}
           </Button>
         </DialogFooter>

@@ -1,8 +1,7 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Maximize2, Minimize2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TooltipBubble } from '@/components/ui/tooltip-bubble';
+import { TASK_CATEGORY_ICONS } from '@/config/icons';
 import { habitHeatmapService } from '@/services/habit-heatmap-service';
 import type { HeatmapDay } from '@/types';
 
@@ -34,12 +34,11 @@ function cellColor(day: HeatmapDay): string {
 }
 
 /** Build a week-major 2-D grid (array of columns, each with 7 slots). */
-function buildGrid(data: HeatmapDay[], year: number) {
-  const jan1 = new Date(year, 0, 1);
+function buildGrid(data: HeatmapDay[], startDate: Date) {
   // In JS getDay(): 0=Sun..6=Sat. We want Mon=0..Sun=6.
-  const jan1Weekday = (jan1.getDay() + 6) % 7;
+  const jan1Weekday = (startDate.getDay() + 6) % 7;
 
-  // Total slots: pad start so Jan 1 lands on the correct weekday row.
+  // Total slots: pad start so the first day lands on the correct weekday row.
   const totalSlots = jan1Weekday + data.length;
   const numCols = Math.ceil(totalSlots / 7);
 
@@ -93,6 +92,8 @@ const TASK_CATEGORIES = [
 interface HabitHeatmapProps {
   taskId?: string | number;
   taskName?: string;
+  /** Mostra só os últimos N dias, sem navegação de ano nem filtro de categoria. */
+  recentDays?: number;
 }
 
 interface TooltipState {
@@ -102,13 +103,12 @@ interface TooltipState {
 
 const EMPTY_DAYS: HeatmapDay[] = [];
 
-export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
+export function HabitHeatmap({ taskId, taskName, recentDays }: HabitHeatmapProps) {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const { data: heatmapData, isLoading } = useQuery({
     queryKey: ['habit-heatmap', year, taskId, selectedCategory],
@@ -120,6 +120,10 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
       }),
   });
   const data = heatmapData?.data ?? EMPTY_DAYS;
+  // ponytail: o backend só retorna dados do ano corrente (Jan1..hoje), então nos
+  // primeiros `recentDays` dias do ano a janela fica menor que o pedido; expandir
+  // para cruzar o ano anterior se isso passar a importar.
+  const displayData = recentDays ? data.slice(-recentDays) : data;
 
   const weekdayLabels = Array.from({ length: 7 }, (_, i) =>
     t(`pages.planningDashboard.weekdayShort.${i}`)
@@ -128,6 +132,12 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
   const monthNames = Array.from({ length: 12 }, (_, i) =>
     t(`pages.planningDashboard.monthShort.${i}`)
   );
+
+  // Start scrolled to the end so the most recent days are visible.
+  // Stable ref: runs only when the grid mounts (after each load), not on re-renders.
+  const scrollToEnd = useCallback((el: HTMLDivElement | null) => {
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, []);
 
   const getCellLabel = useCallback(
     (day: HeatmapDay): string => {
@@ -149,45 +159,58 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
     [t]
   );
 
-  const { grid, jan1Weekday, numCols } = buildGrid(data, year);
-  const mLabels = monthLabels(data, jan1Weekday, monthNames);
+  const gridStartDate = displayData[0]
+    ? new Date(`${displayData[0].date}T00:00:00`)
+    : new Date(year, 0, 1);
+  const { grid, jan1Weekday, numCols } = buildGrid(displayData, gridStartDate);
+  const mLabels = monthLabels(displayData, jan1Weekday, monthNames);
 
   // Summary stats
-  const scheduledDays = data.filter((d) => d.is_scheduled).length;
-  const completedDays = data.filter(
+  const scheduledDays = displayData.filter((d) => d.is_scheduled).length;
+  const completedDays = displayData.filter(
     (d) => d.is_scheduled && d.completed >= d.expected && d.expected > 0
   ).length;
-  const totalCompleted = data.reduce((s, d) => s + d.completed, 0);
+  const totalCompleted = displayData.reduce((s, d) => s + d.completed, 0);
 
   const CELL = 13; // px per cell
   const GAP = 2; // px gap
 
-  const heatmapContent = (
+  return (
     <div className="space-y-3">
-      {/* Header: year selector + filters + expand */}
+      {/* Header: year selector + filters */}
       <div className="gap-sm flex flex-wrap items-center justify-between">
-        <div className="gap-xs flex items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => setYear((y) => y - 1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="min-w-[3rem] text-center text-sm font-semibold">{year}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => setYear((y) => y + 1)}
-            disabled={year >= currentYear}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        {recentDays ? (
+          <span className="text-muted-foreground text-sm font-semibold">
+            {t('pages.planningDashboard.recentDaysLabel', { days: recentDays })}
+          </span>
+        ) : (
+          <div className="gap-xs flex items-center">
+            <Button
+              aria-label={t('common.actions.previous')}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setYear((y) => y - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="min-w-[3rem] text-center text-sm font-semibold">
+              {year}
+            </span>
+            <Button
+              aria-label={t('common.actions.next')}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setYear((y) => y + 1)}
+              disabled={year >= currentYear}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
-        {!taskId && (
+        {!taskId && !recentDays && (
           <Select
             value={selectedCategory}
             onValueChange={(val) => setSelectedCategory(val === 'all' ? '' : val)}
@@ -205,11 +228,18 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
                   defaultValue: 'Todas as categorias',
                 })}
               </SelectItem>
-              {TASK_CATEGORIES.map((cat) => (
-                <SelectItem key={cat.value} value={cat.value}>
-                  {cat.label}
-                </SelectItem>
-              ))}
+              {TASK_CATEGORIES.map((cat) => {
+                const CatIcon = TASK_CATEGORY_ICONS[cat.value];
+                return (
+                  <SelectItem
+                    key={cat.value}
+                    value={cat.value}
+                    icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                  >
+                    {cat.label}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         )}
@@ -232,23 +262,6 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
               </span>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0"
-            onClick={() => setIsExpanded((v) => !v)}
-            title={
-              isExpanded
-                ? t('common.actions.hide')
-                : t('pages.planningDashboard.expand', { defaultValue: 'Expandir' })
-            }
-          >
-            {isExpanded ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
-          </Button>
         </div>
       </div>
 
@@ -256,7 +269,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
       {isLoading ? (
         <div className="bg-muted h-[110px] animate-pulse rounded-md" />
       ) : (
-        <div className="pb-xs relative overflow-x-auto">
+        <div ref={scrollToEnd} className="pb-xs relative overflow-x-auto">
           {/* Wrapper with left padding for weekday labels */}
           <div className="gap-xs flex">
             {/* Weekday labels */}
@@ -360,33 +373,4 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
       </div>
     </div>
   );
-
-  if (isExpanded) {
-    return createPortal(
-      <div className="bg-background/95 p-lg fixed inset-0 z-50 flex items-start justify-center overflow-y-auto backdrop-blur-sm">
-        <div className="border-border bg-card p-lg w-full max-w-5xl rounded-lg border shadow-2xl">
-          <div className="mb-md flex items-center justify-between">
-            <span className="text-foreground text-sm font-semibold">
-              {t('pages.planningDashboard.habitHeatmapTitle', {
-                defaultValue: 'Mapa de Hábitos',
-              })}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setIsExpanded(false)}
-              title={t('common.actions.close')}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          {heatmapContent}
-        </div>
-      </div>,
-      document.body
-    );
-  }
-
-  return heatmapContent;
 }

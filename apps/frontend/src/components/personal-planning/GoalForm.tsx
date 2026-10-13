@@ -1,9 +1,18 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, parseISO } from 'date-fns';
-import { Activity, CalendarDays, Loader2, Tag, Target, Trophy } from 'lucide-react';
+import {
+  Activity,
+  CalendarDays,
+  Loader2,
+  Tag,
+  Target,
+  Trophy,
+  Save,
+  X,
+} from 'lucide-react';
 import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
@@ -12,6 +21,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -21,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { GOAL_TYPE_ICONS, GOAL_STATUS_ICONS } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatDate } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
@@ -55,6 +66,7 @@ export function GoalForm({
 }: GoalFormProps) {
   const { t } = useTranslation();
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -136,7 +148,7 @@ export function GoalForm({
   ]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
       <FormSection title={t('pages.goals.form.sectionIdentification')} icon={Trophy}>
         <div className="gap-md grid grid-cols-1">
           <div className="space-y-sm">
@@ -145,14 +157,12 @@ export function GoalForm({
               {t('pages.goals.form.titleLabel')}
             </Label>
             <Input
+              aria-invalid={!!errors.title}
               id="title"
               {...register('title')}
               placeholder={t('pages.goals.form.titlePlaceholder')}
               disabled={isLoading}
             />
-            {errors.title && (
-              <p className="mt-xs text-destructive text-sm">{errors.title.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -161,24 +171,20 @@ export function GoalForm({
               {t('pages.goals.form.descriptionLabel')}
             </Label>
             <Textarea
+              aria-invalid={!!errors.description}
               id="description"
               {...register('description')}
               placeholder={t('pages.goals.form.descriptionPlaceholder')}
-              rows={3}
+              rows={2}
               disabled={isLoading}
             />
-            {errors.description && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.description.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
 
       <FormSection title={t('pages.goals.form.sectionConfig')} icon={Target}>
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm md:col-span-2">
+          <div className="space-y-sm">
             <Label className="gap-xs flex items-center">
               <Target className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.goals.form.goalTypeLabel')}
@@ -188,7 +194,7 @@ export function GoalForm({
               onValueChange={(value) => setValue('goal_type', value)}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.goal_type}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -205,14 +211,9 @@ export function GoalForm({
                 })}
               </SelectContent>
             </Select>
-            {errors.goal_type && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.goal_type.message}
-              </p>
-            )}
           </div>
 
-          <div className="space-y-sm md:col-span-2">
+          <div className="space-y-sm">
             <Label className="gap-xs flex items-center">
               <Activity className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.goals.form.goalSourceLabel')}
@@ -236,7 +237,7 @@ export function GoalForm({
           </div>
 
           {isTaskSource && (
-            <div className="space-y-sm md:col-span-2">
+            <div className="space-y-sm">
               <Label className="gap-xs flex items-center">
                 <Tag className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.goals.form.relatedTaskLabel')}
@@ -251,7 +252,7 @@ export function GoalForm({
                 }
                 disabled={isLoading}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-invalid={!!errors.related_task}>
                   <SelectValue
                     placeholder={t('pages.goals.form.relatedTaskPlaceholder')}
                   />
@@ -267,33 +268,32 @@ export function GoalForm({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.related_task && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.related_task.message}
-                </p>
-              )}
             </div>
           )}
 
           <div className="space-y-sm">
-            <Label htmlFor="target_value" className="gap-xs flex items-center">
+            <Label
+              htmlFor="target_value"
+              className="gap-xs flex items-center justify-center"
+            >
               <Target className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.goals.form.targetValueLabel')}
             </Label>
-            <Input
-              id="target_value"
-              type="number"
-              min="1"
-              {...register('target_value', {
-                setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
-              })}
-              disabled={isLoading}
+            <Controller
+              control={control}
+              name="target_value"
+              render={({ field }) => (
+                <NumberStepper
+                  aria-invalid={!!errors.target_value}
+                  id="target_value"
+                  disabled={isLoading}
+                  min={1}
+                  value={field.value}
+                  onChange={field.onChange}
+                  className="mx-auto"
+                />
+              )}
             />
-            {errors.target_value && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.target_value.message}
-              </p>
-            )}
           </div>
 
           {!isAutoType && (
@@ -302,20 +302,20 @@ export function GoalForm({
                 <Target className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.goals.form.currentValueLabel')}
               </Label>
-              <Input
-                id="current_value"
-                type="number"
-                min="0"
-                {...register('current_value', {
-                  setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
-                })}
-                disabled={isLoading}
+              <Controller
+                control={control}
+                name="current_value"
+                render={({ field }) => (
+                  <NumberStepper
+                    aria-invalid={!!errors.current_value}
+                    id="current_value"
+                    disabled={isLoading}
+                    min={0}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
-              {errors.current_value && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.current_value.message}
-                </p>
-              )}
             </div>
           )}
         </div>
@@ -329,6 +329,7 @@ export function GoalForm({
               {t('pages.goals.form.startDateLabel')}
             </Label>
             <DatePicker
+              aria-invalid={!!errors.start_date}
               value={watch('start_date')}
               onChange={(date) =>
                 setValue('start_date', date ? formatLocalDate(date) : '')
@@ -336,11 +337,6 @@ export function GoalForm({
               placeholder={t('pages.goals.form.startDatePlaceholder')}
               disabled={isLoading}
             />
-            {errors.start_date && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.start_date.message}
-              </p>
-            )}
           </div>
 
           {hasComputedEndDate ? (
@@ -352,13 +348,6 @@ export function GoalForm({
               <div className="border-input bg-muted/40 text-muted-foreground flex h-10 items-center rounded-md border px-3 text-sm">
                 {computedEndDate ? formatDate(computedEndDate) : '—'}
               </div>
-              <p className="text-muted-foreground text-xs">
-                {t(
-                  isManualSource
-                    ? 'pages.goals.form.endDateComputedManualHint'
-                    : 'pages.goals.form.endDateComputedHint'
-                )}
-              </p>
             </div>
           ) : (
             <div className="space-y-sm">
@@ -367,6 +356,7 @@ export function GoalForm({
                 {t('pages.goals.form.endDateLabel')}
               </Label>
               <DatePicker
+                aria-invalid={!!errors.end_date}
                 value={watch('end_date') ?? ''}
                 onChange={(date) =>
                   setValue('end_date', date ? formatLocalDate(date) : null)
@@ -374,11 +364,6 @@ export function GoalForm({
                 placeholder={t('pages.goals.form.endDatePlaceholder')}
                 disabled={isLoading}
               />
-              {errors.end_date && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.end_date.message}
-                </p>
-              )}
             </div>
           )}
         </div>
@@ -395,7 +380,7 @@ export function GoalForm({
             onValueChange={(value) => setValue('status', value)}
             disabled={isLoading}
           >
-            <SelectTrigger>
+            <SelectTrigger aria-invalid={!!errors.status}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -412,25 +397,21 @@ export function GoalForm({
               ))}
             </SelectContent>
           </Select>
-          {errors.status && (
-            <p className="mt-xs text-destructive text-sm">{errors.status.message}</p>
-          )}
         </div>
       </FormSection>
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <>
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-              {t('common.actions.saving')}
-            </>
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            t('common.actions.save')
+            <Save className="h-4 w-4" />
           )}
+          {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>
     </form>

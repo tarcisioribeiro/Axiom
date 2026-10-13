@@ -1,36 +1,56 @@
 /* eslint-disable max-lines */
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  ArrowDownUp,
   ArrowLeft,
   ArrowLeftRight,
+  CalendarDays,
+  Check,
+  CheckCircle2,
+  CircleDot,
   Link2,
+  Minus,
   Plus,
   RefreshCw,
   Search,
+  Shapes,
   Unlink,
+  X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
+import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { StatCard } from '@/components/common/StatCard';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { BANK_RECONCILIATION_STATUS_ICONS } from '@/config/icons';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { cn } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import { bankReconciliationService } from '@/services/bank-reconciliation-service';
 import { expensesService } from '@/services/expenses-service';
 import { revenuesService } from '@/services/revenues-service';
@@ -99,10 +119,12 @@ function EntryStatusBadge({ status }: { status: BankStatementEntry['status'] }) 
     unmatched: t('pages.bankReconciliation.detail.statusUnmatched'),
     ignored: t('pages.bankReconciliation.detail.statusIgnored'),
   };
+  const StatusIcon = BANK_RECONCILIATION_STATUS_ICONS[status];
   return (
     <span
-      className={`px-sm inline-flex items-center rounded-full border py-0.5 text-xs font-medium ${variants[status]}`}
+      className={`px-sm gap-xs inline-flex items-center rounded-full border py-0.5 text-xs font-medium ${variants[status]}`}
     >
+      {StatusIcon && <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />}
       {labels[status] ?? status}
     </span>
   );
@@ -120,6 +142,49 @@ export default function BankReconciliationDetail() {
   const [loading, setLoading] = useState(true);
   const [matchLoading, setMatchLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+
+  // Filtros da tabela principal — 100% client-side sobre `entries`.
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<
+    BankStatementEntry['status'] | 'all'
+  >('all');
+  const [transactionTypeFilter, setTransactionTypeFilter] = useState<
+    BankStatementEntry['transaction_type'] | 'all'
+  >('all');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+
+  const hasActiveFilters =
+    !!searchTerm ||
+    statusFilter !== 'all' ||
+    transactionTypeFilter !== 'all' ||
+    !!startDate ||
+    !!endDate;
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setTransactionTypeFilter('all');
+    setStartDate(undefined);
+    setEndDate(undefined);
+  };
+
+  const filteredEntries = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return entries.filter((entry) => {
+      if (term && !entry.description.toLowerCase().includes(term)) return false;
+      if (statusFilter !== 'all' && entry.status !== statusFilter) return false;
+      if (
+        transactionTypeFilter !== 'all' &&
+        entry.transaction_type !== transactionTypeFilter
+      )
+        return false;
+      const entryDate = entry.date.slice(0, 10);
+      if (startDate && entryDate < formatLocalDate(startDate)) return false;
+      if (endDate && entryDate > formatLocalDate(endDate)) return false;
+      return true;
+    });
+  }, [entries, searchTerm, statusFilter, transactionTypeFilter, startDate, endDate]);
 
   // Manual match modal state
   const [matchingEntry, setMatchingEntry] = useState<BankStatementEntry | null>(null);
@@ -375,6 +440,7 @@ export default function BankReconciliationDetail() {
                 variant="outline"
                 className="border-success/50 text-success hover:bg-success/10"
                 disabled={isUpdating}
+                aria-label={t('common.actions.confirm')}
                 onClick={() =>
                   handleUpdateEntry(
                     entry,
@@ -384,7 +450,7 @@ export default function BankReconciliationDetail() {
                   )
                 }
               >
-                ✓
+                <Check aria-hidden="true" />
               </Button>
             )}
             {(entry.status === 'pending' || entry.status === 'unmatched') && (
@@ -395,19 +461,20 @@ export default function BankReconciliationDetail() {
                     variant="outline"
                     className="border-destructive/50 text-destructive hover:bg-destructive/10"
                     disabled={isUpdating}
+                    aria-label={t('pages.bankReconciliation.detail.unmatchBtn')}
                     onClick={() => handleUpdateEntry(entry, 'unmatched')}
                   >
-                    ✗
+                    <X aria-hidden="true" />
                   </Button>
                 )}
                 <Button
                   size="sm"
                   variant="outline"
                   disabled={isUpdating}
-                  title={t('pages.bankReconciliation.detail.ignoreBtn')}
+                  aria-label={t('pages.bankReconciliation.detail.ignoreBtn')}
                   onClick={() => handleUpdateEntry(entry, 'ignored')}
                 >
-                  —
+                  <Minus aria-hidden="true" />
                 </Button>
               </>
             )}
@@ -469,12 +536,8 @@ export default function BankReconciliationDetail() {
   return (
     <PageContainer>
       <div className="mb-lg gap-md flex items-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/bank-reconciliation')}
-        >
-          <ArrowLeft className="mr-xs h-4 w-4" />
+        <Button variant="ghost" size="sm" onClick={() => navigate('/accounts')}>
+          <ArrowLeft className="h-4 w-4" />
           {t('common.actions.back')}
         </Button>
       </div>
@@ -536,28 +599,6 @@ export default function BankReconciliationDetail() {
         </div>
       </div>
 
-      <div className="mb-lg mt-lg gap-md grid grid-cols-2 sm:grid-cols-4">
-        <StatCard
-          title={t('pages.bankReconciliation.detail.matched')}
-          value={importData.matched_count}
-          variant="success"
-        />
-        <StatCard
-          title={t('pages.bankReconciliation.detail.divergences')}
-          value={importData.unmatched_count}
-          variant="danger"
-        />
-        <StatCard
-          title={t('pages.bankReconciliation.detail.ignored')}
-          value={importData.ignored_count}
-        />
-        <StatCard
-          title={t('pages.bankReconciliation.detail.pending')}
-          value={pendingCount}
-          variant="warning"
-        />
-      </div>
-
       <div className="mb-md gap-md flex items-center">
         <Badge variant="outline">{importData.file_format.toUpperCase()}</Badge>
         <span className="text-muted-foreground text-sm">
@@ -568,22 +609,157 @@ export default function BankReconciliationDetail() {
         </span>
       </div>
 
+      <FilterBar
+        className="mb-md"
+        hasActiveFilters={hasActiveFilters}
+        onClear={clearFilters}
+        activeFilters={[
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${t(`pages.bankReconciliation.detail.status${statusFilter.charAt(0).toUpperCase()}${statusFilter.slice(1)}`)}`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+          ...(transactionTypeFilter !== 'all'
+            ? [
+                {
+                  key: 'type',
+                  label: `${t('pages.bankReconciliation.detail.allTypes')}: ${t(`pages.bankReconciliation.detail.${transactionTypeFilter}`)}`,
+                  onRemove: () => setTransactionTypeFilter('all'),
+                },
+              ]
+            : []),
+          ...(startDate
+            ? [
+                {
+                  key: 'startDate',
+                  label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
+                  onRemove: () => setStartDate(undefined),
+                },
+              ]
+            : []),
+          ...(endDate
+            ? [
+                {
+                  key: 'endDate',
+                  label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
+                  onRemove: () => setEndDate(undefined),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.bankReconciliation.detail.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-44"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+          >
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.bankReconciliation.detail.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
+              <SelectValue
+                placeholder={t('pages.bankReconciliation.detail.allStatus')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.bankReconciliation.detail.allStatus')}
+              </SelectItem>
+              <SelectItem
+                value="matched"
+                icon={<BANK_RECONCILIATION_STATUS_ICONS.matched className="h-4 w-4" />}
+              >
+                {t('pages.bankReconciliation.detail.statusMatched')}
+              </SelectItem>
+              <SelectItem
+                value="unmatched"
+                icon={
+                  <BANK_RECONCILIATION_STATUS_ICONS.unmatched className="h-4 w-4" />
+                }
+              >
+                {t('pages.bankReconciliation.detail.statusUnmatched')}
+              </SelectItem>
+              <SelectItem
+                value="ignored"
+                icon={<BANK_RECONCILIATION_STATUS_ICONS.ignored className="h-4 w-4" />}
+              >
+                {t('pages.bankReconciliation.detail.statusIgnored')}
+              </SelectItem>
+              <SelectItem
+                value="pending"
+                icon={<BANK_RECONCILIATION_STATUS_ICONS.pending className="h-4 w-4" />}
+              >
+                {t('pages.bankReconciliation.detail.statusPending')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.type')} icon={Shapes}>
+          <Select
+            value={transactionTypeFilter}
+            onValueChange={(v) =>
+              setTransactionTypeFilter(v as typeof transactionTypeFilter)
+            }
+          >
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.bankReconciliation.detail.allTypes')}
+              startIcon={<ArrowDownUp className="h-3.5 w-3.5" />}
+            >
+              <SelectValue
+                placeholder={t('pages.bankReconciliation.detail.allTypes')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.bankReconciliation.detail.allTypes')}
+              </SelectItem>
+              <SelectItem value="debit">
+                {t('pages.bankReconciliation.detail.debit')}
+              </SelectItem>
+              <SelectItem value="credit">
+                {t('pages.bankReconciliation.detail.credit')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartChange={setStartDate}
+            onEndChange={setEndDate}
+          />
+        </FilterField>
+      </FilterBar>
+
       <DataTable
-        data={entries}
+        data={filteredEntries}
         columns={columns}
         keyExtractor={(entry) => entry.id}
+        pageSize={LIST_PAGE_SIZE}
         emptyState={{
           icon: <ArrowLeftRight className="h-12 w-12" />,
           title: t('pages.bankReconciliation.detail.emptyTitle'),
-          message: t('pages.bankReconciliation.detail.emptyMessage'),
         }}
         rowClassName={(entry) => {
-          if (entry.status === 'matched')
-            return 'bg-success/[0.03] border-l-4 border-l-success';
-          if (entry.status === 'unmatched')
-            return 'bg-destructive/[0.03] border-l-4 border-l-destructive';
-          if (entry.status === 'ignored') return 'opacity-50 border-l-4 border-l-muted';
-          return 'border-l-4 border-l-warning';
+          if (entry.status === 'matched') return 'bg-success/[0.03]';
+          if (entry.status === 'unmatched') return 'bg-destructive/[0.03]';
+          if (entry.status === 'ignored') return 'opacity-50';
+          return '';
         }}
       />
 
@@ -626,54 +802,66 @@ export default function BankReconciliationDetail() {
             </div>
           )}
 
-          <div className="relative">
-            <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
-            <Input
-              className="pl-xl"
-              placeholder={
-                candidateLabel === 'despesas'
-                  ? t('pages.bankReconciliation.detail.searchExpenses')
-                  : t('pages.bankReconciliation.detail.searchRevenues')
-              }
-              value={candidateSearch}
-              onChange={(e) => setCandidateSearch(e.target.value)}
-            />
-          </div>
+          <SearchInput
+            placeholder={
+              candidateLabel === 'despesas'
+                ? t('pages.bankReconciliation.detail.searchExpenses')
+                : t('pages.bankReconciliation.detail.searchRevenues')
+            }
+            value={candidateSearch}
+            onValueChange={setCandidateSearch}
+          />
 
-          <div className="space-y-sm max-h-72 overflow-y-auto">
+          <div>
             {candidateLoading ? (
               <p className="py-md text-muted-foreground text-center text-sm">
                 {t('common.actions.loading')}
               </p>
             ) : candidates.length === 0 ? (
-              <p className="py-md text-muted-foreground text-center text-sm">
-                {candidateLabel === 'despesas'
-                  ? t('pages.bankReconciliation.detail.noExpensesFound')
-                  : t('pages.bankReconciliation.detail.noRevenuesFound')}
-              </p>
+              <EmptyState
+                icon={<Link2 className="h-6 w-6" />}
+                title={
+                  candidateLabel === 'despesas'
+                    ? t('pages.bankReconciliation.detail.noExpensesFound')
+                    : t('pages.bankReconciliation.detail.noRevenuesFound')
+                }
+              />
             ) : (
-              candidates.map((c) => (
-                <div
-                  key={c.id}
-                  className="gap-sm p-sm flex items-center justify-between rounded-md border text-sm"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{c.description}</p>
-                    <p className="text-muted-foreground">
-                      {formatDate(c.date)} · {formatCurrency(Math.abs(Number(c.value)))}
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    disabled={updatingId === matchingEntry?.id}
-                    onClick={() => void handleManualMatch(c.id)}
-                  >
-                    {t('pages.bankReconciliation.detail.linkBtn')}
-                  </Button>
-                </div>
-              ))
+              <PaginatedSlide
+                key={candidateSearch}
+                items={candidates}
+                pageSize={LIST_PAGE_SIZE}
+                pinNav={false}
+                className="space-y-sm"
+              >
+                {(pageCandidates) =>
+                  pageCandidates.map((c) => (
+                    <div
+                      key={c.id}
+                      className="gap-sm p-sm flex items-center justify-between rounded-md border text-sm"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{c.description}</p>
+                        <p className="text-muted-foreground">
+                          {formatDate(c.date)} ·{' '}
+                          {formatCurrency(Math.abs(Number(c.value)))}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        disabled={updatingId === matchingEntry?.id}
+                        onClick={() => void handleManualMatch(c.id)}
+                      >
+                        <Link2 className="h-4 w-4" />
+                        {t('pages.bankReconciliation.detail.linkBtn')}
+                      </Button>
+                    </div>
+                  ))
+                }
+              </PaginatedSlide>
             )}
           </div>
+          <DialogCloseFooter />
         </DialogContent>
       </Dialog>
     </PageContainer>

@@ -1,29 +1,30 @@
 /* eslint-disable max-lines */
 import {
-  Plus,
+  CalendarDays,
+  CheckCircle2,
+  CircleDot,
+  Download,
   Pencil,
+  Plus,
+  Search,
+  Tag,
   Trash2,
   TrendingUp,
-  Download,
-  CheckCircle2,
-  Clock,
-  Tag,
-  CircleDot,
 } from 'lucide-react';
-import { useMemo, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable } from '@/components/common/DataTable';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { ExportModal } from '@/components/common/ExportModal';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
+import { TransactionsTabsNav } from '@/components/common/TransactionsTabsNav';
 import { ReceiptButton } from '@/components/receipts';
 import { RevenueForm } from '@/components/revenues/RevenueForm';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -38,8 +39,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { REVENUE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
-import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
+import { PAYMENT_STATUS_ICONS, REVENUE_CATEGORY_ICONS } from '@/config/icons';
+import { useCurrentMember } from '@/hooks/use-current-member';
 import { useRevenuesPage } from '@/hooks/use-revenues-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
@@ -53,6 +56,8 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
 export default function Revenues({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  // Pré-carrega para o modal do formulário já abrir completo (sem campo surgindo depois).
+  useCurrentMember();
   const {
     revenues,
     accounts,
@@ -85,51 +90,10 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
     handleDelete,
     handleSubmit,
     handleExport,
-    totalRevenues,
     hasActiveFilters,
     columns,
     prefillRevenueData,
   } = useRevenuesPage();
-
-  const BREAKDOWN_COLORS = [
-    'bg-success',
-    'bg-primary',
-    'bg-info',
-    'bg-warning',
-    'bg-accent',
-    'bg-destructive',
-  ] as const;
-
-  const { receivedCount, receivedAmount, pendingCount, pendingAmount } = useMemo(() => {
-    const filtered = revenues.filter(
-      (r) => !r.related_transfer && !r.is_transfer_generated && !r.is_initial_balance
-    );
-    const received = filtered.filter((r) => r.received);
-    const pending = filtered.filter((r) => !r.received);
-    return {
-      receivedCount: received.length,
-      receivedAmount: received.reduce((s, r) => s + parseFloat(r.value), 0),
-      pendingCount: pending.length,
-      pendingAmount: pending.reduce((s, r) => s + parseFloat(r.value), 0),
-    };
-  }, [revenues]);
-
-  const categoryBreakdown = useMemo(() => {
-    const groups: Record<string, number> = {};
-    for (const r of revenues.filter(
-      (r) => !r.related_transfer && !r.is_transfer_generated && !r.is_initial_balance
-    )) {
-      groups[r.category] = (groups[r.category] ?? 0) + parseFloat(r.value);
-    }
-    const total = Object.values(groups).reduce((s, v) => s + v, 0);
-    return Object.entries(groups)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 6)
-      .map(([cat, amount]) => ({
-        cat,
-        pct: total > 0 ? (amount / total) * 100 : 0,
-      }));
-  }, [revenues]);
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
@@ -151,6 +115,8 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
           </Button>
         </div>
       </PageHeader>
+
+      {embedded && <TransactionsTabsNav />}
 
       <FilterBar
         hasActiveFilters={hasActiveFilters}
@@ -194,135 +160,70 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             : []),
         ]}
       >
-        <SearchInput
-          placeholder={t('pages.revenues.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-44"
-        />
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-40" startIcon={<Tag className="h-3.5 w-3.5" />}>
-            <SelectValue placeholder={t('pages.revenues.allCategories')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.revenues.allCategories')}</SelectItem>
-            {REVENUE_CATEGORIES_CANONICAL.map(({ key }) => {
-              const Icon = REVENUE_CATEGORY_ICONS[key];
-              return (
-                <SelectItem
-                  key={key}
-                  value={key}
-                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
-                >
-                  {translate('revenueCategories', key)}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger
-            className="w-36"
-            startIcon={<CircleDot className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.revenues.allStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.revenues.allStatus')}</SelectItem>
-            <SelectItem value="received">
-              {t('pages.revenues.stats.received')}
-            </SelectItem>
-            <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
-          </SelectContent>
-        </Select>
-        <DateRangeFilter
-          startDate={startDate}
-          endDate={endDate}
-          onStartChange={setStartDate}
-          onEndChange={setEndDate}
-        />
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.revenues.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-44"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-40" startIcon={<Tag className="h-3.5 w-3.5" />}>
+              <SelectValue placeholder={t('pages.revenues.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.revenues.allCategories')}</SelectItem>
+              {REVENUE_CATEGORIES_CANONICAL.map(({ key }) => {
+                const Icon = REVENUE_CATEGORY_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {translate('revenueCategories', key)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-36"
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.revenues.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.revenues.allStatus')}</SelectItem>
+              <SelectItem
+                value="received"
+                icon={<PAYMENT_STATUS_ICONS.received className="h-4 w-4" />}
+              >
+                {t('pages.revenues.stats.received')}
+              </SelectItem>
+              <SelectItem
+                value="pending"
+                icon={<PAYMENT_STATUS_ICONS.pending className="h-4 w-4" />}
+              >
+                {t('common.status.pending')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartChange={setStartDate}
+            onEndChange={setEndDate}
+          />
+        </FilterField>
       </FilterBar>
-
-      <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
-        <Card className="border-t-success/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.revenues.stats.totalAmount')}
-            </p>
-            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-              <TrendingUp className="text-success h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">
-              {formatCurrency(totalRevenues)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.revenues.entriesCount', { count: revenues.length })}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-primary/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.revenues.stats.received')}</p>
-            <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
-              <CheckCircle2 className="text-primary h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-primary text-2xl font-bold">{receivedCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {formatCurrency(receivedAmount)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-warning/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.revenues.stats.pending')}</p>
-            <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
-              <Clock className="text-warning h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-warning text-2xl font-bold">{pendingCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {formatCurrency(pendingAmount)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {categoryBreakdown.length > 1 && (
-        <div className="bg-card p-md rounded-lg border">
-          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            {t('pages.revenues.byCategory')}
-          </p>
-          <div className="bg-muted flex h-2 overflow-hidden rounded-full">
-            {categoryBreakdown.map(({ cat, pct }, i) => (
-              <div
-                key={cat}
-                className={`h-full transition-[width] ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
-                style={{ width: `${pct}%` }}
-                title={`${translateCategory(cat, 'revenue')}: ${pct.toFixed(1)}%`}
-              />
-            ))}
-          </div>
-          <div className="mt-sm gap-md flex flex-wrap">
-            {categoryBreakdown.map(({ cat, pct }, i) => (
-              <div key={cat} className="gap-xs flex items-center">
-                <span
-                  className={`h-2 w-2 shrink-0 rounded-full ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
-                />
-                <span className="text-muted-foreground text-xs">
-                  {translateCategory(cat, 'revenue')} · {Math.round(pct)}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <DataTable
         data={revenues}
@@ -332,7 +233,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
         rowClassName={(revenue) => (revenue.received ? 'opacity-60' : '')}
         emptyState={{
           icon: <TrendingUp className="text-muted-foreground h-12 w-12" />,
-          message: t('pages.revenues.emptyState'),
+          title: t('pages.revenues.emptyState'),
         }}
         pagination={{
           page,
@@ -367,7 +268,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
                 </span>
               </div>
             </div>
-            <div className="mt-sm gap-xs flex items-center justify-end">
+            <div className="mt-sm gap-xs flex items-center justify-center">
               {revenue.received && (
                 <ReceiptButton
                   source={{ type: 'revenue', data: revenue }}
@@ -394,7 +295,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
           </div>
         )}
         actions={(revenue) => (
-          <div className="gap-sm flex items-center justify-end">
+          <div className="gap-sm flex items-center justify-center">
             {revenue.received && (
               <ReceiptButton
                 source={{ type: 'revenue', data: revenue }}
@@ -427,7 +328,6 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
         open={isExportModalOpen}
         onOpenChange={setIsExportModalOpen}
         title={t('pages.revenues.exportTitle')}
-        description={t('pages.revenues.exportDesc')}
         onExport={handleExport}
         initialDateFrom={startDate}
         initialDateTo={endDate}
@@ -436,16 +336,18 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={selectedRevenue ? 'edit' : 'create'}>
               {selectedRevenue
                 ? t('pages.revenues.editTitle')
                 : t('pages.revenues.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedRevenue
-                ? t('pages.revenues.editDesc')
-                : t('pages.revenues.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedRevenue
+                  ? t('pages.revenues.editDesc')
+                  : t('pages.revenues.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <RevenueForm
             revenue={selectedRevenue}

@@ -9,8 +9,10 @@ import {
   Tag,
   TrendingUp,
   Wallet,
+  Save,
+  X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -30,23 +32,16 @@ import {
 import { StatusToggle } from '@/components/ui/status-toggle';
 import { TimePicker } from '@/components/ui/time-picker';
 import {
+  isRevenueCategoryAllowed,
   REVENUE_CATEGORIES_CANONICAL,
   TRANSLATIONS,
   translate,
 } from '@/config/constants';
 import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
+import { useCurrentMember } from '@/hooks/use-current-member';
 import { formatCurrency } from '@/lib/formatters';
-import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
-import { membersService } from '@/services/members-service';
-import type {
-  Account,
-  FixedRevenue,
-  Loan,
-  Member,
-  Revenue,
-  RevenueFormData,
-} from '@/types';
+import type { Account, FixedRevenue, Loan, Revenue, RevenueFormData } from '@/types';
 
 export interface RevenuePrefillData {
   description?: string;
@@ -76,8 +71,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
   isLoading = false,
 }) => {
   const { t } = useTranslation();
-  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
-  const [eligibleLoans, setEligibleLoans] = useState<Loan[]>([]);
+  const { data: currentUserMember = null } = useCurrentMember();
   const [linksOpen, setLinksOpen] = useState(false);
 
   const { register, handleSubmit, setValue, watch } = useForm<RevenueFormData>({
@@ -108,29 +102,21 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
   });
 
   useEffect(() => {
-    const loadCurrentUserMember = async () => {
-      try {
-        const member = await membersService.getCurrentUserMember();
-        setCurrentUserMember(member);
-        if (!revenue) setValue('member', member.id);
-      } catch (error) {
-        logger.error('Erro ao carregar membro do usuário:', error);
-      }
-    };
-    void loadCurrentUserMember();
-  }, [revenue, setValue]);
+    if (currentUserMember && !revenue) setValue('member', currentUserMember.id);
+  }, [currentUserMember, revenue, setValue]);
 
-  useEffect(() => {
-    if (loans && currentUserMember) {
-      const filtered = loans.filter(
-        (loan) =>
-          loan.creditor === currentUserMember.id &&
-          loan.status !== 'paid' &&
-          loan.status !== 'cancelled'
-      );
-      setEligibleLoans(filtered);
-    }
-  }, [loans, currentUserMember]);
+  const eligibleLoans = useMemo(
+    () =>
+      loans && currentUserMember
+        ? loans.filter(
+            (loan) =>
+              loan.creditor === currentUserMember.id &&
+              loan.status !== 'paid' &&
+              loan.status !== 'cancelled'
+          )
+        : [],
+    [loans, currentUserMember]
+  );
 
   useEffect(() => {
     if (!revenue && prefillData) {
@@ -272,19 +258,23 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                 <SelectValue placeholder={t('common.actions.select')} />
               </SelectTrigger>
               <SelectContent>
-                {revenueCategories.map(({ key }) => {
-                  const Icon = REVENUE_CATEGORY_ICONS[key];
-                  return (
-                    <SelectItem key={key} value={key}>
-                      <span className="flex items-center gap-2">
-                        {Icon && (
-                          <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
-                        )}
-                        {translate('revenueCategories', key)}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
+                {revenueCategories
+                  .filter(({ key }) =>
+                    isRevenueCategoryAllowed(key, selectedAccount?.account_type)
+                  )
+                  .map(({ key }) => {
+                    const Icon = REVENUE_CATEGORY_ICONS[key];
+                    return (
+                      <SelectItem key={key} value={key}>
+                        <span className="flex items-center gap-2">
+                          {Icon && (
+                            <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
+                          )}
+                          {translate('revenueCategories', key)}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
               </SelectContent>
             </Select>
           </div>
@@ -368,9 +358,6 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-muted-foreground text-xs">
-                {t('pages.revenues.form.relatedLoanHint')}
-              </p>
 
               {eligibleFixedRevenues.length > 0 && (
                 <div className="space-y-sm">
@@ -404,9 +391,6 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.revenues.form.relatedFixedRevenueHint')}
-                  </p>
                 </div>
               )}
             </div>
@@ -414,21 +398,22 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
         </div>
       )}
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <>
-              <Loader2 className="mr-xs h-4 w-4 animate-spin" />
-              {t('common.actions.saving')}
-            </>
-          ) : revenue ? (
-            t('common.actions.update')
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            t('common.actions.create')
+            <Save className="h-4 w-4" />
           )}
+          {isLoading
+            ? t('common.actions.saving')
+            : revenue
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
     </form>

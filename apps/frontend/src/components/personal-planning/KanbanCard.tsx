@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { PomodoroTriggerButton } from '@/components/personal-planning/PomodoroTimer';
 import { Badge } from '@/components/ui/badge';
 import { getIconByName } from '@/components/ui/icon-picker';
 import { cn } from '@/lib/utils';
@@ -60,29 +59,6 @@ export function KanbanCard({ card }: KanbanCardProps) {
     return colors[category] || 'bg-muted text-muted-foreground border-transparent';
   };
 
-  const getCategoryBorderColor = (category: string) => {
-    const borders: Record<string, string> = {
-      health: 'border-l-category-health',
-      intellect: 'border-l-category-studies',
-      studies: 'border-l-category-studies',
-      spiritual: 'border-l-category-spiritual',
-      exercise: 'border-l-category-exercise',
-      nutrition: 'border-l-category-nutrition',
-      meditation: 'border-l-category-spiritual',
-      reading: 'border-l-category-studies',
-      writing: 'border-l-category-work',
-      work: 'border-l-category-work',
-      leisure: 'border-l-category-leisure',
-      family: 'border-l-accent',
-      social: 'border-l-category-leisure',
-      finance: 'border-l-category-finance',
-      household: 'border-l-category-nutrition',
-      personal_care: 'border-l-category-health',
-      other: 'border-l-muted-foreground',
-    };
-    return borders[category] || 'border-l-muted-foreground';
-  };
-
   const getPriorityIndicator = (priority?: string) => {
     if (!priority || priority === 'low') return null;
     if (priority === 'high')
@@ -113,15 +89,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: isDragging ? 0.4 : 1, y: 0, scale: isDragging ? 1.03 : 1 }}
       exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.18, ease: 'easeOut' }}
-      whileHover={{
-        scale: isDragging ? 1.03 : 1.01,
-        boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-      }}
-      className={cn(
-        'border-border bg-card p-md cursor-grab rounded-lg border border-l-4 shadow-sm active:cursor-grabbing',
-        getCategoryBorderColor(card.category)
-      )}
+      className="border-border bg-card p-md cursor-grab rounded-lg border active:cursor-grabbing"
     >
       <div className="flex items-start gap-3">
         {/* Drag Handle / Done indicator */}
@@ -186,7 +154,6 @@ export function KanbanCard({ card }: KanbanCardProps) {
               className="gap-xs flex flex-wrap items-center"
               onPointerDown={(e) => e.stopPropagation()}
             >
-              {!isDone && <PomodoroTriggerButton taskName={card.task_name} />}
               {card.is_optional && (
                 <Badge variant="outline" className="text-xs">
                   {t('pages.dailyChecklist.optionalBadge', {

@@ -60,7 +60,7 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="gap-md bg-card p-md flex items-center rounded-lg border shadow-sm"
+      className="gap-md bg-card p-md flex items-center rounded-lg border"
     >
       <PlainButton
         {...attributes}
@@ -122,8 +122,7 @@ export function ReadingQueueTab() {
         return await booksService.getReadingQueue();
       } catch (err) {
         toast({
-          title: t('pages.readingQueue.errorLoad'),
-          description: getErrorMessage(err),
+          title: t('pages.readingQueue.errorLoad', { reason: getErrorMessage(err) }),
           variant: 'destructive',
         });
         return EMPTY_QUEUE;
@@ -141,8 +140,7 @@ export function ReadingQueueTab() {
         }));
         void booksService.reorderQueue(items).catch((err: unknown) => {
           toast({
-            title: t('pages.readingQueue.errorSave'),
-            description: getErrorMessage(err),
+            title: t('pages.readingQueue.errorSave', { reason: getErrorMessage(err) }),
             variant: 'destructive',
           });
         });
@@ -171,7 +169,6 @@ export function ReadingQueueTab() {
       <EmptyState
         icon={<BookOpen className="text-muted-foreground h-12 w-12" />}
         title={t('pages.readingQueue.emptyTitle')}
-        message={t('pages.readingQueue.emptyDesc')}
       />
     );
   }

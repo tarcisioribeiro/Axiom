@@ -1,3 +1,4 @@
+import { CheckCircle2, Loader2, Receipt, Save, Wallet, X } from 'lucide-react';
 /* eslint-disable react-hooks/incompatible-library */
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -115,7 +116,8 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
       {/* Campos editáveis */}
       <div className="space-y-md">
         <div className="space-y-sm">
-          <Label htmlFor="value">
+          <Label className="gap-xs flex items-center" htmlFor="value">
+            <Wallet className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.creditCardExpenses.installmentForm.installmentValueLabel')}
           </Label>
           <Controller
@@ -141,7 +143,8 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
         </div>
 
         <div className="space-y-sm">
-          <Label>
+          <Label className="gap-xs flex items-center">
+            <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.creditCardExpenses.installmentForm.paymentStatusLabel')}
           </Label>
           <Select
@@ -160,7 +163,10 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
         </div>
 
         <div className="space-y-sm">
-          <Label>{t('pages.creditCardExpenses.installmentForm.billLabel')}</Label>
+          <Label className="gap-xs flex items-center">
+            <Receipt className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.creditCardExpenses.installmentForm.billLabel')}
+          </Label>
           <Select
             value={watch('bill')?.toString() || 'none'}
             onValueChange={(v) => setValue('bill', v === 'none' ? null : parseInt(v))}
@@ -188,11 +194,17 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
         </div>
       </div>
 
-      <div className="gap-sm pt-md flex justify-end">
+      <div className="dialog-footer gap-sm pt-md flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
           {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>

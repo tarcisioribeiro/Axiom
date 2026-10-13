@@ -77,29 +77,35 @@ def _build_classification_prompt(
 
 
 def apply_heuristic_rules(user, merchant: str) -> str | None:
-    """Retorna a categoria da primeira regra ativa que corresponder.
+    """Retorna a categoria da primeira regra de automação simples (merchant
+    contém X → definir categoria) que corresponder.
 
     Utiliza fuzzy matching (partial_ratio ≥ 80) além de substring exata,
     igual ao comportamento do sinal pre_save em signals.py.
     """
-    from expenses.models import CategorizationRule
+    from expenses.models import AutomationRule
+    from expenses.signals import _simple_merchant_category_rule
 
     if not merchant:
         return None
 
     merchant_lower = merchant.lower()
-    rules = CategorizationRule.objects.filter(
+    rules = AutomationRule.objects.filter(
         owner=user, is_active=True, is_deleted=False
     ).order_by("priority", "created_at")
 
     for rule in rules:
-        rule_lower = rule.merchant_contains.lower()
+        simple_rule = _simple_merchant_category_rule(rule)
+        if simple_rule is None:
+            continue
+        merchant_value, category = simple_rule
+        rule_lower = merchant_value.lower()
         if (
             rule_lower in merchant_lower
             or fuzz.partial_ratio(rule_lower, merchant_lower)
             >= FUZZY_MATCH_THRESHOLD
         ):
-            return rule.category
+            return category
 
     return None
 

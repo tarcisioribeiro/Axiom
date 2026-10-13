@@ -1,4 +1,4 @@
-import { Download, Loader2 } from 'lucide-react';
+import { CalendarDays, Download, FileType, Loader2, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,7 +7,6 @@ import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -30,7 +29,6 @@ interface ExportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description?: string;
   onExport: (params: ExportParams) => Promise<void>;
   initialDateFrom?: Date;
   initialDateTo?: Date;
@@ -45,7 +43,6 @@ export function ExportModal({
   open,
   onOpenChange,
   title,
-  description,
   onExport,
   initialDateFrom,
   initialDateTo,
@@ -82,36 +79,47 @@ export function ExportModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
+          <DialogTitle className="gap-sm flex items-center">
+            <Download className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
+            {title}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-md">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-xs">
-              <Label className="text-sm">{t('common.export.dateFrom')}</Label>
+              <Label className="gap-xs flex items-center text-sm">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('common.export.dateFrom')}
+              </Label>
               <DatePicker
                 value={dateFrom}
                 onChange={setDateFrom}
                 placeholder={t('common.export.from')}
-                clearable
+                floating={false}
               />
             </div>
             <div className="space-y-xs">
-              <Label className="text-sm">{t('common.export.dateTo')}</Label>
+              <Label className="gap-xs flex items-center text-sm">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('common.export.dateTo')}
+              </Label>
               <DatePicker
                 value={dateTo}
                 onChange={setDateTo}
                 placeholder={t('common.export.to')}
-                clearable
+                floating={false}
               />
             </div>
           </div>
 
           <div className="space-y-xs">
-            <Label className="text-sm">{t('common.export.format')}</Label>
+            <Label className="gap-xs flex items-center text-sm">
+              <FileType className="text-muted-foreground h-3.5 w-3.5" />
+              {t('common.export.format')}
+            </Label>
             <Select
               value={exportFormat}
               onValueChange={(v) => setExportFormat(v as 'csv' | 'pdf')}
@@ -125,18 +133,15 @@ export function ExportModal({
               </SelectContent>
             </Select>
           </div>
-
-          <p className="text-muted-foreground text-xs">
-            {t('common.export.activeFiltersNote')}
-          </p>
         </div>
 
-        <div className="gap-sm pt-sm flex justify-end">
+        <div className="dialog-footer gap-sm pt-sm flex justify-end">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isExporting}
           >
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button onClick={handleExport} disabled={isExporting} className="gap-sm">

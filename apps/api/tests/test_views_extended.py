@@ -705,19 +705,26 @@ class ExpensesExtendedViewTest(BaseWithMemberTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_list_categorization_rules(self):
-        url = reverse("categorization-rule-list")
+    def test_list_automation_rules(self):
+        url = reverse("automation-rule-list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_create_categorization_rule(self):
-        url = reverse("categorization-rule-list")
+    def test_create_automation_rule(self):
+        url = reverse("automation-rule-list")
         data = {
-            "merchant_contains": "starbucks",
-            "category": "food and drink",
+            "name": "Categorizar: starbucks",
+            "conditions": [
+                {
+                    "field": "merchant",
+                    "operator": "contains",
+                    "value": "starbucks",
+                }
+            ],
+            "actions": [{"type": "set_category", "value": "food and drink"}],
             "is_active": True,
         }
-        response = self.client.post(url, data)
+        response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 

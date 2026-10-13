@@ -1,4 +1,15 @@
-import { CheckCircle2, Compass, Lightbulb, Search } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  Compass,
+  EyeOff,
+  Lightbulb,
+  Search,
+  SkipForward,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
@@ -22,6 +33,13 @@ const VAULT_WIZARD_KEY = 'vault_onboarding_completed';
 
 const ICONS = [Compass, Lightbulb, Search];
 
+// Mesma técnica de slide do PaginatedSlide: direção conforme avança/volta.
+const slideVariants = {
+  enter: (dir: number) => ({ opacity: 0, x: dir * 24 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: dir * -24 }),
+};
+
 // Tour guiado por tela: aparece sempre ao entrar, exceto se o usuário marcou
 // "não mostrar mais". O botão do header reabre via OPEN_TOUR_EVENT.
 export function PageTour() {
@@ -31,6 +49,10 @@ export function PageTour() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [dontShow, setDontShow] = useState(false);
+  // Direção derivada do passo anterior, para o slide ir ‹ ou › conforme o
+  // botão clicado (mesmo padrão do PaginatedSlide).
+  const [last, setLast] = useState({ step: 0, direction: 1 });
+  if (last.step !== step) setLast({ step, direction: step > last.step ? 1 : -1 });
 
   // Ao trocar de página, reinicia e decide se abre (ajuste de estado no render).
   const [lastPath, setLastPath] = useState<string | null>(null);
@@ -71,7 +93,7 @@ export function PageTour() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
             <Compass className="text-primary h-5 w-5" />
@@ -100,12 +122,25 @@ export function PageTour() {
           ))}
         </div>
 
-        <div className="gap-md py-md flex flex-col items-center text-center">
-          <Icon className="text-primary h-16 w-16" />
-          <div className="space-y-xs">
-            <h3 className="text-lg font-semibold">{steps[step].title}</h3>
-            <p className="text-muted-foreground text-sm">{steps[step].desc}</p>
-          </div>
+        {/* Altura fixa: o modal não muda de tamanho entre passos. */}
+        <div className="py-md h-60 overflow-hidden">
+          <AnimatePresence mode="wait" initial={false} custom={last.direction}>
+            <motion.div
+              key={step}
+              custom={last.direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="gap-md flex h-full flex-col items-center overflow-y-auto text-center"
+            >
+              <Icon className="text-primary h-16 w-16" />
+              <div className="space-y-xs">
+                <h3 className="text-lg font-semibold">{steps[step].title}</h3>
+                <p className="text-muted-foreground text-sm">{steps[step].desc}</p>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         <label className="gap-sm text-muted-foreground flex cursor-pointer items-center text-sm">
@@ -113,23 +148,34 @@ export function PageTour() {
             checked={dontShow}
             onCheckedChange={(c) => setDontShow(c === true)}
           />
-          {t('pageTour.dontShowAgain')}
+          <span className="gap-xs flex items-center">
+            <EyeOff className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pageTour.dontShowAgain')}
+          </span>
         </label>
 
-        <div className="gap-sm flex justify-between">
+        <div className="dialog-footer gap-sm flex justify-between">
           {step > 0 ? (
             <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
+              <ArrowLeft className="h-4 w-4" />
               {t('pageTour.back')}
             </Button>
           ) : (
             <Button variant="ghost" onClick={close}>
+              <SkipForward className="h-4 w-4" />
               {t('pageTour.skip')}
             </Button>
           )}
           {step < steps.length - 1 ? (
-            <Button onClick={() => setStep((s) => s + 1)}>{t('pageTour.next')}</Button>
+            <Button onClick={() => setStep((s) => s + 1)}>
+              <ArrowRight className="h-4 w-4" />
+              {t('pageTour.next')}
+            </Button>
           ) : (
-            <Button onClick={close}>{t('pageTour.finish')}</Button>
+            <Button onClick={close}>
+              <Check className="h-4 w-4" />
+              {t('pageTour.finish')}
+            </Button>
           )}
         </div>
       </DialogContent>

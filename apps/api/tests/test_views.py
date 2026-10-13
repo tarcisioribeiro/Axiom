@@ -411,6 +411,24 @@ class MemberViewTest(BaseAPITestCase):
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_create_member_rejects_future_birth_date_and_bad_email(self):
+        """Data de nascimento futura e e-mail malformado são rejeitados"""
+        url = reverse("member-create-list")
+        data = {
+            "name": "Ana Souza",
+            "document": "55566677788",
+            "phone": "11666666666",
+            "email": "nao-e-email",
+            "sex": "F",
+            "birth_date": "2999-01-01",
+        }
+
+        response = self.client.post(url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("birth_date", response.data)  # type: ignore
+        self.assertIn("email", response.data)  # type: ignore
+
 
 class CashFlowForecastViewTest(BaseAPITestCase):
     """Testes para CashFlowForecastView"""

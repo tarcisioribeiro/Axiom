@@ -136,20 +136,6 @@ export interface WellnessInterventionCompletion {
   created_at: string;
 }
 
-export interface WellnessWeeklyReport {
-  id: number;
-  week_start: string;
-  week_end: string;
-  ai_summary: string;
-  attention_points: string[];
-  suggestions: string[];
-  avg_loneliness: string | null;
-  avg_anxiety: string | null;
-  avg_motivation: string | null;
-  latest_self_esteem_score: number | null;
-  created_at: string;
-}
-
 export interface WellnessDashboard {
   self_esteem: {
     current_score: number | null;
@@ -252,18 +238,6 @@ class WellnessService {
   getCompletions(): Promise<PaginatedResponse<WellnessInterventionCompletion>> {
     return apiClient.get<PaginatedResponse<WellnessInterventionCompletion>>(
       API_CONFIG.ENDPOINTS.WELLNESS_INTERVENTION_COMPLETIONS
-    );
-  }
-
-  getWeeklyReports(): Promise<PaginatedResponse<WellnessWeeklyReport>> {
-    return apiClient.get<PaginatedResponse<WellnessWeeklyReport>>(
-      API_CONFIG.ENDPOINTS.WELLNESS_WEEKLY_REPORTS
-    );
-  }
-
-  generateWeeklyReport(): Promise<WellnessWeeklyReport> {
-    return apiClient.post<WellnessWeeklyReport>(
-      API_CONFIG.ENDPOINTS.WELLNESS_WEEKLY_REPORTS_GENERATE
     );
   }
 }

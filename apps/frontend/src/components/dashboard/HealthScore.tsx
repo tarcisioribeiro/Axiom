@@ -105,7 +105,7 @@ function DimensionBar({
       <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
         <div
           className={cn(
-            'h-full w-full origin-left rounded-full transition-transform duration-700',
+            'duration-slow h-full w-full origin-left rounded-full transition-transform',
             barColor
           )}
           style={{ transform: `scaleX(${pct / 100})` }}

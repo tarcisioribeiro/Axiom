@@ -63,3 +63,17 @@ class ThemeSyncTests(APITestCase):
         self.assertEqual(
             client.get("/api/v1/me/theme/").json(), {"theme": None}
         )
+
+    def test_issue_token_over_http_requires_login_and_replaces_old(self):
+        url = "/api/v1/me/theme/sync-token/"
+        self.assertEqual(self.anon.post(url).status_code, 401)
+
+        client = APIClient()
+        access = RefreshToken.for_user(self.user).access_token
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+        new = client.post(url).json()["token"]
+
+        self.assertEqual(self._sync("dracula", token=new).status_code, 200)
+        self.assertEqual(
+            self._sync("dracula", token=self.token).status_code, 401
+        )

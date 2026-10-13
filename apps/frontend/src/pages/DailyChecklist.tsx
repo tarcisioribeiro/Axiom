@@ -14,40 +14,44 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import {
-  Save,
+  AlertCircle,
   CheckCircle2,
   Circle,
-  StickyNote,
-  RefreshCw,
-  ExternalLink,
-  AlertCircle,
+  CircleDot,
+  Coffee,
   Flame,
   LayoutList,
-  Zap,
   Moon,
+  Pause,
+  Play,
+  RefreshCw,
+  RotateCcw,
   Sun,
   Sunset,
-  Timer,
-  Play,
-  Pause,
-  RotateCcw,
+  Tag,
+  Target,
+  Zap,
 } from 'lucide-react';
 import {
   useState,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useCallback,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { DailyFocusBlocks } from '@/components/personal-planning/DailyFocusBlocks';
 import { KanbanCard } from '@/components/personal-planning/KanbanCard';
 import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
@@ -57,16 +61,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CircularProgress } from '@/components/ui/circular-progress';
 import { DatePicker } from '@/components/ui/date-picker';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
@@ -76,35 +70,43 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SuccessAnimation } from '@/components/ui/success-animation';
-import { Textarea } from '@/components/ui/textarea';
+import { Tooltip } from '@/components/ui/tooltip';
 import { translate } from '@/config/constants';
+import { DAILY_CHECKLIST_STATUS_ICONS, TASK_CATEGORY_ICONS } from '@/config/icons';
 import { useTaskReminders } from '@/hooks/use-task-reminders';
 import { useToast } from '@/hooks/use-toast';
 import { cn, formatLocalDate, parseLocalDate } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
 import { appService } from '@/services/app-service';
-import { dailyReflectionsService } from '@/services/daily-reflections-service';
 import { membersService } from '@/services/members-service';
 import { taskInstancesService } from '@/services/task-instances-service';
 import { useNotificationsStore } from '@/stores/notifications-store';
 import {
-  MOOD_CHOICES,
+  TASK_CATEGORIES,
   type TaskInstance,
   type TaskCard,
   type KanbanStatus,
   type InstanceStatus,
+  type InstancesForDateResponse,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type ViewMode = 'list' | 'kanban' | 'focusBlocks';
+const EMPTY_INSTANCES: TaskInstance[] = [];
 const VIEW_MODE_KEY = 'dailyChecklist.viewMode';
 const POMODORO_CYCLES_KEY = 'dailyChecklist.pomodoroCycles';
+const LIST_PAGE_SIZE = 5;
 
 type PomodoroMode = 'focus' | 'shortBreak' | 'longBreak';
 const POMODORO_DURATIONS: Record<PomodoroMode, number> = {
   focus: 25 * 60,
   shortBreak: 5 * 60,
   longBreak: 15 * 60,
+};
+const POMODORO_MODE_ICONS: Record<PomodoroMode, typeof Target> = {
+  focus: Target,
+  shortBreak: Coffee,
+  longBreak: Moon,
 };
 
 function PomodoroBar() {
@@ -169,29 +171,28 @@ function PomodoroBar() {
         : 'hsl(var(--warning))';
 
   return (
-    <div className="gap-md bg-card px-lg py-md flex items-center rounded-lg border">
-      <div className="gap-sm flex items-center">
-        <Timer className="text-muted-foreground h-4 w-4" />
-        <span className="text-muted-foreground text-sm font-medium">
-          {t('pages.todayTasks.pomodoroTitle')}
-        </span>
-      </div>
+    <div className="gap-md bg-card px-lg py-md flex flex-wrap items-center rounded-lg border">
       <div className="gap-xs flex items-center rounded-md border p-0.5">
-        {(['focus', 'shortBreak', 'longBreak'] as PomodoroMode[]).map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => switchMode(m)}
-            className={cn(
-              'px-sm py-xs rounded text-xs transition-colors',
-              mode === m
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            {t(`pages.todayTasks.pomodoroMode.${m}`)}
-          </button>
-        ))}
+        {(['focus', 'shortBreak', 'longBreak'] as PomodoroMode[]).map((m) => {
+          const ModeIcon = POMODORO_MODE_ICONS[m];
+          return (
+            <Tooltip key={m} content={t(`pages.todayTasks.pomodoroMode.${m}`)}>
+              <button
+                type="button"
+                onClick={() => switchMode(m)}
+                aria-label={t(`pages.todayTasks.pomodoroMode.${m}`)}
+                className={cn(
+                  'flex h-7 w-7 items-center justify-center rounded transition-colors',
+                  mode === m
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <ModeIcon className="h-4 w-4" />
+              </button>
+            </Tooltip>
+          );
+        })}
       </div>
       <CircularProgress value={progress} size={52} strokeWidth={4} color={ringColor}>
         <span className="text-xs font-bold tabular-nums">{timeString}</span>
@@ -258,41 +259,37 @@ const mapKanbanToInstance = (status: KanbanStatus): InstanceStatus => {
 
 interface DailyChecklistProps {
   embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
 }
 
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function DailyChecklist({ embedded = false }: DailyChecklistProps) {
-  const { t, i18n } = useTranslation();
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [instances, setInstances] = useState<TaskInstance[]>([]);
+export default function DailyChecklist({
+  embedded = false,
+  headerTarget,
+}: DailyChecklistProps) {
+  const { t } = useTranslation();
+  const [selectedDate, setSelectedDate] = useState<string>(() =>
+    formatLocalDate(new Date())
+  );
   const [cards, setCards] = useState<TaskCard[]>([]);
   const [activeCard, setActiveCard] = useState<TaskCard | null>(null);
-  const [reflection, setReflection] = useState('');
-  const [mood, setMood] = useState<string>('');
-  const [reflectionId, setReflectionId] = useState<number | undefined>();
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isReflectionOpen, setIsReflectionOpen] = useState(false);
   const [ownerId, setOwnerId] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>(
     () => (localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || 'kanban'
   );
   const [showCelebration, setShowCelebration] = useState(false);
   const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const prevDayRateRef = useRef<number>(0);
   const xp = useXPTrigger();
   useTaskReminders(cards);
-  const [summary, setSummary] = useState({
-    total: 0,
-    completed: 0,
-    in_progress: 0,
-    pending: 0,
-    completion_rate: 0,
-  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -354,14 +351,12 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     return { label: t('pages.todayTasks.greetingEvening'), Icon: Moon };
   }, [hour, t]);
 
-  useQuery({
+  const { data: instancesResponse, isLoading } = useQuery({
     queryKey: ['daily-checklist', 'data', selectedDate, ownerId],
-    queryFn: async () => {
-      await loadData();
-      return true;
-    },
+    queryFn: () => taskInstancesService.getForDate(selectedDate),
     enabled: ownerId > 0 && !!selectedDate,
   });
+  const instances = instancesResponse?.instances ?? EMPTY_INSTANCES;
 
   // Deriva os cards a partir de `instances` durante o render (sem efeito),
   // permitindo que `setCards` continue editável localmente (drag-and-drop).
@@ -396,8 +391,9 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
       setOwnerId(member.id);
     } catch (error: unknown) {
       toast({
-        title: t('pages.dailyChecklist.loadUserError'),
-        description: getErrorMessage(error),
+        title: t('pages.dailyChecklist.loadUserError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }
@@ -425,51 +421,22 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadedDateRef = useRef<string | null>(null);
-
-  const loadData = async (sync: boolean = false) => {
-    // A resposta de qualquer mutação no app invalida todas as queries
-    // (api-client.ts), incluindo esta. Só mostramos o loading de página
-    // inteira quando a data mudou de fato — do contrário, uma tarefa
-    // marcada como concluída dispara um refetch em segundo plano que
-    // piscaria a tela inteira sem necessidade.
-    const isFreshDate = loadedDateRef.current !== selectedDate;
-    try {
-      if (isFreshDate) setIsLoading(true);
-      const [instancesResponse, reflections] = await Promise.all([
-        taskInstancesService.getForDate(selectedDate, sync),
-        dailyReflectionsService.getAll(),
-      ]);
-      setInstances(instancesResponse.instances);
-      setSummary(instancesResponse.summary);
-      const dayReflection = reflections.find((r) => r.date === selectedDate);
-      if (dayReflection) {
-        setReflection(dayReflection.reflection);
-        setMood(dayReflection.mood || '');
-        setReflectionId(dayReflection.id);
-      } else {
-        setReflection('');
-        setMood('');
-        setReflectionId(undefined);
-      }
-      loadedDateRef.current = selectedDate;
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.dailyChecklist.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      if (isFreshDate) setIsLoading(false);
-    }
-  };
+  const setInstancesCache = useCallback(
+    (updater: (prev: TaskInstance[]) => TaskInstance[]) => {
+      queryClient.setQueryData<InstancesForDateResponse>(
+        ['daily-checklist', 'data', selectedDate, ownerId],
+        (prev) => (prev ? { ...prev, instances: updater(prev.instances) } : prev)
+      );
+    },
+    [queryClient, selectedDate, ownerId]
+  );
 
   const handleToggleTaskComplete = useCallback(
     async (task: TaskInstance) => {
       const newStatus: InstanceStatus =
         task.status === 'completed' ? 'pending' : 'completed';
       setUpdatingTaskId(task.id);
-      setInstances((prev) =>
+      setInstancesCache((prev) =>
         prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t))
       );
       try {
@@ -479,24 +446,30 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         // Ex.: tarefa vinculada ao treino não pode ser concluída manualmente
         if (result.errors.length > 0) throw new Error(result.errors[0].error);
       } catch (error: unknown) {
-        setInstances((prev) =>
+        setInstancesCache((prev) =>
           prev.map((t) => (t.id === task.id ? { ...t, status: task.status } : t))
         );
         toast({
-          title: t('pages.dailyChecklist.saveError'),
-          description: getErrorMessage(error),
+          title: t('pages.dailyChecklist.saveError', {
+            reason: getErrorMessage(error),
+          }),
           variant: 'destructive',
         });
       } finally {
         setUpdatingTaskId(null);
       }
     },
-    [toast, t]
+    [toast, t, setInstancesCache]
   );
 
+  // Status do card no início do arraste: o handleDragOver já move o card de
+  // coluna durante o arraste, então só ele diz se o status mudou de fato.
+  const dragOriginRef = useRef<KanbanStatus | null>(null);
+
   const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    setActiveCard(cards.find((c) => c.id === active.id) || null);
+    const card = cards.find((c) => c.id === event.active.id) || null;
+    setActiveCard(card);
+    dragOriginRef.current = card?.status ?? null;
   };
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -519,89 +492,29 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     });
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveCard(null);
-    if (!over) return;
-    const activeId = active.id as string;
-    const overId = over.id as string;
-    setCards((prevCards) => {
-      const ac = prevCards.find((c) => c.id === activeId);
-      const oc = prevCards.find((c) => c.id === overId);
-      if (!ac) return prevCards;
-      let finalStatus: KanbanStatus | undefined;
-      if (oc) finalStatus = oc.status;
-      else if (['todo', 'doing', 'done'].includes(overId))
-        finalStatus = overId as KanbanStatus;
-      if (!finalStatus) return prevCards;
-      if (finalStatus === 'done' && ac.status !== 'done') {
-        const vpW = window.innerWidth;
-        const vpH = window.innerHeight;
-        xp.fire(
-          vpW * 0.5 + (Math.random() - 0.5) * 120,
-          vpH * 0.45 + (Math.random() - 0.5) * 60
-        );
-      }
-      if (ac.status === finalStatus && oc) {
-        const ai = prevCards.findIndex((c) => c.id === activeId);
-        const oi = prevCards.findIndex((c) => c.id === overId);
-        return arrayMove(prevCards, ai, oi);
-      }
-      return prevCards;
-    });
-  };
+  const setCardStatus = (cardId: string, status: KanbanStatus) =>
+    setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, status } : c)));
 
-  const handleSave = async () => {
+  // Salva só o status do card movido; enquanto salva, o quadro fica travado.
+  const saveCardStatus = async (
+    card: TaskCard,
+    origin: KanbanStatus,
+    status: KanbanStatus
+  ) => {
+    setIsSaving(true);
     try {
-      setIsSaving(true);
-      const updates = cards.map((card) => ({
-        id: card.task_id,
-        status: mapKanbanToInstance(card.status),
-        notes: card.notes,
-      }));
-      const updatePromise = taskInstancesService.bulkUpdate(updates);
-      let reflectionPromise;
-      if (reflection.trim().length >= 10) {
-        const reflectionData = {
-          date: selectedDate,
-          reflection: reflection.trim(),
-          mood: mood || undefined,
-          owner: ownerId,
-        };
-        if (reflectionId) {
-          reflectionPromise = dailyReflectionsService.update(
-            reflectionId,
-            reflectionData
-          );
-        } else {
-          reflectionPromise = dailyReflectionsService.create(reflectionData);
-        }
-      }
-      const promises: Promise<unknown>[] = [updatePromise];
-      if (reflectionPromise) promises.push(reflectionPromise);
-      await Promise.all(promises);
-      const { errors } = await updatePromise;
-      if (errors.length > 0) {
-        toast({
-          title: t('pages.dailyChecklist.saveError'),
-          description: errors[0].error,
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: t('pages.dailyChecklist.saved'),
-          description: t('pages.dailyChecklist.savedDesc'),
-        });
-      }
-      // Invalida (em vez de recarregar direto) para que qualquer outra data
-      // já visitada nesta sessão também seja recarregada do servidor da
-      // próxima vez que for selecionada, em vez de servir dados em cache
-      // desatualizados.
+      const { errors } = await taskInstancesService.bulkUpdate([
+        { id: card.task_id, status: mapKanbanToInstance(status) },
+      ]);
+      // Ex.: tarefa vinculada ao treino não pode ser concluída manualmente
+      if (errors.length > 0) throw new Error(errors[0].error);
+      // Invalida para que outras datas já visitadas nesta sessão também sejam
+      // recarregadas do servidor em vez de servir cache desatualizado.
       void queryClient.invalidateQueries({ queryKey: ['daily-checklist', 'data'] });
     } catch (error: unknown) {
+      setCardStatus(card.id, origin);
       toast({
-        title: t('pages.dailyChecklist.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.dailyChecklist.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -609,19 +522,62 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     }
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveCard(null);
+    const origin = dragOriginRef.current;
+    dragOriginRef.current = null;
+    const activeId = active.id as string;
+    const card = cards.find((c) => c.id === activeId);
+    if (!card || !origin) return;
+    const overId = over?.id as string | undefined;
+    const overCard = cards.find((c) => c.id === overId);
+    const finalStatus =
+      overCard?.status ??
+      (overId && ['todo', 'doing', 'done'].includes(overId)
+        ? (overId as KanbanStatus)
+        : undefined);
+    // Solto fora do quadro: desfaz a mudança de coluna feita no dragOver.
+    if (!finalStatus) {
+      setCardStatus(activeId, origin);
+      return;
+    }
+    setCards((prev) => {
+      const next = prev.map((c) =>
+        c.id === activeId ? { ...c, status: finalStatus } : c
+      );
+      if (!overCard || overCard.id === activeId) return next;
+      return arrayMove(
+        next,
+        next.findIndex((c) => c.id === activeId),
+        next.findIndex((c) => c.id === overCard.id)
+      );
+    });
+    if (finalStatus === origin) return;
+    if (finalStatus === 'done') {
+      xp.fire(
+        window.innerWidth * 0.5 + (Math.random() - 0.5) * 120,
+        window.innerHeight * 0.45 + (Math.random() - 0.5) * 60
+      );
+    }
+    void saveCardStatus(card, origin, finalStatus);
+  };
+
   const handleSync = async () => {
     try {
       setIsSyncing(true);
-      await loadData(true);
+      const synced = await taskInstancesService.getForDate(selectedDate, true);
+      queryClient.setQueryData(
+        ['daily-checklist', 'data', selectedDate, ownerId],
+        synced
+      );
       void queryClient.invalidateQueries({ queryKey: ['daily-checklist', 'data'] });
       toast({
-        title: t('pages.dailyChecklist.synced'),
-        description: t('pages.dailyChecklist.syncedDesc'),
+        title: t('pages.dailyChecklist.syncedDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: t('pages.dailyChecklist.syncError'),
-        description: getErrorMessage(error),
+        title: t('pages.dailyChecklist.syncError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -654,13 +610,21 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
 
   const completedTasks = cardsByStatus.done.length;
 
-  const dateLabel = selectedDate
-    ? new Date(selectedDate + 'T00:00:00').toLocaleDateString(i18n.language, {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-      })
-    : '';
+  const filteredInstances = instances.filter((instance) => {
+    if (categoryFilter !== 'all' && instance.category !== categoryFilter) return false;
+    if (statusFilter !== 'all') {
+      const isCompleted = instance.status === 'completed';
+      if (statusFilter === 'completed' ? !isCompleted : isCompleted) return false;
+    }
+    return true;
+  });
+
+  const hasActiveFilters = categoryFilter !== 'all' || statusFilter !== 'all';
+
+  const clearFilters = () => {
+    setCategoryFilter('all');
+    setStatusFilter('all');
+  };
 
   const viewToggle = (
     <div className="flex items-center rounded-md border p-0.5">
@@ -713,32 +677,42 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     </div>
   );
 
+  // Limita a altura das colunas do kanban ao espaço que sobra na viewport,
+  // para a página não ganhar scroll. Mede o topo do quadro com offsetTop (e
+  // não getBoundingClientRect) para ignorar o transform da animação de
+  // entrada da página.
+  const boardRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const board = boardRef.current;
+      if (!board) return;
+      let top = 0;
+      let el: Element | null = board;
+      while (el instanceof HTMLElement) {
+        top += el.offsetTop;
+        el = el.offsetParent;
+      }
+      board.style.setProperty(
+        '--kanban-max-h',
+        `calc(100vh - ${top}px - var(--spacing-xl))`
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(document.body);
+    return () => observer.disconnect();
+  }, [isLoading, viewMode, instances.length]);
+
   if (isLoading) return <LoadingState />;
 
   const GreetIcon = greeting.Icon;
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
-
-  return (
-    <Wrapper>
-      <XPFloating onMount={xp.register} />
-      <SuccessAnimation
-        show={showCelebration}
-        variant="celebration"
-        size="lg"
-        onComplete={() => setShowCelebration(false)}
-        className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
-      />
-
-      {!embedded && (
-        <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />}>
-          {viewToggle}
-        </PageHeader>
-      )}
-
+  const toolbar = (
+    <div className="gap-md flex flex-wrap items-center">
       <PomodoroBar />
 
       {/* Saudação + progresso do dia */}
-      <div className="gap-lg bg-card px-lg py-md flex items-center rounded-lg border">
+      <div className="gap-md bg-card px-lg py-md flex items-center rounded-lg border">
         <CircularProgress
           value={dayRate}
           size={64}
@@ -747,24 +721,16 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         >
           <span className="text-sm font-bold">{completedTasks}</span>
         </CircularProgress>
-        <div className="flex-1">
-          <div className="gap-sm flex items-center">
-            <GreetIcon className="text-muted-foreground h-5 w-5" />
-            <span className="text-lg font-semibold">{greeting.label}</span>
-          </div>
-          <p className="text-muted-foreground mt-0.5 capitalize">{dateLabel}</p>
+        <div className="gap-sm flex items-center">
+          <GreetIcon className="text-muted-foreground h-5 w-5" />
+          <span className="text-lg font-semibold">{greeting.label}</span>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold">
-            {completedTasks}
-            <span className="text-muted-foreground text-base font-normal">
-              /{cards.length}
-            </span>
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {t('pages.todayTasks.tasksLabel')}
-          </p>
-        </div>
+        <p className="text-2xl font-bold">
+          {completedTasks}
+          <span className="text-muted-foreground text-base font-normal">
+            /{cards.length}
+          </span>
+        </p>
       </div>
 
       {gamification && (
@@ -775,7 +741,9 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
             </div>
             <div className="hidden sm:block">
               <p className="text-xs font-medium">
-                {t('pages.dailyChecklist.level', { level: gamification.current_level })}
+                {t('pages.dailyChecklist.level', {
+                  level: gamification.current_level,
+                })}
               </p>
               <p className="text-muted-foreground text-xs">
                 {gamification.total_xp} XP
@@ -793,7 +761,9 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
             <div className="bg-muted h-1.5 overflow-hidden rounded-full">
               <div
                 className="bg-primary h-full rounded-full transition-[width]"
-                style={{ width: `${Math.min(gamification.level_progress_pct, 100)}%` }}
+                style={{
+                  width: `${Math.min(gamification.level_progress_pct, 100)}%`,
+                }}
               />
             </div>
           </div>
@@ -808,6 +778,59 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         </div>
       )}
 
+      <div className="gap-sm flex items-center">
+        <div role="group" aria-label={t('common.fields.date')}>
+          <DatePicker
+            value={selectedDate ? parseLocalDate(selectedDate) : undefined}
+            onChange={(date) => {
+              setSelectedDate(date ? formatLocalDate(date) : '');
+            }}
+            placeholder={t('pages.dailyChecklist.datePlaceholder')}
+            maxDate={new Date()}
+            className="max-w-xs"
+          />
+        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleSync}
+          disabled={isSyncing || isLoading}
+          aria-label={t('pages.dailyChecklist.syncBtn')}
+        >
+          <RefreshCw
+            className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
+            aria-hidden="true"
+          />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const header = (
+    <PageHeader
+      title={t('pages.dailyChecklist.title')}
+      icon={<CheckCircle2 />}
+      childrenClassName="flex flex-1 items-center"
+    >
+      <div className="flex-1" />
+      {toolbar}
+      <div className="flex flex-1 justify-end">{viewToggle}</div>
+    </PageHeader>
+  );
+
+  return (
+    <Wrapper>
+      <XPFloating onMount={xp.register} />
+      <SuccessAnimation
+        show={showCelebration}
+        variant="celebration"
+        size="lg"
+        onComplete={() => setShowCelebration(false)}
+        className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
+      />
+
+      {headerTarget ? createPortal(header, headerTarget) : header}
+
       {overdueTaskNotifications.length > 0 && (
         <div className="gap-sm border-destructive/30 bg-destructive/10 px-md py-sm text-destructive flex items-center rounded-lg border text-sm">
           <AlertCircle className="h-4 w-4 shrink-0" />
@@ -819,293 +842,261 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         </div>
       )}
 
-      {/* Toolbar */}
-      <div className="gap-md flex flex-wrap items-center">
-        {embedded && viewToggle}
-        <div className="gap-sm flex items-end">
-          <div>
-            <Label htmlFor="date">{t('common.fields.date')}</Label>
-            <DatePicker
-              value={selectedDate ? parseLocalDate(selectedDate) : undefined}
-              onChange={(date) => setSelectedDate(date ? formatLocalDate(date) : '')}
-              placeholder={t('pages.dailyChecklist.datePlaceholder')}
-              maxDate={new Date()}
-              className="max-w-xs"
-            />
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleSync}
-            disabled={isSyncing || isLoading}
-            aria-label={t('pages.dailyChecklist.syncBtn')}
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
-              aria-hidden="true"
-            />
-          </Button>
-          <Dialog open={isReflectionOpen} onOpenChange={setIsReflectionOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="relative"
-                aria-label={t('pages.dailyChecklist.addReflection')}
-              >
-                <StickyNote className="h-4 w-4" aria-hidden="true" />
-                {(reflection.trim() || mood) && (
-                  <span className="bg-primary absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full" />
-                )}
-              </Button>
-            </DialogTrigger>
-            <DialogContent size="md">
-              <DialogHeader>
-                <DialogTitle>{t('pages.dailyChecklist.reflectionTitle')}</DialogTitle>
-                <DialogDescription>
-                  {t('pages.dailyChecklist.reflectionPlaceholder')}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-md py-md">
-                <div>
-                  <Label htmlFor="mood">{t('pages.dailyChecklist.moodQuestion')}</Label>
-                  <Select value={mood} onValueChange={setMood}>
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('pages.dailyChecklist.moodPlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MOOD_CHOICES.map((choice) => (
-                        <SelectItem key={choice.value} value={choice.value}>
-                          {choice.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="reflection">
-                    {t('pages.dailyChecklist.reflectionLabel')}
-                  </Label>
-                  <Textarea
-                    id="reflection"
-                    value={reflection}
-                    onChange={(e) => setReflection(e.target.value)}
-                    placeholder={t('pages.dailyChecklist.reflectionTextPlaceholder')}
-                    rows={6}
-                  />
-                  {reflection.length > 0 && reflection.length < 10 && (
-                    <p className="mt-xs text-destructive text-sm">
-                      {t('pages.dailyChecklist.reflectionMinLength')}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <DialogFooter className="gap-sm flex-col sm:flex-row sm:items-center sm:justify-between">
-                <Link
-                  to="/planning/reflections"
-                  className="gap-xs text-muted-foreground hover:text-primary flex items-center text-xs transition-colors"
-                  onClick={() => setIsReflectionOpen(false)}
+      {/* Troca de modo: só animação de entrada (sem esperar a saída), para o
+          quadro/lista novo já estar montado quando os layout effects medem. */}
+      <motion.div
+        key={viewMode}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-lg"
+      >
+        {/* Vista Bloco de Foco */}
+        {viewMode === 'focusBlocks' && selectedDate && (
+          <DailyFocusBlocks
+            date={selectedDate}
+            ownerId={ownerId}
+            instances={instances}
+            onToggleTaskComplete={(task) => void handleToggleTaskComplete(task)}
+          />
+        )}
+
+        {/* Vista Lista */}
+        {viewMode === 'list' && (
+          <>
+            {instances.length === 0 ? (
+              <EmptyState
+                icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
+                title={t('pages.dailyChecklist.noTasks')}
+              />
+            ) : (
+              <>
+                <FilterBar
+                  hasActiveFilters={hasActiveFilters}
+                  onClear={clearFilters}
+                  activeFilters={[
+                    ...(categoryFilter !== 'all'
+                      ? [
+                          {
+                            key: 'category',
+                            label: `${t('pages.dailyChecklist.allCategories')}: ${translate('taskCategories', categoryFilter)}`,
+                            onRemove: () => setCategoryFilter('all'),
+                          },
+                        ]
+                      : []),
+                    ...(statusFilter !== 'all'
+                      ? [
+                          {
+                            key: 'status',
+                            label: `${t('common.fields.status')}: ${
+                              statusFilter === 'completed'
+                                ? t('pages.dailyChecklist.done')
+                                : t('common.status.pending')
+                            }`,
+                            onRemove: () => setStatusFilter('all'),
+                          },
+                        ]
+                      : []),
+                  ]}
                 >
-                  <ExternalLink className="h-3 w-3" />
-                  {t('pages.dailyChecklist.viewAllReflections')}
-                </Link>
-                <div className="gap-sm flex">
-                  <Button variant="outline" onClick={() => setIsReflectionOpen(false)}>
-                    {t('common.actions.close')}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      void handleSave().then(() => setIsReflectionOpen(false));
-                    }}
-                    disabled={
-                      isSaving ||
-                      (reflection.trim().length > 0 && reflection.trim().length < 10)
-                    }
-                  >
-                    {t('common.actions.save')}
-                  </Button>
-                </div>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <div className="flex-1" />
-        <div className="text-lg font-semibold">
-          {completedTasks}{' '}
-          {t('pages.dailyChecklist.itemsCompleted', { total: cards.length })}
-          {summary.completion_rate > 0 && (
-            <span className="ml-sm text-sm">
-              ({summary.completion_rate.toFixed(0)}%)
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Vista Bloco de Foco */}
-      {viewMode === 'focusBlocks' && selectedDate && (
-        <DailyFocusBlocks
-          date={selectedDate}
-          ownerId={ownerId}
-          instances={instances}
-          onToggleTaskComplete={(task) => void handleToggleTaskComplete(task)}
-        />
-      )}
-
-      {/* Vista Lista */}
-      {viewMode === 'list' && (
-        <>
-          {instances.length === 0 ? (
-            <EmptyState
-              icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
-              title={t('pages.dailyChecklist.noTasks')}
-              message={t('pages.dailyChecklist.noTasksDesc')}
-            />
-          ) : (
-            <div className="space-y-sm">
-              {instances.map((task) => {
-                const isCompleted = task.status === 'completed';
-                const isUpdating = updatingTaskId === task.id;
-                return (
-                  <div
-                    key={task.id}
-                    className={cn(
-                      'gap-md p-md flex items-center rounded-lg border transition-opacity',
-                      isCompleted && 'opacity-60'
-                    )}
-                  >
-                    <PlainButton
-                      type="button"
-                      disabled={isUpdating}
-                      onClick={() => void handleToggleTaskComplete(task)}
-                      className="text-muted-foreground hover:text-primary shrink-0 transition-colors disabled:opacity-50"
-                      title={
-                        isCompleted
-                          ? t('pages.todayTasks.markPending')
-                          : t('pages.todayTasks.markCompleted')
-                      }
-                    >
-                      {isCompleted ? (
-                        <CheckCircle2 className="text-success h-6 w-6" />
-                      ) : (
-                        <Circle className="h-6 w-6" />
-                      )}
-                    </PlainButton>
-                    <div className="flex-1">
-                      <h3
-                        className={cn(
-                          'gap-sm flex items-center font-semibold',
-                          isCompleted && 'line-through'
-                        )}
+                  <FilterField label={t('common.fields.category')} icon={Tag}>
+                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                      <SelectTrigger
+                        className="w-44"
+                        aria-label={t('pages.dailyChecklist.allCategories')}
+                        startIcon={<Tag className="h-3.5 w-3.5" />}
                       >
-                        {task.task_name}
-                        {task.is_optional && (
-                          <Badge variant="outline" className="text-xs">
-                            {t('pages.dailyChecklist.optionalBadge')}
-                          </Badge>
-                        )}
-                      </h3>
-                      {task.time_display && (
-                        <p className="text-muted-foreground text-sm">
-                          {t('pages.todayTasks.timeLabel', { time: task.time_display })}
-                        </p>
-                      )}
-                    </div>
-                    {task.category && (
-                      <TaskCategoryBadge
-                        icon={task.icon}
-                        label={translate('taskCategories', task.category)}
-                        category={task.category}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </>
-      )}
+                        <SelectValue
+                          placeholder={t('pages.dailyChecklist.allCategories')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.dailyChecklist.allCategories')}
+                        </SelectItem>
+                        {TASK_CATEGORIES.map(({ value }) => {
+                          const CatIcon = TASK_CATEGORY_ICONS[value];
+                          return (
+                            <SelectItem
+                              key={value}
+                              value={value}
+                              icon={
+                                CatIcon ? <CatIcon className="h-4 w-4" /> : undefined
+                              }
+                            >
+                              {translate('taskCategories', value)}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
+                  <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger
+                        className="w-36"
+                        aria-label={t('pages.dailyChecklist.allStatus')}
+                        startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                      >
+                        <SelectValue
+                          placeholder={t('pages.dailyChecklist.allStatus')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.dailyChecklist.allStatus')}
+                        </SelectItem>
+                        <SelectItem
+                          value="completed"
+                          icon={
+                            <DAILY_CHECKLIST_STATUS_ICONS.completed className="h-4 w-4" />
+                          }
+                        >
+                          {t('pages.dailyChecklist.done')}
+                        </SelectItem>
+                        <SelectItem
+                          value="pending"
+                          icon={
+                            <DAILY_CHECKLIST_STATUS_ICONS.pending className="h-4 w-4" />
+                          }
+                        >
+                          {t('common.status.pending')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
+                </FilterBar>
 
-      {/* Vista Kanban */}
-      {viewMode === 'kanban' && (
-        <>
-          {instances.length === 0 ? (
-            <EmptyState
-              icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
-              title={t('pages.dailyChecklist.noTasks')}
-              message={t('pages.dailyChecklist.noTasksDesc')}
-            />
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={rectIntersection}
-              measuring={measuringConfig}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-            >
-              <div className="gap-md md:gap-lg grid grid-cols-1 md:grid-cols-3">
-                <KanbanColumn
-                  status="todo"
-                  title={t('pages.dailyChecklist.todo')}
-                  cards={cardsByStatus.todo}
-                />
-                <KanbanColumn
-                  status="doing"
-                  title={t('pages.dailyChecklist.inProgress')}
-                  cards={cardsByStatus.doing}
-                />
-                <KanbanColumn
-                  status="done"
-                  title={t('pages.dailyChecklist.done')}
-                  cards={cardsByStatus.done}
-                />
-              </div>
-              <DragOverlay>
-                {activeCard ? <KanbanCard card={activeCard} /> : null}
-              </DragOverlay>
-            </DndContext>
-          )}
-
-          {requiredCards.length > 0 &&
-            requiredCards.every((c) => c.status === 'done') &&
-            !reflection.trim() && (
-              <div className="gap-md border-success/30 bg-success/5 px-md py-md flex items-center rounded-lg border">
-                <CheckCircle2 className="text-success h-6 w-6 shrink-0" />
-                <div className="flex-1">
-                  <p className="text-foreground text-sm font-medium">
-                    {t('pages.dailyChecklist.reflectionPrompt')}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsReflectionOpen(true)}
-                >
-                  <StickyNote className="mr-xs h-3.5 w-3.5" />
-                  {t('pages.dailyChecklist.addReflection')}
-                </Button>
-              </div>
+                {filteredInstances.length === 0 ? (
+                  <EmptyState
+                    icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
+                    title={t('pages.dailyChecklist.noTasks')}
+                  />
+                ) : (
+                  <PaginatedSlide
+                    key={selectedDate}
+                    items={filteredInstances}
+                    pageSize={LIST_PAGE_SIZE}
+                    centerList
+                    className="space-y-sm"
+                  >
+                    {(pageTasks) =>
+                      pageTasks.map((task) => {
+                        const isCompleted = task.status === 'completed';
+                        const isUpdating = updatingTaskId === task.id;
+                        return (
+                          <div
+                            key={task.id}
+                            className="gap-md p-md bg-card flex items-center rounded-lg border"
+                          >
+                            <PlainButton
+                              type="button"
+                              disabled={isUpdating}
+                              onClick={() => void handleToggleTaskComplete(task)}
+                              className="text-muted-foreground hover:text-primary shrink-0 transition-colors disabled:opacity-50"
+                              title={
+                                isCompleted
+                                  ? t('pages.todayTasks.markPending')
+                                  : t('pages.todayTasks.markCompleted')
+                              }
+                            >
+                              {isCompleted ? (
+                                <CheckCircle2 className="text-success h-6 w-6" />
+                              ) : (
+                                <Circle className="h-6 w-6" />
+                              )}
+                            </PlainButton>
+                            <div className="flex-1">
+                              <h3
+                                className={cn(
+                                  'gap-sm flex items-center font-semibold',
+                                  isCompleted && 'line-through'
+                                )}
+                              >
+                                {task.task_name}
+                                {task.is_optional && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {t('pages.dailyChecklist.optionalBadge')}
+                                  </Badge>
+                                )}
+                              </h3>
+                              {task.time_display && (
+                                <p className="text-muted-foreground text-sm">
+                                  {t('pages.todayTasks.timeLabel', {
+                                    time: task.time_display,
+                                  })}
+                                </p>
+                              )}
+                            </div>
+                            {task.category && (
+                              <TaskCategoryBadge
+                                icon={task.icon}
+                                label={translate('taskCategories', task.category)}
+                                category={task.category}
+                              />
+                            )}
+                          </div>
+                        );
+                      })
+                    }
+                  </PaginatedSlide>
+                )}
+              </>
             )}
+          </>
+        )}
 
-          <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={isSaving} size="lg">
-              {isSaving ? (
-                <>
-                  <Save className="mr-sm h-4 w-4 animate-pulse" />
-                  {t('common.actions.saving')}
-                </>
-              ) : (
-                <>
-                  <Save className="mr-sm h-4 w-4" />
-                  {t('common.actions.save')}
-                </>
-              )}
-            </Button>
-          </div>
-        </>
-      )}
+        {/* Vista Kanban */}
+        {viewMode === 'kanban' && (
+          <>
+            {instances.length === 0 ? (
+              <EmptyState
+                icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
+                title={t('pages.dailyChecklist.noTasks')}
+              />
+            ) : (
+              <DndContext
+                sensors={isSaving ? [] : sensors}
+                collisionDetection={rectIntersection}
+                measuring={measuringConfig}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+              >
+                {/* mb-0: o DndContext injeta nós ocultos de acessibilidade depois
+                  do quadro, então ele não é o último filho e receberia a
+                  margem inferior do space-y do wrapper. */}
+                <div
+                  ref={boardRef}
+                  aria-busy={isSaving}
+                  className={cn(
+                    'gap-md md:gap-lg mb-0 grid grid-cols-1 md:grid-cols-3',
+                    isSaving && 'pointer-events-none'
+                  )}
+                >
+                  <KanbanColumn
+                    status="todo"
+                    title={t('pages.dailyChecklist.todo')}
+                    cards={cardsByStatus.todo}
+                  />
+                  <KanbanColumn
+                    status="doing"
+                    title={t('pages.dailyChecklist.inProgress')}
+                    cards={cardsByStatus.doing}
+                  />
+                  <KanbanColumn
+                    status="done"
+                    title={t('pages.dailyChecklist.done')}
+                    cards={cardsByStatus.done}
+                  />
+                </div>
+                <DragOverlay>
+                  {activeCard ? <KanbanCard card={activeCard} /> : null}
+                </DragOverlay>
+              </DndContext>
+            )}
+          </>
+        )}
+      </motion.div>
     </Wrapper>
   );
 }

@@ -34,7 +34,6 @@ export default function AdminIntegrations() {
     <PageContainer>
       <PageHeader
         title={t('pages.adminIntegrations.title')}
-        subtitle={t('pages.adminIntegrations.subtitle')}
         icon={<Link2 />}
         actions={
           <button
@@ -68,7 +67,7 @@ export default function AdminIntegrations() {
                 <span className="text-muted-foreground">
                   {t('pages.adminIntegrations.model')}
                 </span>
-                <span className="text-foreground font-mono">{data.ollama_model}</span>
+                <span className="text-foreground">{data.ollama_model}</span>
               </>
             )}
             {data.llm_provider === 'anthropic' && data.anthropic_model && (
@@ -76,9 +75,7 @@ export default function AdminIntegrations() {
                 <span className="text-muted-foreground">
                   {t('pages.adminIntegrations.model')}
                 </span>
-                <span className="text-foreground font-mono">
-                  {data.anthropic_model}
-                </span>
+                <span className="text-foreground">{data.anthropic_model}</span>
               </>
             )}
           </div>

@@ -1,30 +1,34 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import {
-  Plus,
+  CalendarDays,
+  CheckCircle2,
+  CircleDot,
   Pencil,
+  Plus,
+  Search,
+  Tag,
   Trash2,
   TrendingUp,
-  CheckCircle2,
-  AlertTriangle,
-  Banknote,
-  Clock,
   Wallet,
 } from 'lucide-react';
 import { useState, useMemo, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
+import { ReceivableDetailModal } from '@/components/receivables/ReceivableDetailModal';
 import { ReceivableForm } from '@/components/receivables/ReceivableForm';
 import { ReceivableReceiptDialog } from '@/components/receivables/ReceivableReceiptDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -32,7 +36,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { TRANSLATIONS } from '@/config/constants';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import {
+  REVENUE_CATEGORIES_CANONICAL,
+  TRANSLATIONS,
+  translate,
+} from '@/config/constants';
+import { BILL_STATUS_ICONS, REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -57,7 +74,16 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function Receivables({ embedded = false }: { embedded?: boolean }) {
+interface ReceivablesProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
+export default function Receivables({
+  embedded = false,
+  headerTarget,
+}: ReceivablesProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -68,7 +94,12 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
     Receivable | undefined
   >();
   const [receiptReceivable, setReceiptReceivable] = useState<Receivable | null>(null);
+  const [detailReceivable, setDetailReceivable] = useState<Receivable | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
 
   const { data: receivables = [], isLoading: receivablesLoading } = useQuery({
     queryKey: ['receivables'],
@@ -92,14 +123,12 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
       void queryClient.invalidateQueries({ queryKey: ['receivables'] });
       toast({
         title: t('pages.receivables.created'),
-        description: t('pages.receivables.createdDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -112,14 +141,12 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
       void queryClient.invalidateQueries({ queryKey: ['receivables'] });
       toast({
         title: t('pages.receivables.updated'),
-        description: t('pages.receivables.updatedDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -131,13 +158,11 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
       void queryClient.invalidateQueries({ queryKey: ['receivables'] });
       toast({
         title: t('pages.receivables.deleted'),
-        description: t('pages.receivables.deletedDesc'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -172,305 +197,351 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
 
   const filteredReceivables = useMemo(
     () =>
-      receivables.filter((r) =>
-        r.description.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [receivables, searchTerm]
+      receivables.filter((r) => {
+        if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+        if (categoryFilter !== 'all' && r.category !== categoryFilter) return false;
+        if (startDate && (!r.due_date || new Date(r.due_date) < new Date(startDate)))
+          return false;
+        if (endDate && (!r.due_date || new Date(r.due_date) > new Date(endDate)))
+          return false;
+        return r.description.toLowerCase().includes(searchTerm.toLowerCase());
+      }),
+    [receivables, searchTerm, statusFilter, categoryFilter, startDate, endDate]
   );
-
-  const { activeCount, overdueCount, receivedCount, totalValue } = useMemo(() => {
-    return {
-      activeCount: receivables.filter((r) => r.status === 'active').length,
-      overdueCount: receivables.filter((r) => r.status === 'overdue').length,
-      receivedCount: receivables.filter((r) => r.status === 'received').length,
-      totalValue: receivables.reduce((s, r) => s + parseFloat(r.value), 0),
-    };
-  }, [receivables]);
 
   if (isLoading) return <LoadingState />;
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
+  const header = (
+    <PageHeader title={t('pages.receivables.title')} icon={<TrendingUp />}>
+      <Button onClick={handleCreate} className="gap-sm">
+        <Plus className="h-4 w-4" />
+        {t('pages.receivables.newBtn')}
+      </Button>
+    </PageHeader>
+  );
+
   return (
     <Wrapper>
-      <PageHeader title={t('pages.receivables.title')} icon={<TrendingUp />}>
-        <Button onClick={handleCreate} className="gap-sm">
-          <Plus className="h-4 w-4" />
-          {t('pages.receivables.newBtn')}
-        </Button>
-      </PageHeader>
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
-        <SearchInput
-          placeholder={t('pages.receivables.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-52 sm:w-64"
-        />
+      <FilterBar
+        hasActiveFilters={
+          !!searchTerm ||
+          statusFilter !== 'all' ||
+          categoryFilter !== 'all' ||
+          !!startDate ||
+          !!endDate
+        }
+        onClear={() => {
+          setSearchTerm('');
+          setStatusFilter('all');
+          setCategoryFilter('all');
+          setStartDate(undefined);
+          setEndDate(undefined);
+        }}
+        activeFilters={[
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${t(`pages.receivables.status.${statusFilter}`)}`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+          ...(categoryFilter !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('pages.receivables.allCategories')}: ${translate('revenueCategories', categoryFilter)}`,
+                  onRemove: () => setCategoryFilter('all'),
+                },
+              ]
+            : []),
+          ...(startDate
+            ? [
+                {
+                  key: 'startDate',
+                  label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
+                  onRemove: () => setStartDate(undefined),
+                },
+              ]
+            : []),
+          ...(endDate
+            ? [
+                {
+                  key: 'endDate',
+                  label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
+                  onRemove: () => setEndDate(undefined),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.receivables.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.receivables.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.receivables.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.receivables.allCategories')}
+              </SelectItem>
+              {REVENUE_CATEGORIES_CANONICAL.map(({ key }) => {
+                const Icon = REVENUE_CATEGORY_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {translate('revenueCategories', key)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.receivables.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.receivables.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.receivables.allStatus')}</SelectItem>
+              <SelectItem
+                value="active"
+                icon={<BILL_STATUS_ICONS.active className="h-4 w-4" />}
+              >
+                {t('pages.receivables.status.active')}
+              </SelectItem>
+              <SelectItem
+                value="received"
+                icon={<BILL_STATUS_ICONS.received className="h-4 w-4" />}
+              >
+                {t('pages.receivables.status.received')}
+              </SelectItem>
+              <SelectItem
+                value="overdue"
+                icon={<BILL_STATUS_ICONS.overdue className="h-4 w-4" />}
+              >
+                {t('pages.receivables.status.overdue')}
+              </SelectItem>
+              <SelectItem
+                value="cancelled"
+                icon={<BILL_STATUS_ICONS.cancelled className="h-4 w-4" />}
+              >
+                {t('pages.receivables.status.cancelled')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartChange={setStartDate}
+            onEndChange={setEndDate}
+          />
+        </FilterField>
       </FilterBar>
-
-      <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
-        <Card className="border-t-success/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.receivables.stats.total')}</p>
-            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-              <Banknote className="text-success h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">
-              {formatCurrency(totalValue)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.receivables.stats.totalSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-warning/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.receivables.stats.active')}</p>
-            <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
-              <Clock className="text-warning h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-warning text-2xl font-bold">{activeCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.receivables.stats.activeSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.receivables.stats.overdue')}
-            </p>
-            <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
-              <AlertTriangle className="text-destructive h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-destructive text-2xl font-bold">{overdueCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.receivables.stats.overdueSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-success/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.receivables.stats.received')}
-            </p>
-            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-              <CheckCircle2 className="text-success h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">{receivedCount}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.receivables.stats.receivedSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
 
       {filteredReceivables.length === 0 ? (
         <EmptyState
           icon={<TrendingUp className="text-muted-foreground h-12 w-12" />}
-          message={
+          title={
             searchTerm
               ? t('pages.receivables.emptySearch')
               : t('pages.receivables.emptyState')
           }
         />
       ) : (
-        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-          {filteredReceivables.map((receivable) => {
-            const getDueBadge = () => {
-              if (receivable.status === 'overdue')
-                return { label: 'Vencido', cls: 'bg-destructive/10 text-destructive' };
-              if (receivable.status === 'received') return null;
-              if (!receivable.due_date) return null;
-              const days = Math.ceil(
-                (new Date(receivable.due_date).getTime() - Date.now()) / 86400000
-              );
-              if (days < 0)
-                return { label: 'Vencido', cls: 'bg-destructive/10 text-destructive' };
-              if (days === 0)
-                return {
-                  label: 'Vence hoje',
-                  cls: 'bg-destructive/10 text-destructive',
-                };
-              if (days <= 7)
-                return { label: `${days}d`, cls: 'bg-warning/10 text-warning' };
-              return null;
-            };
-            const dueBadge = getDueBadge();
-            const urgencyClass =
-              receivable.status === 'overdue'
-                ? 'border-l-4 border-l-destructive'
-                : receivable.status === 'received'
-                  ? 'border-l-4 border-l-success'
-                  : receivable.status === 'cancelled'
-                    ? 'border-l-4 border-l-muted-foreground'
-                    : (() => {
-                        if (!receivable.due_date) return 'border-l-4 border-l-warning';
-                        const d = Math.ceil(
-                          (new Date(receivable.due_date).getTime() - Date.now()) /
-                            86400000
-                        );
-                        if (d <= 0) return 'border-l-4 border-l-destructive';
-                        if (d <= 7) return 'border-l-4 border-l-warning';
-                        return 'border-l-4 border-l-info';
-                      })();
+        <PaginatedSlide
+          key={`${searchTerm}-${statusFilter}-${categoryFilter}-${String(startDate)}-${String(endDate)}`}
+          items={filteredReceivables}
+          pageSize={GRID_PAGE_SIZE}
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+        >
+          {(pageItems) =>
+            pageItems.map((receivable) => {
+              const getDueBadge = () => {
+                if (receivable.status === 'overdue')
+                  return {
+                    label: 'Vencido',
+                    cls: 'bg-destructive/10 text-destructive',
+                  };
+                if (receivable.status === 'received') return null;
+                if (!receivable.due_date) return null;
+                const days = Math.ceil(
+                  (new Date(receivable.due_date).getTime() - Date.now()) / 86400000
+                );
+                if (days < 0)
+                  return {
+                    label: 'Vencido',
+                    cls: 'bg-destructive/10 text-destructive',
+                  };
+                if (days === 0)
+                  return {
+                    label: 'Vence hoje',
+                    cls: 'bg-destructive/10 text-destructive',
+                  };
+                if (days <= 7)
+                  return { label: `${days}d`, cls: 'bg-warning/10 text-warning' };
+                return null;
+              };
+              const dueBadge = getDueBadge();
+              const total = parseFloat(receivable.value);
+              const received = parseFloat(receivable.received_value);
+              const pct = total > 0 ? Math.min((received / total) * 100, 100) : 0;
+              const barColor =
+                pct >= 100 ? 'bg-success' : pct >= 50 ? 'bg-warning' : 'bg-info';
 
-            const total = parseFloat(receivable.value);
-            const received = parseFloat(receivable.received_value);
-            const pct = total > 0 ? Math.min((received / total) * 100, 100) : 0;
-            const barColor =
-              pct >= 100 ? 'bg-success' : pct >= 50 ? 'bg-warning' : 'bg-info';
+              return (
+                <div
+                  key={receivable.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    if (!(e.target as HTMLElement).closest('button'))
+                      setDetailReceivable(receivable);
+                  }}
+                  onKeyDown={(e) => {
+                    if (
+                      (e.key === 'Enter' || e.key === ' ') &&
+                      !(e.target as HTMLElement).closest('button')
+                    ) {
+                      e.preventDefault();
+                      setDetailReceivable(receivable);
+                    }
+                  }}
+                  className="bg-card p-md cursor-pointer space-y-3 rounded-lg border"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="gap-sm flex items-center">
+                        <h3 className="font-semibold">{receivable.description}</h3>
+                        {dueBadge && (
+                          <span
+                            className={cn(
+                              'px-xs rounded-full py-0.5 text-xs font-medium',
+                              dueBadge.cls
+                            )}
+                          >
+                            {dueBadge.label}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-muted-foreground text-sm">
+                        {TRANSLATIONS.revenueCategories[
+                          receivable.category as keyof typeof TRANSLATIONS.revenueCategories
+                        ] ?? receivable.category}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={STATUS_VARIANTS[receivable.status] ?? 'default'}
+                      className="gap-xs"
+                    >
+                      {(() => {
+                        const StatusIcon = BILL_STATUS_ICONS[receivable.status];
+                        return StatusIcon ? (
+                          <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                        ) : null;
+                      })()}
+                      {t(`pages.receivables.status.${receivable.status}`)}
+                    </Badge>
+                  </div>
 
-            return (
-              <div
-                key={receivable.id}
-                className={cn(
-                  'bg-card p-md space-y-3 rounded-lg border transition-shadow hover:shadow-md',
-                  urgencyClass
-                )}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="gap-sm flex items-center">
-                      <h3 className="font-semibold">{receivable.description}</h3>
-                      {dueBadge && (
-                        <span
-                          className={cn(
-                            'px-xs rounded-full py-0.5 text-xs font-medium',
-                            dueBadge.cls
-                          )}
+                  <div className="space-y-xs">
+                    <div className="bg-muted h-2 overflow-hidden rounded-full">
+                      <div
+                        className={cn(
+                          'h-full rounded-full transition-[width]',
+                          barColor
+                        )}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="text-muted-foreground flex justify-between text-xs">
+                      <span>
+                        {t('pages.receivables.receivedAmount', {
+                          value: formatCurrency(received),
+                        })}
+                      </span>
+                      <span>{pct.toFixed(0)}%</span>
+                    </div>
+                  </div>
+
+                  <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
+                    {receivable.status !== 'received' &&
+                      receivable.status !== 'cancelled' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setReceiptReceivable(receivable)}
+                          title={t('pages.receivables.receipt.title')}
+                          className="gap-xs text-success text-xs"
                         >
-                          {dueBadge.label}
-                        </span>
+                          <Wallet className="h-3 w-3" />
+                          {t('pages.receivables.receiveBtn')}
+                        </Button>
                       )}
-                    </div>
-                    <p className="text-muted-foreground text-sm">
-                      {TRANSLATIONS.revenueCategories[
-                        receivable.category as keyof typeof TRANSLATIONS.revenueCategories
-                      ] ?? receivable.category}
-                    </p>
-                  </div>
-                  <Badge variant={STATUS_VARIANTS[receivable.status] ?? 'default'}>
-                    {t(`pages.receivables.status.${receivable.status}`)}
-                  </Badge>
-                </div>
-
-                <div className="space-y-xs">
-                  <div className="bg-muted h-2 overflow-hidden rounded-full">
-                    <div
-                      className={cn('h-full rounded-full transition-[width]', barColor)}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div className="text-muted-foreground flex justify-between text-xs">
-                    <span>
-                      {t('pages.receivables.receivedAmount', {
-                        value: formatCurrency(received),
-                      })}
-                    </span>
-                    <span>{pct.toFixed(0)}%</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(receivable)}
+                      title={t('common.actions.edit')}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => void handleDelete(receivable)}
+                      title={t('common.actions.delete')}
+                    >
+                      <Trash2 className="text-destructive h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-
-                <div className="space-y-xs text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {t('pages.receivables.totalValue')}
-                    </span>
-                    <span className="font-medium">
-                      {formatCurrency(receivable.value)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {t('pages.receivables.remainingBalance')}
-                    </span>
-                    <span className="text-success font-medium">
-                      {formatCurrency(total - received)}
-                    </span>
-                  </div>
-                  {receivable.due_date && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t('pages.receivables.dueDate')}
-                      </span>
-                      <span className="font-medium">
-                        {formatDate(receivable.due_date, 'dd/MM/yyyy')}
-                      </span>
-                    </div>
-                  )}
-                  {receivable.member_name && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t('pages.receivables.debtor')}
-                      </span>
-                      <span className="font-medium">{receivable.member_name}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
-                  {receivable.status !== 'received' &&
-                    receivable.status !== 'cancelled' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setReceiptReceivable(receivable)}
-                        title={t('pages.receivables.receipt.title')}
-                        className="gap-xs text-success text-xs"
-                      >
-                        <Wallet className="h-3 w-3" />
-                        {t('pages.receivables.receiveBtn')}
-                      </Button>
-                    )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(receivable)}
-                    title={t('common.actions.edit')}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => void handleDelete(receivable)}
-                    title={t('common.actions.delete')}
-                  >
-                    <Trash2 className="text-destructive h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-w-2xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={selectedReceivable ? 'edit' : 'create'}>
               {selectedReceivable
                 ? t('pages.receivables.editTitle')
                 : t('pages.receivables.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedReceivable
-                ? t('pages.receivables.editDesc')
-                : t('pages.receivables.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedReceivable
+                  ? t('pages.receivables.editDesc')
+                  : t('pages.receivables.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <ReceivableForm
             receivable={selectedReceivable}
@@ -480,6 +551,11 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
           />
         </DialogContent>
       </Dialog>
+
+      <ReceivableDetailModal
+        receivable={detailReceivable}
+        onClose={() => setDetailReceivable(null)}
+      />
 
       <ReceivableReceiptDialog
         receivable={receiptReceivable}

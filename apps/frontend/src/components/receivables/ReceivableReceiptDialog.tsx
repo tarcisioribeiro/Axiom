@@ -1,5 +1,16 @@
+/* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, CalendarClock, Wallet } from 'lucide-react';
+import {
+  AlertCircle,
+  Banknote,
+  CalendarClock,
+  CalendarDays,
+  FileText,
+  Loader2,
+  Save,
+  Wallet,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -48,7 +59,7 @@ export function ReceivableReceiptDialog({
   const { t } = useTranslation();
   const { toast } = useToast();
   const now = useNow();
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatLocalDate(new Date());
   const [form, setForm] = useState({
     value: '',
     account: '',
@@ -82,8 +93,7 @@ export function ReceivableReceiptDialog({
     if (!receivable) return;
     if (!form.value || !form.account || !form.date) {
       toast({
-        title: t('pages.receivables.receipt.title'),
-        description: t('common.messages.fillRequired'),
+        title: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
@@ -99,9 +109,6 @@ export function ReceivableReceiptDialog({
       });
       toast({
         title: scheduled
-          ? t('pages.receivables.receipt.scheduledSuccess')
-          : t('pages.receivables.receipt.success'),
-        description: scheduled
           ? t('pages.receivables.receipt.scheduledSuccessDesc', { date: form.date })
           : t('pages.receivables.receipt.successDesc'),
       });
@@ -109,8 +116,7 @@ export function ReceivableReceiptDialog({
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -129,7 +135,9 @@ export function ReceivableReceiptDialog({
     <Dialog open={!!receivable} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.receivables.receipt.title')}</DialogTitle>
+          <DialogTitle icon={Banknote}>
+            {t('pages.receivables.receipt.title')}
+          </DialogTitle>
           <DialogDescription>
             {receivable?.description} — {t('pages.receivables.remainingBalance')}{' '}
             {formatCurrency(remaining)}
@@ -167,14 +175,20 @@ export function ReceivableReceiptDialog({
           </div>
 
           <div className="space-y-xs">
-            <Label>{t('pages.receivables.receipt.value')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.receivables.receipt.value')} *
+            </Label>
             <CurrencyInput
               value={form.value}
               onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.receivables.receipt.account')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.receivables.receipt.account')} *
+            </Label>
             <Select
               value={form.account}
               onValueChange={(v) => setForm((f) => ({ ...f, account: v }))}
@@ -192,7 +206,8 @@ export function ReceivableReceiptDialog({
             </Select>
           </div>
           <div className="space-y-xs">
-            <Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {scheduled
                 ? t('pages.receivables.receipt.scheduledDate')
                 : t('pages.receivables.receipt.date')}{' '}
@@ -207,11 +222,14 @@ export function ReceivableReceiptDialog({
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.receivables.receipt.notes')}</Label>
+            <Label className="gap-xs flex items-center">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.receivables.receipt.notes')}
+            </Label>
             <Input
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              placeholder={t('common.fields.notes')}
+              placeholder={t('common.placeholders.notes')}
             />
           </div>
 
@@ -233,9 +251,15 @@ export function ReceivableReceiptDialog({
 
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button onClick={() => void handleSubmit()} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
               {isSubmitting
                 ? t('common.actions.saving')
                 : scheduled

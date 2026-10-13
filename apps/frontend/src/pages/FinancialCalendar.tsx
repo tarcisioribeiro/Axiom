@@ -18,8 +18,10 @@ import { ptBR, enUS } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -107,11 +109,16 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
+interface FinancialCalendarProps {
+  embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
+}
+
 export default function FinancialCalendar({
   embedded = false,
-}: {
-  embedded?: boolean;
-}) {
+  headerTarget,
+}: FinancialCalendarProps) {
   const { t, i18n } = useTranslation();
   const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
 
@@ -334,13 +341,13 @@ export default function FinancialCalendar({
 
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
+  const header = (
+    <PageHeader title={t('financialCalendar.title')} icon={<CalendarDays />} />
+  );
+
   return (
     <Wrapper>
-      <PageHeader
-        title={t('financialCalendar.title')}
-        icon={<CalendarDays />}
-        subtitle={t('financialCalendar.subtitle')}
-      />
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       <div className="mt-md bg-muted/30 px-md py-sm text-muted-foreground rounded-lg border text-sm font-medium">
         {t('financialCalendar.summaryDue', { count: totalEventsThisMonth })}
@@ -464,16 +471,19 @@ export default function FinancialCalendar({
                   }),
                 })}
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedDay(null)}>
+              <Button
+                aria-label={t('common.actions.close')}
+                variant="ghost"
+                size="icon"
+                onClick={() => setSelectedDay(null)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {selectedDayEvents.length === 0 ? (
-              <p className="py-md text-muted-foreground text-center text-sm">
-                {t('financialCalendar.noEvents')}
-              </p>
+              <EmptyState title={t('financialCalendar.noEvents')} />
             ) : (
               <div className="space-y-sm">
                 {selectedDayEvents.map((ev) => (

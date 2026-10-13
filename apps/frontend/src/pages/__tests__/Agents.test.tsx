@@ -127,9 +127,7 @@ describe('Agents page', () => {
     await selectAgent(user, 'Agente Pessoal');
 
     await waitFor(() => {
-      expect(
-        screen.getByPlaceholderText(/Pergunte sobre rotinas/i)
-      ).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Ex.: Treinei hoje?')).toBeInTheDocument();
     });
 
     expect(screen.getByRole('button', { name: /enviar/i })).toBeInTheDocument();
@@ -142,7 +140,7 @@ describe('Agents page', () => {
     await selectAgent(user, 'Agente Financeiro');
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/Pergunte sobre gastos/i)).not.toBeDisabled();
+      expect(screen.getByPlaceholderText('Ex.: Quanto gastei?')).not.toBeDisabled();
     });
 
     // Send button disabled when query is empty
@@ -172,7 +170,7 @@ describe('Agents page', () => {
     await selectAgent(user, 'Agente Pessoal');
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/Pergunte sobre rotinas/i)).not.toBeDisabled();
+      expect(screen.getByPlaceholderText('Ex.: Treinei hoje?')).not.toBeDisabled();
     });
   });
 
@@ -182,7 +180,7 @@ describe('Agents page', () => {
 
     await selectAgent(user, 'Agente Pessoal');
 
-    const textarea = await screen.findByPlaceholderText(/Pergunte sobre rotinas/i);
+    const textarea = await screen.findByPlaceholderText('Ex.: Treinei hoje?');
     await user.click(textarea);
     await user.type(textarea, 'Quais são minhas rotinas de hoje?');
     await user.keyboard('{Enter}');

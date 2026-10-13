@@ -8,17 +8,21 @@ import {
   Flame,
   Layers,
   Loader2,
+  Save,
   Target,
+  Timer,
+  X,
   Zap,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { TimePicker } from '@/components/ui/time-picker';
 import { cn } from '@/lib/utils';
 import type { WorkoutDay } from '@/types/workout';
@@ -109,7 +113,9 @@ export function WorkoutDayForm({
       .filter(Boolean);
   });
 
+  const nowTime = new Date().toTimeString().split(' ')[0].substring(0, 5);
   const {
+    control,
     register,
     handleSubmit,
     reset,
@@ -122,7 +128,7 @@ export function WorkoutDayForm({
       muscle_groups: day?.muscle_groups ?? '',
       days_of_week: day?.days_of_week ?? [],
       order: day?.order ?? 0,
-      default_start_time: toHHMM(day?.default_start_time),
+      default_start_time: day ? toHHMM(day.default_start_time) : nowTime,
       default_duration_minutes: day?.default_duration_minutes ?? '',
     },
   });
@@ -171,164 +177,152 @@ export function WorkoutDayForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
-      {/* Header visual */}
-      <div className="gap-md bg-category-exercise/10 px-md py-sm ring-category-exercise/20 flex items-center rounded-lg ring-1">
-        <div className="bg-category-exercise/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-          <Layers className="text-category-exercise h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-category-exercise text-sm font-semibold">
-            {day
-              ? t('pages.workoutPlans.editDayTitle')
-              : t('pages.workoutPlans.newDayTitle')}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {t('pages.workoutPlans.newDayDesc')}
-          </p>
-        </div>
-      </div>
-
-      {/* Nome e ordem */}
-      <FormSection title={t('pages.workoutPlans.dayName')} icon={Dumbbell}>
-        <div className="gap-sm grid grid-cols-[1fr_100px]">
-          <div>
-            <Input
-              placeholder={t('pages.workoutPlans.dayNamePlaceholder')}
-              {...register('name', { required: true })}
-              className={cn(errors.name && 'border-destructive')}
-            />
-            {errors.name && (
-              <p className="mt-xs text-destructive text-xs">{t('common.required')}</p>
-            )}
-          </div>
-          <div>
-            <Input
-              type="number"
-              min={0}
-              placeholder="0"
+    <form
+      onSubmit={handleSubmit(handleFormSubmit)}
+      className="gap-md flex min-h-0 flex-1 flex-col"
+    >
+      {/* Só os campos rolam; título (DialogHeader) e rodapé ficam fixos */}
+      {/* px-xs: folga para o anel de foco dos campos não ser cortado pela rolagem */}
+      <div className="space-y-lg px-xs">
+        {/* Nome e ordem */}
+        <FormSection title={t('pages.workoutPlans.dayName')} icon={Dumbbell}>
+          <div className="gap-sm grid grid-cols-[1fr_auto]">
+            <div>
+              <Input
+                placeholder={t('pages.workoutPlans.dayNamePlaceholder')}
+                {...register('name', { required: true })}
+                className={cn(errors.name && 'border-destructive')}
+              />
+              {errors.name && (
+                <p className="mt-xs text-destructive text-xs">{t('common.required')}</p>
+              )}
+            </div>
+            <NumberStepper
+              value={watch('order')}
+              onChange={(v) => setValue('order', v ?? 0)}
               aria-label={t('pages.workoutPlans.order')}
-              {...register('order', { valueAsNumber: true })}
-              className="text-center"
             />
           </div>
-        </div>
-      </FormSection>
+        </FormSection>
 
-      {/* Dia da semana */}
-      <FormSection title={t('pages.workoutPlans.dayOfWeek')} icon={Calendar}>
-        <div className="gap-xs flex flex-wrap">
-          {WEEKDAYS.map((wd, i) => {
-            const days = watch('days_of_week');
-            const selected = days.includes(i);
-            return (
-              <button
-                key={wd}
-                type="button"
-                aria-pressed={selected}
-                onClick={() =>
-                  setValue(
-                    'days_of_week',
-                    selected ? days.filter((d) => d !== i) : [...days, i].sort()
-                  )
-                }
-                className={cn(
-                  'px-sm rounded-full border py-1 text-xs font-medium transition',
-                  selected
-                    ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
-                    : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
-                )}
-              >
-                {t(`pages.workoutPlans.weekdays.${wd}`)}
-              </button>
-            );
-          })}
-        </div>
-        <p className="mt-xs text-muted-foreground text-xs">
-          {t('pages.workoutPlans.dayOfWeekHint')}
-        </p>
-      </FormSection>
-
-      {/* Grupos musculares */}
-      <FormSection title={t('pages.workoutPlans.muscleGroups')} icon={Flame}>
-        <div className="space-y-sm">
-          <div className="gap-xs flex flex-wrap">
-            {MUSCLE_CHIP_KEYS.map(({ key }) => {
-              const label = t(`pages.workoutPlans.muscleChips.${key}`);
+        {/* Dia da semana */}
+        <FormSection title={t('pages.workoutPlans.dayOfWeek')} icon={Calendar}>
+          <div className="gap-xs flex flex-wrap justify-center">
+            {WEEKDAYS.map((wd, i) => {
+              const days = watch('days_of_week');
+              const selected = days.includes(i);
               return (
                 <button
-                  key={key}
+                  key={wd}
                   type="button"
-                  onClick={() => toggleChip(label)}
+                  aria-pressed={selected}
+                  onClick={() =>
+                    setValue(
+                      'days_of_week',
+                      selected ? days.filter((d) => d !== i) : [...days, i].sort()
+                    )
+                  }
                   className={cn(
                     'px-sm rounded-full border py-1 text-xs font-medium transition',
-                    selectedChips.includes(label)
-                      ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
-                      : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
+                    selected
+                      ? 'border-primary bg-primary/15 text-primary'
+                      : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary'
                   )}
                 >
-                  {label}
+                  {t(`pages.workoutPlans.weekdays.${wd}`)}
                 </button>
               );
             })}
           </div>
-          <Input
-            placeholder={t('pages.workoutPlans.muscleGroupsPlaceholder')}
-            value={muscleGroupsValue}
-            onChange={(e) => {
-              setValue('muscle_groups', e.target.value);
-              setSelectedChips(
-                e.target.value
-                  .split(',')
-                  .map((s) => s.trim())
-                  .filter(Boolean)
-              );
-            }}
-            className="text-sm"
-          />
-          <p className="text-muted-foreground text-xs">
-            {t('pages.workoutPlans.muscleGroupsHint')}
-          </p>
-        </div>
-      </FormSection>
+        </FormSection>
 
-      {/* Horário padrão */}
-      <FormSection title={t('pages.workoutPlans.defaultScheduleSection')} icon={Clock}>
-        <div className="gap-sm grid grid-cols-2">
+        {/* Grupos musculares */}
+        <FormSection title={t('pages.workoutPlans.muscleGroups')} icon={Flame}>
           <div className="space-y-sm">
-            <Label>{t('pages.workoutPlans.defaultStartTime')}</Label>
-            <TimePicker
-              value={watch('default_start_time') || undefined}
-              onChange={(v) => setValue('default_start_time', v ?? '')}
-            />
-          </div>
-          <div className="space-y-sm">
-            <Label>{t('pages.workoutPlans.defaultDurationMinutes')}</Label>
-            <Input
-              type="number"
-              min={0}
-              placeholder="45"
-              {...register('default_duration_minutes', {
-                setValueAs: (v) => (v === '' ? '' : Number(v)),
+            <div className="gap-xs flex flex-wrap">
+              {MUSCLE_CHIP_KEYS.map(({ key }) => {
+                const label = t(`pages.workoutPlans.muscleChips.${key}`);
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => toggleChip(label)}
+                    className={cn(
+                      'px-sm rounded-full border py-1 text-xs font-medium transition',
+                      selectedChips.includes(label)
+                        ? 'border-primary bg-primary/15 text-primary'
+                        : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary'
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
               })}
+            </div>
+            <Input
+              placeholder={t('pages.workoutPlans.muscleGroupsPlaceholder')}
+              value={muscleGroupsValue}
+              readOnly
+              tabIndex={-1}
+              aria-label={t('pages.workoutPlans.muscleGroups')}
+              // Só exibe o que os chips acima selecionam
+              className="bg-muted/30 text-muted-foreground cursor-default text-sm focus-visible:ring-0"
             />
           </div>
-        </div>
-        <p className="mt-xs text-muted-foreground text-xs">
-          {t('pages.workoutPlans.defaultScheduleHint')}
-        </p>
-      </FormSection>
+        </FormSection>
 
-      <div className="gap-sm border-border pt-md flex justify-end border-t">
+        {/* Horário padrão */}
+        <FormSection
+          title={t('pages.workoutPlans.defaultScheduleSection')}
+          icon={Clock}
+        >
+          <div className="gap-sm grid grid-cols-2">
+            <div className="space-y-sm">
+              <Label className="gap-xs flex items-center">
+                <Clock className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.workoutPlans.defaultStartTime')}
+              </Label>
+              <TimePicker
+                value={watch('default_start_time') || undefined}
+                onChange={(v) => setValue('default_start_time', v ?? '')}
+              />
+            </div>
+            <div className="space-y-sm">
+              <Label className="gap-xs flex items-center">
+                <Timer className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.workoutPlans.defaultDurationMinutes')}
+              </Label>
+              <Controller
+                control={control}
+                name="default_duration_minutes"
+                render={({ field }) => (
+                  <NumberStepper
+                    placeholder="45"
+                    min={0}
+                    optional
+                    aria-label={t('pages.workoutPlans.defaultDurationMinutes')}
+                    value={field.value === '' ? null : field.value}
+                    onChange={(v) => field.onChange(v ?? '')}
+                  />
+                )}
+              />
+            </div>
+          </div>
+        </FormSection>
+      </div>
+
+      <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-category-exercise hover:bg-category-exercise/90"
-        >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+
           {t('common.actions.save')}
         </Button>
       </div>

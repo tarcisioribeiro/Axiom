@@ -3,18 +3,25 @@ import {
   ArrowUpFromLine,
   CalendarClock,
   History,
+  MoreHorizontal,
   Pencil,
   RefreshCcw,
-  Sparkles,
   Trash2,
   TrendingUp,
   Vault,
 } from 'lucide-react';
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { formatCurrency } from '@/lib/formatters';
 import type { Vault as VaultType } from '@/types';
 
@@ -60,7 +67,7 @@ const VAULT_COLORS = [
 interface VaultCardProps {
   vault: VaultType;
   index: number;
-  totalBalance: number;
+  onOpenDetail: (v: VaultType) => void;
   onDeposit: (v: VaultType) => void;
   onWithdraw: (v: VaultType) => void;
   onApplyYield: (v: VaultType) => void;
@@ -74,7 +81,7 @@ interface VaultCardProps {
 export function VaultCard({
   vault,
   index,
-  totalBalance,
+  onOpenDetail,
   onDeposit,
   onWithdraw,
   onApplyYield,
@@ -87,12 +94,34 @@ export function VaultCard({
   const { t } = useTranslation();
   const color = VAULT_COLORS[index % VAULT_COLORS.length];
   const balance = parseFloat(vault.current_balance);
-  const accYield = parseFloat(vault.accumulated_yield);
-  const proportion =
-    totalBalance > 0 ? Math.min(100, (balance / totalBalance) * 100) : 0;
+  // Radix portals the dropdown content outside this card's DOM subtree, so a
+  // click on one of its items can still resolve onto the card underneath
+  // once the menu closes. Marked on pointerdown (before Radix unmounts the
+  // portal), checked once by the card's own click handler.
+  const suppressDetailRef = useRef(false);
 
   return (
-    <Card className={`overflow-hidden border ${color.border}`}>
+    <Card
+      className={`overflow-hidden border ${color.border} cursor-pointer`}
+      role="button"
+      tabIndex={0}
+      onClick={(e) => {
+        if (suppressDetailRef.current) {
+          suppressDetailRef.current = false;
+          return;
+        }
+        if (!(e.target as HTMLElement).closest('button')) onOpenDetail(vault);
+      }}
+      onKeyDown={(e) => {
+        if (
+          (e.key === 'Enter' || e.key === ' ') &&
+          !(e.target as HTMLElement).closest('button')
+        ) {
+          e.preventDefault();
+          onOpenDetail(vault);
+        }
+      }}
+    >
       <div className={`bg-gradient-to-br ${color.bg} px-md pb-md pt-md`}>
         <div className="flex items-start justify-between">
           <div className="gap-sm flex items-center">
@@ -115,107 +144,71 @@ export function VaultCard({
           </p>
         </div>
       </div>
-      <CardContent className="space-y-3 pt-3">
-        <div className="flex items-center justify-between text-sm">
-          <div className="gap-xs flex items-center text-amber-500">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>{t('pages.vaults.columns.yields')}</span>
-          </div>
-          <span className="font-semibold text-amber-600 dark:text-amber-400">
-            {formatCurrency(accYield)}
-          </span>
-        </div>
-        {vault.pending_yield > 0 && (
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{t('pages.vaults.pending')}</span>
-            <span className="text-info font-medium">
-              +{formatCurrency(vault.pending_yield)}
-            </span>
-          </div>
-        )}
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">
-            {t('pages.vaults.columns.rate')}
-          </span>
-          <Badge variant="outline">
-            {vault.annual_yield_rate_percentage.toFixed(2)}% {t('pages.vaults.perYear')}
-          </Badge>
-        </div>
-        {totalBalance > 0 && (
-          <div className="space-y-xs">
-            <div className="text-muted-foreground flex justify-between text-xs">
-              <span>{t('pages.vaults.proportionLabel')}</span>
-              <span>{proportion.toFixed(1)}%</span>
-            </div>
-            <div className="bg-muted h-1.5 overflow-hidden rounded-full">
-              <div
-                className="h-full w-full origin-left rounded-full transition-transform duration-500"
-                style={{
-                  transform: `scaleX(${proportion / 100})`,
-                  backgroundColor: color.barColor,
-                }}
-              />
-            </div>
-          </div>
-        )}
-        <div className="gap-xs pt-sm flex flex-wrap items-center border-t">
+      <CardContent className="pt-3">
+        <div
+          role="presentation"
+          className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <Button
-            variant="ghost"
-            size="icon"
+            variant="outline"
+            size="sm"
             onClick={() => onDeposit(vault)}
-            aria-label={t('pages.vaults.depositBtn')}
-            title={t('pages.vaults.depositBtn')}
             disabled={!vault.is_active}
+            className="gap-xs text-xs"
           >
-            <ArrowDownToLine className="text-success h-4 w-4" aria-hidden="true" />
+            <ArrowDownToLine className="text-success h-3 w-3" aria-hidden="true" />
+            {t('pages.vaults.depositBtn')}
           </Button>
           <Button
-            variant="ghost"
-            size="icon"
+            variant="outline"
+            size="sm"
             onClick={() => onWithdraw(vault)}
-            aria-label={t('pages.vaults.withdrawBtn')}
-            title={t('pages.vaults.withdrawBtn')}
             disabled={!vault.is_active || balance <= 0}
+            className="gap-xs text-xs"
           >
-            <ArrowUpFromLine className="text-destructive h-4 w-4" aria-hidden="true" />
+            <ArrowUpFromLine className="text-destructive h-3 w-3" aria-hidden="true" />
+            {t('pages.vaults.withdrawBtn')}
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onApplyYield(vault)}
-            aria-label={t('pages.vaults.applyYieldBtn')}
-            title={t('pages.vaults.applyYieldBtn')}
-            disabled={!vault.is_active || vault.pending_yield <= 0}
-          >
-            <RefreshCcw className="text-info h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onTransactions(vault)}
-            aria-label={t('pages.vaults.transactionsBtn')}
-            title={t('pages.vaults.transactionsBtn')}
-          >
-            <History className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onContributions(vault)}
-            aria-label={t('pages.vaults.recurringContributions.btn')}
-            title={t('pages.vaults.recurringContributions.btn')}
-          >
-            <CalendarClock className="text-info h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onSimulator(vault)}
-            title={t('pages.vaultSimulator.title')}
-            aria-label={t('pages.vaultSimulator.title')}
-          >
-            <TrendingUp className="text-info h-4 w-4" aria-hidden="true" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                title={t('common.actions.moreOptions')}
+                aria-label={t('common.actions.moreOptions')}
+              >
+                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              onPointerDown={() => {
+                suppressDetailRef.current = true;
+              }}
+            >
+              <DropdownMenuItem
+                onClick={() => onApplyYield(vault)}
+                disabled={!vault.is_active || vault.pending_yield <= 0}
+              >
+                <RefreshCcw className="mr-sm h-4 w-4" aria-hidden="true" />
+                {t('pages.vaults.applyYieldBtn')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onTransactions(vault)}>
+                <History className="mr-sm h-4 w-4" aria-hidden="true" />
+                {t('pages.vaults.transactionsBtn')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onContributions(vault)}>
+                <CalendarClock className="mr-sm h-4 w-4" aria-hidden="true" />
+                {t('pages.vaults.recurringContributions.btn')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onSimulator(vault)}>
+                <TrendingUp className="mr-sm h-4 w-4" aria-hidden="true" />
+                {t('pages.vaultSimulator.title')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="ghost"
             size="icon"

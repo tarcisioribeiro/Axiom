@@ -210,10 +210,10 @@ Groq expõe uma API compatível com o formato OpenAI (`api.groq.com/openai/v1`),
 ```
 LLM_PROVIDER = groq
 GROQ_API_KEY = gsk_...
-GROQ_MODEL   = llama-3.1-8b-instant
+GROQ_MODEL   = openai/gpt-oss-120b
 ```
 
-Modelos recomendados: `llama-3.1-8b-instant` (rápido), `llama-3.3-70b-versatile` (melhor qualidade), `gemma2-9b-it`.
+Modelos recomendados: `openai/gpt-oss-120b` (padrão), `openai/gpt-oss-20b` (mais rápido). O Groq aposenta modelos com frequência — confira [console.groq.com/docs/models](https://console.groq.com/docs/models). Se o `GROQ_MODEL` configurado for aposentado, o sistema usa o padrão automaticamente e avisa no diagnóstico do admin.
 
 ---
 

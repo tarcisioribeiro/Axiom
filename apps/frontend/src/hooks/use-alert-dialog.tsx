@@ -7,7 +7,7 @@ import type { IconComponent } from '@/types/icon';
 type AlertVariant = 'default' | 'success' | 'warning' | 'destructive' | 'info';
 
 /** Tipo de animacao de entrada */
-type AnimationType = 'default' | 'slideUp' | 'slideDown' | 'bounce' | 'shake';
+type AnimationType = 'default' | 'shake';
 
 /** Nivel de blur do backdrop */
 type BlurLevel = 'none' | 'sm' | 'md' | 'lg';
@@ -38,7 +38,7 @@ interface AlertDialogStore extends AlertDialogState {
  * Store Zustand para estado global do AlertDialog.
  * Use o hook `useAlertDialog` para interagir com dialogs.
  */
-export const useAlertDialogStore = create<AlertDialogStore>((set) => ({
+const ALERT_DEFAULTS: AlertDialogState = {
   isOpen: false,
   title: '',
   description: '',
@@ -47,8 +47,15 @@ export const useAlertDialogStore = create<AlertDialogStore>((set) => ({
   variant: 'default',
   animation: 'default',
   blur: 'md',
+  icon: undefined,
   showIcon: true,
-  openAlert: (config) => set({ ...config, isOpen: true }),
+};
+
+export const useAlertDialogStore = create<AlertDialogStore>((set) => ({
+  ...ALERT_DEFAULTS,
+  // Parte dos defaults a cada abertura: opções omitidas não herdam o dialog
+  // anterior (ex.: confirmText "Pular" vazando para "Excluir sessão")
+  openAlert: (config) => set({ ...ALERT_DEFAULTS, ...config, isOpen: true }),
   closeAlert: () => set({ isOpen: false }),
 }));
 
@@ -161,7 +168,6 @@ export const useAlertDialog = () => {
       title,
       description,
       variant: 'success',
-      animation: 'bounce',
       ...options,
     });
   };
@@ -183,7 +189,6 @@ export const useAlertDialog = () => {
       title,
       description,
       variant: 'warning',
-      animation: 'slideDown',
       ...options,
     });
   };
@@ -225,7 +230,6 @@ export const useAlertDialog = () => {
       title,
       description,
       variant: 'info',
-      animation: 'slideUp',
       ...options,
     });
   };

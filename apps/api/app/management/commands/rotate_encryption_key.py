@@ -128,7 +128,9 @@ class Command(BaseCommand):
         totals = {"rotated": 0, "skipped": 0, "empty": 0}
 
         with transaction.atomic():
-            self._rotate_accounts(old_key, new_key, dry_run, totals)
+            self._rotate_accounts(
+                old_key, old_key_str, new_key, new_key_str, dry_run, totals
+            )
             self._rotate_credit_cards(old_key, new_key, dry_run, totals)
             self._rotate_members(
                 old_key, old_key_str, new_key, new_key_str, dry_run, totals
@@ -168,21 +170,61 @@ class Command(BaseCommand):
     def _rotate_accounts(
         self,
         old_key: bytes,
+        old_key_str: str,
         new_key: bytes,
+        new_key_str: str,
         dry_run: bool,
         totals: dict[str, int],
     ) -> None:
-        from accounts.models import Account
+        """Rotate Account._account_number and recompute account_number_hash
+        with the new HMAC key."""
+        from accounts.models import Account, compute_account_number_hash
 
-        self._rotate_model(
-            Account,
-            ["_account_number"],
-            old_key,
-            new_key,
-            dry_run,
-            totals,
-            label="accounts.Account",
+        qs = (
+            Account.objects.exclude(_account_number=None)
+            .exclude(_account_number="")
+            .only("id", "_account_number", "account_number_hash")
         )
+        count = qs.count()
+        self.stdout.write(
+            f"\naccounts.Account: {count} records with encrypted number"
+        )
+
+        to_update = []
+        for obj in qs.iterator(chunk_size=200):
+            if not obj._account_number:
+                continue
+            plain = _decrypt(obj._account_number, old_key)
+            if plain is None:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"  SKIP Account pk={obj.pk} _account_number"
+                        " — could not decrypt with old key"
+                    )
+                )
+                totals["skipped"] += 1
+                continue
+
+            obj._account_number = _encrypt(plain, new_key)
+            obj.account_number_hash = compute_account_number_hash(
+                plain, new_key_str
+            )
+            totals["rotated"] += 1
+            to_update.append(obj)
+
+        if to_update and not dry_run:
+            Account.objects.bulk_update(
+                to_update,
+                ["_account_number", "account_number_hash"],
+                batch_size=200,
+            )
+            self.stdout.write(f"  Updated {len(to_update)} Account records")
+        elif dry_run:
+            self.stdout.write(
+                f"  [DRY-RUN] Would update {len(to_update)} Account records"
+            )
+        else:
+            self.stdout.write("  No records needed updating")
 
     def _rotate_credit_cards(
         self,

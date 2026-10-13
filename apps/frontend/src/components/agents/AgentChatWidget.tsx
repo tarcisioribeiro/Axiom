@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { BotMessageSquare, Send, Square, X } from 'lucide-react';
+import { BotMessageSquare, Maximize2, Send, Square, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -114,7 +114,6 @@ export function AgentChatWidget() {
             ? { opacity: 0, scale: 0.6, y: 16 }
             : { opacity: 1, scale: 1, y: 0 }
         }
-        transition={{ duration: 0.2, ease: 'easeOut' }}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
@@ -137,7 +136,6 @@ export function AgentChatWidget() {
               initial={{ rotate: -90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               exit={{ rotate: 90, opacity: 0 }}
-              transition={{ duration: 0.15 }}
             >
               <X className="h-6 w-6" />
             </motion.span>
@@ -147,7 +145,6 @@ export function AgentChatWidget() {
               initial={{ rotate: 90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               exit={{ rotate: -90, opacity: 0 }}
-              transition={{ duration: 0.15 }}
             >
               <BotMessageSquare className="h-6 w-6" />
             </motion.span>
@@ -163,7 +160,6 @@ export function AgentChatWidget() {
             initial={{ opacity: 0, y: 16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
             className="right-lg bg-background fixed bottom-[5.5rem] z-50 flex w-80 flex-col overflow-hidden rounded-2xl border shadow-2xl sm:w-96"
             style={{ maxHeight: 'min(520px, calc(100vh - 12rem))' }}
           >
@@ -179,12 +175,13 @@ export function AgentChatWidget() {
                 onClick={handleOpenFullAgent}
                 className="px-sm text-muted-foreground hover:text-foreground h-7 text-xs"
               >
+                <Maximize2 aria-hidden="true" />
                 {t('agentWidget.openFull')}
               </Button>
             </div>
 
             {/* Messages */}
-            <div className="custom-scrollbar p-md flex-1 overflow-y-auto">
+            <div className="p-md flex-1 overflow-y-auto">
               {isEmpty ? (
                 <div className="space-y-md">
                   <p className="text-muted-foreground text-center text-sm">
@@ -245,13 +242,13 @@ export function AgentChatWidget() {
                   onKeyDown={handleKeyDown}
                   placeholder={t('agentWidget.inputPlaceholder')}
                   disabled={isStreaming}
-                  className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm outline-none disabled:opacity-60"
+                  className="placeholder:text-muted-foreground min-w-0 flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0 disabled:opacity-60"
                 />
                 {isStreaming ? (
                   <PlainButton
                     onClick={cancel}
                     aria-label={t('agentWidget.cancelLabel')}
-                    className="p-xs text-muted-foreground hover:text-destructive shrink-0 rounded-lg transition-colors"
+                    className="p-xs text-destructive hover:text-destructive shrink-0 rounded-lg transition-colors"
                   >
                     <Square className="h-4 w-4 fill-current" />
                   </PlainButton>

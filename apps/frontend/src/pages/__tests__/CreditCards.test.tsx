@@ -18,6 +18,12 @@ vi.mock('@/services/credit-card-bills-service', () => ({
   },
 }));
 
+vi.mock('@/services/credit-card-installments-service', () => ({
+  creditCardInstallmentsService: {
+    getByBill: vi.fn().mockResolvedValue([]),
+  },
+}));
+
 vi.mock('@/services/accounts-service', () => ({
   accountsService: {
     getAll: vi.fn().mockResolvedValue([
@@ -108,17 +114,19 @@ vi.mock('@/components/common/AnimatedPage', () => ({
 }));
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ptBR from '@/i18n/locales/pt-BR.json';
 import { queryClient } from '@/lib/query-client';
-import CreditCards from '@/pages/CreditCards';
+import CreditCardManagement from '@/pages/CreditCardManagement';
+import { ValidationError } from '@/services/api-errors';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
+import { creditCardInstallmentsService } from '@/services/credit-card-installments-service';
 import { creditCardsService } from '@/services/credit-cards-service';
 import type { CreditCard, CreditCardBill } from '@/types';
 
@@ -135,11 +143,13 @@ beforeAll(async () => {
   }
 });
 
-function renderCreditCards() {
+function renderCreditCards(initialTab: 'cards' | 'bills' = 'cards') {
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <CreditCards />
+      <MemoryRouter initialEntries={[`/credit-cards/${initialTab}`]}>
+        <Routes>
+          <Route path="/credit-cards/:tab" element={<CreditCardManagement />} />
+        </Routes>
       </MemoryRouter>
     </QueryClientProvider>
   );
@@ -287,5 +297,111 @@ describe('CreditCards page', () => {
     expect(mockShowConfirm).not.toHaveBeenCalled();
     expect(screen.queryByLabelText(/cvv/i)).not.toBeInTheDocument();
     expect(creditCardsService.deleteWithCredentials).not.toHaveBeenCalled();
+  });
+
+  it('mostra um único toast de erro com rótulos traduzidos', async () => {
+    vi.mocked(creditCardsService.create).mockRejectedValue(
+      new ValidationError('flag: ...', {
+        flag: ['Este campo é obrigatório.'],
+        validation_date: ['Data de validade deve ser posterior à data atual'],
+      })
+    );
+
+    const user = userEvent.setup();
+    renderCreditCards();
+    await waitFor(() => screen.getByRole('heading', { level: 1 }));
+    await user.click(screen.getByRole('button', { name: /novo/i }));
+    await waitFor(() => screen.getByRole('dialog'));
+    await user.click(screen.getByRole('button', { name: /salvar cartão/i }));
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title:
+            'Não foi possível salvar. Preencha o campo Bandeira; Data de Validade: Data de validade deve ser posterior à data atual',
+        })
+      );
+    });
+    expect(mockToast).toHaveBeenCalledTimes(1);
+  });
+
+  it('abre as compras ao clicar na linha da fatura, mas não ao clicar em botão', async () => {
+    vi.mocked(creditCardsService.getAll).mockResolvedValue([makeCard()]);
+    vi.mocked(creditCardBillsService.getAll).mockResolvedValue([
+      {
+        id: 7,
+        credit_card: 1,
+        month: 'Sep',
+        year: '2026',
+        total_amount: '100.00',
+        minimum_payment: '15.00',
+        paid_amount: '0.00',
+        status: 'open',
+      } as unknown as CreditCardBill,
+    ]);
+
+    renderCreditCards('bills');
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: /pagar/i }).length).toBeGreaterThan(
+        0
+      );
+    });
+    const rows = screen.getAllByRole('row');
+
+    fireEvent.click(within(rows[1]).getByRole('button', { name: /pagar/i }));
+    expect(screen.queryByText(/compras da fatura/i)).not.toBeInTheDocument();
+
+    fireEvent.click(rows[1].querySelector('td')!);
+    expect(await screen.findByRole('dialog')).toHaveTextContent(
+      /compras da fatura - .*\/2026/i
+    );
+    expect(creditCardInstallmentsService.getByBill).toHaveBeenCalledWith(7);
+  });
+
+  it('pagina as compras da fatura em 10 por página e soma o total de todas', async () => {
+    vi.mocked(creditCardsService.getAll).mockResolvedValue([makeCard()]);
+    vi.mocked(creditCardBillsService.getAll).mockResolvedValue([
+      {
+        id: 7,
+        credit_card: 1,
+        month: 'Sep',
+        year: '2026',
+        total_amount: '1200.00',
+        minimum_payment: '15.00',
+        paid_amount: '0.00',
+        status: 'open',
+      } as unknown as CreditCardBill,
+    ]);
+    vi.mocked(creditCardInstallmentsService.getByBill).mockResolvedValue(
+      Array.from({ length: 12 }, (_, n) => ({
+        id: n + 1,
+        description: `Compra ${n + 1}`,
+        value: '100.00',
+        purchase_date: `2026-09-${String(n + 1).padStart(2, '0')}`,
+        due_date: `2026-09-${String(n + 1).padStart(2, '0')}`,
+        installment_number: 1,
+        total_installments: 1,
+      })) as never
+    );
+
+    renderCreditCards('bills');
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: /pagar/i }).length).toBeGreaterThan(
+        0
+      );
+    });
+    fireEvent.click(screen.getAllByRole('row')[1].querySelector('td')!);
+
+    const dialog = await screen.findByRole('dialog');
+    await waitFor(() =>
+      expect(within(dialog).getByText('Compra 1')).toBeInTheDocument()
+    );
+    expect(within(dialog).getByText('Compra 5')).toBeInTheDocument();
+    expect(within(dialog).queryByText('Compra 6')).not.toBeInTheDocument();
+    expect(within(dialog).getByText(/R\$\s*1\.200,00/)).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: /próxima|próximo/i }));
+    expect(await within(dialog).findByText('Compra 6')).toBeInTheDocument();
+    expect(within(dialog).queryByText('Compra 1')).not.toBeInTheDocument();
   });
 });

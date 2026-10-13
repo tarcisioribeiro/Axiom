@@ -1,23 +1,33 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
+import { motion } from 'framer-motion';
 import type { TFunction } from 'i18next';
 import {
+  Apple,
+  CircleDashed,
+  FileText,
   GripVertical,
+  Hash,
   ListChecks,
   Loader2,
   Plus,
+  Ruler,
   Salad,
+  Save,
   StickyNote,
   Trash2,
+  X,
 } from 'lucide-react';
 import { useEffect } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray, useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
@@ -185,7 +195,6 @@ export function MenuOptionForm({
     }
   }, [option, reset]);
 
-  const nameValue = watch('name');
   const allIngredients = watch('ingredients');
   const visualGroups = buildVisualGroups(allIngredients);
 
@@ -248,26 +257,9 @@ export function MenuOptionForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
-      {/* Header */}
-      <div className="gap-md bg-category-nutrition/10 px-md py-sm ring-category-nutrition/20 flex items-center rounded-lg ring-1">
-        <div className="bg-category-nutrition/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-          <ListChecks className="text-category-nutrition h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-category-nutrition text-sm font-semibold">
-            {option
-              ? t('pages.nutritionMealTypes.editOptionTitle')
-              : t('pages.nutritionMealTypes.newOptionTitle')}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {nameValue || t('pages.nutritionMealTypes.newOptionDesc')}
-          </p>
-        </div>
-      </div>
-
       {/* Nome e ordem */}
       <FormSection title={t('pages.nutritionMealTypes.optionName')} icon={ListChecks}>
-        <div className="gap-sm grid grid-cols-[1fr_80px]">
+        <div className="gap-sm grid grid-cols-[minmax(0,1fr)_auto]">
           <div>
             <Input
               placeholder={t('pages.nutritionMealTypes.optionNamePlaceholder')}
@@ -278,12 +270,17 @@ export function MenuOptionForm({
               <p className="mt-xs text-destructive text-xs">{t('common.required')}</p>
             )}
           </div>
-          <Input
-            type="number"
-            min={0}
-            aria-label={t('pages.nutritionMealTypes.optionOrder')}
-            {...register('order', { valueAsNumber: true })}
-            className="text-center"
+          <Controller
+            control={control}
+            name="order"
+            render={({ field }) => (
+              <NumberStepper
+                aria-label={t('pages.nutritionMealTypes.optionOrder')}
+                min={0}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
         </div>
       </FormSection>
@@ -295,7 +292,7 @@ export function MenuOptionForm({
       >
         <div className="space-y-sm">
           {fields.length === 0 ? (
-            <div className="border-category-nutrition/20 py-md rounded-lg border-2 border-dashed text-center">
+            <div className="border-border py-md rounded-lg border-2 border-dashed text-center">
               <Salad className="mb-xs text-category-nutrition/30 mx-auto h-8 w-8" />
               <p className="text-muted-foreground text-sm">
                 {t('pages.nutritionMealTypes.noIngredients')}
@@ -321,11 +318,13 @@ export function MenuOptionForm({
                   ))
                 ) : (
                   // ── Grupo de alternativas ────────────────────────────────────
-                  <div
+                  <motion.div
                     key={`group-${group.groupId}`}
-                    className="border-category-nutrition/30 bg-category-nutrition/5 rounded-lg border"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="border-border bg-card rounded-lg border"
                   >
-                    <div className="border-category-nutrition/20 px-sm py-xs flex items-center justify-between border-b">
+                    <div className="border-border px-sm py-xs flex items-center justify-between border-b">
                       <span className="text-category-nutrition text-xs font-semibold tracking-wider uppercase">
                         {t(
                           'pages.nutritionMealTypes.altGroupLabel',
@@ -338,7 +337,7 @@ export function MenuOptionForm({
                         className="gap-xs px-xs text-category-nutrition hover:bg-category-nutrition/10 flex items-center rounded py-0.5 text-xs font-medium"
                       >
                         <Plus className="h-3 w-3" />
-                        {t('pages.nutritionMealTypes.addVariant', '+ Variante')}
+                        {t('pages.nutritionMealTypes.addVariant', 'Variante')}
                       </button>
                     </div>
                     <div className="p-sm space-y-0">
@@ -362,7 +361,7 @@ export function MenuOptionForm({
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </motion.div>
                 )
               )}
             </div>
@@ -384,22 +383,24 @@ export function MenuOptionForm({
               className="gap-sm border-category-nutrition/20 py-sm text-category-nutrition/70 hover:border-category-nutrition/40 hover:bg-category-nutrition/5 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition"
             >
               <Plus className="h-4 w-4" />
-              {t('pages.nutritionMealTypes.addAltGroup', '+ Alternativas')}
+              {t('pages.nutritionMealTypes.addAltGroup', 'Alternativas')}
             </button>
           </div>
         </div>
       </FormSection>
 
-      <div className="gap-sm border-border pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm border-border pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-category-nutrition hover:bg-category-nutrition/90"
-        >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+
           {t('common.actions.save')}
         </Button>
       </div>
@@ -430,8 +431,23 @@ function IngredientRow({
   onRemove,
   t,
 }: IngredientRowProps) {
+  const quantityValue =
+    parseFloat(String(watch(`ingredients.${idx}.quantity`) ?? '').replace(',', '.')) ||
+    0;
+  const unitKey = watch(`ingredients.${idx}.unit`);
+  // Plural (chave `_other`) quando a quantidade é maior que 1
+  const unitLabel = (u: string) => {
+    const otherKey = `units.${u}_other`;
+    const otherText = t(otherKey);
+    return quantityValue > 1 && otherText !== otherKey ? otherText : t(`units.${u}`);
+  };
+
   return (
-    <div className="group border-border bg-card p-sm hover:border-category-nutrition/30 relative rounded-lg border transition">
+    <motion.div
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="group border-border bg-card p-sm hover:border-primary/40 relative rounded-lg border transition"
+    >
       {/* Row header */}
       <div className="mb-sm gap-xs flex items-center">
         <GripVertical className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
@@ -439,18 +455,20 @@ function IngredientRow({
           {label}
         </span>
         <PlainButton
+          aria-label={t('common.actions.remove')}
           type="button"
           onClick={onRemove}
-          className="text-muted-foreground hover:text-destructive rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+          className="text-destructive hover:text-destructive rounded p-0.5"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </PlainButton>
       </div>
 
-      {/* Food + Quantity + Unit */}
-      <div className="gap-xs grid grid-cols-[1fr_80px_100px]">
+      {/* Alimento, quantidade, unidade, opcional e observação */}
+      <div className="gap-xs grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_9rem_8rem_auto_minmax(0,1fr)]">
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">
+          <Label className="gap-xs text-muted-foreground text-2xs flex w-full items-center justify-center font-medium tracking-wider uppercase">
+            <Apple className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.nutritionMealTypes.food')}
           </Label>
           <Select
@@ -472,20 +490,27 @@ function IngredientRow({
           </Select>
         </div>
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">
+          <Label className="gap-xs text-muted-foreground text-2xs flex w-full items-center justify-center font-medium tracking-wider uppercase">
+            <Hash className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.nutritionMealTypes.quantity')}
           </Label>
-          <Input
-            type="number"
-            step="0.01"
-            min={0}
+          <DecimalInput
             placeholder="0"
-            {...register(`ingredients.${idx}.quantity`)}
-            className="h-8 text-center text-sm"
+            min={0}
+            step={1}
+            aria-label={t('pages.nutritionMealTypes.quantity')}
+            value={watch(`ingredients.${idx}.quantity`)}
+            onChange={(v) =>
+              setValue(`ingredients.${idx}.quantity`, v === null ? '' : String(v), {
+                shouldDirty: true,
+              })
+            }
+            className="h-8"
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">
+          <Label className="gap-xs text-muted-foreground text-2xs flex w-full items-center justify-center font-medium tracking-wider uppercase">
+            <Ruler className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.nutritionMealTypes.unit')}
           </Label>
           <Select
@@ -493,7 +518,11 @@ function IngredientRow({
             onValueChange={(v) => setValue(`ingredients.${idx}.unit`, v)}
           >
             <SelectTrigger className="h-8 text-sm">
-              <SelectValue />
+              {unitKey ? (
+                <SelectValue>{unitLabel(unitKey)}</SelectValue>
+              ) : (
+                <SelectValue />
+              )}
             </SelectTrigger>
             <SelectContent>
               {UNIT_KEYS.map((u) => (
@@ -504,30 +533,36 @@ function IngredientRow({
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      {/* Optional + Notes */}
-      <div className="mt-xs gap-sm flex items-center">
-        <label className="gap-xs flex cursor-pointer items-center">
-          <Checkbox
-            checked={watch(`ingredients.${idx}.is_optional`)}
-            onCheckedChange={(v) =>
-              setValue(`ingredients.${idx}.is_optional`, Boolean(v))
-            }
-          />
-          <span className="text-muted-foreground text-xs">
+        <div className="space-y-xs">
+          <Label className="gap-xs text-muted-foreground text-2xs flex w-full items-center justify-center font-medium tracking-wider uppercase">
+            <CircleDashed className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.nutritionMealTypes.optional')}
-          </span>
-        </label>
-        <div className="relative flex-1">
-          <StickyNote className="left-xs text-muted-foreground/50 absolute top-1/2 h-3 w-3 -translate-y-1/2" />
-          <Input
-            placeholder={t('pages.nutritionMealTypes.ingredientNotesPlaceholder')}
-            {...register(`ingredients.${idx}.notes`)}
-            className="h-7 pl-6 text-xs"
-          />
+          </Label>
+          <div className="flex h-8 items-center justify-center">
+            <Checkbox
+              aria-label={t('pages.nutritionMealTypes.optional')}
+              checked={watch(`ingredients.${idx}.is_optional`)}
+              onCheckedChange={(v) =>
+                setValue(`ingredients.${idx}.is_optional`, Boolean(v))
+              }
+            />
+          </div>
+        </div>
+        <div className="space-y-xs">
+          <Label className="gap-xs text-muted-foreground text-2xs flex w-full items-center justify-center font-medium tracking-wider uppercase">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.nutritionMealTypes.ingredientNotes')}
+          </Label>
+          <div className="relative">
+            <StickyNote className="left-xs text-muted-foreground/50 absolute top-1/2 h-3 w-3 -translate-y-1/2" />
+            <Input
+              placeholder={t('pages.nutritionMealTypes.ingredientNotesPlaceholder')}
+              {...register(`ingredients.${idx}.notes`)}
+              className="h-8 pl-6 text-xs"
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

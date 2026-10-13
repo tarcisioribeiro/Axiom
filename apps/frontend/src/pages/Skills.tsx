@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
   Brain,
+  CheckCircle2,
+  CircleDot,
   Clock,
   Edit,
   GraduationCap,
@@ -11,6 +13,7 @@ import {
   Plus,
   Radar,
   Search,
+  Tag,
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -18,22 +21,34 @@ import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { SkillForm } from '@/components/library/SkillForm';
 import { SkillsRadarChart } from '@/components/library/SkillsRadarChart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { PlainButton } from '@/components/ui/plain-button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { SKILL_CATEGORY_ICONS, SKILL_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cardVariants } from '@/lib/animations';
@@ -42,7 +57,7 @@ import { cn } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import { skillHistoryService } from '@/services/skill-history-service';
 import { skillsService } from '@/services/skills-service';
-import type { Skill, SkillFormData, SkillStatus } from '@/types';
+import type { IntellectCategory, Skill, SkillFormData, SkillStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type ViewMode = 'list' | 'radar';
@@ -52,6 +67,18 @@ const STATUS_COLORS: Record<SkillStatus, string> = {
   evolving: 'bg-warning/10 text-warning border-warning/30',
   mastered: 'bg-success/10 text-success border-success/30',
 };
+
+const SKILL_STATUSES: SkillStatus[] = ['learning', 'evolving', 'mastered'];
+
+const SKILL_CATEGORIES: IntellectCategory[] = [
+  'technology',
+  'languages',
+  'design',
+  'business',
+  'science',
+  'arts',
+  'other',
+];
 
 function ProficiencyDots({ level }: { level: number }) {
   return (
@@ -88,7 +115,7 @@ function SkillCard({
       animate="visible"
       exit="exit"
       layout
-      className="group gap-sm border-border bg-card p-md flex flex-col rounded-lg border shadow-sm transition-shadow hover:shadow-md"
+      className="group gap-sm border-border bg-card p-md flex flex-col rounded-lg border transition-colors"
     >
       <div className="gap-sm flex items-start justify-between">
         <div className="gap-sm flex min-w-0 flex-1 items-center">
@@ -104,10 +131,16 @@ function SkillCard({
         </div>
         <span
           className={cn(
-            'px-sm shrink-0 rounded-full border py-0.5 text-xs font-semibold',
+            'px-sm gap-xs inline-flex shrink-0 items-center rounded-full border py-0.5 text-xs font-semibold',
             STATUS_COLORS[skill.status]
           )}
         >
+          {(() => {
+            const StatusIcon = SKILL_STATUS_ICONS[skill.status];
+            return StatusIcon ? (
+              <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            ) : null;
+          })()}
           {t(`pages.skills.status.${skill.status}`)}
         </span>
       </div>
@@ -156,7 +189,7 @@ function SkillCard({
         </div>
       )}
 
-      <div className="gap-xs flex opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="gap-xs flex">
         <Button
           size="sm"
           variant="ghost"
@@ -196,6 +229,8 @@ export default function Skills() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [formOpen, setFormOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
@@ -279,15 +314,17 @@ export default function Skills() {
     setFormOpen(true);
   };
 
-  const masteredCount = skills.filter((s) => s.status === 'mastered').length;
-  const learningCount = skills.filter((s) => s.status === 'learning').length;
+  const filteredSkills = skills.filter(
+    (s) =>
+      (statusFilter === 'all' || s.status === statusFilter) &&
+      (categoryFilter === 'all' || s.category === categoryFilter)
+  );
 
   return (
     <AnimatedPage>
       <PageContainer>
         <PageHeader
           title={t('pages.skills.title')}
-          subtitle={t('pages.skills.subtitle')}
           icon={<Brain className="text-primary h-6 w-6" />}
           actions={
             <Button
@@ -303,53 +340,102 @@ export default function Skills() {
           }
         />
 
-        {/* Stats */}
-        <div className="gap-md grid grid-cols-3">
-          {[
-            {
-              label: t('common.actions.total'),
-              value: skills.length,
-              color: 'text-foreground',
-            },
-            {
-              label: t('pages.skills.status.mastered'),
-              value: masteredCount,
-              color: 'text-success',
-            },
-            {
-              label: t('pages.skills.status.learning'),
-              value: learningCount,
-              color: 'text-info',
-            },
-          ].map(({ label, value, color }) => (
-            <div
-              key={label}
-              className="gap-md border-border bg-card p-md flex items-center rounded-lg border"
-            >
-              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                <Brain className="text-primary h-5 w-5" />
-              </div>
-              <div>
-                <p className={cn('text-xl font-bold', color)}>{value}</p>
-                <p className="text-muted-foreground text-xs">{label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
         {/* Search + View Toggle */}
         <div className="gap-sm flex items-center">
-          <div className="relative flex-1">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <Input
-              className="pl-9"
-              placeholder={t('pages.skills.searchPlaceholder')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+          <FilterBar
+            className="flex-1"
+            hasActiveFilters={
+              !!search || statusFilter !== 'all' || categoryFilter !== 'all'
+            }
+            onClear={() => {
+              setSearch('');
+              setStatusFilter('all');
+              setCategoryFilter('all');
+            }}
+            activeFilters={[
+              ...(statusFilter !== 'all'
+                ? [
+                    {
+                      key: 'status',
+                      label: `${t('pages.skills.allStatus')}: ${t(`pages.skills.status.${statusFilter}`)}`,
+                      onRemove: () => setStatusFilter('all'),
+                    },
+                  ]
+                : []),
+              ...(categoryFilter !== 'all'
+                ? [
+                    {
+                      key: 'category',
+                      label: `${t('pages.skills.allCategories')}: ${t(`pages.skills.category.${categoryFilter}`)}`,
+                      onRemove: () => setCategoryFilter('all'),
+                    },
+                  ]
+                : []),
+            ]}
+          >
+            <FilterField label={t('common.filterLabels.search')} icon={Search}>
+              <SearchInput
+                placeholder={t('pages.skills.searchPlaceholder')}
+                value={search}
+                onValueChange={setSearch}
+              />
+            </FilterField>
+            <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger
+                  className="w-36"
+                  aria-label={t('pages.skills.allStatus')}
+                  startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('pages.skills.allStatus')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('pages.skills.allStatus')}</SelectItem>
+                  {SKILL_STATUSES.map((status) => {
+                    const StatusIcon = SKILL_STATUS_ICONS[status];
+                    return (
+                      <SelectItem
+                        key={status}
+                        value={status}
+                        icon={<StatusIcon className="h-4 w-4" />}
+                      >
+                        {t(`pages.skills.status.${status}`)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('common.fields.category')} icon={Tag}>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger
+                  className="w-40"
+                  aria-label={t('pages.skills.allCategories')}
+                  startIcon={<Brain className="h-3.5 w-3.5" />}
+                >
+                  <SelectValue placeholder={t('pages.skills.allCategories')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('pages.skills.allCategories')}</SelectItem>
+                  {SKILL_CATEGORIES.map((category) => {
+                    const Icon = SKILL_CATEGORY_ICONS[category];
+                    return (
+                      <SelectItem
+                        key={category}
+                        value={category}
+                        icon={<Icon className="h-4 w-4" />}
+                      >
+                        {t(`pages.skills.category.${category}`)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </FilterField>
+          </FilterBar>
           <div className="border-border flex rounded-lg border">
             <PlainButton
+              aria-label={t('pages.skills.viewList')}
               type="button"
               onClick={() => setViewMode('list')}
               className={cn(
@@ -362,6 +448,7 @@ export default function Skills() {
               <LayoutGrid className="h-4 w-4" />
             </PlainButton>
             <PlainButton
+              aria-label={t('pages.skills.viewRadar')}
               type="button"
               onClick={() => setViewMode('radar')}
               className={cn(
@@ -381,9 +468,9 @@ export default function Skills() {
           <LoadingState />
         ) : viewMode === 'radar' ? (
           <div className="gap-md grid lg:grid-cols-2">
-            <SkillsRadarChart skills={skills} />
+            <SkillsRadarChart skills={filteredSkills} />
             <div className="space-y-sm">
-              {skills.slice(0, 8).map((skill) => (
+              {filteredSkills.slice(0, 8).map((skill) => (
                 <div
                   key={skill.id}
                   className="border-border bg-card px-md py-sm flex items-center justify-between rounded-lg border"
@@ -399,26 +486,35 @@ export default function Skills() {
               ))}
             </div>
           </div>
-        ) : skills.length === 0 ? (
+        ) : filteredSkills.length === 0 ? (
           <EmptyState
             title={
-              search ? t('pages.skills.emptySearch') : t('pages.skills.emptyState')
+              search || statusFilter !== 'all' || categoryFilter !== 'all'
+                ? t('pages.skills.emptySearch')
+                : t('pages.skills.emptyState')
             }
             icon={<Brain className="text-muted-foreground h-10 w-10" />}
           />
         ) : (
           <AnimatePresence>
-            <div className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {skills.map((skill) => (
-                <SkillCard
-                  key={skill.id}
-                  skill={skill}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onViewHistory={(s) => setHistorySkill(s)}
-                />
-              ))}
-            </div>
+            <PaginatedSlide
+              key={`${search}-${statusFilter}-${categoryFilter}`}
+              items={filteredSkills}
+              pageSize={GRID_PAGE_SIZE}
+              className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            >
+              {(pageItems) =>
+                pageItems.map((skill) => (
+                  <SkillCard
+                    key={skill.id}
+                    skill={skill}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onViewHistory={(s) => setHistorySkill(s)}
+                  />
+                ))
+              }
+            </PaginatedSlide>
           </AnimatePresence>
         )}
 
@@ -439,16 +535,18 @@ export default function Skills() {
                   <Brain className="text-primary h-4 w-4" />
                 </div>
                 <div>
-                  <DialogTitle>
+                  <DialogTitle mode={editingSkill ? 'edit' : 'create'}>
                     {editingSkill
                       ? t('pages.skills.editTitle')
                       : t('pages.skills.newTitle')}
                   </DialogTitle>
-                  <DialogDescription>
-                    {editingSkill
-                      ? t('pages.skills.editDesc')
-                      : t('pages.skills.newDesc')}
-                  </DialogDescription>
+                  <VisuallyHidden>
+                    <DialogDescription>
+                      {editingSkill
+                        ? t('pages.skills.editDesc')
+                        : t('pages.skills.newDesc')}
+                    </DialogDescription>
+                  </VisuallyHidden>
                 </div>
               </div>
             </DialogHeader>
@@ -488,9 +586,7 @@ export default function Skills() {
             {historyLoading ? (
               <LoadingState />
             ) : !historyData?.results?.length ? (
-              <p className="py-lg text-muted-foreground text-center text-sm">
-                {t('pages.skills.history.noHistory')}
-              </p>
+              <EmptyState title={t('pages.skills.history.noHistory')} />
             ) : (
               <div className="relative space-y-0 pl-5">
                 <div className="bg-border absolute top-0 left-2 h-full w-px" />
@@ -519,6 +615,7 @@ export default function Skills() {
                 ))}
               </div>
             )}
+            <DialogCloseFooter />
           </DialogContent>
         </Dialog>
       </PageContainer>

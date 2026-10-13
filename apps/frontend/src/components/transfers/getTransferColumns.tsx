@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import type { Column } from '@/components/common/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { translate } from '@/config/constants';
+import { TRANSFER_STATUS_ICONS } from '@/config/icons';
 import { STATUS_VARIANTS, getTransferStatus } from '@/hooks/use-transfers-data';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import type { Transfer } from '@/types';
@@ -50,8 +51,10 @@ export function getTransferColumns(t: TFunction): Column<Transfer>[] {
       label: t('pages.transfers.columns.status'),
       render: (transfer) => {
         const s = getTransferStatus(transfer);
+        const StatusIcon = TRANSFER_STATUS_ICONS[s];
         return (
-          <Badge variant={STATUS_VARIANTS[s] ?? 'outline'}>
+          <Badge variant={STATUS_VARIANTS[s] ?? 'outline'} className="gap-xs">
+            {StatusIcon && <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />}
             {t(`common.status.${s}`, { defaultValue: s })}
           </Badge>
         );

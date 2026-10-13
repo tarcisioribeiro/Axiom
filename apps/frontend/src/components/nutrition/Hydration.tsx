@@ -1,12 +1,14 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Droplets, Link2, Loader2, Plus, Sparkles, Trash2 } from 'lucide-react';
+import { Droplets, Link2, Loader2, Plus, Save, Sparkles, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -96,11 +98,11 @@ export function WaterLogPanel({ date }: { date: string }) {
   const custom = parseInt(customMl, 10);
 
   return (
-    <div className="border-border bg-card p-md space-y-md rounded-lg border shadow-sm">
+    <div className="border-border bg-card p-md space-y-md rounded-lg border">
       <div className="gap-sm flex items-center justify-between">
         <div className="gap-xs flex items-center">
           <Droplets className="h-5 w-5 text-sky-500" />
-          <span className="text-sm font-semibold">
+          <span className="text-sm font-medium">
             {t('pages.nutritionHydration.dayWater')}
           </span>
         </div>
@@ -127,7 +129,7 @@ export function WaterLogPanel({ date }: { date: string }) {
             disabled={addMutation.isPending}
             onClick={() => addMutation.mutate(ml)}
           >
-            <Plus className="mr-xs h-3.5 w-3.5" />
+            <Plus className="h-3.5 w-3.5" />
             {ml} ml
           </Button>
         ))}
@@ -138,15 +140,14 @@ export function WaterLogPanel({ date }: { date: string }) {
             if (custom > 0) addMutation.mutate(custom);
           }}
         >
-          <Input
-            type="number"
+          <NumberStepper
             min={1}
             max={5000}
-            inputMode="numeric"
-            placeholder="ml"
-            value={customMl}
-            onChange={(e) => setCustomMl(e.target.value)}
-            className="h-8 w-24"
+            optional
+            placeholder="Ex.: 250"
+            value={customMl === '' ? null : Number(customMl)}
+            onChange={(v) => setCustomMl(v === null ? '' : String(v))}
+            className="h-8"
             aria-label={t('pages.nutritionHydration.customAmount')}
           />
           <Button
@@ -157,16 +158,15 @@ export function WaterLogPanel({ date }: { date: string }) {
             {addMutation.isPending ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              t('pages.nutritionHydration.add')
+              <Plus className="h-3.5 w-3.5" />
             )}
+            {t('pages.nutritionHydration.add')}
           </Button>
         </form>
       </div>
 
       {!isLoading && logs.length === 0 ? (
-        <p className="text-muted-foreground text-xs">
-          {t('pages.nutritionHydration.noLogs')}
-        </p>
+        <EmptyState title={t('pages.nutritionHydration.noLogs')} />
       ) : (
         <ul className="divide-border divide-y">
           {logs.map((log) => (
@@ -239,8 +239,8 @@ export function HydrationGoalCard() {
   if (isLoading) return null;
 
   return (
-    <div className="space-y-md">
-      <div className="border-border bg-card p-lg space-y-md rounded-lg border shadow-sm">
+    <div className="border-border bg-card p-lg space-y-md rounded-lg border">
+      <div className="space-y-md">
         <div className="gap-sm flex items-center">
           <Droplets className="h-6 w-6 text-sky-500" />
           <div>
@@ -263,30 +263,32 @@ export function HydrationGoalCard() {
           }}
         >
           <div className="space-y-xs flex-1">
-            <Label htmlFor="hydration-liters">
+            <Label className="gap-xs flex items-center" htmlFor="hydration-liters">
+              <Droplets className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.nutritionHydration.litersLabel')}
             </Label>
-            <Input
+            <DecimalInput
               id="hydration-liters"
-              type="number"
-              step="0.05"
               min={0.5}
               max={10}
-              inputMode="decimal"
+              step={0.25}
+              unit="L"
               value={value}
-              onChange={(e) => setLiters(e.target.value)}
+              onChange={(v) => setLiters(v === null ? '' : String(v))}
             />
           </div>
           <Button type="submit" disabled={!(ml > 0) || saveMutation.isPending}>
-            {saveMutation.isPending && (
-              <Loader2 className="mr-xs h-4 w-4 animate-spin" />
+            {saveMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
             )}
             {t('pages.nutritionHydration.saveGoal')}
           </Button>
         </form>
       </div>
 
-      <div className="border-border bg-card p-lg space-y-sm rounded-lg border shadow-sm">
+      <div className="border-border pt-md space-y-sm border-t">
         <p className="gap-xs flex items-center font-semibold">
           <Sparkles className="text-primary h-4 w-4" />
           {t('pages.nutritionHydration.suggestionTitle')}
@@ -314,8 +316,10 @@ export function HydrationGoalCard() {
             </ul>
             <Button
               variant="outline"
+              className="gap-sm"
               onClick={() => setLiters(String(suggestion.suggested_ml! / 1000))}
             >
+              <Sparkles className="h-4 w-4" />
               {t('pages.nutritionHydration.useSuggestion')}
             </Button>
           </>
@@ -325,11 +329,6 @@ export function HydrationGoalCard() {
           </p>
         )}
       </div>
-
-      <p className="text-muted-foreground gap-xs flex items-start text-xs">
-        <Link2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        {t('pages.nutritionHydration.tasksHint')}
-      </p>
     </div>
   );
 }

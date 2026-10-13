@@ -1,3 +1,4 @@
+import { ArrowRight, Loader2, TrendingUp, Wallet, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -52,8 +53,7 @@ export function IncreaseValueDialog({
       setPreview(result);
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -66,15 +66,13 @@ export function IncreaseValueDialog({
     try {
       await payableInstallmentsService.increaseValue(payable.id, newValue, false);
       toast({
-        title: t('pages.payables.form.valueIncreased'),
-        description: t('pages.payables.form.valueIncreasedDesc'),
+        title: t('pages.payables.form.valueIncreasedDesc'),
       });
       onSuccess?.();
       handleClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -106,14 +104,19 @@ export function IncreaseValueDialog({
     <Dialog open={!!payable} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.payables.form.increaseValueTitle')}</DialogTitle>
+          <DialogTitle icon={TrendingUp}>
+            {t('pages.payables.form.increaseValueTitle')}
+          </DialogTitle>
           <DialogDescription>
             {payable.description} — {t('pages.payables.form.increaseValueDesc')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-md">
           <div className="space-y-xs">
-            <Label>{t('pages.payables.form.newValueLabel')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.form.newValueLabel')} *
+            </Label>
             <CurrencyInput
               accentColor="destructive"
               value={addValue}
@@ -123,12 +126,18 @@ export function IncreaseValueDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button
             onClick={() => void handleRequestPreview()}
             disabled={isLoadingPreview || addValue <= 0}
           >
+            {isLoadingPreview ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ArrowRight className="h-4 w-4" />
+            )}
             {isLoadingPreview ? t('common.actions.loading') : t('common.actions.next')}
           </Button>
         </DialogFooter>

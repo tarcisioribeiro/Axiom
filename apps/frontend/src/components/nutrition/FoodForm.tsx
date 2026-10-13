@@ -1,12 +1,19 @@
-/* eslint-disable react-hooks/incompatible-library */
-import { FileText, Flame, Loader2, Salad } from 'lucide-react';
+import { FileText, Flame, Loader2, Ruler, Salad, Save, Scale, X } from 'lucide-react';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -44,9 +51,9 @@ export function FoodForm({
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
   } = useForm<FoodFormData>({
     defaultValues: {
@@ -71,9 +78,6 @@ export function FoodForm({
       });
   }, [food, ownerId, reset]);
 
-  const nameValue = watch('name');
-  const initial = nameValue?.charAt(0)?.toUpperCase() || '?';
-
   const handleFormSubmit = async (data: FoodFormData) => {
     try {
       await onSubmit({
@@ -89,27 +93,6 @@ export function FoodForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
-      {/* Header visual com avatar */}
-      <div className="gap-md bg-category-nutrition/10 px-md py-sm ring-category-nutrition/20 flex items-center rounded-lg ring-1">
-        <div className="bg-category-nutrition/25 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
-          {nameValue ? (
-            <span className="text-category-nutrition text-xl font-bold">{initial}</span>
-          ) : (
-            <Salad className="text-category-nutrition h-6 w-6" />
-          )}
-        </div>
-        <div>
-          <p className="text-category-nutrition text-sm font-semibold">
-            {food
-              ? t('pages.nutritionFoods.editFoodTitle')
-              : t('pages.nutritionFoods.newFoodTitle')}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {nameValue || t('pages.nutritionFoods.newFoodDesc')}
-          </p>
-        </div>
-      </div>
-
       {/* Nome */}
       <FormSection title={t('pages.nutritionFoods.foodName')} icon={Salad}>
         <Input
@@ -138,69 +121,95 @@ export function FoodForm({
         icon={Flame}
       >
         <div className="space-y-sm">
-          <p className="text-muted-foreground text-xs">
-            {t(
-              'pages.nutritionFoods.caloriesHelp',
-              t('pages.nutritionFoods.caloriesHelp')
-            )}
-          </p>
           <div className="gap-sm grid grid-cols-2">
             <div className="space-y-xs">
-              <label className="text-foreground text-xs font-medium">
+              <label className="gap-xs text-foreground flex items-center text-xs font-medium">
+                <Scale className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.nutritionFoods.servingSize', 'Tamanho da Porção')}
               </label>
-              <Input
-                type="number"
-                min={0}
-                step="0.1"
-                placeholder="100"
-                {...register('serving_size')}
+              <Controller
+                control={control}
+                name="serving_size"
+                render={({ field }) => (
+                  <DecimalInput
+                    decimals={1}
+                    placeholder="100"
+                    aria-label={t(
+                      'pages.nutritionFoods.servingSize',
+                      'Tamanho da Porção'
+                    )}
+                    value={field.value}
+                    onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                  />
+                )}
               />
             </div>
             <div className="space-y-xs">
-              <label className="text-foreground text-xs font-medium">
+              <label className="gap-xs text-foreground flex items-center text-xs font-medium">
+                <Ruler className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.nutritionFoods.servingUnit', 'Unidade')}
               </label>
-              <select
-                {...register('serving_unit')}
-                className="border-input bg-background px-sm focus:ring-ring w-full rounded-md border py-2 text-sm focus:ring-2 focus:outline-none"
-              >
-                {SERVING_UNIT_VALUES.map((val) => (
-                  <option key={val} value={val}>
-                    {t(`units.${val}`)}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                name="serving_unit"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value ?? 'g'} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SERVING_UNIT_VALUES.map((val) => (
+                        <SelectItem key={val} value={val}>
+                          {t(`units.${val}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           </div>
           <div className="space-y-xs">
-            <label className="text-foreground text-xs font-medium">
+            <label className="gap-xs text-foreground flex items-center text-xs font-medium">
+              <Flame className="text-muted-foreground h-3.5 w-3.5" />
               {t(
                 'pages.nutritionFoods.caloriesPerServing',
                 'Calorias (kcal) por Porção'
               )}
             </label>
-            <Input
-              type="number"
-              min={0}
-              step="0.1"
-              placeholder="ex: 70"
-              {...register('calories_per_serving')}
+            <Controller
+              control={control}
+              name="calories_per_serving"
+              render={({ field }) => (
+                <DecimalInput
+                  decimals={1}
+                  unit="kcal"
+                  placeholder="Ex.: 70"
+                  aria-label={t(
+                    'pages.nutritionFoods.caloriesPerServing',
+                    'Calorias (kcal) por Porção'
+                  )}
+                  value={field.value}
+                  onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                />
+              )}
             />
           </div>
         </div>
       </FormSection>
 
-      <div className="gap-sm border-border pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm border-border pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-category-nutrition hover:bg-category-nutrition/90"
-        >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+
           {t('common.actions.save')}
         </Button>
       </div>

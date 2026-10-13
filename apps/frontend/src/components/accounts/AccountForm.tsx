@@ -7,6 +7,9 @@ import {
   Hash,
   Landmark,
   ShieldAlert,
+  Loader2,
+  Save,
+  X,
 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -29,6 +32,7 @@ import {
   ACCOUNT_TYPE_ICONS as ACCOUNT_TYPE_ICONS_CONFIG,
   INSTITUTION_ICONS as INSTITUTION_ICONS_CONFIG,
 } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
 import { accountSchema, type AccountFormData } from '@/lib/validations';
@@ -41,6 +45,8 @@ interface AccountFormProps {
   onSubmit: (data: AccountFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  /** Erros por campo devolvidos pelo servidor após o último envio. */
+  fieldErrors?: Record<string, string[]>;
 }
 
 export const AccountForm: React.FC<AccountFormProps> = ({
@@ -48,12 +54,14 @@ export const AccountForm: React.FC<AccountFormProps> = ({
   onSubmit,
   onCancel,
   isLoading = false,
+  fieldErrors,
 }) => {
   const { t } = useTranslation();
   const {
     register,
     handleSubmit,
     setValue,
+    setError,
     watch,
     formState: { errors },
   } = useForm<AccountFormData>({
@@ -82,6 +90,11 @@ export const AccountForm: React.FC<AccountFormProps> = ({
   });
 
   useEffect(() => {
+    const message = fieldErrors?.account_number?.[0];
+    if (message) setError('account_number', { type: 'server', message });
+  }, [fieldErrors, setError]);
+
+  useEffect(() => {
     const loadCurrentUserMember = async () => {
       try {
         const member = await membersService.getCurrentUserMember();
@@ -103,7 +116,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
     balanceVal > 0 ? 'success' : balanceVal < 0 ? 'destructive' : 'default';
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
       {/* Mini preview da conta */}
       <div className="border-border/60 from-muted/40 to-muted/10 p-md relative overflow-hidden rounded-lg border bg-gradient-to-br">
         <div className="gap-sm flex items-center">
@@ -139,39 +152,6 @@ export const AccountForm: React.FC<AccountFormProps> = ({
       {/* Seção: Identificação */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Landmark}>
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm md:col-span-2">
-            <Label className="gap-xs flex items-center">
-              <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.accounts.form.typeLabel')}
-            </Label>
-            <div className="gap-xs grid grid-cols-3">
-              {Object.entries(TRANSLATIONS.accountTypes).map(([key]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() =>
-                    setValue('account_type', key as AccountFormData['account_type'])
-                  }
-                  disabled={isLoading}
-                  className={`gap-xs px-sm py-xs flex items-center rounded border text-xs font-medium transition ${
-                    accountType === key
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
-                  }`}
-                >
-                  {(() => {
-                    const TypeIcon = ACCOUNT_TYPE_ICONS_CONFIG[key] ?? Building2;
-                    return <TypeIcon className="h-4 w-4 shrink-0" />;
-                  })()}
-                  <span className="truncate">{translate('accountTypes', key)}</span>
-                </button>
-              ))}
-            </div>
-            {errors.account_type && (
-              <p className="text-destructive text-sm">{errors.account_type.message}</p>
-            )}
-          </div>
-
           <div className="space-y-sm">
             <Label htmlFor="institution" className="gap-xs flex items-center">
               <Building2 className="text-muted-foreground h-3.5 w-3.5" />
@@ -183,7 +163,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                 setValue('institution', value as AccountFormData['institution'])
               }
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.institution}>
                 <SelectValue
                   placeholder={t('pages.accounts.form.institutionPlaceholder')}
                 />
@@ -202,9 +182,37 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {errors.institution && (
-              <p className="text-destructive text-sm">{errors.institution.message}</p>
-            )}
+          </div>
+
+          <div className="space-y-sm">
+            <Label htmlFor="account_type" className="gap-xs flex items-center">
+              <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.accounts.form.typeLabel')}
+            </Label>
+            <Select
+              value={accountType}
+              onValueChange={(value) =>
+                setValue('account_type', value as AccountFormData['account_type'])
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger id="account_type" aria-invalid={!!errors.account_type}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(TRANSLATIONS.accountTypes).map(([key, value]) => (
+                  <SelectItem key={key} value={key}>
+                    <span className="flex items-center gap-2">
+                      {(() => {
+                        const TypeIcon = ACCOUNT_TYPE_ICONS_CONFIG[key] ?? Building2;
+                        return <TypeIcon className="h-4 w-4" />;
+                      })()}
+                      {value}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-sm md:col-span-2">
@@ -213,14 +221,12 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               {t('pages.accounts.form.nameLabel')}
             </Label>
             <Input
+              aria-invalid={!!errors.account_name}
               id="account_name"
               {...register('account_name')}
               placeholder={t('pages.accounts.form.namePlaceholder')}
               disabled={isLoading}
             />
-            {errors.account_name && (
-              <p className="text-destructive text-sm">{errors.account_name.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
@@ -229,6 +235,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               {t('pages.accounts.form.numberLabel')}
             </Label>
             <Input
+              aria-invalid={!!errors.account_number}
               id="account_number"
               {...register('account_number')}
               placeholder={
@@ -238,16 +245,6 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               }
               disabled={isLoading}
             />
-            {account && (
-              <p className="text-muted-foreground text-xs">
-                {t('pages.accounts.form.numberHiddenPlaceholder')}
-              </p>
-            )}
-            {errors.account_number && (
-              <p className="text-destructive text-sm">
-                {errors.account_number.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -261,6 +258,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               {t('pages.accounts.form.balanceLabel')}
             </Label>
             <CurrencyInput
+              aria-invalid={!!errors.balance}
               id="balance"
               accentColor={balanceAccent}
               value={balanceVal}
@@ -273,9 +271,6 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                 {formatCurrency(-overdraftVal)}
               </p>
             )}
-            {errors.balance && (
-              <p className="text-destructive text-sm">{errors.balance.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -287,6 +282,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               </span>
             </Label>
             <CurrencyInput
+              aria-invalid={!!errors.overdraft_limit}
               id="overdraft_limit"
               value={overdraftVal}
               onChange={(e) =>
@@ -294,20 +290,21 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               }
               disabled={isLoading}
             />
-            {errors.overdraft_limit && (
-              <p className="text-destructive text-sm">
-                {errors.overdraft_limit.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
 
-      <div className="gap-sm pt-md flex justify-end">
+      <div className="dialog-footer gap-sm pt-md flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
           {isLoading
             ? t('common.actions.saving')
             : account

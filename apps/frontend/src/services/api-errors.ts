@@ -68,6 +68,10 @@ export function formatErrorMessage(data: unknown): string {
       return errorData.detail;
     }
 
+    if (typeof errorData.error === 'string') {
+      return errorData.error;
+    }
+
     const errorMessages: string[] = [];
 
     for (const [field, errors] of Object.entries(errorData)) {

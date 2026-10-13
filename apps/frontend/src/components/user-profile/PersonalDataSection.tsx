@@ -1,15 +1,31 @@
+/* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Mail, Phone, User } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { isValidPhoneNumber } from 'libphonenumber-js';
+import { Cake, Mail, Pencil, Phone, Save, User, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
+import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { isValidCPF } from '@/lib/helpers';
+import { formatPhone } from '@/lib/phone';
 import { membersService } from '@/services/members-service';
 import { getErrorMessage } from '@/utils/error-utils';
 
+import { DocumentField } from './DocumentField';
 import { Section } from './Section';
 
 function PersonalDataForm({
@@ -17,11 +33,19 @@ function PersonalDataForm({
   initialName,
   initialEmail,
   initialPhone,
+  initialSex,
+  initialBirthDate,
+  initialDocument,
+  onCancel,
 }: {
   memberId: number;
   initialName: string;
   initialEmail: string;
   initialPhone: string;
+  initialSex: string;
+  initialBirthDate: string | null;
+  initialDocument: string;
+  onCancel: () => void;
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -29,86 +53,199 @@ function PersonalDataForm({
 
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
-  const [phone, setPhone] = useState(initialPhone);
+  const [phone, setPhone] = useState(() => formatPhone(initialPhone));
+  const [sex, setSex] = useState(initialSex);
+  const [birthDate, setBirthDate] = useState(initialBirthDate);
+  const [document, setDocument] = useState(initialDocument);
+  const [editing, setEditing] = useState(false);
+
+  const documentChanged = document !== initialDocument;
 
   const mutation = useMutation({
     mutationFn: () =>
       membersService.patch(memberId, {
-        name,
+        name: name.trim(),
         email: email || undefined,
         phone,
+        sex,
+        birth_date: birthDate,
+        ...(documentChanged && { document }),
       }),
     onSuccess: () => {
+      setEditing(false);
       toast({ title: t('userProfile.personalData.success') });
       void queryClient.invalidateQueries({ queryKey: ['members', 'me'] });
     },
     onError: (err) => {
       toast({
-        title: t('userProfile.personalData.error'),
-        description: getErrorMessage(err),
+        title: t('userProfile.personalData.error', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     },
   });
 
+  // Erros só aparecem em modo de edição.
+  const error = (invalid: boolean, key: string) =>
+    editing && invalid ? t(`userProfile.personalData.${key}`) : undefined;
+  const nameError = error(!name.trim(), 'nameRequired');
+  const emailError = error(
+    !!email && !z.email().safeParse(email).success,
+    'emailInvalid'
+  );
+  const phoneError = error(!isValidPhoneNumber(phone), 'phoneInvalid');
+  // O documento já salvo não é revalidado: só o que o usuário digitar.
+  const documentError = error(
+    documentChanged && !isValidCPF(document),
+    'documentInvalid'
+  );
+  const birthDateError = error(
+    !!birthDate && birthDate > format(new Date(), 'yyyy-MM-dd'),
+    'birthDateFuture'
+  );
+  const errorMessages = [
+    nameError,
+    emailError,
+    phoneError,
+    documentError,
+    birthDateError,
+  ].filter((message): message is string => !!message);
+
   return (
     <Section
       icon={<User className="h-4 w-4" />}
       title={t('userProfile.personalData.title')}
-      description={t('userProfile.personalData.description')}
     >
-      <div className="gap-md grid sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <Label htmlFor="name">{t('userProfile.personalData.name')}</Label>
-          <Input
+      <form
+        className="space-y-md"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (errorMessages.length) {
+            errorMessages.forEach((title) => toast({ title, variant: 'destructive' }));
+            return;
+          }
+          mutation.mutate();
+        }}
+      >
+        <div className="gap-md grid sm:grid-cols-2">
+          <FormField
             id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-xs"
+            label={t('userProfile.personalData.name')}
+            icon={User}
+            error={nameError}
+          >
+            <Input
+              autoComplete="name"
+              placeholder={t('common.placeholders.fullName')}
+              maxLength={200}
+              disabled={!editing}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </FormField>
+          <DocumentField
+            value={document}
+            onChange={setDocument}
+            editing={editing}
+            error={documentError}
           />
         </div>
-        <div>
-          <Label htmlFor="email">{t('userProfile.personalData.email')}</Label>
-          <div className="mt-xs relative">
-            <Mail className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+        <div className="gap-md grid sm:grid-cols-2">
+          <FormField
+            id="email"
+            label={t('userProfile.personalData.email')}
+            icon={Mail}
+            error={emailError}
+          >
             <Input
-              id="email"
               type="email"
+              autoComplete="email"
+              placeholder={t('common.placeholders.email')}
+              disabled={!editing}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-9"
+              onChange={(e) => setEmail(e.target.value.trim())}
             />
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="phone">{t('userProfile.personalData.phone')}</Label>
-          <div className="mt-xs relative">
-            <Phone className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+          </FormField>
+          <FormField
+            id="phone"
+            label={t('userProfile.personalData.phone')}
+            icon={Phone}
+            error={phoneError}
+          >
             <Input
-              id="phone"
+              type="tel"
+              autoComplete="tel"
+              placeholder="+55 (00) 00000-0000"
+              disabled={!editing}
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="pl-9"
+              onChange={(e) => setPhone(formatPhone(e.target.value, phone))}
+            />
+          </FormField>
+        </div>
+        <div className="gap-md grid sm:grid-cols-2">
+          <div className="space-y-sm">
+            <Label className="gap-xs flex items-center" htmlFor="sex">
+              <User className="text-muted-foreground h-3.5 w-3.5" />
+              {t('userProfile.personalData.sex')}
+            </Label>
+            <Select value={sex} onValueChange={setSex} disabled={!editing}>
+              <SelectTrigger id="sex">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="M">{t('pages.members.form.sexMale')}</SelectItem>
+                <SelectItem value="F">{t('pages.members.form.sexFemale')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-sm">
+            <Label className="gap-xs flex items-center">
+              <Cake className="text-muted-foreground h-3.5 w-3.5" />
+              {t('userProfile.personalData.birthDate')}
+            </Label>
+            <DatePicker
+              value={birthDate ? parseISO(birthDate + 'T00:00:00') : undefined}
+              onChange={(d) => setBirthDate(d ? format(d, 'yyyy-MM-dd') : null)}
+              maxDate={new Date()}
+              disabled={!editing}
+              aria-invalid={!!birthDateError}
             />
           </div>
         </div>
-      </div>
-      <div className="pt-sm flex justify-end">
-        <Button
-          onClick={() => mutation.mutate()}
-          disabled={mutation.isPending}
-          className="gradient-primary font-semibold text-white"
-        >
-          {mutation.isPending
-            ? t('userProfile.personalData.saving')
-            : t('userProfile.personalData.save')}
-        </Button>
-      </div>
+        <div className="gap-sm flex justify-end">
+          {editing ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={mutation.isPending}
+                onClick={onCancel}
+              >
+                <X />
+                {t('common.actions.cancel')}
+              </Button>
+              <Button type="submit" loading={mutation.isPending}>
+                {!mutation.isPending && <Save />}
+                {mutation.isPending
+                  ? t('userProfile.personalData.saving')
+                  : t('userProfile.personalData.save')}
+              </Button>
+            </>
+          ) : (
+            <Button type="button" variant="outline" onClick={() => setEditing(true)}>
+              <Pencil />
+              {t('userProfile.personalData.edit')}
+            </Button>
+          )}
+        </div>
+      </form>
     </Section>
   );
 }
 
 export function PersonalDataSection({ memberId }: { memberId: number }) {
+  // Cancelar remonta o formulário, descartando o que foi digitado.
+  const [formKey, setFormKey] = useState(0);
   const { data: member } = useQuery({
     queryKey: ['members', 'me'],
     queryFn: () => membersService.getCurrentUserMember(),
@@ -118,11 +255,15 @@ export function PersonalDataSection({ memberId }: { memberId: number }) {
 
   return (
     <PersonalDataForm
-      key={member.id}
+      key={`${member.id}-${formKey}`}
+      onCancel={() => setFormKey((k) => k + 1)}
       memberId={memberId}
       initialName={member.name ?? ''}
       initialEmail={member.email ?? ''}
       initialPhone={member.phone ?? ''}
+      initialSex={member.sex}
+      initialBirthDate={member.birth_date ?? null}
+      initialDocument={(member.document ?? '').replace(/\D/g, '')}
     />
   );
 }

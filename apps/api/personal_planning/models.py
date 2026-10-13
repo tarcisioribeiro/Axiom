@@ -1266,6 +1266,15 @@ class TaskInstance(BaseModel):
     completed_at = models.DateTimeField(
         null=True, blank=True, verbose_name="Concluída em"
     )
+    xp_awarded = models.PositiveSmallIntegerField(
+        default=0,
+        verbose_name="XP Concedido",
+        help_text=(
+            "XP já creditado por esta instância ter sido concluída"
+            " (0 = nenhum). Usado para descontar o XP se a tarefa for"
+            " desmarcada."
+        ),
+    )
 
     # Proprietário
     owner = models.ForeignKey(
@@ -1343,6 +1352,7 @@ BADGE_CATEGORY_CHOICES = (
 
 XP_EVENT_CHOICES = (
     ("task_completed", "Tarefa concluída"),
+    ("task_uncompleted", "Tarefa desmarcada"),
     ("goal_completed", "Objetivo concluído"),
     ("streak_7", "Sequência de 7 dias"),
     ("streak_30", "Sequência de 30 dias"),
@@ -1396,7 +1406,7 @@ class GamificationProfile(BaseModel):
     def add_xp(
         self, amount: int, event: str, description: str = ""
     ) -> "XPTransaction":
-        self.total_xp += amount
+        self.total_xp = max(0, self.total_xp + amount)
         new_level = self._calculate_level()
         leveled_up = new_level > self.current_level
         self.current_level = new_level

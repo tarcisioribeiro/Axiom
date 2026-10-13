@@ -4,13 +4,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 
+import { LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import type { RevenuePrefillData } from '@/components/revenues/RevenueForm';
 import { Badge } from '@/components/ui/badge';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
-import { sumByProperty } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
 import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
@@ -61,7 +61,6 @@ export interface UseRevenuesPageReturn {
     date_from?: string;
     date_to?: string;
   }) => Promise<void>;
-  totalRevenues: number;
   hasActiveFilters: boolean;
   columns: Column<Revenue>[];
   prefillRevenueData: RevenuePrefillData | undefined;
@@ -93,7 +92,7 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const PAGE_SIZE = 50;
+  const PAGE_SIZE = LIST_PAGE_SIZE;
   const [page, setPage] = useState(1);
   const filtersKey = JSON.stringify([
     debouncedSearch,
@@ -171,14 +170,12 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
       void invalidateRevenues();
       toast({
         title: t('pages.revenues.created'),
-        description: t('pages.revenues.createdDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -191,14 +188,12 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
       void invalidateRevenues();
       toast({
         title: t('pages.revenues.updated'),
-        description: t('pages.revenues.updatedDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -210,13 +205,11 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
       void invalidateRevenues();
       toast({
         title: t('pages.revenues.deleted'),
-        description: t('pages.revenues.deletedDesc'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -245,8 +238,7 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
   const handleCreate = () => {
     if (accounts.length === 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.revenues.noAccountMsg'),
+        title: t('pages.revenues.noAccountMsg'),
         variant: 'destructive',
       });
       return;
@@ -303,25 +295,15 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
       await revenuesService.exportRevenues(exportParams);
       toast({
         title: t('common.messages.exportSuccess'),
-        description: t('common.messages.exportSuccessDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.exportError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.exportError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
   };
 
-  const totalRevenues = sumByProperty(
-    revenues
-      .filter(
-        (r) => !r.related_transfer && !r.is_transfer_generated && !r.is_initial_balance
-      )
-      .map((r) => ({ value: parseFloat(r.value) })),
-    'value'
-  );
   const hasActiveFilters =
     !!searchTerm ||
     categoryFilter !== 'all' ||
@@ -426,7 +408,6 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     handleDelete,
     handleSubmit,
     handleExport,
-    totalRevenues,
     hasActiveFilters,
     columns,
     prefillRevenueData,

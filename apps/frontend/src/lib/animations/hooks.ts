@@ -1,7 +1,7 @@
 import { useInView, useMotionValue, animate } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
 
-import { EASING } from './transitions';
+import { EASE_OUT } from './transitions';
 
 export const useScrollAnimation = (once = true) => {
   const ref = useRef(null);
@@ -22,7 +22,7 @@ export const useCounter = (end: number, duration = 2) => {
     if (prefersReducedMotion) return;
     const controls = animate(motionValue, end, {
       duration,
-      ease: EASING.smooth,
+      ease: EASE_OUT,
       onUpdate: setCount,
     });
     return controls.stop;

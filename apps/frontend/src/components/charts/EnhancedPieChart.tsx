@@ -17,11 +17,7 @@ interface EnhancedPieChartProps {
   height?: number;
   /** Exibe a legenda inferior padrão. Default true. */
   showLegend?: boolean;
-  /** Desenha o percentual de cada fatia sobre o próprio arco. Default false. */
-  showSliceLabels?: boolean;
 }
-
-const RADIAN = Math.PI / 180;
 
 /**
  * Gráfico de pizza aprimorado
@@ -43,37 +39,8 @@ export const EnhancedPieChart = ({
   customColors,
   height = 300,
   showLegend = true,
-  showSliceLabels = false,
 }: EnhancedPieChartProps) => {
   const dims = useChartDimensions();
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderSliceLabel = (props: any) => {
-    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props as {
-      cx: number;
-      cy: number;
-      midAngle: number;
-      innerRadius: number;
-      outerRadius: number;
-      percent: number;
-    };
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor="middle"
-        dominantBaseline="central"
-        className="text-xs font-bold"
-        style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.35))' }}
-      >
-        {`${(percent * 100).toFixed(1)}%`}
-      </text>
-    );
-  };
 
   // Calcula o total para percentuais na legenda
   const total = useMemo(
@@ -132,7 +99,6 @@ export const EnhancedPieChart = ({
           animationBegin={0}
           animationDuration={700}
           animationEasing="ease-out"
-          label={showSliceLabels ? renderSliceLabel : undefined}
           labelLine={false}
         >
           {data.map((entry, index) => {
@@ -146,7 +112,7 @@ export const EnhancedPieChart = ({
                 fill={fillColor}
                 stroke="hsl(var(--background))"
                 strokeWidth={3}
-                className="transition-opacity duration-200 hover:opacity-75"
+                className="duration-normal transition-opacity hover:opacity-75"
                 style={{
                   cursor: 'pointer',
                   filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.15))',

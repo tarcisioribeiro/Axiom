@@ -1,3 +1,16 @@
+import {
+  CalendarDays,
+  Clock,
+  CreditCardIcon,
+  FileText,
+  Hash,
+  Loader2,
+  Save,
+  Store,
+  Tag,
+  Wallet,
+  X,
+} from 'lucide-react';
 /* eslint-disable max-lines */
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -9,6 +22,7 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -200,7 +214,8 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md" noValidate>
       <div className="gap-md grid grid-cols-1 md:grid-cols-2">
         <div className="space-y-sm md:col-span-2">
-          <Label htmlFor="description">
+          <Label className="gap-xs flex items-center" htmlFor="description">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.creditCardExpenses.form.descriptionLabel')}
           </Label>
           <Input
@@ -212,7 +227,8 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
 
         <div className="space-y-sm">
-          <Label htmlFor="total_value">
+          <Label className="gap-xs flex items-center" htmlFor="total_value">
+            <Wallet className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.creditCardExpenses.form.totalValueLabel')}
           </Label>
           <Controller
@@ -238,7 +254,10 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
 
         <div className="space-y-sm">
-          <Label>{t('pages.creditCardExpenses.form.categoryLabel')}</Label>
+          <Label className="gap-xs flex items-center">
+            <Tag className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.creditCardExpenses.form.categoryLabel')}
+          </Label>
           <Select
             value={watchedCategory || ''}
             onValueChange={(v) => setValue('category', v)}
@@ -276,7 +295,8 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
 
         <div className="space-y-sm">
-          <Label htmlFor="purchase_date">
+          <Label className="gap-xs flex items-center" htmlFor="purchase_date">
+            <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.creditCardExpenses.form.purchaseDateLabel')}
           </Label>
           <DatePicker
@@ -290,7 +310,8 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
 
         <div className="space-y-sm">
-          <Label htmlFor="purchase_time">
+          <Label className="gap-xs flex items-center" htmlFor="purchase_time">
+            <Clock className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.creditCardExpenses.form.purchaseTimeLabel')}
           </Label>
           <TimePicker
@@ -301,7 +322,10 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
 
         <div className="space-y-sm">
-          <Label>{t('pages.creditCardExpenses.form.cardLabel')}</Label>
+          <Label className="gap-xs flex items-center">
+            <CreditCardIcon className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.creditCardExpenses.form.cardLabel')}
+          </Label>
           <Select
             value={watchedCard?.toString() || ''}
             onValueChange={(v) => setValue('card', parseInt(v))}
@@ -367,21 +391,28 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
 
         <div className="space-y-sm">
-          <Label htmlFor="total_installments">
+          <Label className="gap-xs flex items-center" htmlFor="total_installments">
+            <Hash className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.creditCardExpenses.form.installmentsLabel')}
           </Label>
-          <Input
-            id="total_installments"
-            type="number"
-            min="1"
-            max="48"
-            {...register('total_installments', {
+          <Controller
+            control={control}
+            name="total_installments"
+            rules={{
               required: true,
-              valueAsNumber: true,
               min: 1,
               max: 48,
-            })}
-            disabled={isLoading || isEditMode}
+            }}
+            render={({ field }) => (
+              <NumberStepper
+                id="total_installments"
+                disabled={isLoading || isEditMode}
+                min={1}
+                max={48}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
           <div className="bg-muted p-sm rounded-md">
             {watchedTotalInstallments > 1 ? (
@@ -406,7 +437,8 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
 
         <div className="space-y-sm">
-          <Label htmlFor="merchant">
+          <Label className="gap-xs flex items-center" htmlFor="merchant">
+            <Store className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.creditCardExpenses.form.merchantLabel')}
           </Label>
           <Input
@@ -418,9 +450,13 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
 
         <div className="space-y-sm md:col-span-2">
-          <Label htmlFor="notes">{t('pages.creditCardExpenses.form.notesLabel')}</Label>
+          <Label className="gap-xs flex items-center" htmlFor="notes">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.creditCardExpenses.form.notesLabel')}
+          </Label>
           <Textarea
             id="notes"
+            rows={1}
             {...register('notes')}
             placeholder={t('pages.creditCardExpenses.form.notesPlaceholder')}
             disabled={isLoading}
@@ -428,11 +464,17 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
       </div>
 
-      <div className="gap-sm pt-md flex justify-end">
+      <div className="dialog-footer gap-sm pt-md flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
           {isLoading
             ? t('common.actions.saving')
             : purchase

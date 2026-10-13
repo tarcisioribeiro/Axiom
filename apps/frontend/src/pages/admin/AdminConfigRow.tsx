@@ -14,6 +14,8 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Collapse } from '@/components/ui/collapsible-section';
+import { Input } from '@/components/ui/input';
 import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/admin-service';
@@ -41,8 +43,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
     mutationFn: (val: string) => adminService.updateConfig(config.key, val),
     onSuccess: () => {
       toast({
-        title: t('pages.adminConfig.configSaved'),
-        description: t('pages.adminConfig.configSavedDesc', { label: config.label }),
+        title: t('pages.adminConfig.configSavedDesc', { label: config.label }),
       });
       setEditing(false);
       setValue('');
@@ -50,8 +51,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
     },
     onError: (err: Error) => {
       toast({
-        title: t('pages.adminConfig.configError'),
-        description: err.message,
+        title: t('pages.adminConfig.configError', { reason: err.message }),
         variant: 'destructive',
       });
     },
@@ -65,8 +65,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
   const handleSave = () => {
     if (value === '') {
       toast({
-        title: t('pages.adminConfig.emptyValue'),
-        description: t('pages.adminConfig.emptyValueDesc'),
+        title: t('pages.adminConfig.emptyValueDesc'),
         variant: 'destructive',
       });
       return;
@@ -83,7 +82,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
       );
     if (config.is_secret)
       return <span className="text-muted-foreground">••••••••</span>;
-    return <span className="font-mono text-sm">{config.masked_value}</span>;
+    return <span className="text-sm">{config.masked_value}</span>;
   };
 
   return (
@@ -105,7 +104,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
               </span>
             )}
           </div>
-          <p className="text-muted-foreground mt-0.5 font-mono text-xs">{config.key}</p>
+          <p className="text-muted-foreground mt-0.5 text-xs">{config.key}</p>
           {varDescription && (
             <p className="mt-xs text-muted-foreground text-xs">{varDescription}</p>
           )}
@@ -114,7 +113,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
           {editing ? (
             <div className="gap-sm mt-3 flex items-center">
               <div className="relative flex-1">
-                <input
+                <Input
                   ref={inputRef}
                   type={config.is_secret && !showValue ? 'password' : 'text'}
                   value={value}
@@ -124,7 +123,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
                       ? t('pages.adminConfig.newSecretPlaceholder')
                       : t('pages.adminConfig.newValuePlaceholder')
                   }
-                  className="border-border bg-background py-sm text-foreground focus:ring-primary w-full rounded-lg border px-3 pr-10 font-mono text-sm focus:ring-2 focus:outline-none"
+                  className="pr-10"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSave();
                     if (e.key === 'Escape') setEditing(false);
@@ -132,6 +131,9 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
                 />
                 {config.is_secret && (
                   <PlainButton
+                    aria-label={t(
+                      showValue ? 'common.actions.hide' : 'common.actions.reveal'
+                    )}
                     type="button"
                     onClick={() => setShowValue((v) => !v)}
                     className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
@@ -157,6 +159,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
                 {t('pages.adminConfig.save')}
               </button>
               <PlainButton
+                aria-label={t('common.actions.cancel')}
                 onClick={() => setEditing(false)}
                 className="border-border p-sm text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg border"
               >
@@ -232,13 +235,13 @@ export function CategorySection({
           <ChevronRight className="text-muted-foreground h-4 w-4" />
         )}
       </button>
-      {open && (
+      <Collapse open={open}>
         <div className="border-border border-t">
           {configs.map((cfg) => (
             <ConfigRow key={cfg.key} config={cfg} />
           ))}
         </div>
-      )}
+      </Collapse>
     </div>
   );
 }

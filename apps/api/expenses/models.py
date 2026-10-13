@@ -10,6 +10,28 @@ from app.models import (
     BaseModel,
 )
 
+# Tokens de cor do tema (semânticos + categorias) — mesmos nomes das
+# variáveis CSS em apps/frontend/src/index.css, então a cor da tag
+# acompanha o tema ativo em vez de ficar congelada num hex.
+TAG_COLOR_CHOICES = [
+    ("primary", "Primária"),
+    ("star", "Dourado"),
+    ("accent", "Destaque"),
+    ("destructive", "Alerta"),
+    ("success", "Sucesso"),
+    ("warning", "Atenção"),
+    ("info", "Informação"),
+    ("category-finance", "Financeiro"),
+    ("category-health", "Saúde"),
+    ("category-studies", "Estudos"),
+    ("category-spiritual", "Espiritual"),
+    ("category-exercise", "Exercício"),
+    ("category-nutrition", "Nutrição"),
+    ("category-work", "Trabalho"),
+    ("category-leisure", "Lazer"),
+    ("category-intellect", "Intelecto"),
+]
+
 
 class Tag(BaseModel):
     """
@@ -22,10 +44,11 @@ class Tag(BaseModel):
         max_length=50, null=False, blank=False, verbose_name="Nome"
     )
     color = models.CharField(
-        max_length=7,
-        default="#6366f1",
+        max_length=24,
+        choices=TAG_COLOR_CHOICES,
+        default="primary",
         verbose_name="Cor",
-        help_text="Cor hexadecimal (#RRGGBB)",
+        help_text="Token de cor do tema (ex.: primary, category-finance)",
     )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -40,7 +63,8 @@ class Tag(BaseModel):
         verbose_name_plural = "Tags"
         constraints = [
             models.UniqueConstraint(
-                fields=["name", "owner"], name="unique_tag_name_per_owner"
+                fields=["name", "color", "owner"],
+                name="unique_tag_name_color_per_owner",
             )
         ]
         indexes = [
@@ -441,62 +465,6 @@ class FixedExpenseGenerationLog(BaseModel):
 
     def __str__(self):
         return f"Geração {self.month} - {self.total_generated} despesas"
-
-
-class CategorizationRule(BaseModel):
-    """
-    Regra para categorização automática de despesas com base no
-    estabelecimento.
-
-    Quando uma despesa é criada com categoria 'others' e merchant preenchido,
-    a primeira regra ativa cujo merchant_contains esteja contido no merchant
-    da despesa (case-insensitive) é aplicada automaticamente.
-    """
-
-    merchant_contains = models.CharField(
-        max_length=255,
-        null=False,
-        blank=False,
-        verbose_name="Estabelecimento contém",
-        help_text=(
-            "Texto a ser buscado no campo 'estabelecimento' da despesa"
-            " (case-insensitive)"
-        ),
-    )
-    category = models.CharField(
-        max_length=200,
-        choices=EXPENSES_CATEGORIES,
-        null=False,
-        blank=False,
-        verbose_name="Categoria",
-    )
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name="Ativa",
-        help_text="Desmarque para desativar sem excluir a regra",
-    )
-    priority = models.PositiveIntegerField(
-        default=100,
-        verbose_name="Prioridade",
-        help_text="Menor valor = maior prioridade.",
-    )
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="categorization_rules",
-        verbose_name="Proprietário",
-    )
-
-    class Meta:
-        ordering = ["priority", "created_at"]
-        verbose_name = "Regra de Categorização"
-        verbose_name_plural = "Regras de Categorização"
-        indexes = [
-            models.Index(fields=["owner", "is_active"]),
-        ]
-
-    def __str__(self):
-        return f"{self.merchant_contains} → {self.category}"
 
 
 class ExpenseSplit(BaseModel):

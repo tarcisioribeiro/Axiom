@@ -1,47 +1,47 @@
 import { CalendarCheck, CalendarDays } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTabRoute } from '@/hooks/use-tab-route';
 
 import FinancialCalendar from './FinancialCalendar';
 import MonthlyPlanner from './MonthlyPlanner';
 
-const TAB_KEY = 'financeAgenda.activeTab';
+const TABS = ['calendar', 'monthly-planner'] as const;
 
 export default function FinanceAgendaPage() {
   const { t } = useTranslation();
-
-  const defaultTab = localStorage.getItem(TAB_KEY) ?? 'calendar';
-
-  const handleTabChange = (value: string) => {
-    localStorage.setItem(TAB_KEY, value);
-  };
+  // Cada aba renderiza seu cabeçalho (título + ações) aqui, acima das abas.
+  const [headerTarget, setHeaderTarget] = useState<HTMLDivElement | null>(null);
+  const [activeTab, setActiveTab] = useTabRoute('/finance/agenda', TABS, 'calendar');
 
   return (
     <PageContainer className="flex flex-1 flex-col">
       <Tabs
-        defaultValue={defaultTab}
-        onValueChange={handleTabChange}
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
         className="flex flex-1 flex-col"
       >
+        <div ref={setHeaderTarget} className="mb-lg empty:hidden" />
         <TabsList className="mb-lg w-full">
           <TabsTrigger value="calendar" className="gap-xs flex-1">
             <CalendarDays className="h-4 w-4" />
             {t('nav.items.financialCalendar')}
           </TabsTrigger>
-          <TabsTrigger value="planner" className="gap-xs flex-1">
+          <TabsTrigger value="monthly-planner" className="gap-xs flex-1">
             <CalendarCheck className="h-4 w-4" />
             {t('nav.items.monthlyPlanner')}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="calendar" className="mt-0 flex-1">
-          <FinancialCalendar embedded />
+          <FinancialCalendar embedded headerTarget={headerTarget} />
         </TabsContent>
 
-        <TabsContent value="planner" className="mt-0 flex-1">
-          <MonthlyPlanner embedded />
+        <TabsContent value="monthly-planner" className="mt-0 flex-1">
+          <MonthlyPlanner embedded headerTarget={headerTarget} />
         </TabsContent>
       </Tabs>
     </PageContainer>

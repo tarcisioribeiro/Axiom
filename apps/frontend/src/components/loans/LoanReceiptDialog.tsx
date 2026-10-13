@@ -1,5 +1,16 @@
+/* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, CalendarClock, Wallet } from 'lucide-react';
+import {
+  AlertCircle,
+  Banknote,
+  CalendarClock,
+  CalendarDays,
+  FileText,
+  Loader2,
+  Save,
+  Wallet,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -48,7 +59,7 @@ export function LoanReceiptDialog({
   const { t } = useTranslation();
   const { toast } = useToast();
   const now = useNow();
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatLocalDate(new Date());
   const [form, setForm] = useState({
     value: '',
     account: '',
@@ -80,8 +91,7 @@ export function LoanReceiptDialog({
     if (!loan) return;
     if (!form.value || !form.account || !form.date) {
       toast({
-        title: t('pages.loans.receipt.title'),
-        description: t('common.messages.fillRequired'),
+        title: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
@@ -97,9 +107,6 @@ export function LoanReceiptDialog({
       });
       toast({
         title: scheduled
-          ? t('pages.loans.receipt.scheduledSuccess')
-          : t('pages.loans.receipt.success'),
-        description: scheduled
           ? t('pages.loans.receipt.scheduledSuccessDesc', { date: form.date })
           : t('pages.loans.receipt.successDesc'),
       });
@@ -107,8 +114,7 @@ export function LoanReceiptDialog({
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -127,7 +133,7 @@ export function LoanReceiptDialog({
     <Dialog open={!!loan} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.loans.receipt.title')}</DialogTitle>
+          <DialogTitle icon={Banknote}>{t('pages.loans.receipt.title')}</DialogTitle>
           <DialogDescription>
             {loan?.description} — {t('pages.loans.remainingBalance')}{' '}
             {formatCurrency(remaining)}
@@ -166,14 +172,20 @@ export function LoanReceiptDialog({
           </div>
 
           <div className="space-y-xs">
-            <Label>{t('pages.loans.receipt.value')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.loans.receipt.value')} *
+            </Label>
             <CurrencyInput
               value={form.value}
               onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.loans.receipt.account')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.loans.receipt.account')} *
+            </Label>
             <Select
               value={form.account}
               onValueChange={(v) => setForm((f) => ({ ...f, account: v }))}
@@ -191,7 +203,8 @@ export function LoanReceiptDialog({
             </Select>
           </div>
           <div className="space-y-xs">
-            <Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {scheduled
                 ? t('pages.loans.receipt.scheduledDate')
                 : t('pages.loans.receipt.date')}{' '}
@@ -206,11 +219,14 @@ export function LoanReceiptDialog({
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.loans.receipt.notes')}</Label>
+            <Label className="gap-xs flex items-center">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.loans.receipt.notes')}
+            </Label>
             <Input
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              placeholder={t('common.fields.notes')}
+              placeholder={t('common.placeholders.notes')}
             />
           </div>
 
@@ -233,9 +249,15 @@ export function LoanReceiptDialog({
 
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button onClick={() => void handleSubmit()} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
               {isSubmitting
                 ? t('common.actions.saving')
                 : scheduled

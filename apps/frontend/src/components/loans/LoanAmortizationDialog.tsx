@@ -1,8 +1,11 @@
+import { Calculator, TrendingDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -38,13 +41,18 @@ export function LoanAmortizationDialog({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="custom-scrollbar max-h-[80vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{t('pages.loans.amortization.title')}</DialogTitle>
+          <DialogTitle icon={TrendingDown}>
+            {t('pages.loans.amortization.title')}
+          </DialogTitle>
           <DialogDescription>{loan?.description}</DialogDescription>
         </DialogHeader>
         <div className="mb-md flex items-center gap-3">
-          <Label>{t('pages.loans.amortization.method')}:</Label>
+          <Label className="gap-xs flex items-center">
+            <Calculator className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.loans.amortization.method')}:
+          </Label>
           <div className="gap-sm flex">
             {(['price', 'sac'] as const).map((m) => (
               <Button
@@ -63,9 +71,7 @@ export function LoanAmortizationDialog({
             {t('pages.loans.amortization.loading')}
           </div>
         ) : !amortization ? (
-          <div className="py-xl text-muted-foreground text-center text-sm">
-            {t('pages.loans.amortization.noData')}
-          </div>
+          <EmptyState title={t('pages.loans.amortization.noData')} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -114,6 +120,7 @@ export function LoanAmortizationDialog({
             </table>
           </div>
         )}
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

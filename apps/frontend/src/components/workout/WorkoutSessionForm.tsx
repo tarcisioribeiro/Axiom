@@ -1,7 +1,23 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import { Loader2, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useRef } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Dumbbell,
+  Flag,
+  ListChecks,
+  Loader2,
+  NotebookPen,
+  Plus,
+  Trash2,
+  Save,
+  SkipForward,
+  X,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -9,6 +25,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -19,12 +36,34 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { TimePicker } from '@/components/ui/time-picker';
 import { ExerciseThumbnail } from '@/components/workout/ExerciseThumbnail';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatLocalDate } from '@/lib/utils';
 import type { WorkoutDay, WorkoutSession } from '@/types/workout';
 
-const LOAD_UNITS = ['kg', 'lb'] as const;
+// 'bw' só existe no form: a série salva peso corporal como carga em branco
+const LOAD_UNITS = ['bw', 'kg', 'lb'] as const;
 const DEFAULT_SESSION_DURATION_MINUTES = 45;
+
+// Slide entre exercícios da sequência (direção: 1 avança, -1 volta)
+const slideVariants = {
+  enter: (direction: number) => ({ x: direction > 0 ? 60 : -60, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (direction: number) => ({ x: direction < 0 ? 60 : -60, opacity: 0 }),
+};
+
+/** Carga no formato do idioma (vírgula pt-BR, ponto en-US), máx. 1 casa. */
+function formatLoad(value: string | number | null | undefined, locale: string) {
+  if (value == null || value === '') return '';
+  const n = Number(String(value).replace(',', '.'));
+  if (Number.isNaN(n)) return '';
+  return new Intl.NumberFormat(locale, {
+    maximumFractionDigits: 1,
+    useGrouping: false,
+  }).format(n);
+}
+
+const parseLoad = (value: string) => value.replace(',', '.');
 
 interface SessionSetValues {
   id?: number;
@@ -67,6 +106,8 @@ interface WorkoutSessionFormProps {
   onSubmit: (data: WorkoutSessionFormValues) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
+  /** Último peso registrado em Medidas Corporais (kg). */
+  bodyWeightKg?: string | null;
 }
 
 function newSet(
@@ -75,12 +116,11 @@ function newSet(
   loadUnit = 'kg',
   repsDone = ''
 ): SessionSetValues {
-  // Série não aceita 'bw': peso corporal = carga em branco
   const bodyweight = loadUnit === 'bw';
   return {
     set_number: setNumber,
     load: bodyweight ? '' : load,
-    load_unit: bodyweight ? 'kg' : loadUnit,
+    load_unit: loadUnit,
     reps_done: repsDone,
     completed: true,
     notes: '',
@@ -105,14 +145,24 @@ export function WorkoutSessionForm({
   onSubmit,
   onCancel,
   isLoading = false,
+  bodyWeightKg,
 }: WorkoutSessionFormProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
+  const { showConfirm } = useAlertDialog();
+  const locale = i18n.language;
+  const fmt = (v: string | number | null | undefined) => formatLoad(v, locale);
+  const bodyweightLabel = bodyWeightKg
+    ? `${t('pages.workoutSessions.bodyweight')} - ${fmt(bodyWeightKg)} kg`
+    : t('pages.workoutSessions.bodyweight');
+  const durationOf = (dayId: string) =>
+    workoutDays.find((d) => String(d.id) === dayId)?.default_duration_minutes ??
+    DEFAULT_SESSION_DURATION_MINUTES;
 
   const today = formatLocalDate(new Date());
   const defaultStart = nowTimeStr();
 
-  const { register, handleSubmit, control, watch, setValue } =
+  const { register, handleSubmit, control, watch, setValue, getValues } =
     useForm<WorkoutSessionFormValues>({
       defaultValues: session
         ? {
@@ -140,8 +190,8 @@ export function WorkoutSessionForm({
                   .map((s) => ({
                     id: s.id,
                     set_number: s.set_number,
-                    load: s.load ?? '',
-                    load_unit: s.load_unit,
+                    load: fmt(s.load),
+                    load_unit: s.load ? s.load_unit : 'bw',
                     reps_done: s.reps_done != null ? String(s.reps_done) : '',
                     completed: s.completed,
                     notes: s.notes ?? '',
@@ -161,11 +211,45 @@ export function WorkoutSessionForm({
           },
     });
 
-  const {
-    fields: exerciseFields,
-    append: appendExercise,
-    remove: removeExercise,
-  } = useFieldArray({ control, name: 'exercises', keyName: 'fieldKey' });
+  const { fields: exerciseFields, remove: removeExercise } = useFieldArray({
+    control,
+    name: 'exercises',
+    keyName: 'fieldKey',
+  });
+
+  // Sequência: um exercício por vez; step === length é a etapa final.
+  const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const pendingSkipRef = useRef<number | null>(null);
+  const handleExitComplete = () => {
+    const idx = pendingSkipRef.current;
+    if (idx == null) return;
+    pendingSkipRef.current = null;
+    removeExercise(idx);
+    setStep(idx);
+  };
+  const goTo = (delta: number) => {
+    setDirection(delta);
+    setStep((s) => s + delta);
+  };
+  const atEnd = step >= exerciseFields.length;
+
+  const handleSkip = async () => {
+    const confirmed = await showConfirm({
+      title: t('pages.workoutSessions.skipConfirmTitle'),
+      description: t('pages.workoutSessions.skipConfirmDesc', {
+        name: getValues(`exercises.${step}.exercise_name`),
+      }),
+      confirmText: t('pages.workoutSessions.skip'),
+      variant: 'warning',
+    });
+    // Remover o atual já deixa `step` apontando para o próximo
+    // Anima a saída do exercício pulado antes de removê-lo (ver onExitComplete)
+    if (confirmed) {
+      pendingSkipRef.current = step;
+      goTo(1);
+    }
+  };
 
   const selectedDayId = watch('workout_day');
 
@@ -178,6 +262,7 @@ export function WorkoutSessionForm({
       didMountRef.current = true;
       return;
     }
+    setStep(0);
     if (selectedDayId) {
       const day = workoutDays.find((d) => String(d.id) === selectedDayId);
       if (day?.exercises && day.exercises.length > 0) {
@@ -195,7 +280,7 @@ export function WorkoutSessionForm({
           sets: Array.from({ length: ex.sets }, (_, i) =>
             newSet(
               i + 1,
-              ex.set_targets?.[i]?.load ?? ex.load ?? '',
+              fmt(ex.set_targets?.[i]?.load ?? ex.load),
               ex.load_unit || 'kg',
               String(ex.set_targets?.[i]?.reps ?? ex.reps_min)
             )
@@ -207,33 +292,57 @@ export function WorkoutSessionForm({
       }
 
       if (day?.default_start_time) {
-        const start = day.default_start_time.slice(0, 5);
-        setValue('started_at', start);
-        setValue(
-          'finished_at',
-          addMinutesToTimeStr(
-            start,
-            day.default_duration_minutes ?? DEFAULT_SESSION_DURATION_MINUTES
-          )
-        );
+        setValue('started_at', day.default_start_time.slice(0, 5));
       }
     }
-  }, [selectedDayId, workoutDays, setValue]);
+    const start = getValues('started_at');
+    if (start) {
+      setValue('finished_at', addMinutesToTimeStr(start, durationOf(selectedDayId)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- durationOf deriva de workoutDays
+  }, [selectedDayId, workoutDays, setValue, getValues]);
+
+  // Término = início + duração padrão da divisão; segue editável à mão
+  const handleStartChange = (start: string) => {
+    setValue('started_at', start);
+    if (start) {
+      setValue(
+        'finished_at',
+        addMinutesToTimeStr(start, durationOf(getValues('workout_day')))
+      );
+    }
+  };
 
   const handleFormSubmit = async (data: WorkoutSessionFormValues) => {
     try {
-      await onSubmit(data);
+      await onSubmit({
+        ...data,
+        exercises: data.exercises.map((ex) => ({
+          ...ex,
+          sets: ex.sets.map((s) =>
+            s.load_unit === 'bw'
+              ? { ...s, load: '', load_unit: 'kg' }
+              : { ...s, load: parseLoad(s.load) }
+          ),
+        })),
+      });
     } catch {
       toast({ title: t('pages.workoutSessions.saveError'), variant: 'destructive' });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
+    <form
+      onSubmit={handleSubmit(handleFormSubmit)}
+      className="gap-md flex min-h-0 flex-1 flex-col"
+    >
       <FormSection title={t('pages.workoutSessions.sectionSession')}>
-        <div className="gap-sm grid grid-cols-2">
+        <div className="gap-sm grid grid-cols-1 sm:grid-cols-[14rem_1fr]">
           <div className="space-y-sm">
-            <Label htmlFor="session-date">{t('pages.workoutSessions.date')}</Label>
+            <Label htmlFor="session-date" className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-4 w-4" />
+              {t('pages.workoutSessions.date')}
+            </Label>
             <DatePicker
               value={watch('date')}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
@@ -242,7 +351,10 @@ export function WorkoutSessionForm({
             />
           </div>
           <div className="space-y-sm">
-            <Label htmlFor="session-day">{t('pages.workoutSessions.workoutDay')}</Label>
+            <Label htmlFor="session-day" className="gap-xs flex items-center">
+              <Dumbbell className="text-muted-foreground h-4 w-4" />
+              {t('pages.workoutSessions.workoutDay')}
+            </Label>
             <Select
               value={watch('workout_day')}
               onValueChange={(v) => setValue('workout_day', v)}
@@ -253,9 +365,6 @@ export function WorkoutSessionForm({
                 />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">
-                  {t('pages.workoutSessions.noWorkoutDay')}
-                </SelectItem>
                 {workoutDays.map((d) => (
                   <SelectItem key={d.id} value={String(d.id)}>
                     {d.name}
@@ -269,14 +378,20 @@ export function WorkoutSessionForm({
 
         <div className="gap-sm grid grid-cols-2">
           <div className="space-y-sm">
-            <Label>{t('pages.workoutSessions.startTime')}</Label>
+            <Label className="gap-xs flex items-center">
+              <Clock className="text-muted-foreground h-4 w-4" />
+              {t('pages.workoutSessions.startTime')}
+            </Label>
             <TimePicker
               value={watch('started_at') || undefined}
-              onChange={(t) => setValue('started_at', t ?? '')}
+              onChange={(t) => handleStartChange(t ?? '')}
             />
           </div>
           <div className="space-y-sm">
-            <Label>{t('pages.workoutSessions.endTime')}</Label>
+            <Label className="gap-xs flex items-center">
+              <Flag className="text-muted-foreground h-4 w-4" />
+              {t('pages.workoutSessions.endTime')}
+            </Label>
             <TimePicker
               value={watch('finished_at') || undefined}
               onChange={(t) => setValue('finished_at', t ?? '')}
@@ -285,49 +400,103 @@ export function WorkoutSessionForm({
         </div>
       </FormSection>
 
-      <div className="space-y-sm">
+      <div className="gap-sm flex min-h-0 flex-1 flex-col">
         <div className="flex items-center justify-between">
-          <Label>{t('pages.workoutSessions.exercisesSection')}</Label>
+          <Label className="gap-xs flex items-center">
+            <ListChecks className="text-muted-foreground h-4 w-4" />
+            {t('pages.workoutSessions.exercisesSection')}
+          </Label>
+          {!atEnd && (
+            <span className="text-muted-foreground text-xs font-medium">
+              {t('pages.workoutSessions.exerciseProgress', {
+                current: step + 1,
+                total: exerciseFields.length,
+              })}
+            </span>
+          )}
+        </div>
+
+        <div className="flex min-h-40 flex-col overflow-x-hidden pr-1">
+          <AnimatePresence
+            initial={false}
+            custom={direction}
+            mode="wait"
+            onExitComplete={handleExitComplete}
+          >
+            <motion.div
+              key={atEnd ? 'end' : exerciseFields[step].fieldKey}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className={atEnd ? 'h-full' : 'my-auto'}
+            >
+              {!atEnd ? (
+                <ExerciseBlock
+                  // step no key: remonta o useFieldArray das séries quando o
+                  // índice muda após remover um exercício pulado
+                  key={`${exerciseFields[step].fieldKey}-${step}`}
+                  exIdx={step}
+                  control={control}
+                  register={register}
+                  watch={watch}
+                  setValue={setValue}
+                  t={t}
+                  fmt={fmt}
+                  bodyweightLabel={bodyweightLabel}
+                />
+              ) : (
+                <div className="gap-xs flex h-full flex-col items-center justify-center text-center text-sm">
+                  <p className="font-medium">
+                    {exerciseFields.length > 0
+                      ? t('pages.workoutSessions.sequenceDone')
+                      : t('pages.workoutSessions.noSequence')}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {exerciseFields.length > 0
+                      ? t('pages.workoutSessions.sequenceDoneDesc')
+                      : t('pages.workoutSessions.noSequenceDesc')}
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="gap-sm flex items-center justify-between">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={() =>
-              appendExercise({
-                exercise_name: '',
-                sets_target: 3,
-                reps_target_min: 8,
-                reps_target_max: 12,
-                load_target: '',
-                load_target_unit: 'kg',
-                order: exerciseFields.length,
-                sets: [newSet(1)],
-              })
-            }
+            disabled={step === 0}
+            onClick={() => goTo(-1)}
           >
-            <Plus className="mr-1 h-3 w-3" />
-            {t('pages.workoutSessions.addExercise')}
+            <ChevronLeft className="h-4 w-4" />
+            {atEnd && exerciseFields.length > 0
+              ? t('pages.workoutSessions.backToSequence')
+              : t('common.actions.previous')}
           </Button>
-        </div>
-
-        <div className="space-y-sm max-h-80 overflow-y-auto pr-1">
-          {exerciseFields.map((exField, exIdx) => (
-            <ExerciseBlock
-              key={exField.fieldKey}
-              exIdx={exIdx}
-              control={control}
-              register={register}
-              watch={watch}
-              setValue={setValue}
-              onRemove={() => removeExercise(exIdx)}
-              t={t}
-            />
-          ))}
+          {!atEnd && (
+            <div className="gap-sm flex">
+              <Button type="button" variant="outline" size="sm" onClick={handleSkip}>
+                <SkipForward className="h-4 w-4" />
+                {t('pages.workoutSessions.skip')}
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => goTo(1)}>
+                <ChevronRight className="h-4 w-4" />
+                {t('common.actions.next')}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="space-y-sm">
-        <Label htmlFor="session-notes">{t('pages.workoutSessions.sessionNotes')}</Label>
+        <Label htmlFor="session-notes" className="gap-xs flex items-center">
+          <NotebookPen className="text-muted-foreground h-4 w-4" />
+          {t('pages.workoutSessions.sessionNotes')}
+        </Label>
         <Textarea
           id="session-notes"
           placeholder={t('pages.workoutSessions.sessionNotesPlaceholder')}
@@ -336,12 +505,19 @@ export function WorkoutSessionForm({
         />
       </div>
 
-      <div className="gap-sm pt-sm flex justify-end">
+      <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {/* Sessão sempre vinculada a uma divisão (sem sessão avulsa) */}
+        <Button type="submit" disabled={isLoading || (!session && !selectedDayId)}>
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+
           {t('common.actions.save')}
         </Button>
       </div>
@@ -355,8 +531,9 @@ interface ExerciseBlockProps {
   register: ReturnType<typeof useForm<WorkoutSessionFormValues>>['register'];
   watch: ReturnType<typeof useForm<WorkoutSessionFormValues>>['watch'];
   setValue: ReturnType<typeof useForm<WorkoutSessionFormValues>>['setValue'];
-  onRemove: () => void;
   t: (key: string) => string;
+  fmt: (v: string) => string;
+  bodyweightLabel: string;
 }
 
 function ExerciseBlock({
@@ -365,8 +542,9 @@ function ExerciseBlock({
   register,
   watch,
   setValue,
-  onRemove,
   t,
+  fmt,
+  bodyweightLabel,
 }: ExerciseBlockProps) {
   const {
     fields: setFields,
@@ -379,85 +557,92 @@ function ExerciseBlock({
   });
 
   return (
-    <div className="space-y-sm border-category-exercise bg-card p-sm rounded-md border-l-2">
+    <div className="space-y-sm border-primary/40 border-l-primary bg-card p-sm rounded-md border border-l-2">
       <div className="gap-sm flex items-center">
         <ExerciseThumbnail
           gifUrl={watch(`exercises.${exIdx}.gif_url`)}
           thumbnailUrl={watch(`exercises.${exIdx}.thumbnail_url`)}
           size="sm"
         />
-        <Input
-          className="flex-1"
-          placeholder={t('pages.workoutSessions.exerciseNamePlaceholder')}
-          {...register(`exercises.${exIdx}.exercise_name`, { required: true })}
-        />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="text-destructive shrink-0"
-          onClick={onRemove}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <span className="flex-1 font-medium">
+          {watch(`exercises.${exIdx}.exercise_name`)}
+        </span>
       </div>
 
       <div className="space-y-xs">
-        <div className="gap-xs px-xs text-muted-foreground grid grid-cols-[2rem_1fr_1fr_1fr_2rem] text-xs font-medium">
+        <div className="gap-xs px-xs text-muted-foreground grid grid-cols-[2rem_1fr_1.5fr_1fr_2rem] text-xs font-medium">
           <span>{t('pages.workoutSessions.setNumber')}</span>
           <span>{t('pages.workoutSessions.load')}</span>
           <span>{t('pages.workoutSessions.loadUnit')}</span>
           <span>{t('pages.workoutSessions.repsDone')}</span>
           <span />
         </div>
-        {setFields.map((setField, sIdx) => (
-          <div
-            key={setField.fieldKey}
-            className="gap-xs grid grid-cols-[2rem_1fr_1fr_1fr_2rem] items-center"
-          >
-            <span className="text-muted-foreground text-center text-xs font-medium">
-              {sIdx + 1}
-            </span>
-            <Input
-              type="number"
-              step="0.5"
-              min={0}
-              placeholder={t('pages.workoutSessions.bodyweight')}
-              {...register(`exercises.${exIdx}.sets.${sIdx}.load`)}
-            />
-            <Select
-              value={watch(`exercises.${exIdx}.sets.${sIdx}.load_unit`)}
-              onValueChange={(v) =>
-                setValue(`exercises.${exIdx}.sets.${sIdx}.load_unit`, v)
-              }
+        {setFields.map((setField, sIdx) => {
+          const loadPath = `exercises.${exIdx}.sets.${sIdx}.load` as const;
+          const unitPath = `exercises.${exIdx}.sets.${sIdx}.load_unit` as const;
+          const isBodyweight = watch(unitPath) === 'bw';
+          return (
+            <div
+              key={setField.fieldKey}
+              className="gap-xs grid grid-cols-[2rem_1fr_1.5fr_1fr_2rem] items-center"
             >
-              <SelectTrigger className="h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LOAD_UNITS.map((u) => (
-                  <SelectItem key={u} value={u}>
-                    {t(`units.${u}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              type="number"
-              min={0}
-              {...register(`exercises.${exIdx}.sets.${sIdx}.reps_done`)}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-destructive h-7 w-7"
-              onClick={() => removeSet(sIdx)}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </div>
-        ))}
+              <span className="text-muted-foreground text-center text-xs font-medium">
+                {sIdx + 1}
+              </span>
+              <Input
+                type="text"
+                inputMode="decimal"
+                disabled={isBodyweight}
+                placeholder={isBodyweight ? '—' : fmt('0')}
+                {...register(loadPath, {
+                  onBlur: (e: React.FocusEvent<HTMLInputElement>) =>
+                    setValue(loadPath, fmt(e.target.value)),
+                })}
+              />
+              <Select
+                value={watch(unitPath)}
+                onValueChange={(v) => {
+                  setValue(unitPath, v);
+                  if (v === 'bw') setValue(loadPath, '');
+                }}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LOAD_UNITS.map((u) => (
+                    <SelectItem key={u} value={u}>
+                      {u === 'bw' ? bodyweightLabel : t(`units.${u}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Controller
+                control={control}
+                name={`exercises.${exIdx}.sets.${sIdx}.reps_done`}
+                render={({ field }) => (
+                  <NumberStepper
+                    optional
+                    aria-label={t('pages.workoutSessions.repsDone')}
+                    value={field.value === '' ? null : Number(field.value)}
+                    onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                    className="w-full"
+                  />
+                )}
+              />
+              <Button
+                aria-label={t('common.actions.remove')}
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:text-destructive h-7 w-7"
+                onClick={() => removeSet(sIdx)}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          );
+        })}
         <Button
           type="button"
           variant="ghost"
@@ -467,14 +652,14 @@ function ExerciseBlock({
             appendSet(
               newSet(
                 setFields.length + 1,
-                watch(`exercises.${exIdx}.load_target`),
+                fmt(watch(`exercises.${exIdx}.load_target`)),
                 watch(`exercises.${exIdx}.load_target_unit`) || 'kg',
                 String(watch(`exercises.${exIdx}.reps_target_min`) ?? '')
               )
             )
           }
         >
-          <Plus className="mr-1 h-3 w-3" />
+          <Plus className="h-3 w-3" />
           {t('pages.workoutSessions.addSet')}
         </Button>
       </div>

@@ -20,12 +20,34 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 
 from accounts.models import Account
-from expenses.models import CategorizationRule, Expense
+from expenses.models import AutomationRule, Expense
 from revenues.models import Revenue
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def _make_categorization_rule(
+    owner, merchant_contains, category, is_active=True
+):
+    """Cria uma AutomationRule no padrão simples usado pela categorização
+    automática: uma condição 'merchant contains X' + uma ação 'set_category Y'.
+    """
+    return AutomationRule.objects.create(
+        name=f"Categorizar: {merchant_contains}",
+        logic="all",
+        conditions=[
+            {
+                "field": "merchant",
+                "operator": "contains",
+                "value": merchant_contains,
+            }
+        ],
+        actions=[{"type": "set_category", "value": category}],
+        is_active=is_active,
+        owner=owner,
+    )
 
 
 def _make_account(name="TestAcc", atype="CC"):
@@ -762,12 +784,7 @@ class AutoCategorizeExpenseSignalTest(TestCase):
         self.account = _make_account()
 
     def test_category_auto_applied_when_rule_matches_merchant(self):
-        CategorizationRule.objects.create(
-            merchant_contains="starbucks",
-            category="food and drink",
-            is_active=True,
-            owner=self.user,
-        )
+        _make_categorization_rule(self.user, "starbucks", "food and drink")
         exp = Expense.objects.create(
             description="Coffee",
             value=Decimal("15.00"),
@@ -799,12 +816,7 @@ class AutoCategorizeExpenseSignalTest(TestCase):
         self.assertFalse(exp.auto_categorized)
 
     def test_category_not_changed_when_already_categorized(self):
-        CategorizationRule.objects.create(
-            merchant_contains="unknown",
-            category="food and drink",
-            is_active=True,
-            owner=self.user,
-        )
+        _make_categorization_rule(self.user, "unknown", "food and drink")
         exp = Expense.objects.create(
             description="Already categorized",
             value=Decimal("30.00"),
@@ -820,11 +832,8 @@ class AutoCategorizeExpenseSignalTest(TestCase):
         self.assertEqual(exp.category, "transport")
 
     def test_inactive_rule_is_ignored(self):
-        CategorizationRule.objects.create(
-            merchant_contains="mcdonalds",
-            category="food and drink",
-            is_active=False,  # inactive
-            owner=self.user,
+        _make_categorization_rule(
+            self.user, "mcdonalds", "food and drink", is_active=False
         )
         exp = Expense.objects.create(
             description="Burger",
@@ -840,12 +849,7 @@ class AutoCategorizeExpenseSignalTest(TestCase):
         self.assertEqual(exp.category, "others")
 
     def test_rule_matching_is_case_insensitive(self):
-        CategorizationRule.objects.create(
-            merchant_contains="UBER",
-            category="transport",
-            is_active=True,
-            owner=self.user,
-        )
+        _make_categorization_rule(self.user, "UBER", "transport")
         exp = Expense.objects.create(
             description="Ride",
             value=Decimal("12.00"),
@@ -860,12 +864,7 @@ class AutoCategorizeExpenseSignalTest(TestCase):
         self.assertEqual(exp.category, "transport")
 
     def test_signal_skipped_when_no_merchant(self):
-        CategorizationRule.objects.create(
-            merchant_contains="test",
-            category="food and drink",
-            is_active=True,
-            owner=self.user,
-        )
+        _make_categorization_rule(self.user, "test", "food and drink")
         exp = Expense.objects.create(
             description="Cash buy",
             value=Decimal("50.00"),
@@ -881,12 +880,7 @@ class AutoCategorizeExpenseSignalTest(TestCase):
 
     def test_edit_to_others_triggers_recategorization(self):
         """Updating category to 'others' re-applies matching rules."""
-        CategorizationRule.objects.create(
-            merchant_contains="starbucks",
-            category="food and drink",
-            is_active=True,
-            owner=self.user,
-        )
+        _make_categorization_rule(self.user, "starbucks", "food and drink")
         exp = Expense.objects.create(
             description="Coffee",
             value=Decimal("15.00"),
@@ -914,12 +908,7 @@ class AutoCategorizeExpenseSignalTest(TestCase):
         Manually setting a specific category clears the auto_categorized
         flag.
         """
-        CategorizationRule.objects.create(
-            merchant_contains="uber",
-            category="transport",
-            is_active=True,
-            owner=self.user,
-        )
+        _make_categorization_rule(self.user, "uber", "transport")
         # Create expense — auto-categorized on creation
         exp = Expense.objects.create(
             description="Ride",
@@ -965,12 +954,7 @@ class AutoCategorizeExpenseSignalTest(TestCase):
         self.assertFalse(exp.auto_categorized)
 
         # Add a rule and update an unrelated field — category is still 'others'
-        CategorizationRule.objects.create(
-            merchant_contains="unknown",
-            category="purchases",
-            is_active=True,
-            owner=self.user,
-        )
+        _make_categorization_rule(self.user, "unknown", "purchases")
         exp.payed = True
         exp.save()
         exp.refresh_from_db()

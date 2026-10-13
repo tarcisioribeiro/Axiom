@@ -28,7 +28,7 @@ from django.utils import timezone
 
 from members.models import Member
 from notifications.models import Notification
-from notifications.services import dispatch_notification
+from notifications.services import dispatch_notification, upsert_notification
 
 logger = logging.getLogger("axiom")
 
@@ -38,14 +38,13 @@ def _get_or_create_notification(
 ):
     """Wrapper that returns (notification, created)
     and only dispatches when created."""
-    notification, created = Notification.objects.get_or_create(
-        owner=member,
-        notification_type=notification_type,
-        content_type=content_type,
-        object_id=object_id,
-        defaults={**defaults, "created_by": member.user},
+    return upsert_notification(
+        member,
+        notification_type,
+        content_type,
+        object_id,
+        {**defaults, "created_by": member.user},
     )
-    return notification, created
 
 
 class Command(BaseCommand):

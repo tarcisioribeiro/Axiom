@@ -1,26 +1,29 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Edit,
-  Trash2,
   BookOpen,
-  User,
-  UserPen,
   Calendar,
-  UserCircle,
   ChevronDown,
   ChevronUp,
+  Edit,
+  Globe,
+  Plus,
+  Search,
+  Trash2,
+  User,
+  UserCircle,
+  UserPen,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { AuthorForm } from '@/components/library/AuthorForm';
 import { Badge } from '@/components/ui/badge';
@@ -39,9 +42,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { authorsService } from '@/services/authors-service';
+import { NATIONALITIES } from '@/types';
 import type { Author, AuthorFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -184,6 +196,7 @@ function AuthorCard({
 
 export default function Authors() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [nationalityFilter, setNationalityFilter] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState<Author | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -200,8 +213,7 @@ export default function Authors() {
         return await authorsService.getAll();
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return [] as Author[];
@@ -236,13 +248,11 @@ export default function Authors() {
       await authorsService.delete(id);
       toast({
         title: t('pages.authors.deleted'),
-        description: t('pages.authors.deletedDesc'),
       });
       void queryClient.invalidateQueries({ queryKey: ['authors'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -256,13 +266,11 @@ export default function Authors() {
         author = await authorsService.update(selectedAuthor.id, data);
         toast({
           title: t('pages.authors.updated'),
-          description: t('pages.authors.updatedDesc'),
         });
       } else {
         author = await authorsService.create(data);
         toast({
           title: t('pages.authors.created'),
-          description: t('pages.authors.createdDesc'),
         });
       }
       if (pendingPhotoFile) {
@@ -272,8 +280,7 @@ export default function Authors() {
       void queryClient.invalidateQueries({ queryKey: ['authors'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -281,11 +288,15 @@ export default function Authors() {
     }
   };
 
-  const filteredAuthors = authors.filter(
-    (author) =>
+  const filteredAuthors = authors.filter((author) => {
+    if (nationalityFilter !== 'all' && author.nationality !== nationalityFilter) {
+      return false;
+    }
+    return (
       author.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (author.nationality?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-  );
+    );
+  });
 
   if (loading) {
     return <LoadingState />;
@@ -300,48 +311,95 @@ export default function Authors() {
         </Button>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
-        <SearchInput
-          placeholder={t('pages.authors.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-52 sm:w-64"
-        />
+      <FilterBar
+        hasActiveFilters={!!searchTerm || nationalityFilter !== 'all'}
+        onClear={() => {
+          setSearchTerm('');
+          setNationalityFilter('all');
+        }}
+        activeFilters={[
+          ...(nationalityFilter !== 'all'
+            ? [
+                {
+                  key: 'nationality',
+                  label: `${t('pages.authors.nationalityFilterLabel')}: ${t(`pages.authors.nationalities.${nationalityFilter}`)}`,
+                  onRemove: () => setNationalityFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.authors.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.filterLabels.nationality')} icon={Globe}>
+          <Select value={nationalityFilter} onValueChange={setNationalityFilter}>
+            <SelectTrigger
+              className="w-48"
+              aria-label={t('pages.authors.allNationalities')}
+              startIcon={<Globe className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.authors.allNationalities')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.authors.allNationalities')}</SelectItem>
+              {NATIONALITIES.map((nat) => (
+                <SelectItem key={nat.value} value={nat.value}>
+                  {t(`pages.authors.nationalities.${nat.value}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
       </FilterBar>
 
       {filteredAuthors.length === 0 ? (
         <EmptyState
           icon={<User className="text-muted-foreground h-12 w-12" />}
-          message={
+          title={
             searchTerm ? t('pages.authors.emptySearch') : t('pages.authors.emptyState')
           }
         />
       ) : (
-        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-          {filteredAuthors.map((author) => (
-            <AuthorCard
-              key={author.id}
-              author={author}
-              onEdit={handleEdit}
-              onDelete={(id) => void handleDelete(id)}
-            />
-          ))}
-        </div>
+        <PaginatedSlide
+          key={`${searchTerm}-${nationalityFilter}`}
+          items={filteredAuthors}
+          pageSize={GRID_PAGE_SIZE}
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+        >
+          {(pageItems) =>
+            pageItems.map((author) => (
+              <AuthorCard
+                key={author.id}
+                author={author}
+                onEdit={handleEdit}
+                onDelete={(id) => void handleDelete(id)}
+              />
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={selectedAuthor ? 'edit' : 'create'}>
               {selectedAuthor
                 ? t('pages.authors.editTitle')
                 : t('pages.authors.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedAuthor
-                ? t('pages.authors.editDesc')
-                : t('pages.authors.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedAuthor
+                  ? t('pages.authors.editDesc')
+                  : t('pages.authors.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <AuthorForm
             author={selectedAuthor}

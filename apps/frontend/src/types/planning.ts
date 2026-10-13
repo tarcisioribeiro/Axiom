@@ -157,34 +157,6 @@ export interface RoutineTemplateImportResult {
   template_name: string;
 }
 
-export interface UserRoutineTemplate {
-  id: number;
-  uuid: string;
-  name: string;
-  description: string;
-  icon: string;
-  tasks: RoutineTemplateTask[];
-  task_count: number;
-  owner: number;
-  owner_name?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface UserRoutineTemplateFormData {
-  name: string;
-  description?: string;
-  icon?: string;
-  tasks: RoutineTemplateTask[];
-  owner: number;
-}
-
-export interface UserRoutineTemplateImportResult {
-  created_ids: number[];
-  skipped_names: string[];
-  template_name: string;
-}
-
 export interface HeatmapDay {
   date: string;
   completed: number;

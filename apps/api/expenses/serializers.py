@@ -3,7 +3,6 @@ from rest_framework import serializers
 from expenses.models import (
     AutomationRule,
     AutomationRuleLog,
-    CategorizationRule,
     Expense,
     ExpenseSplit,
     FixedExpense,
@@ -33,6 +32,21 @@ class TagSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def validate(self, attrs):
+        name = attrs.get("name", getattr(self.instance, "name", None))
+        color = attrs.get("color", getattr(self.instance, "color", None))
+        owner = self.context["request"].user
+        duplicate = Tag.objects.filter(
+            owner=owner, name__iexact=name, color__iexact=color
+        )
+        if self.instance:
+            duplicate = duplicate.exclude(pk=self.instance.pk)
+        if duplicate.exists():
+            raise serializers.ValidationError(
+                "Já existe uma tag com esse nome e essa cor."
+            )
+        return attrs
 
 
 class ExpenseSplitSerializer(serializers.ModelSerializer):
@@ -400,31 +414,6 @@ class BulkMarkPaidSerializer(serializers.Serializer):
     expense_ids = serializers.ListField(
         child=serializers.IntegerField(), allow_empty=False
     )
-
-
-class CategorizationRuleSerializer(serializers.ModelSerializer):
-    """Serializer para regras de categorização automática"""
-
-    class Meta:
-        model = CategorizationRule
-        fields = [
-            "id",
-            "uuid",
-            "merchant_contains",
-            "category",
-            "is_active",
-            "priority",
-            "owner",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = [
-            "id",
-            "uuid",
-            "owner",
-            "created_at",
-            "updated_at",
-        ]
 
 
 class AutomationRuleSerializer(serializers.ModelSerializer):

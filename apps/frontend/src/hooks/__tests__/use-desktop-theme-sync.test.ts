@@ -32,9 +32,9 @@ describe('useDesktopThemeSync', () => {
   });
 
   it('routes light themes to setLightVariant', async () => {
-    mockGet.mockResolvedValue({ theme: 'nord-light' });
+    mockGet.mockResolvedValue({ theme: 'tokyo-day' });
     renderHook(() => useDesktopThemeSync(true, setDark, setLight));
-    await waitFor(() => expect(setLight).toHaveBeenCalledWith('nord-light'));
+    await waitFor(() => expect(setLight).toHaveBeenCalledWith('tokyo-day'));
   });
 
   it('ignores unknown themes, null and request errors', async () => {

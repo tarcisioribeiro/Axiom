@@ -1,8 +1,10 @@
-/* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
+import { CalendarDays, CalendarPlus, ListChecks, Loader2, X } from 'lucide-react';
+/* eslint-disable max-lines */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MaskedCurrencyInput } from '@/components/ui/currency-input';
@@ -16,7 +18,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -24,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
@@ -149,15 +151,15 @@ export function LaunchRevenuesDialog({
             })}`
           : '';
       toast({
-        title: t('pages.fixedRevenues.launchDialog.success'),
-        description: `${createdDesc}${skippedNotice}`,
+        title: `${createdDesc}${skippedNotice}`,
       });
       onSuccess();
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('pages.fixedRevenues.launchDialog.error'),
-        description: getErrorMessage(error),
+        title: t('pages.fixedRevenues.launchDialog.error', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -171,12 +173,17 @@ export function LaunchRevenuesDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-4xl">
+      <DialogContent className="max-w-6xl">
         <DialogHeader>
-          <DialogTitle>{t('pages.fixedRevenues.launchDialog.title')}</DialogTitle>
-          <DialogDescription>
-            {t('pages.fixedRevenues.launchDialog.desc')}
-          </DialogDescription>
+          <DialogTitle className="gap-sm flex items-center">
+            <CalendarPlus className="text-success h-5 w-5" aria-hidden="true" />
+            {t('pages.fixedRevenues.launchDialog.title')}
+          </DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>
+              {t('pages.fixedRevenues.launchDialog.desc')}
+            </DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
 
         {noMonthsAvailable ? (
@@ -186,7 +193,10 @@ export function LaunchRevenuesDialog({
         ) : (
           <div className="space-y-md">
             <div className="space-y-sm">
-              <Label>{t('pages.fixedRevenues.launchDialog.selectMonth')}</Label>
+              <Label className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.fixedRevenues.launchDialog.selectMonth')}
+              </Label>
               <Select value={validMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger>
                   <SelectValue
@@ -206,85 +216,92 @@ export function LaunchRevenuesDialog({
             </div>
 
             <div className="space-y-sm">
-              <Label>
+              <Label className="gap-xs flex items-center">
+                <ListChecks className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.fixedRevenues.launchDialog.revenuesLabel', {
                   selected: selectedCount,
                   total: fixedRevenues.length,
                 })}
               </Label>
-              <ScrollArea className="p-md h-[360px] rounded-md border">
-                <div className="space-y-3">
-                  {fixedRevenues.map((r) => (
-                    <div
-                      key={r.id}
-                      className={`gap-md flex items-center rounded-lg border p-3 transition-colors ${
-                        selectedIds.has(r.id)
-                          ? 'bg-background'
-                          : 'bg-muted/50 opacity-60'
-                      }`}
-                    >
-                      <Checkbox
-                        id={`rev-${r.id}`}
-                        checked={selectedIds.has(r.id)}
-                        onCheckedChange={(checked) => {
-                          setSelectedIds((prev) => {
-                            const next = new Set(prev);
-                            if (checked) next.add(r.id);
-                            else next.delete(r.id);
-                            return next;
-                          });
-                        }}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{r.description}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {t('pages.fixedRevenues.launchDialog.dueDate', {
-                            day: r.due_day,
-                          })}
-                        </p>
-                      </div>
-                      <div className="w-48 shrink-0">
-                        <DatePicker
-                          value={dateFor(r)}
-                          minDate={bounds?.min}
-                          maxDate={bounds?.max}
-                          clearable={false}
-                          floating
-                          disabled={isSubmitting || !selectedIds.has(r.id)}
-                          onChange={(date) =>
-                            setRevenueDates((prev) => ({
-                              ...prev,
-                              [r.id]: date ? formatLocalDate(date) : '',
-                            }))
-                          }
-                        />
-                      </div>
-                      <div className="w-40 shrink-0">
-                        {r.allow_value_edit ? (
-                          <MaskedCurrencyInput
-                            accentColor="success"
-                            value={revenueValues[r.id] ?? parseFloat(r.default_value)}
-                            onValueChange={(v) =>
-                              setRevenueValues((p) => ({ ...p, [r.id]: v }))
-                            }
-                            disabled={isSubmitting || !selectedIds.has(r.id)}
+              <div className="p-md rounded-md border">
+                <PaginatedSlide items={fixedRevenues} pageSize={5} pinNav={false}>
+                  {(pageItems) => (
+                    <div className="space-y-3">
+                      {pageItems.map((r) => (
+                        <div
+                          key={r.id}
+                          className={`gap-md flex items-center rounded-lg border p-3 transition-colors ${
+                            selectedIds.has(r.id)
+                              ? 'bg-background'
+                              : 'bg-muted/50 opacity-60'
+                          }`}
+                        >
+                          <Checkbox
+                            id={`rev-${r.id}`}
+                            checked={selectedIds.has(r.id)}
+                            onCheckedChange={(checked) => {
+                              setSelectedIds((prev) => {
+                                const next = new Set(prev);
+                                if (checked) next.add(r.id);
+                                else next.delete(r.id);
+                                return next;
+                              });
+                            }}
                           />
-                        ) : (
-                          <span className="text-success block text-right text-sm font-medium">
-                            {formatCurrency(parseFloat(r.default_value))}
-                          </span>
-                        )}
-                      </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-medium">{r.description}</p>
+                            <p className="text-muted-foreground text-sm whitespace-nowrap">
+                              {t('pages.fixedRevenues.launchDialog.dueDate', {
+                                day: r.due_day,
+                              })}
+                            </p>
+                          </div>
+                          <div className="w-48 shrink-0">
+                            <DatePicker
+                              value={dateFor(r)}
+                              minDate={bounds?.min}
+                              maxDate={bounds?.max}
+                              floating
+                              disabled={isSubmitting || !selectedIds.has(r.id)}
+                              onChange={(date) =>
+                                setRevenueDates((prev) => ({
+                                  ...prev,
+                                  [r.id]: date ? formatLocalDate(date) : '',
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="w-40 shrink-0">
+                            {r.allow_value_edit ? (
+                              <MaskedCurrencyInput
+                                accentColor="success"
+                                value={
+                                  revenueValues[r.id] ?? parseFloat(r.default_value)
+                                }
+                                onValueChange={(v) =>
+                                  setRevenueValues((p) => ({ ...p, [r.id]: v }))
+                                }
+                                disabled={isSubmitting || !selectedIds.has(r.id)}
+                              />
+                            ) : (
+                              <span className="text-success block text-right text-sm font-medium">
+                                {formatCurrency(parseFloat(r.default_value))}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                  )}
+                </PaginatedSlide>
+              </div>
             </div>
           </div>
         )}
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           {!noMonthsAvailable && (
@@ -292,6 +309,11 @@ export function LaunchRevenuesDialog({
               onClick={() => void handleSubmit()}
               disabled={isSubmitting || !validMonth || selectedCount === 0}
             >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CalendarPlus className="h-4 w-4" />
+              )}
               {isSubmitting
                 ? t('pages.fixedRevenues.launchDialog.generating')
                 : t('pages.fixedRevenues.launchDialog.generateBtn', {

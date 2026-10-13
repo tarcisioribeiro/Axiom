@@ -1,12 +1,14 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 
-import { useBreadcrumb } from '@/hooks/use-breadcrumb';
+import { type BreadcrumbItem, useBreadcrumb } from '@/hooks/use-breadcrumb';
 import { cn } from '@/lib/utils';
 
 interface BreadcrumbProps {
   className?: string;
+  /** Itens prontos — para layouts fora do `nav-config` (ex.: painel admin). */
+  items?: BreadcrumbItem[];
 }
 
 /**
@@ -20,11 +22,14 @@ interface BreadcrumbProps {
  * <Breadcrumb className="my-md" />
  * ```
  */
-export function Breadcrumb({ className }: BreadcrumbProps) {
+export function Breadcrumb({ className, items }: BreadcrumbProps) {
   const { t } = useTranslation();
-  const { breadcrumbs } = useBreadcrumb();
+  const { breadcrumbs: routeBreadcrumbs } = useBreadcrumb();
+  const breadcrumbs = items ?? routeBreadcrumbs;
+  const { pathname } = useLocation();
 
-  if (breadcrumbs.length <= 1) {
+  // A tela inicial mostra só "Início"; nas demais, um item só (rota desconhecida) some.
+  if (breadcrumbs.length === 0 || (breadcrumbs.length === 1 && pathname !== '/')) {
     return null;
   }
 
@@ -68,7 +73,9 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
 
       {/* Versão mobile - apenas item atual */}
       <div className="gap-sm flex items-center text-sm md:hidden">
-        {breadcrumbs.length > 1 && (
+        {breadcrumbs.length === 1 ? (
+          <span className="text-foreground font-medium">{breadcrumbs[0].label}</span>
+        ) : (
           <>
             <Link
               to={breadcrumbs[breadcrumbs.length - 2].href ?? '/'}

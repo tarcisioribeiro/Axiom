@@ -7,17 +7,16 @@ import {
   Wallet,
   Archive,
   Download,
-  Search,
-  X,
   Bell,
   Loader2,
   Clock,
   ArrowRight,
 } from 'lucide-react';
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -31,240 +30,12 @@ import {
 import { VaultRecoveryKeyModal } from '@/components/security/VaultRecoveryKeyModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
 import { securityDashboardService } from '@/services/security-dashboard-service';
 import { vaultConfigService } from '@/services/security-vault-service';
 import { getErrorMessage } from '@/utils/error-utils';
-
-type SearchResultType = 'password' | 'card' | 'account' | 'archive';
-
-interface SearchResultItem {
-  id: number;
-  type: SearchResultType;
-  label: string;
-  sublabel: string;
-  route: string;
-}
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debouncedValue;
-}
-
-function VaultSearch() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const [query, setQuery] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const debouncedQuery = useDebounce(query, 300);
-
-  const enabled = debouncedQuery.trim().length >= 2;
-
-  const { data: searchData, isFetching } = useQuery({
-    queryKey: ['vault-search', debouncedQuery],
-    queryFn: () => securityDashboardService.globalSearch(debouncedQuery),
-    enabled,
-    staleTime: 15_000,
-  });
-
-  const results = useMemo<SearchResultItem[]>(() => {
-    if (!enabled || !searchData) return [];
-
-    const passwordResults: SearchResultItem[] = (searchData.passwords ?? []).map(
-      (p) => ({
-        id: p.id,
-        type: 'password' as const,
-        label: p.title,
-        sublabel: p.site ?? p.username,
-        route: '/security/passwords',
-      })
-    );
-
-    const cardResults: SearchResultItem[] = (searchData.stored_cards ?? []).map(
-      (c) => ({
-        id: c.id,
-        type: 'card' as const,
-        label: c.name,
-        sublabel: c.cardholder_name,
-        route: '/security/stored-cards',
-      })
-    );
-
-    const accountResults: SearchResultItem[] = (searchData.stored_accounts ?? []).map(
-      (a) => ({
-        id: a.id,
-        type: 'account' as const,
-        label: a.name,
-        sublabel: a.institution_name,
-        route: '/security/stored-accounts',
-      })
-    );
-
-    const archiveResults: SearchResultItem[] = (searchData.archives ?? []).map((a) => ({
-      id: a.id,
-      type: 'archive' as const,
-      label: a.title,
-      sublabel: a.file_name ?? a.category,
-      route: '/security/archives',
-    }));
-
-    return [...passwordResults, ...cardResults, ...accountResults, ...archiveResults];
-  }, [enabled, searchData]);
-
-  const grouped = useMemo(() => {
-    const groups: Record<SearchResultType, SearchResultItem[]> = {
-      password: [],
-      card: [],
-      account: [],
-      archive: [],
-    };
-    for (const r of results) {
-      groups[r.type].push(r);
-    }
-    return groups;
-  }, [results]);
-
-  const groupConfig: Array<{
-    type: SearchResultType;
-    label: string;
-    icon: React.ReactNode;
-  }> = [
-    {
-      type: 'password',
-      label: t('pages.securityDashboard.vaultSearch.groupPasswords'),
-      icon: <Key className="text-info h-4 w-4" />,
-    },
-    {
-      type: 'card',
-      label: t('pages.securityDashboard.vaultSearch.groupCards'),
-      icon: <CreditCard className="text-warning h-4 w-4" />,
-    },
-    {
-      type: 'account',
-      label: t('pages.securityDashboard.vaultSearch.groupAccounts'),
-      icon: <Wallet className="text-success h-4 w-4" />,
-    },
-    {
-      type: 'archive',
-      label: t('pages.securityDashboard.vaultSearch.groupArchives'),
-      icon: <Archive className="text-accent h-4 w-4" />,
-    },
-  ];
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSelect = (item: SearchResultItem) => {
-    void navigate(item.route);
-    setQuery('');
-    setIsOpen(false);
-  };
-
-  const hasResults = results.length > 0;
-
-  return (
-    <div ref={containerRef} className="relative w-full">
-      <div className="relative">
-        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-        <Input
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setIsOpen(true);
-          }}
-          onFocus={() => setIsOpen(true)}
-          placeholder={t('pages.securityDashboard.vaultSearch.placeholder')}
-          className="pr-10 pl-10"
-        />
-        {query && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 p-0"
-            onClick={() => {
-              setQuery('');
-              setIsOpen(false);
-            }}
-            aria-label={t('common.actions.close')}
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        )}
-      </div>
-
-      {isOpen && enabled && (
-        <div className="mt-xs bg-popover absolute top-full right-0 left-0 z-50 max-h-96 overflow-y-auto rounded-lg border shadow-lg">
-          {isFetching ? (
-            <div className="gap-sm py-lg flex items-center justify-center">
-              <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-              <span className="text-muted-foreground text-sm">Buscando...</span>
-            </div>
-          ) : !hasResults ? (
-            <div className="gap-sm py-lg flex flex-col items-center justify-center text-center">
-              <Search className="text-muted-foreground/40 h-8 w-8" />
-              <p className="text-sm font-medium">
-                {t('pages.securityDashboard.vaultSearch.noResults')}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {t('pages.securityDashboard.vaultSearch.noResultsDesc')}
-              </p>
-            </div>
-          ) : (
-            <div className="py-sm">
-              {groupConfig.map(({ type, label, icon }) => {
-                const items = grouped[type];
-                if (items.length === 0) return null;
-                return (
-                  <div key={type}>
-                    <div className="gap-xs px-md py-xs flex items-center">
-                      {icon}
-                      <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                        {label}
-                      </span>
-                    </div>
-                    {items.map((item) => (
-                      <button
-                        key={`${item.type}-${item.id}`}
-                        className="gap-sm px-md py-sm hover:bg-accent/50 flex w-full items-center text-left transition-colors"
-                        onClick={() => handleSelect(item)}
-                        type="button"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{item.label}</p>
-                          <p className="text-muted-foreground truncate text-xs">
-                            {item.sublabel}
-                          </p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function VaultAlertConfigPanel() {
   const { t } = useTranslation();
@@ -425,12 +196,12 @@ export default function SecurityDashboard() {
       await vaultConfigService.exportVaultZip();
       toast({
         title: t('pages.securityDashboard.exportVaultSuccess'),
-        description: t('pages.securityDashboard.exportVaultSuccessDesc'),
       });
     } catch (err) {
       toast({
-        title: t('pages.securityDashboard.exportVaultError'),
-        description: getErrorMessage(err),
+        title: t('pages.securityDashboard.exportVaultError', {
+          reason: getErrorMessage(err),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -470,11 +241,10 @@ export default function SecurityDashboard() {
           </Button>
         </div>
 
-        <VaultSearch />
-
         {/* Itens do Cofre */}
         <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
           <StatCard
+            centered
             title={t('pages.securityDashboard.passwords')}
             value={stats?.total_passwords || 0}
             icon={<Key className="h-4 w-4" />}
@@ -482,6 +252,7 @@ export default function SecurityDashboard() {
             onClick={() => void navigate('/security/passwords')}
           />
           <StatCard
+            centered
             title={t('pages.securityDashboard.storedCards')}
             value={stats?.total_stored_cards || 0}
             icon={<CreditCard className="h-4 w-4" />}
@@ -489,6 +260,7 @@ export default function SecurityDashboard() {
             onClick={() => void navigate('/security/stored-cards')}
           />
           <StatCard
+            centered
             title={t('pages.securityDashboard.storedAccounts')}
             value={stats?.total_stored_accounts || 0}
             icon={<Wallet className="h-4 w-4" />}
@@ -496,6 +268,7 @@ export default function SecurityDashboard() {
             onClick={() => void navigate('/security/stored-accounts')}
           />
           <StatCard
+            centered
             title={t('pages.securityDashboard.archives')}
             value={stats?.total_archives || 0}
             icon={<Archive className="h-4 w-4" />}
@@ -519,9 +292,7 @@ export default function SecurityDashboard() {
             </CardHeader>
             <CardContent>
               {!stats?.recent_activity?.length ? (
-                <p className="py-md text-muted-foreground text-center text-sm">
-                  {t('pages.securityDashboard.noRecentActivity')}
-                </p>
+                <EmptyState title={t('pages.securityDashboard.noRecentActivity')} />
               ) : (
                 <div className="flex flex-col divide-y">
                   {stats.recent_activity.slice(0, 8).map((entry, i) => (

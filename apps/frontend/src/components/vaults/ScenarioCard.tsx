@@ -1,12 +1,14 @@
-import { Trash2 } from 'lucide-react';
+import { Percent, PiggyBank, Timer, Trash2, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 
 export interface ScenarioForm {
   id: string;
@@ -53,10 +55,11 @@ export function ScenarioCard({
         </CardTitle>
         {canRemove && (
           <Button
+            aria-label={t('common.actions.remove')}
             variant="ghost"
             size="icon"
             onClick={() => onRemove(scenario.id)}
-            className="text-muted-foreground hover:text-destructive h-7 w-7"
+            className="text-destructive hover:text-destructive h-7 w-7"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -64,7 +67,10 @@ export function ScenarioCard({
       </CardHeader>
       <CardContent className="gap-md grid sm:grid-cols-2">
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.vaultSimulator.initialAmount')}</Label>
+          <Label className="gap-xs flex items-center text-xs">
+            <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.vaultSimulator.initialAmount')}
+          </Label>
           <CurrencyInput
             min="0"
             value={scenario.initial_amount}
@@ -72,7 +78,10 @@ export function ScenarioCard({
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.vaultSimulator.monthlyDeposit')}</Label>
+          <Label className="gap-xs flex items-center text-xs">
+            <PiggyBank className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.vaultSimulator.monthlyDeposit')}
+          </Label>
           <CurrencyInput
             min="0"
             value={scenario.monthly_deposit}
@@ -80,27 +89,36 @@ export function ScenarioCard({
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.vaultSimulator.annualRate')}</Label>
-          <Input
-            type="number"
-            min="0"
-            max="10000"
-            step="0.01"
-            value={scenario.annual_rate}
-            onChange={(e) => onUpdate(scenario.id, 'annual_rate', e.target.value)}
+          <Label className="gap-xs flex items-center text-xs">
+            <Percent className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.vaultSimulator.annualRate')}
+          </Label>
+          <DecimalInput
+            max={10000}
+            unit="%"
             placeholder="12,00"
+            aria-label={t('pages.vaultSimulator.annualRate')}
+            value={scenario.annual_rate}
+            onChange={(v) =>
+              onUpdate(scenario.id, 'annual_rate', v === null ? '' : String(v))
+            }
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-xs">{t('pages.vaultSimulator.termMonths')}</Label>
-          <Input
-            type="number"
-            min="1"
-            max="600"
-            step="1"
-            value={scenario.months}
-            onChange={(e) => onUpdate(scenario.id, 'months', e.target.value)}
+          <Label className="gap-xs flex items-center text-xs">
+            <Timer className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.vaultSimulator.termMonths')}
+          </Label>
+          <NumberStepper
+            min={1}
+            max={600}
+            optional
             placeholder="12"
+            aria-label={t('pages.vaultSimulator.termMonths')}
+            value={scenario.months === '' ? null : Number(scenario.months)}
+            onChange={(v) =>
+              onUpdate(scenario.id, 'months', v === null ? '' : String(v))
+            }
           />
         </div>
       </CardContent>

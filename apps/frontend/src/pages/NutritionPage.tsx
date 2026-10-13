@@ -1,36 +1,37 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
   BookOpen,
   CalendarDays,
   CheckCircle2,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  CircleDot,
   Clock,
   Edit,
   Flame,
-  Loader2,
   Moon,
   Plus,
   Salad,
   Search,
-  Sparkles,
   Sun,
   Sunrise,
   Trash2,
   UtensilsCrossed,
+  X,
 } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { FoodForm } from '@/components/nutrition/FoodForm';
 import {
   HydrationGoalCard,
@@ -47,18 +48,25 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TASK_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useTabRoute } from '@/hooks/use-tab-route';
 import { useToast } from '@/hooks/use-toast';
-import { DURATION } from '@/lib/animations';
+import { calcCalories } from '@/lib/nutrition-calories';
 import { STALE_TIMES } from '@/lib/query-client';
-import { cn, formatLocalDate } from '@/lib/utils';
-import { apiClient } from '@/services/api-client';
+import { cn, formatLocalDate, formatQuantity } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import {
   foodService,
@@ -79,6 +87,11 @@ import type {
 } from '@/types/nutrition';
 import { getErrorMessage } from '@/utils/error-utils';
 
+// 5 cards por linha × 5 linhas
+const FOODS_PAGE_SIZE = 25;
+// Limite de tipos de refeição por usuário (validado também no backend)
+const MAX_MEAL_TYPES = 6;
+
 type DialogMode =
   | { type: 'new-food' }
   | { type: 'edit-food'; food: Food }
@@ -88,15 +101,7 @@ type DialogMode =
   | { type: 'edit-option'; option: MenuOption }
   | { type: 'new-log'; prefillMealType?: number }
   | { type: 'edit-log'; log: MealLog }
-  | { type: 'ai-generate-menu' }
   | null;
-
-interface AIMenuFormValues {
-  calories: number;
-  preferences: string;
-  restrictions: string;
-  meals_per_day: number;
-}
 
 interface MealPeriodTheme {
   cardBg: string;
@@ -178,20 +183,31 @@ function getMealPeriodTheme(time?: string | null): MealPeriodTheme {
   };
 }
 
+const TABS = ['log', 'meal-types', 'foods'] as const;
+
+const TAB_HEADERS: Record<
+  (typeof TABS)[number],
+  { titleKey: string; icon: ReactNode }
+> = {
+  log: { titleKey: 'pages.nutritionFoods.tabLog', icon: <CalendarDays /> },
+  'meal-types': {
+    titleKey: 'pages.nutritionFoods.tabMealTypes',
+    icon: <UtensilsCrossed />,
+  },
+  foods: { titleKey: 'pages.nutritionFoods.tabFoods', icon: <Salad /> },
+};
+
 export default function NutritionPage() {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState<DialogMode>(null);
-  const [aiMenuForm, setAiMenuForm] = useState<AIMenuFormValues>({
-    calories: 2000,
-    preferences: '',
-    restrictions: '',
-    meals_per_day: 3,
-  });
-  const [expandedMealTypes, setExpandedMealTypes] = useState<Set<number>>(new Set());
+  const [optionsMealTypeId, setOptionsMealTypeId] = useState<number | null>(null);
   const [foodSearch, setFoodSearch] = useState('');
+  const [mealTypeSearch, setMealTypeSearch] = useState('');
+  const [mealTypeStatusFilter, setMealTypeStatusFilter] = useState('all');
+  const [activeTab, setActiveTab] = useTabRoute('/planning/nutrition', TABS, 'log');
   const today = formatLocalDate(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(today);
 
@@ -221,20 +237,12 @@ export default function NutritionPage() {
     queryFn: () => mealLogService.getByDate(selectedDate),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
-  const { data: todayLogs = [], isLoading: todayLogsLoading } = useQuery({
-    queryKey: ['meal-logs', 'date', today],
-    queryFn: () => mealLogService.getByDate(today),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-  });
 
   const foods = foodsData ?? [];
   const mealTypes = mealTypesData ?? [];
   const activeMealTypes = mealTypes.filter((mt) => mt.is_active);
   const dayCalories = Math.round(
     selectedLogs.reduce((acc, log) => acc + log.calories, 0)
-  );
-  const todayCalories = Math.round(
-    todayLogs.reduce((acc, log) => acc + log.calories, 0)
   );
   const adherencePct =
     activeMealTypes.length > 0
@@ -251,6 +259,13 @@ export default function NutritionPage() {
     f.name.toLowerCase().includes(foodSearch.toLowerCase())
   );
 
+  const filteredMealTypes = mealTypes.filter((mt) => {
+    if (mealTypeStatusFilter === 'active' && !mt.is_active) return false;
+    if (mealTypeStatusFilter === 'inactive' && mt.is_active) return false;
+    return mt.name.toLowerCase().includes(mealTypeSearch.toLowerCase());
+  });
+  const hasMealTypeFilters = !!mealTypeSearch || mealTypeStatusFilter !== 'all';
+
   // ── Mutations ─────────────────────────────────────────────────────────────
 
   const invalidateFoods = () => queryClient.invalidateQueries({ queryKey: ['foods'] });
@@ -262,42 +277,12 @@ export default function NutritionPage() {
     return queryClient.invalidateQueries({ queryKey: ['task-instances'] });
   };
 
-  const aiGenerateMenuMutation = useMutation({
-    mutationFn: (data: AIMenuFormValues) =>
-      apiClient.post<{ meal_types_created: number; options_created: number }>(
-        '/api/v1/personal-planning/ai-menu-plan/',
-        data
-      ),
-    onSuccess: (result) => {
-      void invalidateMealTypes();
-      toast({
-        title: 'Cardápio gerado com sucesso!',
-        description: `${result.meal_types_created} refeições com ${result.options_created} opções criadas.`,
-      });
-      setAiMenuForm({
-        calories: 2000,
-        preferences: '',
-        restrictions: '',
-        meals_per_day: 3,
-      });
-      setDialog(null);
-    },
-    onError: () => {
-      toast({
-        title: 'Erro ao gerar cardápio',
-        description: 'Não foi possível gerar o cardápio. Tente novamente.',
-        variant: 'destructive',
-      });
-    },
-  });
-
   const createFoodMutation = useMutation({
     mutationFn: (data: FoodFormData) => foodService.create(data),
     onSuccess: () => {
       void invalidateFoods();
       toast({
         title: t('pages.nutritionFoods.foodCreated'),
-        description: t('pages.nutritionFoods.foodCreatedDesc'),
       });
       setDialog(null);
     },
@@ -310,7 +295,6 @@ export default function NutritionPage() {
       void invalidateFoods();
       toast({
         title: t('pages.nutritionFoods.foodUpdated'),
-        description: t('pages.nutritionFoods.foodUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -322,7 +306,6 @@ export default function NutritionPage() {
       void invalidateFoods();
       toast({
         title: t('pages.nutritionFoods.foodDeleted'),
-        description: t('pages.nutritionFoods.foodDeletedDesc'),
       });
     },
   });
@@ -333,7 +316,6 @@ export default function NutritionPage() {
       void invalidateMealTypes();
       toast({
         title: t('pages.nutritionMealTypes.mealTypeCreated'),
-        description: t('pages.nutritionMealTypes.mealTypeCreatedDesc'),
       });
       setDialog(null);
     },
@@ -346,7 +328,6 @@ export default function NutritionPage() {
       void invalidateMealTypes();
       toast({
         title: t('pages.nutritionMealTypes.mealTypeUpdated'),
-        description: t('pages.nutritionMealTypes.mealTypeUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -358,7 +339,6 @@ export default function NutritionPage() {
       void invalidateMealTypes();
       toast({
         title: t('pages.nutritionMealTypes.mealTypeDeleted'),
-        description: t('pages.nutritionMealTypes.mealTypeDeletedDesc'),
       });
     },
   });
@@ -403,7 +383,6 @@ export default function NutritionPage() {
       void invalidateMealTypes();
       toast({
         title: t('pages.nutritionMealTypes.optionCreated'),
-        description: t('pages.nutritionMealTypes.optionCreatedDesc'),
       });
       setDialog(null);
     },
@@ -470,7 +449,6 @@ export default function NutritionPage() {
       void invalidateMealTypes();
       toast({
         title: t('pages.nutritionMealTypes.optionUpdated'),
-        description: t('pages.nutritionMealTypes.optionUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -482,7 +460,6 @@ export default function NutritionPage() {
       void invalidateMealTypes();
       toast({
         title: t('pages.nutritionMealTypes.optionDeleted'),
-        description: t('pages.nutritionMealTypes.optionDeletedDesc'),
       });
     },
   });
@@ -493,14 +470,12 @@ export default function NutritionPage() {
       void invalidateLogs();
       toast({
         title: t('pages.nutritionLog.logCreated'),
-        description: t('pages.nutritionLog.logCreatedDesc'),
       });
       setDialog(null);
     },
     onError: (err: unknown) => {
       toast({
-        title: t('pages.nutritionLog.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.nutritionLog.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     },
@@ -513,7 +488,6 @@ export default function NutritionPage() {
       void invalidateLogs();
       toast({
         title: t('pages.nutritionLog.logUpdated'),
-        description: t('pages.nutritionLog.logUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -525,13 +499,11 @@ export default function NutritionPage() {
       void invalidateLogs();
       toast({
         title: t('pages.nutritionLog.logDeleted'),
-        description: t('pages.nutritionLog.logDeletedDesc'),
       });
     },
     onError: (err: unknown) => {
       toast({
-        title: t('pages.nutritionLog.deleteError'),
-        description: getErrorMessage(err),
+        title: t('pages.nutritionLog.deleteError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     },
@@ -539,16 +511,30 @@ export default function NutritionPage() {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  const toggleMealType = (id: number) => {
-    setExpandedMealTypes((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
+  const handleDeleteOption = async (opt: MenuOption) => {
+    const ok = await showConfirm({
+      title: t('pages.nutritionMealTypes.deleteOptionTitle'),
+      description: t('pages.nutritionMealTypes.deleteOptionDesc'),
     });
+    if (ok) deleteOptionMutation.mutate(opt.id);
+  };
+
+  const optionsMealType = mealTypes.find((mt) => mt.id === optionsMealTypeId) ?? null;
+
+  // Mesmo nome (sem diferença de maiúsculas/espaços) e mesmo horário = duplicata
+  const isDuplicateMealType = (
+    name: string,
+    suggestedTime: string | null | undefined,
+    ignoreId?: number
+  ) => {
+    const key = name.trim().split(/\s+/).join(' ').toLocaleLowerCase('pt-BR');
+    const time = suggestedTime ? suggestedTime.slice(0, 5) : null;
+    return mealTypes.some(
+      (mt) =>
+        mt.id !== ignoreId &&
+        mt.name.trim().split(/\s+/).join(' ').toLocaleLowerCase('pt-BR') === key &&
+        (mt.suggested_time ? mt.suggested_time.slice(0, 5) : null) === time
+    );
   };
 
   // ── Dialog title/desc ──────────────────────────────────────────────────────
@@ -572,8 +558,6 @@ export default function NutritionPage() {
         return t('pages.nutritionLog.newLogTitle');
       case 'edit-log':
         return t('pages.nutritionLog.editLogTitle');
-      case 'ai-generate-menu':
-        return 'Gerar Cardápio com IA';
     }
   };
 
@@ -596,8 +580,6 @@ export default function NutritionPage() {
         return t('pages.nutritionLog.newLogDesc');
       case 'edit-log':
         return t('pages.nutritionLog.editLogDesc');
-      case 'ai-generate-menu':
-        return 'Informe suas preferências e a IA criará tipos de refeição com opções variadas.';
     }
   };
 
@@ -617,16 +599,32 @@ export default function NutritionPage() {
     <AnimatedPage>
       <PageContainer>
         <PageHeader
-          title={t('pages.nutritionFoods.title')}
-          icon={<UtensilsCrossed className="text-category-nutrition h-6 w-6" />}
+          title={t(TAB_HEADERS[activeTab].titleKey)}
+          icon={TAB_HEADERS[activeTab].icon}
+          actions={
+            activeTab === 'meal-types' ? (
+              <Button
+                disabled={mealTypes.length >= MAX_MEAL_TYPES}
+                onClick={() => setDialog({ type: 'new-meal-type' })}
+              >
+                <Plus className="h-4 w-4" />
+                {t('pages.nutritionMealTypes.newMealTypeBtn')}
+              </Button>
+            ) : activeTab === 'foods' ? (
+              <Button onClick={() => setDialog({ type: 'new-food' })}>
+                <Plus className="h-4 w-4" />
+                {t('pages.nutritionFoods.newFoodBtn')}
+              </Button>
+            ) : undefined
+          }
         />
 
-        <Tabs defaultValue="today" className="flex flex-1 flex-col">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
+          className="flex flex-1 flex-col"
+        >
           <TabsList className="mb-lg w-full">
-            <TabsTrigger value="today" className="gap-xs flex-1">
-              <Sun className="h-4 w-4" />
-              {t('pages.nutritionHub.todayMeals')}
-            </TabsTrigger>
             <TabsTrigger value="log" className="gap-xs flex-1">
               <CalendarDays className="h-4 w-4" />
               {t('pages.nutritionFoods.tabLog')}
@@ -641,183 +639,110 @@ export default function NutritionPage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* ── Hoje ─────────────────────────────────────────────────────── */}
-          <TabsContent value="today" className="mt-0 flex-1">
-            <div className="space-y-md">
-              <div className="flex items-center justify-between">
-                <p className="text-muted-foreground text-sm font-medium">
-                  {t('pages.nutritionHub.subtitle')}
-                </p>
-                <div className="gap-md flex items-center">
-                  <div className="text-right">
-                    <span className="inline-flex items-center gap-0.5 text-2xl font-bold text-orange-500 tabular-nums">
-                      <Flame className="h-5 w-5" />
-                      {todayCalories}
-                    </span>
-                    <p className="text-muted-foreground text-xs">kcal</p>
-                  </div>
-                  <WaterTotal date={today} />
-                </div>
-              </div>
-              {(() => {
-                if (todayLogsLoading) return <LoadingState />;
-                if (todayLogs.length === 0)
-                  return (
-                    <EmptyState
-                      title={t('pages.nutritionHub.noMealsToday')}
-                      description={t('pages.nutritionHub.registerInLog')}
-                      icon={<UtensilsCrossed className="h-8 w-8" />}
-                    />
-                  );
-                return (
-                  <div className="space-y-sm">
-                    {todayLogs.map((log) => {
-                      const totalCal = Math.round(log.calories);
-                      return (
-                        <div
-                          key={log.id}
-                          className="border-border p-sm flex items-center justify-between rounded-md border"
-                        >
-                          <div>
-                            <p className="text-sm font-medium">
-                              {log.meal_type_name ?? log.meal_type}
-                            </p>
-                            <div className="gap-xs mt-0.5 flex flex-wrap items-center">
-                              {log.menu_option_name && (
-                                <p className="text-muted-foreground text-xs">
-                                  {log.menu_option_name}
-                                </p>
-                              )}
-                              {totalCal > 0 && (
-                                <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
-                                  <Flame className="h-3 w-3" />
-                                  {totalCal} kcal
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="gap-sm flex items-center">
-                            <span className="text-muted-foreground text-xs">
-                              {log.time ?? ''}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive h-7 w-7 p-0"
-                              onClick={() => deleteLogMutation.mutate(log.id)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            </div>
-          </TabsContent>
-
           {/* ── Diário ───────────────────────────────────────────────────── */}
           <TabsContent value="log" className="mt-0 flex-1">
-            {/* Navegação de data */}
-            <div className="mb-md gap-sm flex items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigateDay(-1)}
-                title={t('pages.nutritionLog.prevDay')}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex-1">
-                <DatePicker
-                  value={selectedDate}
-                  onChange={(v) => setSelectedDate(v ? formatLocalDate(v) : today)}
-                  placeholder={t('pages.nutritionLog.selectDate')}
-                  maxDate={today}
-                />
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigateDay(1)}
-                disabled={selectedDate >= today}
-                title={t('pages.nutritionLog.nextDay')}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Header card com aderência */}
-            <div className="mb-lg border-border bg-card overflow-hidden rounded-lg border shadow-sm">
-              <div className="gap-md px-lg py-md flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-muted-foreground text-sm font-medium capitalize">
-                    {selectedDateLabel}
-                  </p>
-                  <div className="mt-xs gap-xs flex items-baseline">
-                    <span className="text-category-nutrition text-4xl font-bold tabular-nums">
-                      {selectedLogs.length}
-                    </span>
-                    <span className="text-muted-foreground text-xl">
-                      / {activeMealTypes.length}
-                    </span>
-                  </div>
-                  <p className="mt-xs text-muted-foreground text-sm">
-                    {t('pages.nutritionLog.mealsLogged', {
-                      logged: selectedLogs.length,
-                      total: activeMealTypes.length,
-                    })}
-                  </p>
-                </div>
-
-                <div className="gap-md flex shrink-0 items-center">
-                  <div className="text-right">
-                    <span className="inline-flex items-center gap-0.5 text-2xl font-bold text-orange-500 tabular-nums">
-                      <Flame className="h-5 w-5" />
-                      {dayCalories}
-                    </span>
-                    <p className="text-muted-foreground text-xs">kcal</p>
-                  </div>
-                  <WaterTotal date={selectedDate} />
-
-                  {/* Circular progress */}
-                  {activeMealTypes.length > 0 && (
-                    <div className="relative shrink-0">
-                      <svg
-                        width="80"
-                        height="80"
-                        viewBox="0 0 80 80"
-                        className="-rotate-90"
-                      >
-                        <circle
-                          cx="40"
-                          cy="40"
-                          r={RADIUS}
-                          fill="none"
-                          strokeWidth="7"
-                          className="stroke-muted"
-                        />
-                        <circle
-                          cx="40"
-                          cy="40"
-                          r={RADIUS}
-                          fill="none"
-                          strokeWidth="7"
-                          strokeLinecap="round"
-                          className="stroke-category-nutrition transition duration-500"
-                          strokeDasharray={CIRC}
-                          strokeDashoffset={dashOffset}
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-category-nutrition text-sm font-bold">
-                          {adherencePct}%
-                        </span>
+            <div className="mb-lg">
+              {/* Header card com aderência */}
+              <div className="border-border bg-card overflow-hidden rounded-lg border">
+                <div className="gap-md px-lg py-md flex items-center justify-between">
+                  <div className="min-w-0">
+                    <div className="gap-sm flex flex-wrap items-center">
+                      <p className="text-muted-foreground text-sm font-medium capitalize">
+                        {selectedDateLabel}
+                      </p>
+                      <div className="gap-sm flex items-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => navigateDay(-1)}
+                          title={t('pages.nutritionLog.prevDay')}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <div className="w-44">
+                          <DatePicker
+                            value={selectedDate}
+                            onChange={(v) =>
+                              setSelectedDate(v ? formatLocalDate(v) : today)
+                            }
+                            placeholder={t('pages.nutritionLog.selectDate')}
+                            maxDate={today}
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => navigateDay(1)}
+                          disabled={selectedDate >= today}
+                          title={t('pages.nutritionLog.nextDay')}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                  )}
+                    <div className="mt-xs gap-xs flex items-baseline">
+                      <span className="text-category-nutrition text-4xl font-bold tabular-nums">
+                        {selectedLogs.length}
+                      </span>
+                      <span className="text-muted-foreground text-xl">
+                        / {activeMealTypes.length}
+                      </span>
+                    </div>
+                    <p className="mt-xs text-muted-foreground text-sm">
+                      {t('pages.nutritionLog.mealsLogged', {
+                        logged: selectedLogs.length,
+                        total: activeMealTypes.length,
+                      })}
+                    </p>
+                  </div>
+
+                  <div className="gap-md flex shrink-0 items-center">
+                    <div className="text-right">
+                      <span className="inline-flex items-center gap-0.5 text-2xl font-bold text-orange-500 tabular-nums">
+                        <Flame className="h-5 w-5" />
+                        {dayCalories}
+                      </span>
+                      <p className="text-muted-foreground text-xs">kcal</p>
+                    </div>
+                    <WaterTotal date={selectedDate} />
+
+                    {/* Circular progress */}
+                    {activeMealTypes.length > 0 && (
+                      <div className="relative shrink-0">
+                        <svg
+                          width="80"
+                          height="80"
+                          viewBox="0 0 80 80"
+                          className="-rotate-90"
+                        >
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r={RADIUS}
+                            fill="none"
+                            strokeWidth="7"
+                            className="stroke-muted"
+                          />
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r={RADIUS}
+                            fill="none"
+                            strokeWidth="7"
+                            strokeLinecap="round"
+                            className="stroke-category-nutrition duration-slow transition"
+                            strokeDasharray={CIRC}
+                            strokeDashoffset={dashOffset}
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-category-nutrition text-sm font-bold">
+                            {adherencePct}%
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -853,41 +778,85 @@ export default function NutritionPage() {
             <div className="gap-lg grid items-start lg:grid-cols-2">
               <HydrationGoalCard />
               <div>
-                <div className="mb-md gap-sm flex justify-end">
-                  <Button
-                    variant="outline"
-                    onClick={() => setDialog({ type: 'ai-generate-menu' })}
-                  >
-                    <Sparkles className="mr-sm text-primary h-4 w-4" />
-                    Gerar com IA
-                  </Button>
-                  <Button onClick={() => setDialog({ type: 'new-meal-type' })}>
-                    <Plus className="mr-sm h-4 w-4" />
-                    {t('pages.nutritionMealTypes.newMealTypeBtn')}
-                  </Button>
-                </div>
+                <FilterBar
+                  className="mb-md"
+                  hasActiveFilters={hasMealTypeFilters}
+                  onClear={() => {
+                    setMealTypeSearch('');
+                    setMealTypeStatusFilter('all');
+                  }}
+                  activeFilters={[
+                    ...(mealTypeStatusFilter !== 'all'
+                      ? [
+                          {
+                            key: 'status',
+                            label: `${t('common.fields.status')}: ${
+                              mealTypeStatusFilter === 'active'
+                                ? t('pages.nutritionMealTypes.active')
+                                : t('pages.nutritionMealTypes.inactive')
+                            }`,
+                            onRemove: () => setMealTypeStatusFilter('all'),
+                          },
+                        ]
+                      : []),
+                  ]}
+                >
+                  <FilterField label={t('common.filterLabels.search')} icon={Search}>
+                    <SearchInput
+                      placeholder={t('pages.nutritionMealTypes.searchPlaceholder')}
+                      value={mealTypeSearch}
+                      onValueChange={setMealTypeSearch}
+                    />
+                  </FilterField>
+                  <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+                    <Select
+                      value={mealTypeStatusFilter}
+                      onValueChange={setMealTypeStatusFilter}
+                    >
+                      <SelectTrigger
+                        className="w-36"
+                        aria-label={t('pages.nutritionMealTypes.allStatus')}
+                        startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                      >
+                        <SelectValue
+                          placeholder={t('pages.nutritionMealTypes.allStatus')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.nutritionMealTypes.allStatus')}
+                        </SelectItem>
+                        <SelectItem
+                          value="active"
+                          icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                        >
+                          {t('pages.nutritionMealTypes.active')}
+                        </SelectItem>
+                        <SelectItem
+                          value="inactive"
+                          icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                        >
+                          {t('pages.nutritionMealTypes.inactive')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
+                </FilterBar>
 
                 {mealTypesLoading ? (
                   <LoadingState />
-                ) : mealTypes.length === 0 ? (
+                ) : filteredMealTypes.length === 0 ? (
                   <EmptyState
                     title={t('pages.nutritionMealTypes.emptyMealTypes')}
-                    description={t('pages.nutritionMealTypes.emptyMealTypesDesc')}
                     icon={<UtensilsCrossed className="h-8 w-8" />}
-                    action={{
-                      label: t('pages.nutritionMealTypes.newMealTypeBtn'),
-                      icon: <Plus className="h-4 w-4" />,
-                      onClick: () => setDialog({ type: 'new-meal-type' }),
-                    }}
                   />
                 ) : (
                   <div className="space-y-sm">
-                    {mealTypes.map((mt) => (
+                    {filteredMealTypes.map((mt) => (
                       <MealTypeCard
                         key={mt.id}
                         mealType={mt}
-                        expanded={expandedMealTypes.has(mt.id)}
-                        onToggle={() => toggleMealType(mt.id)}
+                        onOpenOptions={() => setOptionsMealTypeId(mt.id)}
                         onEdit={() =>
                           setDialog({ type: 'edit-meal-type', mealType: mt })
                         }
@@ -900,23 +869,17 @@ export default function NutritionPage() {
                           });
                           if (ok) deleteMealTypeMutation.mutate(mt.id);
                         }}
-                        onNewOption={() =>
-                          setDialog({ type: 'new-option', mealTypeId: mt.id })
-                        }
-                        onEditOption={(opt) =>
-                          setDialog({ type: 'edit-option', option: opt })
-                        }
-                        onDeleteOption={async (opt) => {
-                          const ok = await showConfirm({
-                            title: t('pages.nutritionMealTypes.deleteOptionTitle'),
-                            description: t('pages.nutritionMealTypes.deleteOptionDesc'),
-                          });
-                          if (ok) deleteOptionMutation.mutate(opt.id);
-                        }}
                         t={t}
                       />
                     ))}
                   </div>
+                )}
+                {mealTypes.length >= MAX_MEAL_TYPES && (
+                  <p className="text-muted-foreground mt-sm text-xs">
+                    {t('pages.nutritionMealTypes.limitReached', {
+                      max: MAX_MEAL_TYPES,
+                    })}
+                  </p>
                 )}
               </div>
             </div>
@@ -924,63 +887,66 @@ export default function NutritionPage() {
 
           {/* ── Alimentos ────────────────────────────────────────────────── */}
           <TabsContent value="foods" className="mt-0 flex-1">
-            <div className="mb-md gap-sm flex items-center">
-              <div className="relative flex-1">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                <input
-                  type="text"
+            <FilterBar
+              className="mb-md"
+              hasActiveFilters={!!foodSearch}
+              onClear={() => setFoodSearch('')}
+            >
+              <FilterField label={t('common.filterLabels.search')} icon={Search}>
+                <SearchInput
                   placeholder={t('pages.nutritionFoods.searchPlaceholder')}
                   value={foodSearch}
-                  onChange={(e) => setFoodSearch(e.target.value)}
-                  className="border-input bg-background py-sm focus:ring-ring w-full rounded-lg border pr-3 pl-9 text-sm outline-none focus:ring-2"
+                  onValueChange={setFoodSearch}
                 />
-              </div>
-              <Button onClick={() => setDialog({ type: 'new-food' })}>
-                <Plus className="mr-sm h-4 w-4" />
-                {t('pages.nutritionFoods.newFoodBtn')}
-              </Button>
-            </div>
+              </FilterField>
+            </FilterBar>
 
             {foodsLoading ? (
               <LoadingState />
             ) : filteredFoods.length === 0 ? (
               <EmptyState
                 title={t('pages.nutritionFoods.emptyFoods')}
-                description={t('pages.nutritionFoods.emptyFoodsDesc')}
                 icon={<Salad className="h-8 w-8" />}
-                action={{
-                  label: t('pages.nutritionFoods.newFoodBtn'),
-                  icon: <Plus className="h-4 w-4" />,
-                  onClick: () => setDialog({ type: 'new-food' }),
-                }}
               />
             ) : (
-              <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3">
-                {filteredFoods.map((food) => (
-                  <FoodCard
-                    key={food.id}
-                    food={food}
-                    onEdit={() => setDialog({ type: 'edit-food', food })}
-                    onDelete={async () => {
-                      const ok = await showConfirm({
-                        title: t('pages.nutritionFoods.deleteFoodTitle'),
-                        description: t('pages.nutritionFoods.deleteFoodDesc'),
-                      });
-                      if (ok) deleteFoodMutation.mutate(food.id);
-                    }}
-                  />
-                ))}
-              </div>
+              <PaginatedSlide
+                key={foodSearch}
+                items={filteredFoods}
+                pageSize={FOODS_PAGE_SIZE}
+                centerList
+                className="gap-sm grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+              >
+                {(pageFoods) =>
+                  pageFoods.map((food) => (
+                    <FoodCard
+                      key={food.id}
+                      food={food}
+                      onEdit={() => setDialog({ type: 'edit-food', food })}
+                      onDelete={async () => {
+                        const ok = await showConfirm({
+                          title: t('pages.nutritionFoods.deleteFoodTitle'),
+                          description: t('pages.nutritionFoods.deleteFoodDesc'),
+                        });
+                        if (ok) deleteFoodMutation.mutate(food.id);
+                      }}
+                    />
+                  ))
+                }
+              </PaginatedSlide>
             )}
           </TabsContent>
         </Tabs>
 
         {/* ── Dialog ────────────────────────────────────────────────────── */}
         <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
-          <DialogContent className="max-w-xl">
+          <DialogContent
+            className={cn('max-w-xl', dialog?.type.endsWith('option') && 'max-w-5xl')}
+          >
             <DialogHeader>
-              <DialogTitle>{dialogTitle()}</DialogTitle>
-              <DialogDescription>{dialogDesc()}</DialogDescription>
+              <DialogTitle mode={dialog?.type.startsWith('edit') ? 'edit' : 'create'}>
+                {dialogTitle()}
+              </DialogTitle>
+              <DialogDescription className="sr-only">{dialogDesc()}</DialogDescription>
             </DialogHeader>
 
             {(dialog?.type === 'new-food' || dialog?.type === 'edit-food') && (
@@ -1007,6 +973,15 @@ export default function NutritionPage() {
                 }
                 ownerId={ownerId}
                 onSubmit={async (data) => {
+                  const ignoreId =
+                    dialog.type === 'edit-meal-type' ? dialog.mealType.id : undefined;
+                  if (isDuplicateMealType(data.name, data.suggested_time, ignoreId)) {
+                    toast({
+                      title: t('pages.nutritionMealTypes.duplicateMealType'),
+                      variant: 'destructive',
+                    });
+                    return;
+                  }
                   if (dialog.type === 'edit-meal-type') {
                     await updateMealTypeMutation.mutateAsync({
                       id: dialog.mealType.id,
@@ -1071,100 +1046,52 @@ export default function NutritionPage() {
                 isLoading={createLogMutation.isPending || updateLogMutation.isPending}
               />
             )}
+          </DialogContent>
+        </Dialog>
 
-            {dialog?.type === 'ai-generate-menu' && (
-              <div className="space-y-md">
-                <div className="space-y-sm">
-                  <Label htmlFor="ai-calories">Objetivo calórico diário (kcal)</Label>
-                  <Input
-                    id="ai-calories"
-                    type="number"
-                    min={800}
-                    max={5000}
-                    step={50}
-                    value={aiMenuForm.calories}
-                    onChange={(e) =>
-                      setAiMenuForm((f) => ({ ...f, calories: Number(e.target.value) }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-sm">
-                  <Label htmlFor="ai-preferences">Preferências alimentares</Label>
-                  <Input
-                    id="ai-preferences"
-                    placeholder="Ex: vegetariano, low carb, mediterrâneo…"
-                    value={aiMenuForm.preferences}
-                    onChange={(e) =>
-                      setAiMenuForm((f) => ({ ...f, preferences: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-sm">
-                  <Label htmlFor="ai-restrictions">Restrições alimentares</Label>
-                  <Input
-                    id="ai-restrictions"
-                    placeholder="Ex: sem glúten, sem lactose, alergia a amendoim…"
-                    value={aiMenuForm.restrictions}
-                    onChange={(e) =>
-                      setAiMenuForm((f) => ({ ...f, restrictions: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-sm">
-                  <Label>Refeições por dia: {aiMenuForm.meals_per_day}</Label>
-                  <div className="gap-xs flex">
-                    {[2, 3, 4, 5, 6].map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() =>
-                          setAiMenuForm((f) => ({ ...f, meals_per_day: n }))
-                        }
-                        className={cn(
-                          'flex h-8 w-8 items-center justify-center rounded-md border text-xs font-bold transition-colors',
-                          aiMenuForm.meals_per_day === n
-                            ? 'border-primary bg-primary/10 text-primary'
-                            : 'border-input bg-background text-muted-foreground hover:bg-muted'
-                        )}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="gap-sm pt-sm flex">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setDialog(null)}
-                    disabled={aiGenerateMenuMutation.isPending}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    disabled={aiGenerateMenuMutation.isPending}
-                    onClick={() => aiGenerateMenuMutation.mutate(aiMenuForm)}
-                  >
-                    {aiGenerateMenuMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-                        Gerando…
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="mr-sm h-4 w-4" />
-                        Gerar Cardápio
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
+        {/* ── Dialog: opções da refeição (formulários abrem por cima) ───── */}
+        <Dialog
+          open={optionsMealType !== null}
+          onOpenChange={(open) => !open && setOptionsMealTypeId(null)}
+        >
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="gap-sm flex items-center">
+                {getMealPeriodTheme(optionsMealType?.suggested_time).icon}
+                {optionsMealType?.name}
+              </DialogTitle>
+              <DialogDescription className="sr-only">
+                {t('pages.nutritionMealTypes.optionsDesc')}
+              </DialogDescription>
+            </DialogHeader>
+            {optionsMealType && (
+              <MealOptionsList
+                mealType={optionsMealType}
+                onEditOption={(opt) => setDialog({ type: 'edit-option', option: opt })}
+                onDeleteOption={handleDeleteOption}
+                t={t}
+              />
             )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setOptionsMealTypeId(null)}
+                className="sm:mr-auto"
+              >
+                <X className="h-3 w-3" />
+                {t('common.actions.close')}
+              </Button>
+              {optionsMealType && (
+                <Button
+                  onClick={() =>
+                    setDialog({ type: 'new-option', mealTypeId: optionsMealType.id })
+                  }
+                >
+                  <Plus className="h-3 w-3" />
+                  {t('pages.nutritionMealTypes.newOptionBtn')}
+                </Button>
+              )}
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </PageContainer>
@@ -1176,25 +1103,17 @@ export default function NutritionPage() {
 
 interface MealTypeCardProps {
   mealType: MealType;
-  expanded: boolean;
-  onToggle: () => void;
+  onOpenOptions: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onNewOption: () => void;
-  onEditOption: (opt: MenuOption) => void;
-  onDeleteOption: (opt: MenuOption) => void;
   t: (key: string) => string;
 }
 
 function MealTypeCard({
   mealType,
-  expanded,
-  onToggle,
+  onOpenOptions,
   onEdit,
   onDelete,
-  onNewOption,
-  onEditOption,
-  onDeleteOption,
   t,
 }: MealTypeCardProps) {
   const theme = getMealPeriodTheme(mealType.suggested_time);
@@ -1216,7 +1135,7 @@ function MealTypeCard({
         <button
           type="button"
           className="gap-sm flex min-w-0 flex-1 items-center text-left"
-          onClick={onToggle}
+          onClick={onOpenOptions}
         >
           <div
             className={cn(
@@ -1248,22 +1167,31 @@ function MealTypeCard({
               </span>
             </div>
           </div>
-          {expanded ? (
-            <ChevronDown className="text-muted-foreground ml-auto h-4 w-4 shrink-0" />
-          ) : (
-            <ChevronRight className="text-muted-foreground ml-auto h-4 w-4 shrink-0" />
-          )}
         </button>
         <div className="ml-sm gap-xs flex shrink-0 items-center">
-          <Badge variant={mealType.is_active ? 'success' : 'secondary'}>
+          <Badge
+            variant={mealType.is_active ? 'success' : 'secondary'}
+            className="gap-xs"
+          >
+            {(() => {
+              const StatusIcon =
+                TASK_STATUS_ICONS[mealType.is_active ? 'active' : 'inactive'];
+              return <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />;
+            })()}
             {mealType.is_active
               ? t('pages.nutritionMealTypes.active')
               : t('pages.nutritionMealTypes.inactive')}
           </Badge>
-          <Button variant="ghost" size="icon" onClick={onEdit}>
+          <Button
+            aria-label={t('common.actions.edit')}
+            variant="ghost"
+            size="icon"
+            onClick={onEdit}
+          >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
+            aria-label={t('common.actions.delete')}
             variant="ghost"
             size="icon"
             className="text-destructive hover:text-destructive"
@@ -1273,93 +1201,90 @@ function MealTypeCard({
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
 
-      <AnimatePresence initial={false}>
-        {expanded && (
-          <motion.div
-            key="meal-type-content"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: DURATION.fast, ease: 'easeInOut' }}
-            style={{ overflow: 'hidden' }}
-          >
-            <div className="border-border bg-card p-md border-t">
-              <div className="mb-sm flex justify-end">
-                <Button variant="outline" size="sm" onClick={onNewOption}>
-                  <Plus className="mr-xs h-3 w-3" />
-                  {t('pages.nutritionMealTypes.newOptionBtn')}
-                </Button>
+interface MealOptionsListProps {
+  mealType: MealType;
+  onEditOption: (opt: MenuOption) => void;
+  onDeleteOption: (opt: MenuOption) => void;
+  t: (key: string) => string;
+}
+
+function MealOptionsList({
+  mealType,
+  onEditOption,
+  onDeleteOption,
+  t,
+}: MealOptionsListProps) {
+  return (
+    <div>
+      {mealType.options.length === 0 ? (
+        <EmptyState title={t('pages.nutritionMealTypes.noIngredients')} />
+      ) : (
+        <div className="space-y-sm">
+          {mealType.options.map((opt) => (
+            <div
+              key={opt.id}
+              className="border-border bg-muted/20 overflow-hidden rounded-lg border"
+            >
+              {/* Option header */}
+              <div className="border-border/60 bg-card px-sm py-xs flex items-center justify-between border-b">
+                <div className="gap-xs flex items-center">
+                  <div className="bg-category-nutrition/10 flex h-6 w-6 items-center justify-center rounded-lg">
+                    <BookOpen className="text-category-nutrition h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-sm font-semibold">{opt.name}</span>
+                  {(() => {
+                    const total = opt.ingredients.reduce((acc, ing) => {
+                      const c = calcCalories(ing);
+                      return c != null ? acc + c : acc;
+                    }, 0);
+                    const hasData = opt.ingredients.some(
+                      (ing) => calcCalories(ing) != null
+                    );
+                    return hasData && total > 0 ? (
+                      <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
+                        <Flame className="h-3 w-3" />
+                        {total} kcal
+                      </span>
+                    ) : null;
+                  })()}
+                </div>
+                <div className="gap-xs flex">
+                  <Button
+                    aria-label={t('common.actions.edit')}
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => onEditOption(opt)}
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    aria-label={t('common.actions.delete')}
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive h-7 w-7"
+                    onClick={() => onDeleteOption(opt)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
-              {mealType.options.length === 0 ? (
-                <p className="py-sm text-muted-foreground text-center text-xs">
+              {/* Ingredients */}
+              {opt.ingredients.length > 0 ? (
+                <IngredientList ingredients={opt.ingredients} />
+              ) : (
+                <p className="px-sm py-xs text-muted-foreground text-xs">
                   {t('pages.nutritionMealTypes.noIngredients')}
                 </p>
-              ) : (
-                <div className="space-y-sm">
-                  {mealType.options.map((opt) => (
-                    <div
-                      key={opt.id}
-                      className="border-border bg-muted/20 overflow-hidden rounded-lg border"
-                    >
-                      {/* Option header */}
-                      <div className="border-border/60 bg-card px-sm py-xs flex items-center justify-between border-b">
-                        <div className="gap-xs flex items-center">
-                          <div className="bg-category-nutrition/10 flex h-6 w-6 items-center justify-center rounded-lg">
-                            <BookOpen className="text-category-nutrition h-3.5 w-3.5" />
-                          </div>
-                          <span className="text-sm font-semibold">{opt.name}</span>
-                          {(() => {
-                            const total = opt.ingredients.reduce((acc, ing) => {
-                              const c = calcCalories(ing);
-                              return c != null ? acc + c : acc;
-                            }, 0);
-                            const hasData = opt.ingredients.some(
-                              (ing) => calcCalories(ing) != null
-                            );
-                            return hasData && total > 0 ? (
-                              <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
-                                <Flame className="h-3 w-3" />
-                                {total} kcal
-                              </span>
-                            ) : null;
-                          })()}
-                        </div>
-                        <div className="gap-xs flex">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => onEditOption(opt)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive h-7 w-7"
-                            onClick={() => onDeleteOption(opt)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                      {/* Ingredients */}
-                      {opt.ingredients.length > 0 ? (
-                        <IngredientList ingredients={opt.ingredients} />
-                      ) : (
-                        <p className="px-sm py-xs text-muted-foreground text-xs">
-                          {t('pages.nutritionMealTypes.noIngredients')}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
               )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1388,7 +1313,6 @@ function MealTimeline({
     return (
       <EmptyState
         title={t('pages.nutritionLog.emptyLog')}
-        description={t('pages.nutritionLog.emptyLogDesc')}
         icon={<UtensilsCrossed className="h-8 w-8" />}
       />
     );
@@ -1502,6 +1426,7 @@ function MealTimeline({
                         </span>
                       )}
                       <Button
+                        aria-label={t('common.actions.edit')}
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7"
@@ -1510,6 +1435,7 @@ function MealTimeline({
                         <Edit className="h-3 w-3" />
                       </Button>
                       <Button
+                        aria-label={t('common.actions.delete')}
                         variant="ghost"
                         size="icon"
                         className="text-destructive hover:text-destructive h-7 w-7"
@@ -1525,6 +1451,7 @@ function MealTimeline({
                       className="border-warning/50 hover:bg-warning/10 h-7 text-xs"
                       onClick={() => onRegister(mt.id)}
                     >
+                      <Plus className="h-3 w-3" />
                       {t('pages.nutritionLog.registerMeal')}
                     </Button>
                   ) : (
@@ -1534,6 +1461,7 @@ function MealTimeline({
                       className="text-muted-foreground hover:text-foreground h-7 text-xs"
                       onClick={() => onRegister(mt.id)}
                     >
+                      <Plus className="h-3 w-3" />
                       {t('pages.nutritionLog.registerMeal')} →
                     </Button>
                   )}
@@ -1557,7 +1485,7 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
   const { t } = useTranslation();
   const initial = food.name.charAt(0).toUpperCase();
   return (
-    <div className="group gap-sm border-border bg-card p-md hover:border-category-nutrition/40 flex items-center rounded-lg border transition hover:shadow-sm">
+    <div className="group gap-sm border-border bg-card p-md flex items-center rounded-lg border">
       <div className="bg-category-nutrition/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
         <span className="text-category-nutrition text-base font-bold">{initial}</span>
       </div>
@@ -1567,12 +1495,12 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
           {food.calories_per_serving && (
             <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
               <Flame className="h-3 w-3" />
-              {food.calories_per_serving} kcal
+              {Math.round(Number(food.calories_per_serving))} kcal
             </span>
           )}
           {food.serving_size && food.serving_unit && (
             <span className="text-muted-foreground text-xs">
-              {food.serving_size} {t(`units.${food.serving_unit}`, food.serving_unit)}
+              {formatQuantity(t, food.serving_size, food.serving_unit)}
             </span>
           )}
         </div>
@@ -1582,11 +1510,18 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
           </p>
         )}
       </div>
-      <div className="gap-xs flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+      <div className="gap-xs flex shrink-0">
+        <Button
+          aria-label={t('common.actions.edit')}
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onEdit}
+        >
           <Edit className="h-3 w-3" />
         </Button>
         <Button
+          aria-label={t('common.actions.delete')}
           variant="ghost"
           size="icon"
           className="text-destructive hover:text-destructive h-7 w-7"
@@ -1601,15 +1536,6 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
 
 // ── Ingredient list with alternative groups ─────────────────────────────────
 
-function calcCalories(ing: MenuOptionIngredient): number | null {
-  if (!ing.food_calories_per_serving || !ing.food_serving_size) return null;
-  const cals = parseFloat(ing.food_calories_per_serving);
-  const servingSize = parseFloat(ing.food_serving_size);
-  if (!servingSize) return null;
-  const qty = ing.quantity ? parseFloat(ing.quantity) : servingSize;
-  return Math.round((qty / servingSize) * cals);
-}
-
 function IngredientItem({ ing }: { ing: MenuOptionIngredient }) {
   const { t } = useTranslation();
   const cal = calcCalories(ing);
@@ -1618,7 +1544,7 @@ function IngredientItem({ ing }: { ing: MenuOptionIngredient }) {
       <div className="mt-xs bg-category-nutrition/50 h-1.5 w-1.5 shrink-0 rounded-full" />
       <span className="text-muted-foreground text-xs">
         <span className="text-foreground font-medium">{ing.food_name}</span>
-        {ing.quantity ? ` — ${ing.quantity} ${ing.unit_display}` : ''}
+        {ing.quantity ? ` — ${formatQuantity(t, ing.quantity, ing.unit)}` : ''}
         {cal != null && (
           <span className="ml-xs inline-flex items-center gap-0.5 text-orange-500">
             <Flame className="h-2.5 w-2.5" />

@@ -59,8 +59,9 @@ export default function VaultSimulator() {
       setResults(data.scenarios);
     } catch (err) {
       toast({
-        title: t('pages.vaultSimulator.simulationError'),
-        description: getErrorMessage(err),
+        title: t('pages.vaultSimulator.simulationError', {
+          reason: getErrorMessage(err),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -87,12 +88,12 @@ export default function VaultSimulator() {
         <div className="flex flex-wrap gap-3">
           {scenarios.length < 3 && (
             <Button variant="outline" size="sm" onClick={addScenario}>
-              <Plus className="mr-sm h-4 w-4" />
+              <Plus className="h-4 w-4" />
               {t('pages.vaultSimulator.addScenario')}
             </Button>
           )}
           <Button onClick={() => void handleSimulate()} disabled={isLoading}>
-            <Calculator className="mr-sm h-4 w-4" />
+            <Calculator className="h-4 w-4" />
             {isLoading
               ? t('pages.vaultSimulator.calculating')
               : t('pages.vaultSimulator.calculate')}

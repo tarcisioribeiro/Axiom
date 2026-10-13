@@ -3,16 +3,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
+  Brain,
   CheckCircle2,
+  CircleDot,
   Clock,
+  Edit,
   GraduationCap,
   Layers,
+  MonitorPlay,
   Plus,
   Search,
+  Tag,
   Timer,
   Trash2,
-  Edit,
-  Brain,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -30,9 +33,12 @@ import {
 import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { CourseDetailModal } from '@/components/library/CourseDetailModal';
 import { CourseForm } from '@/components/library/CourseForm';
 import { Badge } from '@/components/ui/badge';
@@ -45,18 +51,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { PLATFORM_ICONS } from '@/config/icons';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import {
+  COURSE_STATUS_ICONS,
+  PLATFORM_ICONS,
+  SKILL_CATEGORY_ICONS,
+} from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cardVariants } from '@/lib/animations';
 import { useChartColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
-import { cn } from '@/lib/utils';
 import { coursesService, courseSessionsService } from '@/services/courses-service';
 import { membersService } from '@/services/members-service';
-import type { Course, CourseFormData, CourseStatus } from '@/types';
+import type {
+  Course,
+  CourseFormData,
+  CoursePlatform,
+  CourseStatus,
+  IntellectCategory,
+} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 const STATUS_FILTER_KEYS: (CourseStatus | 'all')[] = [
@@ -65,6 +87,28 @@ const STATUS_FILTER_KEYS: (CourseStatus | 'all')[] = [
   'not_started',
   'completed',
   'paused',
+];
+
+const CATEGORY_FILTER_KEYS: (IntellectCategory | 'all')[] = [
+  'all',
+  'technology',
+  'languages',
+  'design',
+  'business',
+  'science',
+  'arts',
+  'other',
+];
+
+const PLATFORM_FILTER_KEYS: (CoursePlatform | 'all')[] = [
+  'all',
+  'udemy',
+  'coursera',
+  'youtube',
+  'linkedin',
+  'alura',
+  'pluralsight',
+  'other',
 ];
 
 const STATUS_BADGE: Record<
@@ -99,7 +143,7 @@ function CourseCard({
       animate="visible"
       exit="exit"
       layout
-      className="group border-border bg-card flex cursor-pointer flex-col overflow-hidden rounded-lg border shadow-sm transition-shadow hover:shadow-md"
+      className="group border-border bg-card flex cursor-pointer flex-col overflow-hidden rounded-lg border transition-colors"
       onClick={() => onOpen(course)}
       role="button"
       tabIndex={0}
@@ -122,7 +166,16 @@ function CourseCard({
             {t(`pages.courses.platform.${course.platform}`)}
           </p>
         </div>
-        <Badge variant={STATUS_BADGE[course.status]} className="shrink-0 text-xs">
+        <Badge
+          variant={STATUS_BADGE[course.status]}
+          className="gap-xs shrink-0 text-xs"
+        >
+          {(() => {
+            const StatusIcon = COURSE_STATUS_ICONS[course.status];
+            return StatusIcon ? (
+              <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            ) : null;
+          })()}
           {t(`pages.courses.status.${course.status}`)}
         </Badge>
       </div>
@@ -162,7 +215,7 @@ function CourseCard({
       </div>
 
       {/* Actions */}
-      <div className="gap-xs border-border/50 px-md py-sm flex border-t opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="gap-xs border-border/50 px-md py-sm flex border-t">
         <Button
           size="sm"
           variant="ghost"
@@ -213,6 +266,10 @@ export default function Courses() {
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<CourseStatus | 'all'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<IntellectCategory | 'all'>(
+    'all'
+  );
+  const [platformFilter, setPlatformFilter] = useState<CoursePlatform | 'all'>('all');
   const [formOpen, setFormOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [detailCourse, setDetailCourse] = useState<Course | null>(null);
@@ -226,10 +283,12 @@ export default function Courses() {
 
   const params: Record<string, unknown> = { page_size: 200 };
   if (statusFilter !== 'all') params.status = statusFilter;
+  if (categoryFilter !== 'all') params.category = categoryFilter;
+  if (platformFilter !== 'all') params.platform = platformFilter;
   if (search) params.search = search;
 
   const { data: courses = [], isLoading } = useQuery({
-    queryKey: ['courses', statusFilter, search],
+    queryKey: ['courses', statusFilter, categoryFilter, platformFilter, search],
     queryFn: () => coursesService.getAll(params),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
@@ -337,16 +396,11 @@ export default function Courses() {
     void navigate(`/agents?context=${context}`);
   };
 
-  const inProgressCount = courses.filter((c) => c.status === 'in_progress').length;
-  const completedCount = courses.filter((c) => c.status === 'completed').length;
-  const totalHours = courses.reduce((s, c) => s + c.invested_hours, 0);
-
   return (
     <AnimatedPage>
       <PageContainer>
         <PageHeader
           title={t('pages.courses.title')}
-          subtitle={t('pages.courses.subtitle')}
           icon={<GraduationCap className="text-primary h-6 w-6" />}
           actions={
             <Button
@@ -358,40 +412,6 @@ export default function Courses() {
             </Button>
           }
         />
-
-        {/* Stats strip */}
-        <div className="gap-md grid grid-cols-3">
-          {[
-            {
-              label: t('pages.courses.filters.in_progress'),
-              value: inProgressCount,
-              icon: BookOpen,
-            },
-            {
-              label: t('pages.courses.filters.completed'),
-              value: completedCount,
-              icon: CheckCircle2,
-            },
-            {
-              label: t('pages.courses.stats.investedHours'),
-              value: `${totalHours.toFixed(1)}h`,
-              icon: Clock,
-            },
-          ].map(({ label, value, icon: Icon }) => (
-            <div
-              key={label}
-              className="gap-md border-border bg-card p-md flex items-center rounded-lg border"
-            >
-              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                <Icon className="text-primary h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xl font-bold">{value}</p>
-                <p className="text-muted-foreground text-xs">{label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* Study hours this week */}
         <Card>
@@ -445,36 +465,144 @@ export default function Courses() {
         </Card>
 
         {/* Filters */}
-        <div className="gap-sm flex flex-wrap items-center">
-          <div className="relative flex-1">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <Input
-              className="pl-9"
+        <FilterBar
+          hasActiveFilters={
+            !!search ||
+            statusFilter !== 'all' ||
+            categoryFilter !== 'all' ||
+            platformFilter !== 'all'
+          }
+          onClear={() => {
+            setSearch('');
+            setStatusFilter('all');
+            setCategoryFilter('all');
+            setPlatformFilter('all');
+          }}
+          activeFilters={[
+            ...(statusFilter !== 'all'
+              ? [
+                  {
+                    key: 'status',
+                    label: `${t('common.fields.status')}: ${t(`pages.courses.filters.${statusFilter}`)}`,
+                    onRemove: () => setStatusFilter('all'),
+                  },
+                ]
+              : []),
+            ...(categoryFilter !== 'all'
+              ? [
+                  {
+                    key: 'category',
+                    label: `${t('common.fields.category')}: ${t(`pages.courses.category.${categoryFilter}`)}`,
+                    onRemove: () => setCategoryFilter('all'),
+                  },
+                ]
+              : []),
+            ...(platformFilter !== 'all'
+              ? [
+                  {
+                    key: 'platform',
+                    label: `${t('pages.courses.form.platformLabel')}: ${t(`pages.courses.platform.${platformFilter}`)}`,
+                    onRemove: () => setPlatformFilter('all'),
+                  },
+                ]
+              : []),
+          ]}
+        >
+          <FilterField label={t('common.filterLabels.search')} icon={Search}>
+            <SearchInput
               placeholder={t('pages.courses.searchPlaceholder')}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onValueChange={setSearch}
             />
-          </div>
-          <div className="gap-xs flex">
-            {STATUS_FILTER_KEYS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setStatusFilter(s)}
-                className={cn(
-                  'px-md py-xs rounded-lg text-xs font-medium transition-colors',
-                  statusFilter === s
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                )}
+          </FilterField>
+          <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as CourseStatus | 'all')}
+            >
+              <SelectTrigger
+                aria-label={t('common.fields.status')}
+                startIcon={<CircleDot className="h-3.5 w-3.5" />}
               >
-                {s === 'all'
-                  ? t('pages.courses.filters.all')
-                  : t(`pages.courses.filters.${s}`)}
-              </button>
-            ))}
-          </div>
-        </div>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_FILTER_KEYS.map((s) => {
+                  const StatusIcon = COURSE_STATUS_ICONS[s];
+                  return (
+                    <SelectItem
+                      key={s}
+                      value={s}
+                      icon={StatusIcon ? <StatusIcon className="h-4 w-4" /> : undefined}
+                    >
+                      {t(`pages.courses.filters.${s}`)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </FilterField>
+          <FilterField label={t('common.fields.category')} icon={Tag}>
+            <Select
+              value={categoryFilter}
+              onValueChange={(v) => setCategoryFilter(v as IntellectCategory | 'all')}
+            >
+              <SelectTrigger
+                aria-label={t('pages.courses.allCategories')}
+                startIcon={<Tag className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.courses.allCategories')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.courses.allCategories')}</SelectItem>
+                {CATEGORY_FILTER_KEYS.filter((c) => c !== 'all').map((c) => {
+                  const CategoryIcon = SKILL_CATEGORY_ICONS[c];
+                  return (
+                    <SelectItem
+                      key={c}
+                      value={c}
+                      icon={
+                        CategoryIcon ? <CategoryIcon className="h-4 w-4" /> : undefined
+                      }
+                    >
+                      {t(`pages.courses.category.${c}`)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </FilterField>
+          <FilterField label={t('common.filterLabels.platform')} icon={MonitorPlay}>
+            <Select
+              value={platformFilter}
+              onValueChange={(v) => setPlatformFilter(v as CoursePlatform | 'all')}
+            >
+              <SelectTrigger
+                aria-label={t('pages.courses.allPlatforms')}
+                startIcon={<BookOpen className="h-3.5 w-3.5" />}
+              >
+                <SelectValue placeholder={t('pages.courses.allPlatforms')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('pages.courses.allPlatforms')}</SelectItem>
+                {PLATFORM_FILTER_KEYS.filter((p) => p !== 'all').map((p) => {
+                  const PlatformIcon = PLATFORM_ICONS[p];
+                  return (
+                    <SelectItem
+                      key={p}
+                      value={p}
+                      icon={
+                        PlatformIcon ? <PlatformIcon className="h-4 w-4" /> : undefined
+                      }
+                    >
+                      {t(`pages.courses.platform.${p}`)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </FilterField>
+        </FilterBar>
 
         {/* Grid */}
         {isLoading ? (
@@ -484,35 +612,32 @@ export default function Courses() {
             title={
               search ? t('pages.courses.emptySearch') : t('pages.courses.emptyState')
             }
-            message={!search ? t('pages.courses.emptyStateDesc') : undefined}
             icon={<GraduationCap className="text-muted-foreground h-10 w-10" />}
-            action={
-              !search
-                ? {
-                    label: t('pages.courses.newBtn'),
-                    icon: <Plus className="mr-xs h-4 w-4" />,
-                    onClick: openNew,
-                  }
-                : undefined
-            }
           />
         ) : (
           <AnimatePresence>
-            <div className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {courses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  onOpen={(c) => {
-                    setDetailCourse(c);
-                    setDetailOpen(true);
-                  }}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onAskIntellect={handleAskIntellect}
-                />
-              ))}
-            </div>
+            <PaginatedSlide
+              key={`${statusFilter}-${categoryFilter}-${platformFilter}-${search}`}
+              items={courses}
+              pageSize={GRID_PAGE_SIZE}
+              className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            >
+              {(pageItems) =>
+                pageItems.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    onOpen={(c) => {
+                      setDetailCourse(c);
+                      setDetailOpen(true);
+                    }}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onAskIntellect={handleAskIntellect}
+                  />
+                ))
+              }
+            </PaginatedSlide>
           </AnimatePresence>
         )}
 
@@ -533,16 +658,18 @@ export default function Courses() {
                   <GraduationCap className="text-primary h-4 w-4" />
                 </div>
                 <div>
-                  <DialogTitle>
+                  <DialogTitle mode={editingCourse ? 'edit' : 'create'}>
                     {editingCourse
                       ? t('pages.courses.editTitle')
                       : t('pages.courses.newTitle')}
                   </DialogTitle>
-                  <DialogDescription>
-                    {editingCourse
-                      ? t('pages.courses.editDesc')
-                      : t('pages.courses.newDesc')}
-                  </DialogDescription>
+                  <VisuallyHidden>
+                    <DialogDescription>
+                      {editingCourse
+                        ? t('pages.courses.editDesc')
+                        : t('pages.courses.newDesc')}
+                    </DialogDescription>
+                  </VisuallyHidden>
                 </div>
               </div>
             </DialogHeader>

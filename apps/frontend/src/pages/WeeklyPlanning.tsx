@@ -4,22 +4,17 @@ import {
   AlertTriangle,
   Calendar,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Circle,
   AlertCircle,
   Clock,
-  Zap,
 } from 'lucide-react';
-import { createElement, useState } from 'react';
+import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { getIconByName } from '@/components/ui/icon-picker';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -45,13 +40,12 @@ const CATEGORY_COLORS: Record<string, string> = {
   other: 'bg-muted/30 border-border text-foreground',
 };
 
-function getWeekStart(offset: number = 0): Date {
+function getWeekStart(): Date {
   const now = new Date();
-  const dayOfWeek = now.getDay();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7) + offset * 7);
-  monday.setHours(0, 0, 0, 0);
-  return monday;
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - now.getDay());
+  sunday.setHours(0, 0, 0, 0);
+  return sunday;
 }
 
 function getWeekDays(weekStart: Date): Date[] {
@@ -104,30 +98,31 @@ function TaskPill({ instance }: { instance: TaskInstance }) {
   return (
     <div
       className={cn(
-        'gap-xs px-xs py-xs flex items-start rounded border text-xs leading-tight transition-opacity',
+        'gap-xs px-xs flex items-center rounded border py-0.5 text-xs leading-tight transition-opacity',
         colorClass,
         isDone && 'opacity-50'
       )}
       title={instance.task_name}
     >
       <StatusIcon status={instance.status} />
-      <div className="min-w-0 flex-1">
-        <p className={cn('truncate font-medium', isDone && 'line-through')}>
-          <InstanceIcon name={instance.icon ?? ''} className="mr-xs inline h-3 w-3" />
-          {instance.task_name}
-        </p>
-        {instance.scheduled_time && (
-          <span className="opacity-70">{instance.scheduled_time}</span>
-        )}
-      </div>
+      {instance.scheduled_time && (
+        <span className="shrink-0 opacity-70">
+          {instance.scheduled_time.slice(0, 5)}
+        </span>
+      )}
+      <p
+        className={cn('min-w-0 flex-1 truncate font-medium', isDone && 'line-through')}
+      >
+        <InstanceIcon name={instance.icon ?? ''} className="mr-xs inline h-3 w-3" />
+        {instance.task_name}
+      </p>
     </div>
   );
 }
 
 export default function WeeklyPlanning() {
   const { t, i18n } = useTranslation();
-  const [weekOffset, setWeekOffset] = useState(0);
-  const weekStart = getWeekStart(weekOffset);
+  const weekStart = getWeekStart();
   const weekEnd = getWeekDays(weekStart)[6];
   const days = getWeekDays(weekStart);
 
@@ -155,157 +150,38 @@ export default function WeeklyPlanning() {
   }, {});
 
   const today = formatLocalDate(new Date());
-  const isCurrentWeek = weekOffset === 0;
 
-  const totalTasks = instances.length;
-  const completedTasks = instances.filter((i) => i.status === 'completed').length;
-  const weekPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-  const weekLabel = (() => {
-    const locale = i18n.language;
-    const start = weekStart.toLocaleDateString(locale, {
-      day: '2-digit',
-      month: 'short',
-    });
-    const end = weekEnd.toLocaleDateString(locale, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-    return `${start} – ${end}`;
-  })();
+  const formatDayMonth = (d: Date) =>
+    d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  const weekLabel = `${formatDayMonth(weekStart)} - ${formatDayMonth(weekEnd)}/${weekEnd.getFullYear()}`;
 
   if (isLoading) return <LoadingState />;
 
   return (
     <AnimatedPage>
       <PageContainer>
-        <PageHeader
-          title={t('weeklyPlanning.title')}
-          icon={<Calendar />}
-          subtitle={weekLabel}
-        >
-          <div className="gap-sm flex items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setWeekOffset((o) => o - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setWeekOffset(0)}
-              disabled={isCurrentWeek}
-            >
-              {t('weeklyPlanning.thisWeek')}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setWeekOffset((o) => o + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </PageHeader>
+        <div className="mb-md gap-md flex flex-wrap items-center">
+          <PageHeader title={t('weeklyPlanning.title')} icon={<Calendar />} />
 
-        {Object.values(loadByDate).some((load) => load > OVERLOAD_MINUTES) && (
-          <div className="mb-md border-warning/30 bg-warning/5 p-md rounded-lg border">
-            <div className="gap-sm flex items-center">
-              <AlertTriangle className="text-warning h-4 w-4 shrink-0" />
-              <p className="text-warning text-sm">
-                <strong>{t('weeklyPlanning.overloadWarningTitle')}:</strong>{' '}
-                {t('weeklyPlanning.overloadWarning', {
-                  time: formatMinutes(OVERLOAD_MINUTES),
-                })}
-              </p>
-            </div>
+          <div className="flex min-w-0 flex-1 justify-center">
+            {Object.values(loadByDate).some((load) => load > OVERLOAD_MINUTES) && (
+              <div className="border-warning/30 bg-warning/5 px-sm py-xs gap-sm flex items-center rounded-lg border">
+                <AlertTriangle className="text-warning h-4 w-4 shrink-0" />
+                <p className="text-warning text-xs">
+                  <strong>{t('weeklyPlanning.overloadWarningTitle')}:</strong>{' '}
+                  {t('weeklyPlanning.overloadWarning', {
+                    time: formatMinutes(OVERLOAD_MINUTES),
+                  })}
+                </p>
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Legend */}
-        <div className="mb-md gap-sm text-muted-foreground flex flex-wrap items-center text-xs">
-          <span>{t('weeklyPlanning.legend', 'Legenda')}:</span>
-          <span className="gap-xs flex items-center">
-            <CheckCircle2 className="text-success h-3.5 w-3.5" />
-            {t('weeklyPlanning.statusCompleted', 'Concluído')}
-          </span>
-          <span className="gap-xs flex items-center">
-            <Clock className="text-warning h-3.5 w-3.5" />
-            {t('weeklyPlanning.statusInProgress', 'Em andamento')}
-          </span>
-          <span className="gap-xs flex items-center">
-            <Circle className="h-3.5 w-3.5" />
-            {t('weeklyPlanning.statusPending', 'Pendente')}
-          </span>
-          <span className="gap-xs flex items-center">
-            <Zap className="text-warning h-3.5 w-3.5" />
-            {t('weeklyPlanning.overloadedDay', 'Dia sobrecarregado')}
-          </span>
+          <span className="text-muted-foreground text-sm">{weekLabel}</span>
         </div>
-
-        {/* Week summary */}
-        <div className="mb-md gap-md grid grid-cols-3">
-          <Card>
-            <CardContent className="gap-sm px-md py-md pt-md flex items-center">
-              <Calendar className="text-muted-foreground h-5 w-5" />
-              <div>
-                <p className="text-lg font-bold">{totalTasks}</p>
-                <p className="text-muted-foreground text-xs">
-                  {t('weeklyPlanning.tasks')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="gap-sm px-md py-md pt-md flex items-center">
-              <CheckCircle2 className="text-success h-5 w-5" />
-              <div>
-                <p className="text-lg font-bold">{completedTasks}</p>
-                <p className="text-muted-foreground text-xs">
-                  {t('weeklyPlanning.completed')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="gap-sm px-md py-md pt-md flex items-center">
-              <Clock className="text-muted-foreground h-5 w-5" />
-              <div>
-                <p className="text-lg font-bold">
-                  {formatMinutes(Object.values(loadByDate).reduce((s, v) => s + v, 0))}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  {t('weeklyPlanning.estimatedLoad')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Week progress bar */}
-        {totalTasks > 0 && (
-          <div className="mb-md gap-md flex items-center">
-            <Badge variant="secondary">
-              {completedTasks}/{totalTasks} {t('weeklyPlanning.completed')}
-            </Badge>
-            <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
-              <div
-                className={cn(
-                  'h-full rounded-full transition',
-                  weekPct >= 100 ? 'bg-success' : 'bg-primary'
-                )}
-                style={{ width: `${weekPct}%` }}
-              />
-            </div>
-            <span className="text-sm font-medium">{weekPct}%</span>
-          </div>
-        )}
 
         {/* 7-day grid */}
-        <div className="gap-md grid grid-cols-1 sm:grid-cols-7">
+        <div className="gap-md grid grid-cols-1 sm:h-[calc(100dvh-13rem)] sm:grid-cols-7">
           {days.map((day) => {
             const key = formatLocalDate(day);
             const dayInsts = instancesByDate[key] ?? [];
@@ -323,7 +199,7 @@ export default function WeeklyPlanning() {
               <Card
                 key={key}
                 className={cn(
-                  'flex flex-col',
+                  'flex min-h-0 flex-col',
                   isToday && 'ring-primary/60 ring-2',
                   isOverloaded && 'border-warning/40'
                 )}
@@ -400,7 +276,7 @@ export default function WeeklyPlanning() {
                     </span>
                   </div>
                 </CardHeader>
-                <CardContent className="gap-xs p-sm flex flex-1 flex-col pt-0">
+                <CardContent className="gap-xs p-sm flex min-h-0 flex-1 flex-col overflow-y-auto pt-0">
                   {dayInsts.length === 0 ? (
                     <p className="text-muted-foreground/50 text-center text-xs">
                       {t('weeklyPlanning.noTasks')}

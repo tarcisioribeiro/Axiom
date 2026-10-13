@@ -1,6 +1,16 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, CalendarClock, CreditCard } from 'lucide-react';
+import {
+  AlertCircle,
+  CalendarClock,
+  CalendarDays,
+  CreditCard,
+  FileText,
+  Loader2,
+  Save,
+  Wallet,
+  X,
+} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -50,7 +60,7 @@ export function PayablePaymentDialog({
   const { t } = useTranslation();
   const { toast } = useToast();
   const now = useNow();
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatLocalDate(new Date());
   const [form, setForm] = useState({
     value: '',
     account: '',
@@ -114,38 +124,37 @@ export function PayablePaymentDialog({
     if (!payable) return;
     if (!form.value || !form.account || !form.date) {
       toast({
-        title: t('pages.payables.payment.title'),
-        description: t('common.messages.fillRequired'),
+        title: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
     }
     if (isValueExceedsRemaining) {
       toast({
-        title: t('pages.payables.payment.title'),
-        description: t('common.balance.insufficientEvenWithOverdraft', {
+        title: t('common.balance.insufficientEvenWithOverdraft', {
           available: formatCurrency(remaining.toFixed(2)),
         }),
+
         variant: 'destructive',
       });
       return;
     }
     if (balanceInfo && !balanceInfo.canPay) {
       toast({
-        title: t('common.balance.insufficient'),
-        description: t('common.balance.insufficientEvenWithOverdraft', {
+        title: t('common.balance.insufficientEvenWithOverdraft', {
           available: formatCurrency(balanceInfo.available.toFixed(2)),
         }),
+
         variant: 'destructive',
       });
       return;
     }
     if (futureBalanceInfo && !futureBalanceInfo.canPay) {
       toast({
-        title: t('common.balance.insufficient'),
-        description: t('common.balance.insufficientEvenWithOverdraft', {
+        title: t('common.balance.insufficientEvenWithOverdraft', {
           available: formatCurrency(futureBalanceInfo.available.toFixed(2)),
         }),
+
         variant: 'destructive',
       });
       return;
@@ -161,9 +170,6 @@ export function PayablePaymentDialog({
       });
       toast({
         title: scheduled
-          ? t('pages.payables.payment.scheduledSuccess')
-          : t('pages.payables.payment.success'),
-        description: scheduled
           ? t('pages.payables.payment.scheduledSuccessDesc', { date: form.date })
           : t('pages.payables.payment.successDesc'),
       });
@@ -171,8 +177,7 @@ export function PayablePaymentDialog({
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -191,7 +196,7 @@ export function PayablePaymentDialog({
     <Dialog open={!!payable} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.payables.payment.title')}</DialogTitle>
+          <DialogTitle icon={Wallet}>{t('pages.payables.payment.title')}</DialogTitle>
           <DialogDescription>
             {payable?.description} — {t('pages.payables.remainingBalance')}{' '}
             {formatCurrency(remaining)}
@@ -230,14 +235,20 @@ export function PayablePaymentDialog({
           </div>
 
           <div className="space-y-xs">
-            <Label>{t('pages.payables.payment.value')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.payment.value')} *
+            </Label>
             <CurrencyInput
               value={form.value}
               onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.payables.payment.account')} *</Label>
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.payment.account')} *
+            </Label>
             <Select
               value={form.account}
               onValueChange={(v) => setForm((f) => ({ ...f, account: v }))}
@@ -255,7 +266,8 @@ export function PayablePaymentDialog({
             </Select>
           </div>
           <div className="space-y-xs">
-            <Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {scheduled
                 ? t('pages.payables.payment.scheduledDate')
                 : t('pages.payables.payment.date')}{' '}
@@ -270,11 +282,14 @@ export function PayablePaymentDialog({
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.payables.payment.notes')}</Label>
+            <Label className="gap-xs flex items-center">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.payment.notes')}
+            </Label>
             <Input
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              placeholder={t('common.fields.notes')}
+              placeholder={t('common.placeholders.notes')}
             />
           </div>
 
@@ -355,6 +370,7 @@ export function PayablePaymentDialog({
 
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
@@ -368,6 +384,11 @@ export function PayablePaymentDialog({
                   !futureBalanceInfo.canPay)
               }
             >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
               {isSubmitting
                 ? t('common.actions.saving')
                 : scheduled

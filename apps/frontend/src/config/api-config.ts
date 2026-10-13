@@ -1,4 +1,3 @@
-/* eslint-disable max-lines -- flat endpoint registry */
 // API Configuration
 // Calcula a URL da API dinamicamente baseada no hostname atual
 // Isso permite que o app funcione tanto em localhost quanto em IPs de rede
@@ -73,7 +72,6 @@ export const API_CONFIG = {
     MEMBERS: '/api/v1/members/',
     CURRENT_USER_MEMBER: '/api/v1/members/me/',
     MEMBER_PROFILE_PHOTO: '/api/v1/members/me/photo/',
-    MEMBER_FINANCIAL_REPORT: '/api/v1/members/:id/financial-report/',
     AVAILABLE_PERMISSIONS: '/api/v1/permissions/available/',
 
     // Security Module
@@ -95,7 +93,6 @@ export const API_CONFIG = {
     SECURITY_VAULT_PREFERENCES: '/api/v1/security/vault/preferences/',
     SECURITY_VAULT_HEALTH: '/api/v1/security/passwords/health/',
     SECURITY_VAULT_EXPORT: '/api/v1/security/vault/export/',
-    SECURITY_SEARCH: '/api/v1/security/search/',
     PASSWORD_IMPORT_PREVIEW: '/api/v1/security/passwords/import/preview/',
     PASSWORD_IMPORT_CONFIRM: '/api/v1/security/passwords/import/confirm/',
     PASSWORD_SHARE_TOKENS: '/api/v1/security/passwords/:id/share-tokens/',
@@ -149,7 +146,6 @@ export const API_CONFIG = {
     FOCUS_BLOCK_TASKS: '/api/v1/personal-planning/focus-block-tasks/',
     ROUTINE_TEMPLATES: '/api/v1/personal-planning/routine-templates/',
     ROUTINE_TEMPLATES_IMPORT: '/api/v1/personal-planning/routine-templates/import/',
-    USER_ROUTINE_TEMPLATES: '/api/v1/personal-planning/user-routine-templates/',
     REFLECTIONS: '/api/v1/personal-planning/reflections/',
     TASK_INSTANCES: '/api/v1/personal-planning/instances/',
     PERSONAL_PLANNING_ANALYTICS: '/api/v1/personal-planning/analytics/',
@@ -187,9 +183,6 @@ export const API_CONFIG = {
     WELLNESS_INTERVENTIONS: '/api/v1/personal-planning/wellness/interventions/',
     WELLNESS_INTERVENTION_COMPLETIONS:
       '/api/v1/personal-planning/wellness/intervention-completions/',
-    WELLNESS_WEEKLY_REPORTS: '/api/v1/personal-planning/wellness/weekly-reports/',
-    WELLNESS_WEEKLY_REPORTS_GENERATE:
-      '/api/v1/personal-planning/wellness/weekly-reports/generate/',
 
     // Vaults Module
     VAULTS: '/api/v1/vaults/',
@@ -219,10 +212,6 @@ export const API_CONFIG = {
     // Monthly Planning
     MONTHLY_PLAN_SUMMARY: '/api/v1/monthly-plan/summary/',
     MONTHLY_PLAN: '/api/v1/monthly-plan/',
-
-    // Categorization Rules
-    CATEGORIZATION_RULES: '/api/v1/categorization-rules/',
-    CATEGORIZATION_RULES_APPLY: '/api/v1/categorization-rules/apply/',
 
     // Automation Rules
     AUTOMATION_RULES: '/api/v1/automation-rules/',

@@ -1,3 +1,4 @@
+import { CalendarClock, CalendarDays, Hash, Loader2, Save, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,8 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { useToast } from '@/hooks/use-toast';
 import { nextDueDateOnOrAfterToday } from '@/lib/debt-schedule';
 import { formatCurrency } from '@/lib/formatters';
@@ -60,15 +61,13 @@ export function LoanPaymentPlanDialog({
         firstDueDate || undefined
       );
       toast({
-        title: t('pages.loans.paymentPlan.created'),
-        description: t('pages.loans.paymentPlan.createdDesc'),
+        title: t('pages.loans.paymentPlan.createdDesc'),
       });
       onSuccess?.();
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -80,26 +79,34 @@ export function LoanPaymentPlanDialog({
     <Dialog open={!!loan} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.loans.paymentPlan.title')}</DialogTitle>
+          <DialogTitle icon={CalendarClock}>
+            {t('pages.loans.paymentPlan.title')}
+          </DialogTitle>
           <DialogDescription>
             {loan.description} — {t('pages.loans.paymentPlan.desc')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-md">
           <div className="space-y-xs">
-            <Label>{t('pages.loans.paymentPlan.installmentsCountLabel')} *</Label>
-            <Input
-              type="number"
+            <Label className="gap-xs flex items-center">
+              <Hash className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.loans.paymentPlan.installmentsCountLabel')} *
+            </Label>
+            <NumberStepper
               min={2}
-              value={installments}
-              onChange={(e) => setInstallments(e.target.value)}
+              optional
+              aria-label={t('pages.loans.paymentPlan.installmentsCountLabel')}
+              value={installments === '' ? null : Number(installments)}
+              onChange={(v) => setInstallments(v === null ? '' : String(v))}
             />
           </div>
           <div className="space-y-xs">
-            <Label>{t('pages.loans.paymentPlan.firstInstallmentLabel')}</Label>
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.loans.paymentPlan.firstInstallmentLabel')}
+            </Label>
             <DatePicker
               value={firstDueDate}
-              clearable={false}
               onChange={(date) => setFirstDueDate(date ? formatLocalDate(date) : '')}
             />
             <p className="text-muted-foreground text-xs">
@@ -117,12 +124,18 @@ export function LoanPaymentPlanDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || count < 2}
           >
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
             {isSubmitting ? t('common.actions.saving') : t('common.actions.create')}
           </Button>
         </DialogFooter>

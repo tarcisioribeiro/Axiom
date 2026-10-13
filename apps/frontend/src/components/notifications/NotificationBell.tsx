@@ -35,7 +35,7 @@ export function NotificationBell() {
           variant="ghost"
           size="icon"
           tooltipSide="bottom"
-          className="hover-lift hover:bg-secondary relative transition"
+          className="relative"
           aria-label={t('layout.notifications.ariaLabel')}
         >
           <Bell className="h-5 w-5" aria-hidden="true" />
@@ -55,7 +55,7 @@ export function NotificationBell() {
           <h4 className="text-sm font-semibold">{t('layout.notifications.title')}</h4>
           {unreadCount > 0 && (
             <Button variant="ghost" size="xs" onClick={markAllAsRead}>
-              <CheckCheck className="mr-xs h-3 w-3" />
+              <CheckCheck className="h-3 w-3" />
               {t('layout.notifications.markAllRead')}
             </Button>
           )}

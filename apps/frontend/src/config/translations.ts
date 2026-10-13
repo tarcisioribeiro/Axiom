@@ -11,6 +11,7 @@ export const TRANSLATIONS = {
     VA: 'Vale Alimentação',
     VR: 'Vale Refeição',
     CP: 'Conta Poupança',
+    CM: 'Carteira Móvel',
   },
 
   // Institutions
@@ -133,7 +134,7 @@ export const TRANSLATIONS = {
     doc: 'DOC',
     ted: 'TED',
     pix: 'PIX',
-    internal: 'Transferência Interna',
+    withdrawal: 'Saque',
   },
 
   // Payment Status
@@ -468,19 +469,6 @@ export const TRANSLATIONS = {
     previous: 'Anterior',
     next: 'Próximo',
   },
-
-  // Categorization Rules
-  categorizationRules: {
-    autoCategorized: 'Auto',
-    merchantContains: 'Estabelecimento contém',
-    applyRules: 'Aplicar Regras',
-    rulesApplied: 'regras aplicadas',
-    noRulesFound: 'Nenhuma regra encontrada',
-    newRule: 'Nova Regra',
-    editRule: 'Editar Regra',
-    ruleActive: 'Ativa',
-    ruleInactive: 'Inativa',
-  },
 };
 
 // Reverse translations - Portuguese to English
@@ -568,6 +556,7 @@ export const TRANSLATIONS_EN = {
     VA: 'Meal Voucher',
     VR: 'Food Voucher',
     CP: 'Savings Account',
+    CM: 'Mobile Wallet',
   },
 
   months: {

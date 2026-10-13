@@ -1,15 +1,25 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Building2, Globe, Calendar, BookOpen } from 'lucide-react';
+import {
+  BookOpen,
+  Building2,
+  Calendar,
+  Edit,
+  Globe,
+  Plus,
+  Search,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { PublisherForm } from '@/components/library/PublisherForm';
 import { Badge } from '@/components/ui/badge';
@@ -28,10 +38,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { publishersService } from '@/services/publishers-service';
 import type { Publisher, PublisherFormData } from '@/types';
+import { COUNTRIES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 function PublisherInitials({ name }: { name: string }) {
@@ -65,6 +84,7 @@ const EMPTY_PUBLISHERS: Publisher[] = [];
 
 export default function Publishers() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [countryFilter, setCountryFilter] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPublisher, setSelectedPublisher] = useState<Publisher | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,8 +100,7 @@ export default function Publishers() {
         return await publishersService.getAll();
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return EMPTY_PUBLISHERS;
@@ -116,13 +135,11 @@ export default function Publishers() {
       await publishersService.delete(id);
       toast({
         title: t('pages.publishers.deleted'),
-        description: t('pages.publishers.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -135,21 +152,18 @@ export default function Publishers() {
         await publishersService.update(selectedPublisher.id, data);
         toast({
           title: t('pages.publishers.updated'),
-          description: t('pages.publishers.updatedDesc'),
         });
       } else {
         await publishersService.create(data);
         toast({
           title: t('pages.publishers.created'),
-          description: t('pages.publishers.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -159,8 +173,9 @@ export default function Publishers() {
 
   const filteredPublishers = publishers.filter(
     (publisher) =>
-      publisher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (publisher.country?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+      (countryFilter === 'all' || publisher.country === countryFilter) &&
+      (publisher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (publisher.country?.toLowerCase() || '').includes(searchTerm.toLowerCase()))
   );
 
   if (loading) {
@@ -176,131 +191,178 @@ export default function Publishers() {
         </Button>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
-        <SearchInput
-          placeholder={t('pages.publishers.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="w-52 sm:w-64"
-        />
+      <FilterBar
+        hasActiveFilters={!!searchTerm || countryFilter !== 'all'}
+        onClear={() => {
+          setSearchTerm('');
+          setCountryFilter('all');
+        }}
+        activeFilters={[
+          ...(countryFilter !== 'all'
+            ? [
+                {
+                  key: 'country',
+                  label: `${t('pages.publishers.allCountries')}: ${t(`pages.publishers.countries.${countryFilter}`)}`,
+                  onRemove: () => setCountryFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.publishers.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.filterLabels.country')} icon={Globe}>
+          <Select value={countryFilter} onValueChange={setCountryFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.publishers.allCountries')}
+              startIcon={<Globe className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.publishers.allCountries')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.publishers.allCountries')}</SelectItem>
+              {COUNTRIES.map((country) => (
+                <SelectItem key={country.value} value={country.value}>
+                  {t(`pages.publishers.countries.${country.value}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
       </FilterBar>
 
       {filteredPublishers.length === 0 ? (
         <EmptyState
           icon={<Building2 className="text-muted-foreground h-12 w-12" />}
-          message={
+          title={
             searchTerm
               ? t('pages.publishers.emptySearch')
               : t('pages.publishers.emptyState')
           }
         />
       ) : (
-        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-          {filteredPublishers.map((publisher) => (
-            <Card key={publisher.id} className="flex flex-col">
-              <CardHeader className="pb-3">
-                <div className="gap-sm flex items-start justify-between">
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <PublisherInitials name={publisher.name} />
-                    <div className="min-w-0">
-                      <CardTitle className="text-base leading-tight">
-                        {publisher.name}
-                      </CardTitle>
-                      <CardDescription className="mt-0.5">
-                        {publisher.country
-                          ? t('pages.publishers.countries.' + publisher.country, {
-                              defaultValue: publisher.country_display,
-                            })
-                          : publisher.country_display}
-                      </CardDescription>
+        <PaginatedSlide
+          key={`${searchTerm}-${countryFilter}`}
+          items={filteredPublishers}
+          pageSize={GRID_PAGE_SIZE}
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+        >
+          {(pageItems) =>
+            pageItems.map((publisher) => (
+              <Card key={publisher.id} className="flex flex-col">
+                <CardHeader className="pb-3">
+                  <div className="gap-sm flex items-start justify-between">
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <PublisherInitials name={publisher.name} />
+                      <div className="min-w-0">
+                        <CardTitle className="text-base leading-tight">
+                          {publisher.name}
+                        </CardTitle>
+                        <CardDescription className="mt-0.5">
+                          {publisher.country
+                            ? t('pages.publishers.countries.' + publisher.country, {
+                                defaultValue: publisher.country_display,
+                              })
+                            : publisher.country_display}
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <div className="gap-xs flex shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEdit(publisher)}
+                        aria-label={t('common.actions.edit')}
+                        title={t('common.actions.edit')}
+                      >
+                        <Edit className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive h-8 w-8"
+                        onClick={() => void handleDelete(publisher.id)}
+                        aria-label={t('common.actions.delete')}
+                        title={t('common.actions.delete')}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="gap-xs flex shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => handleEdit(publisher)}
-                      aria-label={t('common.actions.edit')}
-                      title={t('common.actions.edit')}
-                    >
-                      <Edit className="h-3.5 w-3.5" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive h-8 w-8"
-                      onClick={() => void handleDelete(publisher.id)}
-                      aria-label={t('common.actions.delete')}
-                      title={t('common.actions.delete')}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
+                </CardHeader>
 
-              <CardContent className="flex flex-1 flex-col gap-3">
-                {publisher.founded_year && (
-                  <div className="gap-sm flex items-center">
-                    <Calendar className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-                    <Badge variant="outline" className="text-xs font-normal">
-                      {t('pages.publishers.foundedYear', {
-                        year: publisher.founded_year,
-                      })}
-                    </Badge>
-                  </div>
-                )}
-                {publisher.website && (
-                  <div className="gap-sm flex items-center">
-                    <Globe className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-                    <a
-                      href={publisher.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary truncate text-sm hover:underline"
-                      onClick={(e) => e.stopPropagation()}
+                <CardContent className="flex flex-1 flex-col gap-3">
+                  {publisher.founded_year && (
+                    <div className="gap-sm flex items-center">
+                      <Calendar className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+                      <Badge variant="outline" className="text-xs font-normal">
+                        {t('pages.publishers.foundedYear', {
+                          year: publisher.founded_year,
+                        })}
+                      </Badge>
+                    </div>
+                  )}
+                  {publisher.website && (
+                    <div className="gap-sm flex items-center">
+                      <Globe className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+                      <a
+                        href={publisher.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary truncate text-sm hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {publisher.website.replace(/^https?:\/\//, '')}
+                      </a>
+                    </div>
+                  )}
+                  <div className="pt-sm mt-auto">
+                    <Link
+                      to={`/library/books?search=${encodeURIComponent(publisher.name)}`}
                     >
-                      {publisher.website.replace(/^https?:\/\//, '')}
-                    </a>
+                      <Badge
+                        variant="secondary"
+                        className="gap-sm hover:bg-secondary/70 flex w-fit items-center text-xs"
+                      >
+                        <BookOpen className="h-3 w-3" />
+                        {publisher.books_count === 0
+                          ? t('pages.publishers.booksCountZero')
+                          : t('pages.publishers.booksCount', {
+                              count: publisher.books_count,
+                            })}
+                      </Badge>
+                    </Link>
                   </div>
-                )}
-                <div className="pt-sm mt-auto">
-                  <Link
-                    to={`/library/books?search=${encodeURIComponent(publisher.name)}`}
-                  >
-                    <Badge
-                      variant="secondary"
-                      className="gap-sm hover:bg-secondary/70 flex w-fit items-center text-xs"
-                    >
-                      <BookOpen className="h-3 w-3" />
-                      {publisher.books_count === 0
-                        ? t('pages.publishers.booksCountZero')
-                        : t('pages.publishers.booksCount', {
-                            count: publisher.books_count,
-                          })}
-                    </Badge>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={selectedPublisher ? 'edit' : 'create'}>
               {selectedPublisher
                 ? t('pages.publishers.editTitle')
                 : t('pages.publishers.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedPublisher
-                ? t('pages.publishers.editDesc')
-                : t('pages.publishers.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedPublisher
+                  ? t('pages.publishers.editDesc')
+                  : t('pages.publishers.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <PublisherForm
             publisher={selectedPublisher}

@@ -47,11 +47,11 @@ export const WithChildren: Story = {
     <PageHeader {...args}>
       <div className="gap-sm flex">
         <Button variant="outline" size="sm">
-          <Filter className="mr-sm h-4 w-4" />
+          <Filter className="h-4 w-4" />
           Filtros
         </Button>
         <Button size="sm">
-          <Plus className="mr-sm h-4 w-4" />
+          <Plus className="h-4 w-4" />
           Nova despesa
         </Button>
       </div>

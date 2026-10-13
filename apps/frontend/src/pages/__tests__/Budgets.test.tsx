@@ -43,6 +43,7 @@ vi.mock('@/stores/auth-store', () => ({
 
 vi.mock('@/components/common/FilterBar', () => ({
   FilterBar: () => <div data-testid="filter-bar" />,
+  FilterField: () => null,
 }));
 
 vi.mock('@/components/common/AnimatedPage', () => ({
@@ -252,9 +253,9 @@ describe('Budgets page', () => {
     }
   });
 
-  it('shows "Sugerir com IA" button', async () => {
+  it('does not show "Sugerir com IA" button', async () => {
     renderBudgets();
     await waitFor(() => screen.getByRole('heading', { level: 1 }));
-    expect(screen.getByRole('button', { name: /sugerir/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sugerir/i })).not.toBeInTheDocument();
   });
 });

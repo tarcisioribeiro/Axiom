@@ -99,9 +99,7 @@ describe('ExerciseDatasetPicker', () => {
       results: [ENTRY_SQUAT],
     });
 
-    const input = screen.getByPlaceholderText(
-      'Buscar exercício (em inglês, ex: squat)...'
-    );
+    const input = screen.getByPlaceholderText('Ex.: squat');
     await user.type(input, 'squat');
 
     await waitFor(

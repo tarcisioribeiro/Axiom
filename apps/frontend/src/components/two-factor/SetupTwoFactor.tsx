@@ -1,15 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -24,17 +18,6 @@ export function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  const {
-    data: setupData,
-    isLoading: isLoadingSetup,
-    error: setupError,
-  } = useQuery({
-    queryKey: ['2fa', 'setup'],
-    queryFn: () => authService.getTwoFactorSetup(),
-    staleTime: Infinity,
-    retry: false,
-  });
-
   const activateMutation = useMutation({
     mutationFn: (c: string) => authService.activateTwoFactor(c),
     onSuccess: (data) => {
@@ -44,93 +27,92 @@ export function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
     },
     onError: (error: unknown) => {
       toast({
-        title: t('pages.twoFactor.invalidCode'),
-        description: getErrorMessage(error),
+        title: t('pages.twoFactor.setupError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
   });
 
+  const {
+    data: setupData,
+    isLoading: isLoadingSetup,
+    error: setupError,
+  } = useQuery({
+    queryKey: ['2fa', 'setup'],
+    queryFn: () => authService.getTwoFactorSetup(),
+    staleTime: Infinity,
+    // Sem cache entre montagens: reabrir após desativar exige um QR Code novo.
+    gcTime: 0,
+    retry: false,
+    // O api-client invalida todas as queries após um POST; refazer o setup com o
+    // 2FA recém-ativado devolve 400 ("2FA já está ativado").
+    enabled: !activateMutation.isPending && !activateMutation.isSuccess,
+  });
+
+  // Antes de qualquer estado do setup: os códigos só são exibidos uma vez.
+  if (backupCodes.length > 0) {
+    return <BackupCodesDisplay codes={backupCodes} />;
+  }
+
   if (isLoadingSetup) {
     return (
-      <Card>
-        <CardContent className="flex h-48 items-center justify-center">
-          <span className="text-muted-foreground text-sm">
-            {t('pages.twoFactor.loading')}
-          </span>
-        </CardContent>
-      </Card>
+      <p className="text-muted-foreground flex h-48 items-center justify-center text-sm">
+        {t('pages.twoFactor.loading')}
+      </p>
     );
   }
 
   if (setupError || !setupData) {
     return (
-      <Card>
-        <CardContent className="py-xl text-destructive text-center text-sm">
-          {t('pages.twoFactor.invalidCode')}
-        </CardContent>
-      </Card>
+      <p className="py-xl text-destructive text-center text-sm">
+        {t('pages.twoFactor.invalidCode')}
+      </p>
     );
   }
 
-  if (backupCodes.length > 0) {
-    return <BackupCodesDisplay codes={backupCodes} />;
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('pages.twoFactor.setupTitle')}</CardTitle>
-        <CardDescription>{t('pages.twoFactor.step1Desc')}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-lg">
-        <div className="gap-md flex flex-col items-center">
-          <img
-            src={setupData.qr_code}
-            alt="QR Code 2FA"
-            className="p-sm h-48 w-48 rounded-md border bg-white"
-          />
-          <div className="space-y-xs w-full max-w-xs">
-            <p className="text-muted-foreground text-xs">
-              {t('pages.twoFactor.step1')}:
-            </p>
-            <code className="bg-muted py-sm block rounded px-3 text-xs break-all">
-              {setupData.manual_entry_key}
-            </code>
-          </div>
-        </div>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            activateMutation.mutate(code);
-          }}
-          className="space-y-3"
-        >
-          <div className="space-y-xs">
-            <Label htmlFor="totp-code">{t('pages.twoFactor.confirmCode')}</Label>
-            <Input
-              id="totp-code"
-              type="text"
-              inputMode="numeric"
-              placeholder={t('pages.twoFactor.confirmCodePlaceholder')}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              maxLength={6}
-              required
-              className="max-w-xs"
-            />
-          </div>
-          <Button
-            type="submit"
-            disabled={activateMutation.isPending || code.length < 6}
-          >
-            {activateMutation.isPending
-              ? t('pages.twoFactor.verifying')
-              : t('pages.twoFactor.enableBtn')}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        activateMutation.mutate(code);
+      }}
+      className="gap-md mx-auto flex w-full max-w-xs flex-col"
+    >
+      <img
+        src={setupData.qr_code}
+        alt="QR Code 2FA"
+        className="p-sm h-48 w-48 self-center rounded-md border bg-white"
+      />
+      <code className="bg-muted py-sm block rounded px-3 text-center text-xs break-all">
+        {setupData.manual_entry_key}
+      </code>
+      <div className="space-y-xs">
+        <Label className="gap-xs flex items-center" htmlFor="totp-code">
+          <ShieldCheck className="text-muted-foreground h-3.5 w-3.5" />
+          {t('pages.twoFactor.confirmCode')}
+        </Label>
+        <Input
+          id="totp-code"
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          placeholder={t('pages.twoFactor.confirmCodePlaceholder')}
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          maxLength={6}
+          required
+        />
+      </div>
+      <Button
+        type="submit"
+        loading={activateMutation.isPending}
+        disabled={code.length < 6}
+      >
+        {!activateMutation.isPending && <ShieldCheck />}
+        {activateMutation.isPending
+          ? t('pages.twoFactor.verifying')
+          : t('pages.twoFactor.enableBtn')}
+      </Button>
+    </form>
   );
 }

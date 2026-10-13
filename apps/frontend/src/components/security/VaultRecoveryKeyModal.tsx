@@ -1,4 +1,14 @@
-import { Key, Copy, CheckCircle2, AlertTriangle } from 'lucide-react';
+import {
+  AlertTriangle,
+  Check,
+  CheckCircle2,
+  Copy,
+  Key,
+  KeyRound,
+  Loader2,
+  Unlock,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -49,8 +59,9 @@ export function VaultRecoveryKeyModal({
       setGeneratedKey(res.recovery_key);
     } catch (e) {
       toast({
-        title: t('userProfile.security.recoveryKey.generateError'),
-        description: getErrorMessage(e),
+        title: t('userProfile.security.recoveryKey.generateError', {
+          reason: getErrorMessage(e),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -78,8 +89,9 @@ export function VaultRecoveryKeyModal({
       onUnlocked?.();
     } catch (e) {
       toast({
-        title: t('userProfile.security.recoveryKey.unlockError'),
-        description: getErrorMessage(e),
+        title: t('userProfile.security.recoveryKey.unlockError', {
+          reason: getErrorMessage(e),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -137,14 +149,18 @@ export function VaultRecoveryKeyModal({
                   <span>{t('userProfile.security.recoveryKey.oneTimeWarning')}</span>
                 </div>
                 <div className="space-y-xs">
-                  <Label>{t('userProfile.security.recoveryKey.yourKey')}</Label>
+                  <Label className="gap-xs flex items-center">
+                    <KeyRound className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('userProfile.security.recoveryKey.yourKey')}
+                  </Label>
                   <div className="gap-sm flex">
-                    <Input
-                      value={generatedKey}
-                      readOnly
-                      className="font-mono text-sm"
-                    />
-                    <Button variant="outline" size="icon" onClick={handleCopy}>
+                    <Input value={generatedKey} readOnly className="text-sm" />
+                    <Button
+                      aria-label={t('common.actions.copy')}
+                      variant="outline"
+                      size="icon"
+                      onClick={handleCopy}
+                    >
                       {copied ? (
                         <CheckCircle2 className="text-success h-4 w-4" />
                       ) : (
@@ -158,6 +174,7 @@ export function VaultRecoveryKeyModal({
                 </div>
                 <DialogFooter>
                   <Button onClick={handleClose}>
+                    <Check className="h-4 w-4" />
                     {t('userProfile.security.recoveryKey.savedConfirm')}
                   </Button>
                 </DialogFooter>
@@ -167,7 +184,8 @@ export function VaultRecoveryKeyModal({
         ) : (
           <div className="space-y-md">
             <div className="space-y-xs">
-              <Label htmlFor="recovery-input">
+              <Label className="gap-xs flex items-center" htmlFor="recovery-input">
+                <KeyRound className="text-muted-foreground h-3.5 w-3.5" />
                 {t('userProfile.security.recoveryKey.inputLabel')}
               </Label>
               <Input
@@ -175,7 +193,6 @@ export function VaultRecoveryKeyModal({
                 value={recoveryInput}
                 onChange={(e) => setRecoveryInput(e.target.value)}
                 placeholder="XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX"
-                className="font-mono"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') void handleUnlock();
                 }}
@@ -183,12 +200,18 @@ export function VaultRecoveryKeyModal({
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={handleClose}>
+                <X className="h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               <Button
                 onClick={() => void handleUnlock()}
                 disabled={loading || !recoveryInput.trim()}
               >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Unlock className="h-4 w-4" />
+                )}
                 {loading
                   ? t('common.actions.loading')
                   : t('userProfile.security.recoveryKey.unlockBtn')}

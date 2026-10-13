@@ -2,31 +2,37 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Filter,
-  ShoppingCart,
-  Calendar,
-  DollarSign,
-  Link2,
-  Tag,
+  CheckCircle2,
   CircleDot,
+  CreditCardIcon,
+  DollarSign,
+  LayoutGrid,
+  Link2,
+  Pencil,
+  Plus,
+  Receipt,
+  CalendarDays,
+  ShoppingBag,
+  ShoppingCart,
+  Tag,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { StatCard } from '@/components/common/StatCard';
+import { LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { TransactionsTabsNav } from '@/components/common/TransactionsTabsNav';
 import { CreditCardInstallmentForm } from '@/components/credit-cards/CreditCardInstallmentForm';
 import { CreditCardPurchaseForm } from '@/components/credit-cards/CreditCardPurchaseForm';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
@@ -42,17 +48,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import {
   translate,
   TRANSLATIONS,
   EXPENSE_CATEGORIES_CANONICAL,
 } from '@/config/constants';
-import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { EXPENSE_CATEGORY_ICONS, PAYMENT_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { pageVariants } from '@/lib/animations';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { translateCategory } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { cn, toLocalDate } from '@/lib/utils';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
@@ -76,7 +82,7 @@ const EMPTY_INSTALLMENTS: CreditCardInstallment[] = [];
 const EMPTY_CARDS: CreditCard[] = [];
 const EMPTY_BILLS: CreditCardBill[] = [];
 
-const PURCHASES_PAGE_SIZE = 20;
+const PURCHASES_PAGE_SIZE = 5;
 
 const isBillOpen = (bill: CreditCardBill) =>
   bill.status !== 'paid' && bill.status !== 'closed';
@@ -124,7 +130,8 @@ export default function CreditCardExpenses({
   const [selectedAssignBillId, setSelectedAssignBillId] = useState<string>('');
   const [isAssignBillDialogOpen, setIsAssignBillDialogOpen] = useState(false);
   const [cardFilter, setCardFilter] = useState<string>('all');
-  const [billFilter, setBillFilter] = useState<string>('all');
+  // 'none' = parcelas sem fatura vinculada
+  const [billFilter, setBillFilter] = useState<string>('none');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'bills' | 'purchases'>('bills');
@@ -155,8 +162,7 @@ export default function CreditCardExpenses({
         };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return {
@@ -206,14 +212,14 @@ export default function CreditCardExpenses({
       (b) => b.credit_card.toString() === firstCardId
     );
     const sortedBills = [...firstCardBills].sort(compareBillsOpenFirst);
-    setBillFilter(sortedBills[0] ? sortedBills[0].id.toString() : 'all');
+    setBillFilter(sortedBills[0] ? sortedBills[0].id.toString() : 'none');
   }
 
   // Reseta o filtro de fatura para a primeira fatura em aberto sempre que o
   // cartão selecionado MUDA (derivado durante o render, comparando apenas
   // `cardFilter`) — nunca em reação a um re-fetch de `bills` (ex.: após
   // vincular uma parcela sem fatura ou lançar uma nova compra), pois nesses
-  // casos o usuário normalmente está com 'Todas as Faturas' selecionado de
+  // casos o usuário normalmente está com 'Parcelas sem fatura' selecionado de
   // propósito para conseguir vincular parcelas.
   const [lastCardFilter, setLastCardFilter] = useState(cardFilter);
   if (lastCardFilter !== cardFilter) {
@@ -223,7 +229,7 @@ export default function CreditCardExpenses({
         (b) => b.id.toString() === billFilter
       );
       if (!currentBillValid) {
-        setBillFilter(availableBills[0] ? availableBills[0].id.toString() : 'all');
+        setBillFilter(availableBills[0] ? availableBills[0].id.toString() : 'none');
       }
     }
   }
@@ -251,15 +257,19 @@ export default function CreditCardExpenses({
     return 'N/A';
   };
 
+  const hasOrphanInstallments = installments.some(
+    (i) => !i.bill && (cardFilter === 'all' || i.card_id?.toString() === cardFilter)
+  );
+
   // Filtrar parcelas
   const filteredInstallments = useMemo(() => {
     let filtered = [...installments];
     if (cardFilter !== 'all') {
       filtered = filtered.filter((i) => i.card_id?.toString() === cardFilter);
     }
-    if (billFilter !== 'all') {
-      filtered = filtered.filter((i) => i.bill?.toString() === billFilter);
-    }
+    filtered = filtered.filter((i) =>
+      billFilter === 'none' ? !i.bill : i.bill?.toString() === billFilter
+    );
     if (categoryFilter !== 'all') {
       filtered = filtered.filter((i) => i.category === categoryFilter);
     }
@@ -395,13 +405,11 @@ export default function CreditCardExpenses({
         await creditCardPurchasesService.update(selectedPurchase.id, data);
         toast({
           title: t('pages.creditCardExpenses.updated'),
-          description: t('pages.creditCardExpenses.updatedDesc'),
         });
       } else {
         await creditCardPurchasesService.create(data);
         toast({
-          title: t('pages.creditCardExpenses.created'),
-          description:
+          title:
             data.total_installments > 1
               ? t('pages.creditCardExpenses.createdWithInstallments', {
                   count: data.total_installments,
@@ -414,8 +422,7 @@ export default function CreditCardExpenses({
       void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -426,8 +433,7 @@ export default function CreditCardExpenses({
   const handleCreate = () => {
     if (creditCards.length === 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.creditCardExpenses.noCardMsg'),
+        title: t('pages.creditCardExpenses.noCardMsg'),
         variant: 'destructive',
       });
       return;
@@ -462,14 +468,12 @@ export default function CreditCardExpenses({
     try {
       await creditCardPurchasesService.delete(purchaseId);
       toast({
-        title: t('pages.creditCardExpenses.deleted'),
-        description: t('pages.creditCardExpenses.deletedDesc'),
+        title: t('pages.creditCardExpenses.deletedDesc'),
       });
       void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -484,13 +488,11 @@ export default function CreditCardExpenses({
         title: installment.payed
           ? t('pages.creditCardExpenses.installmentUnpaid')
           : t('pages.creditCardExpenses.installmentPaid'),
-        description: t('pages.creditCardExpenses.installmentStatusDesc'),
       });
       void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.updateError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.updateError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -509,14 +511,12 @@ export default function CreditCardExpenses({
       await creditCardInstallmentsService.update(selectedInstallment.id, data);
       toast({
         title: t('pages.creditCardExpenses.installmentUpdated'),
-        description: t('pages.creditCardExpenses.installmentUpdatedDesc'),
       });
       setIsInstallmentDialogOpen(false);
       void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -549,81 +549,18 @@ export default function CreditCardExpenses({
       });
       toast({
         title: t('pages.creditCardExpenses.installmentLinked'),
-        description: t('pages.creditCardExpenses.installmentLinkedDesc'),
       });
       setIsAssignBillDialogOpen(false);
       void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const totalInstallments = filteredInstallments.reduce((sum, i) => sum + i.value, 0);
-  const totalPaid = filteredInstallments
-    .filter((i) => i.payed)
-    .reduce((sum, i) => sum + i.value, 0);
-  const totalPending = filteredInstallments
-    .filter((i) => !i.payed)
-    .reduce((sum, i) => sum + i.value, 0);
-
-  const categoryBreakdown = useMemo(() => {
-    const groups: Record<string, number> = {};
-    for (const i of filteredInstallments) {
-      const cat = i.category ?? 'others';
-      groups[cat] = (groups[cat] ?? 0) + i.value;
-    }
-    return Object.entries(groups)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 6)
-      .map(([cat, amount]) => ({
-        cat,
-        pct: totalInstallments > 0 ? (amount / totalInstallments) * 100 : 0,
-      }));
-  }, [filteredInstallments, totalInstallments]);
-
-  const totalPurchasesValue = filteredPurchases.reduce(
-    (sum, p) => sum + p.total_value,
-    0
-  );
-  const totalPurchasesPaid = filteredPurchases
-    .filter((p) => p.installments.every((i) => i.payed))
-    .reduce((sum, p) => sum + p.total_value, 0);
-  const totalPurchasesPending = totalPurchasesValue - totalPurchasesPaid;
-
-  const purchasesCategoryBreakdown = useMemo(() => {
-    const groups: Record<string, number> = {};
-    for (const p of filteredPurchases) {
-      const cat = p.category ?? 'others';
-      groups[cat] = (groups[cat] ?? 0) + p.total_value;
-    }
-    return Object.entries(groups)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 6)
-      .map(([cat, amount]) => ({
-        cat,
-        pct: totalPurchasesValue > 0 ? (amount / totalPurchasesValue) * 100 : 0,
-      }));
-  }, [filteredPurchases, totalPurchasesValue]);
-
-  // Estatísticas exibidas (StatCards, breakdown por categoria e resumo do
-  // filtro) seguem o dataset da visualização ativa, para não mostrarem
-  // totais de parcelas enquanto o usuário navega pelas compras (e vice-versa).
-  const isPurchasesView = viewMode === 'purchases';
-  const displayTotal = isPurchasesView ? totalPurchasesValue : totalInstallments;
-  const displayPaid = isPurchasesView ? totalPurchasesPaid : totalPaid;
-  const displayPending = isPurchasesView ? totalPurchasesPending : totalPending;
-  const displayCategoryBreakdown = isPurchasesView
-    ? purchasesCategoryBreakdown
-    : categoryBreakdown;
-  const displayCount = isPurchasesView
-    ? filteredPurchases.length
-    : filteredInstallments.length;
 
   const columns: Column<CreditCardInstallment>[] = [
     {
@@ -793,8 +730,10 @@ export default function CreditCardExpenses({
       label: t('pages.creditCardExpenses.columns.status'),
       render: (purchase) => {
         const paid = purchase.installments.every((i) => i.payed);
+        const StatusIcon = PAYMENT_STATUS_ICONS[paid ? 'paid' : 'pending'];
         return (
-          <Badge variant={paid ? 'success' : 'destructive'}>
+          <Badge variant={paid ? 'success' : 'destructive'} className="gap-xs">
+            <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
             {paid
               ? t('pages.creditCardExpenses.status.paid')
               : t('pages.creditCardExpenses.status.pending')}
@@ -825,87 +764,55 @@ export default function CreditCardExpenses({
         }}
       />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <StatCard
-          title={t('pages.creditCardExpenses.totalPaid')}
-          value={formatCurrency(displayPaid)}
-          accentColor="green"
-        />
-        <StatCard
-          title={t('pages.creditCardExpenses.totalPending')}
-          value={formatCurrency(displayPending)}
-          accentColor="orange"
-        />
-        <StatCard
-          title={t('pages.creditCardExpenses.totalAmount')}
-          value={formatCurrency(displayTotal)}
-          accentColor="red"
-        />
-      </div>
+      {embedded && <TransactionsTabsNav />}
 
-      {displayCategoryBreakdown.length > 1 && (
-        <div className="bg-card p-md rounded-lg border">
-          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            {t('pages.creditCardExpenses.byCategory')}
-          </p>
-          <div className="bg-muted flex h-2 overflow-hidden rounded-full">
-            {displayCategoryBreakdown.map(({ cat, pct }, i) => (
-              <div
-                key={cat}
-                className={`h-full transition-[width] ${['bg-primary', 'bg-success', 'bg-warning', 'bg-info', 'bg-accent', 'bg-destructive'][i % 6]}`}
-                style={{ width: `${pct}%` }}
-                title={`${translateCategory(cat, 'expense')}: ${pct.toFixed(1)}%`}
-              />
-            ))}
-          </div>
-          <div className="mt-sm gap-md flex flex-wrap">
-            {displayCategoryBreakdown.map(({ cat, pct }, i) => (
-              <div key={cat} className="gap-xs flex items-center">
-                <span
-                  className={`h-2 w-2 shrink-0 rounded-full ${['bg-primary', 'bg-success', 'bg-warning', 'bg-info', 'bg-accent', 'bg-destructive'][i % 6]}`}
-                />
-                <span className="text-muted-foreground text-xs">
-                  {translateCategory(cat, 'expense')} · {Math.round(pct)}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-md bg-card p-md rounded-lg border">
-        <div className="flex items-center justify-between">
-          <div className="gap-sm flex items-center">
-            <Filter className="h-4 w-4" />
-            <span className="font-semibold">{t('common.actions.filter')}</span>
-          </div>
-          <div className="gap-sm flex items-center">
-            <span className="text-sm">{t('pages.creditCardExpenses.viewMode')}</span>
+      <div className="space-y-sm">
+        <FilterBar
+          hasActiveFilters={
+            categoryFilter !== 'all' ||
+            statusFilter !== 'all' ||
+            !!purchaseDateFrom ||
+            !!purchaseDateTo
+          }
+          onClear={() => {
+            setCategoryFilter('all');
+            setStatusFilter('all');
+            setPurchaseDateFrom(undefined);
+            setPurchaseDateTo(undefined);
+          }}
+        >
+          <FilterField label={t('pages.creditCardExpenses.viewMode')} icon={LayoutGrid}>
             <Select
               value={viewMode}
               onValueChange={(v) => setViewMode(v as 'bills' | 'purchases')}
             >
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger
+                startIcon={
+                  viewMode === 'bills' ? (
+                    <Receipt className="h-3.5 w-3.5" />
+                  ) : (
+                    <ShoppingBag className="h-3.5 w-3.5" />
+                  )
+                }
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="bills">
+                <SelectItem value="bills" icon={<Receipt className="h-4 w-4" />}>
                   {t('pages.creditCardExpenses.byBill')}
                 </SelectItem>
-                <SelectItem value="purchases">
+                <SelectItem
+                  value="purchases"
+                  icon={<ShoppingBag className="h-4 w-4" />}
+                >
                   {t('pages.creditCardExpenses.list')}
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
-        </div>
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-xs">
-            <span className="text-muted-foreground text-sm">
-              {t('pages.creditCardExpenses.columns.card')}
-            </span>
+          </FilterField>
+          <FilterField label={t('common.filterLabels.card')} icon={CreditCardIcon}>
             <Select value={cardFilter} onValueChange={setCardFilter}>
-              <SelectTrigger>
+              <SelectTrigger aria-label={t('pages.creditCardExpenses.columns.card')}>
                 <SelectValue placeholder={t('pages.creditCardExpenses.allCards')} />
               </SelectTrigger>
               <SelectContent>
@@ -919,30 +826,36 @@ export default function CreditCardExpenses({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          {viewMode === 'bills' ? (
-            <div className="space-y-xs">
-              <span className="text-muted-foreground text-sm">
-                {t('pages.creditCardExpenses.columns.bill')}
-              </span>
+          </FilterField>
+          <FilterField
+            label={
+              viewMode === 'bills'
+                ? t('common.filterLabels.bill')
+                : t('common.filterLabels.period')
+            }
+            icon={viewMode === 'bills' ? Receipt : CalendarDays}
+          >
+            {viewMode === 'bills' ? (
               <Select
                 value={billFilter}
                 onValueChange={setBillFilter}
-                disabled={availableBills.length === 0}
+                disabled={availableBills.length === 0 && !hasOrphanInstallments}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-label={t('pages.creditCardExpenses.columns.bill')}>
                   <SelectValue
                     placeholder={
-                      availableBills.length === 0
+                      availableBills.length === 0 && !hasOrphanInstallments
                         ? t('pages.creditCardExpenses.noBills')
-                        : t('pages.creditCardExpenses.allBills')
+                        : t('pages.creditCardExpenses.orphanBillLabel')
                     }
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">
-                    {t('pages.creditCardExpenses.allBills')}
-                  </SelectItem>
+                  {(hasOrphanInstallments || billFilter === 'none') && (
+                    <SelectItem value="none">
+                      {t('pages.creditCardExpenses.orphanBillLabel')}
+                    </SelectItem>
+                  )}
                   {availableBills.map((b) => (
                     <SelectItem key={b.id} value={b.id.toString()}>
                       {translate('months', b.month)}/{b.year}
@@ -950,41 +863,29 @@ export default function CreditCardExpenses({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          ) : (
-            <div className="gap-sm grid grid-cols-2">
-              <div className="space-y-xs">
-                <span className="text-muted-foreground text-sm">
-                  {t('pages.creditCardExpenses.dateFrom')}
-                </span>
+            ) : (
+              <div className="gap-xs flex items-center">
                 <DatePicker
                   value={purchaseDateFrom}
                   onChange={setPurchaseDateFrom}
                   placeholder={t('common.actions.filters.fromDate')}
-                  clearable
                   maxDate={purchaseDateTo}
                 />
-              </div>
-              <div className="space-y-xs">
-                <span className="text-muted-foreground text-sm">
-                  {t('pages.creditCardExpenses.dateTo')}
-                </span>
                 <DatePicker
                   value={purchaseDateTo}
                   onChange={setPurchaseDateTo}
                   placeholder={t('common.actions.filters.toDate')}
-                  clearable
                   minDate={purchaseDateFrom}
                 />
               </div>
-            </div>
-          )}
-          <div className="space-y-xs">
-            <span className="text-muted-foreground text-sm">
-              {t('pages.creditCardExpenses.columns.category')}
-            </span>
+            )}
+          </FilterField>
+          <FilterField label={t('common.fields.category')} icon={Tag}>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger startIcon={<Tag className="h-3.5 w-3.5" />}>
+              <SelectTrigger
+                aria-label={t('pages.creditCardExpenses.columns.category')}
+                startIcon={<Tag className="h-3.5 w-3.5" />}
+              >
                 <SelectValue
                   placeholder={t('pages.creditCardExpenses.allCategories')}
                 />
@@ -1007,61 +908,40 @@ export default function CreditCardExpenses({
                 })}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-xs">
-            <span className="text-muted-foreground text-sm">
-              {t('pages.creditCardExpenses.columns.status')}
-            </span>
+          </FilterField>
+          <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger startIcon={<CircleDot className="h-3.5 w-3.5" />}>
+              <SelectTrigger
+                aria-label={t('pages.creditCardExpenses.columns.status')}
+                startIcon={<CircleDot className="h-3.5 w-3.5" />}
+              >
                 <SelectValue placeholder={t('pages.creditCardExpenses.allStatus')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
                   {t('pages.creditCardExpenses.allStatus')}
                 </SelectItem>
-                <SelectItem value="paid">{t('common.status.paid')}</SelectItem>
-                <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
+                <SelectItem
+                  value="paid"
+                  icon={<PAYMENT_STATUS_ICONS.paid className="h-4 w-4" />}
+                >
+                  {t('common.status.paid')}
+                </SelectItem>
+                <SelectItem
+                  value="pending"
+                  icon={<PAYMENT_STATUS_ICONS.pending className="h-4 w-4" />}
+                >
+                  {t('common.status.pending')}
+                </SelectItem>
               </SelectContent>
             </Select>
-          </div>
-        </div>
+          </FilterField>
+        </FilterBar>
         {purchaseDateRangeInvalid && (
           <p className="text-destructive text-sm">
             {t('pages.creditCardExpenses.dateRangeWarning')}
           </p>
         )}
-        <div className="pt-sm flex items-center justify-between border-t">
-          <span className="text-sm">
-            {t(
-              isPurchasesView
-                ? 'pages.creditCardExpenses.foundPurchases'
-                : 'pages.creditCardExpenses.foundInstallments',
-              { count: displayCount }
-            )}
-          </span>
-          <div className="gap-md flex items-center">
-            <span className="text-sm">
-              <span className="text-muted-foreground">
-                {t('pages.creditCardExpenses.totalPaid')}
-              </span>{' '}
-              <span className="text-success font-semibold">
-                {formatCurrency(displayPaid)}
-              </span>
-            </span>
-            <span className="text-sm">
-              <span className="text-muted-foreground">
-                {t('pages.creditCardExpenses.totalPending')}
-              </span>{' '}
-              <span className="text-warning font-semibold">
-                {formatCurrency(displayPending)}
-              </span>
-            </span>
-            <span className="text-destructive text-lg font-bold">
-              {t('pages.creditCardExpenses.totalAmount')} {formatCurrency(displayTotal)}
-            </span>
-          </div>
-        </div>
       </div>
 
       <AnimatePresence mode="wait">
@@ -1075,205 +955,101 @@ export default function CreditCardExpenses({
             className="space-y-lg"
           >
             {installmentsByBill.length === 0 ? (
-              <EmptyState message={t('pages.creditCardExpenses.emptyState')} />
+              <EmptyState
+                icon={<ShoppingCart className="h-6 w-6" />}
+                title={t('pages.creditCardExpenses.emptyState')}
+              />
             ) : (
-              installmentsByBill.map(
-                ({
-                  key,
-                  bill,
-                  label,
-                  period,
-                  cardName,
-                  installments: billInstallments,
-                  total,
-                  paid,
-                  pending,
-                }) => (
-                  <Card key={key}>
-                    <CardHeader className="pb-sm">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="gap-sm flex items-center text-lg">
-                            <Calendar className="text-primary h-5 w-5" />
-                            {key === 'sem-fatura'
-                              ? label
-                              : t('pages.creditCardExpenses.billLabel', { label })}
-                            {bill && (
-                              <Badge
-                                variant={
-                                  bill.status === 'paid'
-                                    ? 'success'
-                                    : bill.status === 'overdue'
-                                      ? 'destructive'
-                                      : bill.status === 'closed'
-                                        ? 'secondary'
-                                        : 'outline'
-                                }
-                                className="text-xs"
-                              >
-                                {bill.status === 'paid'
-                                  ? t('pages.creditCardExpenses.status.paid')
-                                  : bill.status === 'overdue'
-                                    ? t('pages.creditCardExpenses.status.overdue')
-                                    : bill.status === 'closed'
-                                      ? t('pages.creditCardExpenses.status.closed')
-                                      : t('pages.creditCardExpenses.status.open')}
-                              </Badge>
+              installmentsByBill.map(({ key, installments: billInstallments }) => (
+                <div key={key}>
+                  <DataTable
+                    data={billInstallments}
+                    columns={groupedColumns}
+                    keyExtractor={(installment) => installment.id}
+                    isLoading={false}
+                    pageSize={LIST_PAGE_SIZE}
+                    emptyState={{
+                      icon: (
+                        <ShoppingCart className="text-muted-foreground h-12 w-12" />
+                      ),
+                      title: t('pages.creditCardExpenses.noInstallments'),
+                    }}
+                    actions={(installment) => {
+                      const purchase = purchases.find(
+                        (p) => p.id === installment.purchase
+                      );
+                      const isOrphan = !installment.bill;
+                      return (
+                        <div className="gap-sm flex items-center justify-center">
+                          {purchase && (
+                            <ReceiptButton
+                              source={{
+                                type: 'credit_card_purchase',
+                                data: purchase,
+                              }}
+                              memberName={getMemberDisplayName(
+                                installment.member_name,
+                                user
+                              )}
+                            />
+                          )}
+                          {isOrphan && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenAssignBill(installment)}
+                              aria-label={t('pages.creditCardExpenses.assignBillBtn')}
+                              title={t('pages.creditCardExpenses.assignBillBtn')}
+                            >
+                              <Link2
+                                className="text-primary h-4 w-4"
+                                aria-hidden="true"
+                              />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditInstallment(installment)}
+                            aria-label={t(
+                              'pages.creditCardExpenses.editInstallmentLabel'
                             )}
-                          </CardTitle>
-                          {period && (
-                            <p className="mt-xs text-sm">
-                              {cardName && (
-                                <span className="font-medium">{cardName}</span>
-                              )}
-                              {cardName && period && ' • '}
-                              {period}
-                            </p>
-                          )}
-                          {bill && (
-                            <div className="mt-sm space-y-xs">
-                              <div className="text-muted-foreground flex items-center justify-between text-xs">
-                                <span>
-                                  {t('pages.creditCardExpenses.billPaidProgress')}
-                                </span>
-                                <span>
-                                  {total > 0 ? Math.round((paid / total) * 100) : 0}%
-                                </span>
-                              </div>
-                              <div className="bg-muted h-1.5 overflow-hidden rounded-full">
-                                <div
-                                  className="bg-success h-full rounded-full"
-                                  style={{
-                                    width: `${total > 0 ? (paid / total) * 100 : 0}%`,
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          )}
+                            title={t('pages.creditCardExpenses.editInstallmentLabel')}
+                          >
+                            <DollarSign
+                              className="text-primary h-4 w-4"
+                              aria-hidden="true"
+                            />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditPurchase(installment.purchase)}
+                            aria-label={t('pages.creditCardExpenses.editPurchaseLabel')}
+                            title={t('pages.creditCardExpenses.editPurchaseLabel')}
+                          >
+                            <Pencil className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeletePurchase(installment.purchase)}
+                            aria-label={t(
+                              'pages.creditCardExpenses.deletePurchaseLabel'
+                            )}
+                            title={t('pages.creditCardExpenses.deletePurchaseLabel')}
+                          >
+                            <Trash2
+                              className="text-destructive h-4 w-4"
+                              aria-hidden="true"
+                            />
+                          </Button>
                         </div>
-                        <div className="gap-md flex items-center">
-                          <span className="text-sm">
-                            <span className="text-muted-foreground">
-                              {t('pages.creditCardExpenses.totalPaid')}
-                            </span>{' '}
-                            <span className="text-success font-semibold">
-                              {formatCurrency(paid)}
-                            </span>
-                          </span>
-                          <span className="text-sm">
-                            <span className="text-muted-foreground">
-                              {t('pages.creditCardExpenses.totalPending')}
-                            </span>{' '}
-                            <span className="text-warning font-semibold">
-                              {formatCurrency(pending)}
-                            </span>
-                          </span>
-                          <span className="text-destructive text-lg font-bold">
-                            {formatCurrency(total)}
-                          </span>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <DataTable
-                        data={billInstallments}
-                        columns={groupedColumns}
-                        keyExtractor={(installment) => installment.id}
-                        isLoading={false}
-                        emptyState={{
-                          icon: (
-                            <ShoppingCart className="text-muted-foreground h-12 w-12" />
-                          ),
-                          message: t('pages.creditCardExpenses.noInstallments'),
-                        }}
-                        actions={(installment) => {
-                          const purchase = purchases.find(
-                            (p) => p.id === installment.purchase
-                          );
-                          const isOrphan = !installment.bill;
-                          return (
-                            <div className="gap-sm flex items-center justify-end">
-                              {purchase && (
-                                <ReceiptButton
-                                  source={{
-                                    type: 'credit_card_purchase',
-                                    data: purchase,
-                                  }}
-                                  memberName={getMemberDisplayName(
-                                    installment.member_name,
-                                    user
-                                  )}
-                                />
-                              )}
-                              {isOrphan && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleOpenAssignBill(installment)}
-                                  aria-label={t(
-                                    'pages.creditCardExpenses.assignBillBtn'
-                                  )}
-                                  title={t('pages.creditCardExpenses.assignBillBtn')}
-                                >
-                                  <Link2
-                                    className="text-primary h-4 w-4"
-                                    aria-hidden="true"
-                                  />
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEditInstallment(installment)}
-                                aria-label={t(
-                                  'pages.creditCardExpenses.editInstallmentLabel'
-                                )}
-                                title={t(
-                                  'pages.creditCardExpenses.editInstallmentLabel'
-                                )}
-                              >
-                                <DollarSign
-                                  className="text-primary h-4 w-4"
-                                  aria-hidden="true"
-                                />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEditPurchase(installment.purchase)}
-                                aria-label={t(
-                                  'pages.creditCardExpenses.editPurchaseLabel'
-                                )}
-                                title={t('pages.creditCardExpenses.editPurchaseLabel')}
-                              >
-                                <Pencil className="h-4 w-4" aria-hidden="true" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleDeletePurchase(installment.purchase)
-                                }
-                                aria-label={t(
-                                  'pages.creditCardExpenses.deletePurchaseLabel'
-                                )}
-                                title={t(
-                                  'pages.creditCardExpenses.deletePurchaseLabel'
-                                )}
-                              >
-                                <Trash2
-                                  className="text-destructive h-4 w-4"
-                                  aria-hidden="true"
-                                />
-                              </Button>
-                            </div>
-                          );
-                        }}
-                      />
-                    </CardContent>
-                  </Card>
-                )
-              )
+                      );
+                    }}
+                  />
+                </div>
+              ))
             )}
           </motion.div>
         ) : (
@@ -1291,7 +1067,7 @@ export default function CreditCardExpenses({
               isLoading={isLoading}
               emptyState={{
                 icon: <ShoppingCart className="text-muted-foreground h-12 w-12" />,
-                message: t('pages.creditCardExpenses.emptyPurchasesState'),
+                title: t('pages.creditCardExpenses.emptyPurchasesState'),
               }}
               pagination={{
                 page: purchasesCurrentPage,
@@ -1300,7 +1076,7 @@ export default function CreditCardExpenses({
                 onPageChange: setPurchasesPage,
               }}
               actions={(purchase) => (
-                <div className="gap-sm flex items-center justify-end">
+                <div className="gap-sm flex items-center justify-center">
                   <ReceiptButton
                     source={{ type: 'credit_card_purchase', data: purchase }}
                     memberName={getMemberDisplayName(purchase.member_name, user)}
@@ -1331,18 +1107,20 @@ export default function CreditCardExpenses({
       </AnimatePresence>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-w-3xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={selectedPurchase ? 'edit' : 'create'}>
               {selectedPurchase
                 ? t('pages.creditCardExpenses.editPurchaseTitle')
                 : t('pages.creditCardExpenses.newPurchaseTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedPurchase
-                ? t('pages.creditCardExpenses.editPurchaseDesc')
-                : t('pages.creditCardExpenses.newPurchaseDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedPurchase
+                  ? t('pages.creditCardExpenses.editPurchaseDesc')
+                  : t('pages.creditCardExpenses.newPurchaseDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <CreditCardPurchaseForm
             purchase={selectedPurchase}
@@ -1355,14 +1133,16 @@ export default function CreditCardExpenses({
       </Dialog>
 
       <Dialog open={isInstallmentDialogOpen} onOpenChange={setIsInstallmentDialogOpen}>
-        <DialogContent className="custom-scrollbar max-w-lg">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode="edit">
               {t('pages.creditCardExpenses.editInstallmentTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {t('pages.creditCardExpenses.editInstallmentDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.creditCardExpenses.editInstallmentDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           {selectedInstallment && (
             <CreditCardInstallmentForm
@@ -1379,7 +1159,9 @@ export default function CreditCardExpenses({
       <Dialog open={isAssignBillDialogOpen} onOpenChange={setIsAssignBillDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('pages.creditCardExpenses.assignBillTitle')}</DialogTitle>
+            <DialogTitle icon={Receipt}>
+              {t('pages.creditCardExpenses.assignBillTitle')}
+            </DialogTitle>
             <DialogDescription>
               {assigningInstallment && (
                 <>
@@ -1422,12 +1204,13 @@ export default function CreditCardExpenses({
                       </SelectContent>
                     </Select>
                   )}
-                  <div className="gap-sm flex justify-end">
+                  <div className="dialog-footer gap-sm flex justify-end">
                     <Button
                       variant="outline"
                       onClick={() => setIsAssignBillDialogOpen(false)}
                       disabled={isSubmitting}
                     >
+                      <X className="h-4 w-4" />
                       {t('common.actions.cancel')}
                     </Button>
                     <Button
@@ -1438,6 +1221,7 @@ export default function CreditCardExpenses({
                         eligibleBills.length === 0
                       }
                     >
+                      <Link2 className="h-4 w-4" />
                       {t('pages.creditCardExpenses.assignBillBtn')}
                     </Button>
                   </div>

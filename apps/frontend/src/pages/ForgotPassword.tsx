@@ -1,3 +1,4 @@
+import { Mail, Send } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -76,7 +77,10 @@ export default function ForgotPassword() {
               )}
 
               <div className="space-y-sm">
-                <Label htmlFor="email">{t('auth.forgotPassword.emailLabel')}</Label>
+                <Label className="gap-xs flex items-center" htmlFor="email">
+                  <Mail className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('auth.forgotPassword.emailLabel')}
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -90,9 +94,11 @@ export default function ForgotPassword() {
 
               <Button
                 type="submit"
-                className="gradient-primary w-full font-semibold text-white"
-                disabled={isLoading || !email}
+                className="w-full"
+                disabled={!email}
+                loading={isLoading}
               >
+                {!isLoading && <Send aria-hidden="true" />}
                 {isLoading
                   ? t('auth.forgotPassword.loading')
                   : t('auth.forgotPassword.submit')}

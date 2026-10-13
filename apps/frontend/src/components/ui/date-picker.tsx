@@ -1,11 +1,10 @@
 import flatpickr from 'flatpickr';
 import { Portuguese } from 'flatpickr/dist/l10n/pt';
 import type { Options as FlatpickrOptions } from 'flatpickr/dist/types/options';
-import { Calendar as CalendarIcon, X } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { PlainButton } from '@/components/ui/plain-button';
 import { floatingOptions } from '@/lib/flatpickr-floating';
 import { cn, toLocalDate, formatLocalDate } from '@/lib/utils';
 
@@ -18,7 +17,7 @@ interface DatePickerProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
-  clearable?: boolean;
+  'aria-invalid'?: boolean;
   minDate?: Date | string;
   maxDate?: Date | string;
   /**
@@ -86,13 +85,13 @@ export function DatePicker({
   placeholder,
   disabled = false,
   className,
+  'aria-invalid': ariaInvalid,
   floating = true,
-  clearable = true,
   minDate,
   maxDate,
 }: DatePickerProps) {
   const { t } = useTranslation();
-  const resolvedPlaceholder = placeholder ?? t('common.fields.selectDate');
+  const resolvedPlaceholder = placeholder ?? t('common.placeholders.date');
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const flatpickrRef = useRef<flatpickr.Instance | null>(null);
@@ -128,7 +127,6 @@ export function DatePicker({
       // Usa a ref para chamar o onChange atual
       // Não propagamos selectedDates vazio para evitar que o Flatpickr limpe o
       // valor do formulário durante a inicialização ou transições internas.
-      // A limpeza explícita é feita pelo botão de clear (handleClear).
       onChange: (selectedDates: Date[]) => {
         if (selectedDates.length > 0) {
           onChangeRef.current?.(selectedDates[0]);
@@ -208,16 +206,8 @@ export function DatePicker({
     }
   }, [dateValue]);
 
-  // Handler para limpar a data
-  const handleClear = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    flatpickrRef.current?.clear();
-    onChange?.(undefined);
-  };
-
   return (
-    <div ref={containerRef} className={cn('relative w-full', className)}>
+    <div ref={containerRef} className={cn('relative isolate w-full', className)}>
       {/* Ícone do calendário */}
       <CalendarIcon className="text-primary/70 pointer-events-none absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2" />
 
@@ -230,38 +220,21 @@ export function DatePicker({
           if (flatpickrRef.current) commitTypedDate(flatpickrRef.current);
         }}
         type="text"
+        aria-invalid={ariaInvalid}
         placeholder={resolvedPlaceholder}
         disabled={disabled}
         className={cn(
           'flatpickr-input',
-          'py-sm h-10 w-full pr-10 pl-10',
+          'py-sm pr-md h-10 w-full pl-10',
           'border-input bg-background rounded-md border',
           'text-foreground placeholder:text-foreground text-sm',
           'focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
-          'transition-all duration-200',
+          'duration-normal transition-all',
           'hover:border-primary/40',
+          'aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-destructive/50 aria-[invalid=true]:ring-2',
           disabled && 'cursor-not-allowed opacity-50'
         )}
       />
-
-      {/* Botão para limpar */}
-      {clearable && dateValue && !disabled && (
-        <PlainButton
-          type="button"
-          onClick={handleClear}
-          aria-label="Limpar data"
-          className={cn(
-            'absolute top-1/2 right-3 z-10 -translate-y-1/2',
-            'h-5 w-5 rounded-full',
-            'flex items-center justify-center',
-            'hover:text-destructive',
-            'hover:bg-destructive/10',
-            'transition-colors duration-150'
-          )}
-        >
-          <X className="h-3.5 w-3.5" aria-hidden="true" />
-        </PlainButton>
-      )}
     </div>
   );
 }

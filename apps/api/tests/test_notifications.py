@@ -122,6 +122,54 @@ class NotificationListViewTest(BaseNotificationTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_revives_soft_deleted_notification_instead_of_500(self):
+        """
+        Regression test: Notification.objects (ActiveManager) hides
+        soft-deleted rows from get_or_create's lookup, but the DB unique
+        constraint (owner, notification_type, content_type, object_id)
+        doesn't know about is_deleted — so when a task goes back to
+        pending/due after its notification was soft-deleted (cleanup of
+        resolved items), regenerating it must revive the old row instead
+        of colliding with the constraint and 500ing the whole list.
+        """
+        from datetime import date as _date
+
+        from personal_planning.models import RoutineTask, TaskInstance
+
+        task_template = RoutineTask.objects.create(
+            name="Revival Task",
+            category="health",
+            periodicity="daily",
+            owner=self.member,
+        )
+        task = TaskInstance.objects.create(
+            owner=self.member,
+            template=task_template,
+            task_name=task_template.name,
+            scheduled_date=_date.today(),
+            status="pending",
+        )
+        # Leftover from a previous run where this same task's notification
+        # was soft-deleted (e.g. it was completed, then reopened).
+        stale = Notification.objects.create(
+            owner=self.member,
+            notification_type="task_today",
+            content_type="task_instance",
+            object_id=task.id,
+            title="Old title",
+            created_by=self.user,
+        )
+        stale.is_deleted = True
+        stale.save()
+
+        url = reverse("notification-list")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        stale.refresh_from_db()
+        self.assertFalse(stale.is_deleted)
+        self.assertIn("Revival Task", stale.title)
+
 
 class NotificationUpdateViewTest(BaseNotificationTestCase):
     """Tests for PATCH /api/v1/notifications/<pk>/"""

@@ -11,25 +11,16 @@ import {
   SortableContext,
   arrayMove,
   useSortable,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity,
   CalendarDays,
-  Calendar,
   Check,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
+  CheckCircle2,
+  CircleDot,
   ClipboardList,
   Clock,
   Dumbbell,
@@ -39,27 +30,43 @@ import {
   GripVertical,
   ImagePlus,
   Layers,
+  ListChecks,
   Loader2,
+  NotebookPen,
   Plus,
-  Sparkles,
+  Save,
+  Search,
+  Shapes,
+  Tag,
   Target,
+  Timer,
   Trash2,
+  X,
   Zap,
 } from 'lucide-react';
-import React, { type ReactNode, useMemo, useState, useCallback } from 'react';
+import React, {
+  type ReactNode,
+  useMemo,
+  useState,
+  useCallback,
+  useSyncExternalStore,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -67,7 +74,6 @@ import {
 } from '@/components/ui/dialog';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
@@ -78,6 +84,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { ExerciseDatasetPicker } from '@/components/workout/ExerciseDatasetPicker';
 import { ExerciseThumbnail } from '@/components/workout/ExerciseThumbnail';
 import { WorkoutCalendar } from '@/components/workout/WorkoutCalendar';
@@ -85,14 +92,16 @@ import { WorkoutDayForm } from '@/components/workout/WorkoutDayForm';
 import { WorkoutExerciseModal } from '@/components/workout/WorkoutExerciseModal';
 import { WorkoutPlanForm } from '@/components/workout/WorkoutPlanForm';
 import { WorkoutSessionForm } from '@/components/workout/WorkoutSessionForm';
+import { TASK_STATUS_ICONS, WORKOUT_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useTabRoute } from '@/hooks/use-tab-route';
 import { useToast } from '@/hooks/use-toast';
-import { DURATION } from '@/lib/animations';
+import { formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
-import { cn } from '@/lib/utils';
-import { apiClient } from '@/services/api-client';
+import { cn, formatLocalDate } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import {
+  bodyMetricService,
   exerciseService,
   workoutDayService,
   workoutExerciseService,
@@ -124,18 +133,10 @@ type DialogMode =
   | { type: 'edit-exercise'; exercise: WorkoutExercise; day: WorkoutDay }
   | { type: 'new-session' }
   | { type: 'edit-session'; session: WorkoutSession }
+  | { type: 'view-session'; session: WorkoutSession }
   | { type: 'new-catalog-exercise' }
   | { type: 'edit-catalog-exercise'; exercise: Exercise }
-  | { type: 'quick-log' }
-  | { type: 'ai-generate-plan' }
   | null;
-
-interface AIWorkoutFormValues {
-  goal: string;
-  level: 'iniciante' | 'intermediário' | 'avançado';
-  equipment: string;
-  days_per_week: number;
-}
 
 interface ExerciseCatalogFormValues {
   name: string;
@@ -144,8 +145,31 @@ interface ExerciseCatalogFormValues {
   description: string;
 }
 
-const SESSIONS_PAGE_SIZE = 50;
-const CATALOG_PAGE_SIZE = 48;
+const SESSIONS_PAGE_SIZE = 5;
+const CATALOG_ROWS_PER_PAGE = 2;
+const PLANS_ROWS_PER_PAGE = 3;
+
+/** Colunas atuais de um grid responsivo: [min-width em px, colunas], da maior
+ * para a menor largura; abaixo de todas, 1 coluna. */
+const gridColumns = (breakpoints: [number, number][]) =>
+  breakpoints.find(([px]) => window.matchMedia(`(min-width: ${px}px)`).matches)?.[1] ??
+  1;
+// Espelham as classes sm:/lg:/xl:grid-cols-* dos grids correspondentes
+const getCatalogColumns = () =>
+  gridColumns([
+    [1280, 4],
+    [1024, 3],
+    [640, 2],
+  ]);
+const getPlanColumns = () =>
+  gridColumns([
+    [1024, 3],
+    [640, 2],
+  ]);
+const subscribeResize = (onChange: () => void) => {
+  window.addEventListener('resize', onChange);
+  return () => window.removeEventListener('resize', onChange);
+};
 
 /** "Peso corporal", "20 kg" ou null — carga padrão de um exercício do plano. */
 function formatExerciseLoad(
@@ -164,30 +188,6 @@ function formatSetTargets(ex: WorkoutExercise): string | null {
   if (ex.load_unit === 'bw') return reps;
   const loads = targets.map((st) => st.load ?? ex.load ?? '–').join('/');
   return `${reps} · ${loads} ${ex.load_unit}`;
-}
-
-function groupSessionsByWeek(sessions: WorkoutSession[]) {
-  const now = new Date();
-  const day = now.getDay();
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-  const startOfThisWeek = new Date(now);
-  startOfThisWeek.setDate(now.getDate() + diffToMonday);
-  startOfThisWeek.setHours(0, 0, 0, 0);
-  const startOfLastWeek = new Date(startOfThisWeek);
-  startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
-
-  const thisWeek: WorkoutSession[] = [];
-  const lastWeek: WorkoutSession[] = [];
-  const older: WorkoutSession[] = [];
-
-  for (const s of sessions) {
-    const d = new Date(s.date + 'T12:00:00');
-    if (d >= startOfThisWeek) thisWeek.push(s);
-    else if (d >= startOfLastWeek) lastWeek.push(s);
-    else older.push(s);
-  }
-
-  return { thisWeek, lastWeek, older };
 }
 
 function getMuscleIcon(muscleGroups?: string | null): ReactNode {
@@ -215,31 +215,43 @@ function formatDuration(minutes: number): string {
   return m > 0 ? `${h}h ${m}min` : `${h}h`;
 }
 
+const TABS = ['today', 'sessions', 'calendar', 'plans', 'exercises'] as const;
+
+const TAB_HEADERS: Record<
+  (typeof TABS)[number],
+  { titleKey: string; icon: ReactNode }
+> = {
+  today: { titleKey: 'pages.workoutHub.todayPlan', icon: <Flame /> },
+  sessions: { titleKey: 'pages.workoutPlans.tabSessions', icon: <Zap /> },
+  calendar: { titleKey: 'pages.workoutPlans.tabCalendar', icon: <CalendarDays /> },
+  plans: { titleKey: 'pages.workoutPlans.tabPlans', icon: <ClipboardList /> },
+  exercises: { titleKey: 'pages.workoutPlans.tabExercises', icon: <Dumbbell /> },
+};
+
 export default function WorkoutPage() {
+  const catalogColumns = useSyncExternalStore(subscribeResize, getCatalogColumns);
+  const planColumns = useSyncExternalStore(subscribeResize, getPlanColumns);
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState<DialogMode>(null);
-  const [aiForm, setAiForm] = useState<AIWorkoutFormValues>({
-    goal: '',
-    level: 'iniciante',
-    equipment: 'academia completa',
-    days_per_week: 3,
-  });
-  const [selectedDayByPlan, setSelectedDayByPlan] = useState<
-    Record<number, number | null>
-  >({});
-  const [expandedInactivePlans, setExpandedInactivePlans] = useState<Set<number>>(
-    new Set()
-  );
-  const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
+  const [activeTab, setActiveTab] = useTabRoute('/planning/workout', TABS, 'today');
+  const [viewPlanId, setViewPlanId] = useState<number | null>(null);
+  const [viewDayId, setViewDayId] = useState<number | null>(null);
   const [imagePickerExercise, setImagePickerExercise] = useState<Exercise | null>(null);
   const [exerciseSearch, setExerciseSearch] = useState('');
   const [exerciseTypeFilter, setExerciseTypeFilter] = useState('all');
   const [exerciseMuscleFilter, setExerciseMuscleFilter] = useState('all');
   const [exerciseCategoryFilter, setExerciseCategoryFilter] = useState('all');
-  const [catalogPage, setCatalogPage] = useState(1);
+  const [sessionStartDate, setSessionStartDate] = useState<Date | undefined>(undefined);
+  const [sessionEndDate, setSessionEndDate] = useState<Date | undefined>(undefined);
+  const [planCategoryFilter, setPlanCategoryFilter] = useState<WorkoutCategory | 'all'>(
+    'all'
+  );
+  const [planStatusFilter, setPlanStatusFilter] = useState<
+    'all' | 'active' | 'inactive'
+  >('all');
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -249,18 +261,30 @@ export default function WorkoutPage() {
 
   const ownerId = member?.id ?? 0;
 
+  // Mesma query da tela de Medidas; API ordena por -measured_at
+  const { data: bodyMetrics = [] } = useQuery({
+    queryKey: ['body-metrics'],
+    queryFn: () => bodyMetricService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const latestBodyWeightKg = bodyMetrics.find((m) => m.weight_kg)?.weight_kg ?? null;
+  const isSessionDialog =
+    dialog?.type === 'new-session' || dialog?.type === 'edit-session';
+  const isExerciseDialog =
+    dialog?.type === 'add-exercise' || dialog?.type === 'edit-exercise';
+
   const { data: plansData, isLoading: plansLoading } = useQuery({
     queryKey: ['workout-plans'],
     queryFn: () => workoutPlanService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
-  const [sessionsPage, setSessionsPage] = useState(1);
+  // ponytail: carrega todas as sessões e pagina no cliente (PaginatedSlide);
+  // trocar por paginação no servidor se o histórico ficar grande demais
   const { data: sessionsData, isLoading: sessionsLoading } = useQuery({
-    queryKey: ['workout-sessions', 'page', sessionsPage],
-    queryFn: () => workoutSessionService.getAllPaginated({ page: sessionsPage }),
+    queryKey: ['workout-sessions', 'all'],
+    queryFn: () => workoutSessionService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
-    placeholderData: keepPreviousData,
   });
 
   const { data: allDays } = useQuery({
@@ -276,13 +300,7 @@ export default function WorkoutPage() {
   });
 
   const plans = plansData ?? [];
-  const sessions = sessionsData?.results ?? [];
-  const sessionsTotal = sessionsData?.count ?? 0;
-  const sessionsTotalPages = Math.max(1, Math.ceil(sessionsTotal / SESSIONS_PAGE_SIZE));
-  // Página ficou vazia (ex.: última sessão excluída) → volta para a última existente
-  if (sessionsData && sessionsPage > sessionsTotalPages) {
-    setSessionsPage(sessionsTotalPages);
-  }
+  const sessions = sessionsData ?? [];
   const allDaysList = allDays ?? [];
 
   const filteredCatalogExercises = useMemo(() => {
@@ -316,19 +334,44 @@ export default function WorkoutPage() {
     t,
   ]);
 
-  const catalogTotalPages = Math.max(
-    1,
-    Math.ceil(filteredCatalogExercises.length / CATALOG_PAGE_SIZE)
-  );
-  // Filtro reduziu o total → volta para a última página existente
-  if (catalogPage > catalogTotalPages) setCatalogPage(catalogTotalPages);
-  const pagedCatalogExercises = filteredCatalogExercises.slice(
-    (catalogPage - 1) * CATALOG_PAGE_SIZE,
-    catalogPage * CATALOG_PAGE_SIZE
-  );
-
   const activePlans = plans.filter((p) => p.is_active);
   const inactivePlans = plans.filter((p) => !p.is_active);
+
+  const hasSessionFilters = !!sessionStartDate || !!sessionEndDate;
+  const clearSessionFilters = () => {
+    setSessionStartDate(undefined);
+    setSessionEndDate(undefined);
+  };
+  const filteredSessions = useMemo(() => {
+    return (sessionsData ?? []).filter((s) => {
+      const d = s.date.slice(0, 10);
+      if (sessionStartDate && d < formatLocalDate(sessionStartDate)) return false;
+      if (sessionEndDate && d > formatLocalDate(sessionEndDate)) return false;
+      return true;
+    });
+  }, [sessionsData, sessionStartDate, sessionEndDate]);
+
+  const hasPlanFilters = planCategoryFilter !== 'all' || planStatusFilter !== 'all';
+  const clearPlanFilters = () => {
+    setPlanCategoryFilter('all');
+    setPlanStatusFilter('all');
+  };
+  const filteredPlans = useMemo(() => {
+    return [...activePlans, ...inactivePlans].filter((plan) => {
+      if (planCategoryFilter !== 'all' && plan.category !== planCategoryFilter)
+        return false;
+      if (
+        planStatusFilter !== 'all' &&
+        plan.is_active !== (planStatusFilter === 'active')
+      )
+        return false;
+      return true;
+    });
+  }, [activePlans, inactivePlans, planCategoryFilter, planStatusFilter]);
+  // Lido da query (não guardado no estado) para refletir edições de divisões/exercícios
+  const viewedPlan = plans.find((p) => p.id === viewPlanId);
+  // Também lido da query: some (e o modal fecha) quando a divisão é excluída
+  const viewedDay = viewedPlan?.days?.find((d) => d.id === viewDayId);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
@@ -339,43 +382,12 @@ export default function WorkoutPage() {
   const invalidateSessions = () =>
     queryClient.invalidateQueries({ queryKey: ['workout-sessions'] });
 
-  const aiGeneratePlanMutation = useMutation({
-    mutationFn: (data: AIWorkoutFormValues) =>
-      apiClient.post<{ plan_id: number; name: string; days_created: number }>(
-        '/api/v1/personal-planning/ai-workout-plan/',
-        data
-      ),
-    onSuccess: (result) => {
-      void invalidatePlans();
-      void invalidateDays();
-      toast({
-        title: 'Plano gerado com sucesso!',
-        description: `"${result.name}" com ${result.days_created} dias de treino foi criado.`,
-      });
-      setAiForm({
-        goal: '',
-        level: 'iniciante',
-        equipment: 'academia completa',
-        days_per_week: 3,
-      });
-      setDialog(null);
-    },
-    onError: () => {
-      toast({
-        title: 'Erro ao gerar plano',
-        description: 'Não foi possível gerar o plano. Tente novamente.',
-        variant: 'destructive',
-      });
-    },
-  });
-
   const createPlanMutation = useMutation({
     mutationFn: (data: WorkoutPlanFormData) => workoutPlanService.create(data),
     onSuccess: () => {
       void invalidatePlans();
       toast({
         title: t('pages.workoutPlans.planCreated'),
-        description: t('pages.workoutPlans.planCreatedDesc'),
       });
       setDialog(null);
     },
@@ -388,7 +400,6 @@ export default function WorkoutPage() {
       void invalidatePlans();
       toast({
         title: t('pages.workoutPlans.planUpdated'),
-        description: t('pages.workoutPlans.planUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -400,7 +411,6 @@ export default function WorkoutPage() {
       void invalidatePlans();
       toast({
         title: t('pages.workoutPlans.planDeleted'),
-        description: t('pages.workoutPlans.planDeletedDesc'),
       });
     },
   });
@@ -412,7 +422,6 @@ export default function WorkoutPage() {
       void invalidateDays();
       toast({
         title: t('pages.workoutPlans.dayCreated'),
-        description: t('pages.workoutPlans.dayCreatedDesc'),
       });
       setDialog(null);
     },
@@ -426,7 +435,6 @@ export default function WorkoutPage() {
       void invalidateDays();
       toast({
         title: t('pages.workoutPlans.dayUpdated'),
-        description: t('pages.workoutPlans.dayUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -462,8 +470,7 @@ export default function WorkoutPage() {
     },
     onError: (err: unknown) =>
       toast({
-        title: t('pages.workoutPlans.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.workoutPlans.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       }),
   });
@@ -504,8 +511,7 @@ export default function WorkoutPage() {
     },
     onError: (err: unknown) =>
       toast({
-        title: t('pages.workoutPlans.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.workoutPlans.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       }),
   });
@@ -526,7 +532,6 @@ export default function WorkoutPage() {
       void invalidateDays();
       toast({
         title: t('pages.workoutPlans.dayDeleted'),
-        description: t('pages.workoutPlans.dayDeletedDesc'),
       });
     },
   });
@@ -614,7 +619,8 @@ export default function WorkoutPage() {
             const setPayload = {
               session_exercise: exerciseId,
               set_number: sIdx + 1,
-              load: s.load || undefined,
+              // null (não undefined): PUT sem o campo manteria a carga antiga
+              load: s.load || null,
               load_unit: s.load_unit,
               reps_done: s.reps_done ? Number(s.reps_done) : undefined,
               completed: s.completed,
@@ -680,14 +686,12 @@ export default function WorkoutPage() {
       void invalidateSessions();
       toast({
         title: t('pages.workoutSessions.sessionCreated'),
-        description: t('pages.workoutSessions.sessionCreatedDesc'),
       });
       setDialog(null);
     },
     onError: (err: unknown) => {
       toast({
-        title: t('pages.workoutSessions.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.workoutSessions.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     },
@@ -721,14 +725,12 @@ export default function WorkoutPage() {
       void invalidateSessions();
       toast({
         title: t('pages.workoutSessions.sessionUpdated'),
-        description: t('pages.workoutSessions.sessionUpdatedDesc'),
       });
       setDialog(null);
     },
     onError: (err: unknown) => {
       toast({
-        title: t('pages.workoutSessions.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.workoutSessions.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     },
@@ -740,7 +742,6 @@ export default function WorkoutPage() {
       void invalidateSessions();
       toast({
         title: t('pages.workoutSessions.sessionDeleted'),
-        description: t('pages.workoutSessions.sessionDeletedDesc'),
       });
     },
   });
@@ -758,8 +759,7 @@ export default function WorkoutPage() {
     },
     onError: (err: unknown) =>
       toast({
-        title: t('pages.exercises.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.exercises.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       }),
   });
@@ -774,8 +774,7 @@ export default function WorkoutPage() {
     },
     onError: (err: unknown) =>
       toast({
-        title: t('pages.exercises.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.exercises.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       }),
   });
@@ -812,24 +811,6 @@ export default function WorkoutPage() {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  const toggleInactivePlan = (id: number) => {
-    setExpandedInactivePlans((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const toggleDay = (id: number) => {
-    setExpandedDays((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
   const handleDeletePlan = async (plan: WorkoutPlan) => {
     const confirmed = await showConfirm({
       title: t('pages.workoutPlans.deletePlanTitle'),
@@ -850,6 +831,9 @@ export default function WorkoutPage() {
     const confirmed = await showConfirm({
       title: t('pages.workoutSessions.deleteSessionTitle'),
       description: t('pages.workoutSessions.deleteSessionDesc'),
+      confirmText: t('common.actions.delete'),
+      variant: 'destructive',
+      animation: 'shake',
     });
     if (confirmed) deleteSessionMutation.mutate(session.id);
   };
@@ -883,14 +867,14 @@ export default function WorkoutPage() {
         return t('pages.workoutSessions.newSessionTitle');
       case 'edit-session':
         return t('pages.workoutSessions.editSessionTitle');
+      case 'view-session':
+        return (
+          dialog.session.workout_day_name ?? t('pages.workoutSessions.noWorkoutDay')
+        );
       case 'new-catalog-exercise':
         return t('pages.exercises.newTitle');
       case 'edit-catalog-exercise':
         return t('pages.exercises.editTitle');
-      case 'quick-log':
-        return t('pages.workoutSessions.quickLogTitle');
-      case 'ai-generate-plan':
-        return 'Gerar Plano com IA';
     }
   };
 
@@ -913,14 +897,12 @@ export default function WorkoutPage() {
         return t('pages.workoutSessions.newSessionDesc');
       case 'edit-session':
         return t('pages.workoutSessions.editSessionDesc');
+      case 'view-session':
+        return dialog.session.workout_day_muscle_groups ?? '';
       case 'new-catalog-exercise':
         return t('pages.exercises.newDesc');
       case 'edit-catalog-exercise':
         return t('pages.exercises.editDesc');
-      case 'quick-log':
-        return t('pages.workoutSessions.quickLogDesc');
-      case 'ai-generate-plan':
-        return 'Descreva seu objetivo e a IA criará um plano completo com divisões e exercícios.';
     }
   };
 
@@ -930,11 +912,33 @@ export default function WorkoutPage() {
     <AnimatedPage>
       <PageContainer>
         <PageHeader
-          title={t('pages.workoutPlans.title')}
-          icon={<Dumbbell className="text-category-exercise h-6 w-6" />}
+          title={t(TAB_HEADERS[activeTab].titleKey)}
+          icon={TAB_HEADERS[activeTab].icon}
+          actions={
+            activeTab === 'sessions' ? (
+              <Button onClick={() => setDialog({ type: 'new-session' })}>
+                <Plus className="h-4 w-4" />
+                {t('pages.workoutSessions.newSessionBtn')}
+              </Button>
+            ) : activeTab === 'plans' ? (
+              <Button onClick={() => setDialog({ type: 'new-plan' })}>
+                <Plus className="h-4 w-4" />
+                {t('pages.workoutPlans.newPlanBtn')}
+              </Button>
+            ) : activeTab === 'exercises' ? (
+              <Button onClick={() => setDialog({ type: 'new-catalog-exercise' })}>
+                <Plus className="h-4 w-4" />
+                {t('pages.exercises.newBtn')}
+              </Button>
+            ) : undefined
+          }
         />
 
-        <Tabs defaultValue="today" className="flex flex-1 flex-col">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
+          className="flex flex-1 flex-col"
+        >
           <TabsList className="mb-lg w-full">
             <TabsTrigger value="today" className="gap-xs flex-1">
               <Flame className="h-4 w-4" />
@@ -960,397 +964,246 @@ export default function WorkoutPage() {
 
           {/* ── Hoje ──────────────────────────────────────────────────── */}
           <TabsContent value="today" className="mt-0 flex-1">
-            <TodayPlanTab
-              activePlans={activePlans}
-              plansLoading={plansLoading}
-              onStartSession={() => setDialog({ type: 'new-session' })}
-              t={t}
-            />
+            <TodayPlanTab activePlans={activePlans} plansLoading={plansLoading} t={t} />
           </TabsContent>
 
           {/* ── Sessões ─────────────────────────────────────────────────── */}
           <TabsContent value="sessions" className="mt-0 flex-1">
-            <div className="mb-md gap-sm flex justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setDialog({ type: 'quick-log' })}
-              >
-                <Zap className="mr-sm h-4 w-4" />
-                {t('pages.workoutSessions.quickLogBtn')}
-              </Button>
-              <Button onClick={() => setDialog({ type: 'new-session' })}>
-                <Plus className="mr-sm h-4 w-4" />
-                {t('pages.workoutSessions.newSessionBtn')}
-              </Button>
-            </div>
-
             {sessionsLoading ? (
               <LoadingState />
             ) : sessions.length === 0 ? (
               <EmptyState
                 title={t('pages.workoutSessions.emptySessions')}
-                description={t('pages.workoutSessions.emptySessionsDesc')}
                 icon={<Dumbbell className="h-8 w-8" />}
-                action={{
-                  label: t('pages.workoutSessions.emptyAction'),
-                  icon: <Plus className="mr-xs h-4 w-4" />,
-                  onClick: () => setDialog({ type: 'new-session' }),
-                }}
               />
             ) : (
               <>
-                <SessionsGrouped
-                  sessions={sessions}
-                  onEdit={(s) => setDialog({ type: 'edit-session', session: s })}
-                  onDelete={handleDeleteSession}
-                  t={t}
-                />
-                <div className="mt-md flex items-center justify-between">
-                  <p className="text-muted-foreground text-sm">
-                    {t('common.table.showing', {
-                      count: sessions.length,
-                      total: sessionsTotal,
-                    })}
-                  </p>
-                  <div className="gap-sm flex items-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      aria-label={t('common.table.previousPage')}
-                      disabled={sessionsPage <= 1}
-                      onClick={() => setSessionsPage((p) => p - 1)}
-                    >
-                      <ChevronLeft />
-                    </Button>
-                    <span className="text-muted-foreground text-sm" aria-live="polite">
-                      {t('common.table.pageOf', {
-                        page: sessionsPage,
-                        totalPages: sessionsTotalPages,
-                      })}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      aria-label={t('common.table.nextPage')}
-                      disabled={sessionsPage >= sessionsTotalPages}
-                      onClick={() => setSessionsPage((p) => p + 1)}
-                    >
-                      <ChevronRight />
-                    </Button>
-                  </div>
-                </div>
+                <FilterBar
+                  className="mb-md"
+                  hasActiveFilters={hasSessionFilters}
+                  onClear={clearSessionFilters}
+                  activeFilters={[
+                    ...(sessionStartDate
+                      ? [
+                          {
+                            key: 'startDate',
+                            label: `${t('pages.workoutSessions.filterDateFrom')}: ${formatDate(sessionStartDate)}`,
+                            onRemove: () => setSessionStartDate(undefined),
+                          },
+                        ]
+                      : []),
+                    ...(sessionEndDate
+                      ? [
+                          {
+                            key: 'endDate',
+                            label: `${t('pages.workoutSessions.filterDateTo')}: ${formatDate(sessionEndDate)}`,
+                            onRemove: () => setSessionEndDate(undefined),
+                          },
+                        ]
+                      : []),
+                  ]}
+                >
+                  <FilterField
+                    label={t('common.filterLabels.period')}
+                    icon={CalendarDays}
+                  >
+                    <DateRangeFilter
+                      startDate={sessionStartDate}
+                      endDate={sessionEndDate}
+                      onStartChange={setSessionStartDate}
+                      onEndChange={setSessionEndDate}
+                    />
+                  </FilterField>
+                </FilterBar>
+
+                {filteredSessions.length === 0 ? (
+                  <EmptyState
+                    title={t('pages.workoutSessions.emptySessions')}
+                    icon={<Dumbbell className="h-8 w-8" />}
+                  />
+                ) : (
+                  <PaginatedSlide
+                    key={`${sessionStartDate ? formatLocalDate(sessionStartDate) : ''}|${sessionEndDate ? formatLocalDate(sessionEndDate) : ''}`}
+                    items={filteredSessions}
+                    pageSize={SESSIONS_PAGE_SIZE}
+                    centerList
+                    className="space-y-sm"
+                  >
+                    {(pageSessions) =>
+                      pageSessions.map((session) => (
+                        <SessionCard
+                          key={session.id}
+                          session={session}
+                          onView={() => setDialog({ type: 'view-session', session })}
+                          onEdit={() => setDialog({ type: 'edit-session', session })}
+                          onDelete={() => void handleDeleteSession(session)}
+                          t={t}
+                        />
+                      ))
+                    }
+                  </PaginatedSlide>
+                )}
               </>
             )}
           </TabsContent>
 
           {/* ── Calendário ──────────────────────────────────────────────── */}
           <TabsContent value="calendar" className="mt-0 flex-1">
-            {plansLoading ? <LoadingState /> : <WorkoutCalendar plans={plans} />}
+            {/* Calendário + detalhe do dia centralizados na altura livre */}
+            <div className="page-fill flex flex-1 flex-col justify-center">
+              {plansLoading ? <LoadingState /> : <WorkoutCalendar plans={plans} />}
+            </div>
           </TabsContent>
 
           {/* ── Planos ──────────────────────────────────────────────────── */}
           <TabsContent value="plans" className="mt-0 flex-1">
-            <div className="mb-md gap-sm flex justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setDialog({ type: 'ai-generate-plan' })}
-              >
-                <Sparkles className="mr-sm text-primary h-4 w-4" />
-                Gerar com IA
-              </Button>
-              <Button onClick={() => setDialog({ type: 'new-plan' })}>
-                <Plus className="mr-sm h-4 w-4" />
-                {t('pages.workoutPlans.newPlanBtn')}
-              </Button>
-            </div>
-
             {plansLoading ? (
               <LoadingState />
             ) : plans.length === 0 ? (
               <EmptyState
                 title={t('pages.workoutPlans.emptyPlans')}
-                description={t('pages.workoutPlans.emptyPlansDesc')}
                 icon={<Dumbbell className="h-8 w-8" />}
-                action={{
-                  label: t('pages.workoutPlans.emptyPlansAction'),
-                  icon: <Plus className="mr-xs h-4 w-4" />,
-                  onClick: () => setDialog({ type: 'new-plan' }),
-                }}
               />
             ) : (
-              <div className="space-y-xl">
-                {/* Planos ativos — hero cards */}
-                {activePlans.map((activePlan) => {
-                  const activePlanSelectedDay =
-                    selectedDayByPlan[activePlan.id] ?? null;
-                  const setActivePlanSelectedDay = (dayId: number | null) =>
-                    setSelectedDayByPlan((prev) => ({
-                      ...prev,
-                      [activePlan.id]: dayId,
-                    }));
-                  return (
-                    <div key={activePlan.id} className="space-y-sm">
-                      <div className="ring-category-exercise/30 overflow-hidden rounded-2xl shadow-sm ring-1">
-                        {/* Gradient header */}
-                        <div className="from-category-exercise to-category-exercise/60 px-lg pb-md pt-lg relative overflow-hidden bg-gradient-to-br">
-                          <Dumbbell className="absolute -top-6 -right-6 h-36 w-36 rotate-12 text-white/10" />
-                          <div className="relative flex items-start justify-between">
-                            <div className="min-w-0">
-                              <div className="mb-sm gap-xs px-sm py-xs inline-flex items-center rounded-full bg-white/20 text-xs font-bold tracking-widest text-white uppercase">
-                                <Zap className="h-3 w-3" />
-                                {t('pages.workoutPlans.activePlan')}
-                              </div>
-                              <h2 className="text-2xl font-bold text-white">
-                                {activePlan.name}
-                              </h2>
-                              <span className="mt-xs px-sm inline-block rounded-full bg-white/15 py-0.5 text-xs font-medium text-white/90">
-                                {t(
-                                  `pages.workoutPlans.categories.${activePlan.category}`
-                                )}
-                              </span>
-                              {activePlan.description && (
-                                <p className="mt-xs text-sm text-white/70">
-                                  {activePlan.description}
-                                </p>
-                              )}
-                              <div className="mt-sm gap-md flex flex-wrap text-sm text-white/80">
-                                <span className="gap-xs flex items-center">
-                                  <ClipboardList className="h-3.5 w-3.5" />
-                                  {activePlan.day_count} {t('pages.workoutPlans.days')}
-                                </span>
-                                <span className="gap-xs flex items-center">
-                                  <Dumbbell className="h-3.5 w-3.5" />
-                                  {activePlan.exercise_count}{' '}
-                                  {t('pages.workoutPlans.exercises')}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="ml-md gap-xs flex shrink-0">
-                              <PlainButton
-                                type="button"
-                                onClick={() =>
-                                  setDialog({ type: 'edit-plan', plan: activePlan })
-                                }
-                                className="p-xs rounded-lg text-white/70 transition-colors hover:bg-white/20 hover:text-white"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </PlainButton>
-                              <PlainButton
-                                type="button"
-                                onClick={() => handleDeletePlan(activePlan)}
-                                className="p-xs rounded-lg text-white/70 transition-colors hover:bg-white/20 hover:text-white"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </PlainButton>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Day cards */}
-                        <div className="bg-card p-md">
-                          <p className="mb-sm text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                            {t('pages.workoutPlans.days')}
-                          </p>
-                          <div className="gap-sm pb-xs flex overflow-x-auto">
-                            {activePlan.days?.map((day) => (
-                              <button
-                                key={day.id}
-                                type="button"
-                                onClick={() =>
-                                  setActivePlanSelectedDay(
-                                    activePlanSelectedDay === day.id ? null : day.id
-                                  )
-                                }
-                                className={cn(
-                                  'p-sm flex min-w-[130px] flex-col items-start rounded-lg border-2 text-left transition',
-                                  activePlanSelectedDay === day.id
-                                    ? 'border-category-exercise bg-category-exercise/10 shadow-sm'
-                                    : 'border-border bg-background hover:border-category-exercise/40 hover:bg-category-exercise/5'
-                                )}
-                              >
-                                <div
-                                  className={cn(
-                                    'mb-sm flex h-8 w-8 items-center justify-center rounded-lg',
-                                    activePlanSelectedDay === day.id
-                                      ? 'bg-category-exercise/20 text-category-exercise'
-                                      : 'bg-muted text-muted-foreground'
-                                  )}
-                                >
-                                  {getMuscleIcon(day.muscle_groups)}
-                                </div>
-                                <span
-                                  className={cn(
-                                    'text-sm leading-tight font-semibold',
-                                    activePlanSelectedDay === day.id
-                                      ? 'text-category-exercise'
-                                      : 'text-foreground'
-                                  )}
-                                >
-                                  {day.name}
-                                </span>
-                                {day.muscle_groups && (
-                                  <span className="text-muted-foreground mt-0.5 line-clamp-1 text-xs">
-                                    {day.muscle_groups}
-                                  </span>
-                                )}
-                                <span className="mt-sm text-muted-foreground text-xs">
-                                  {day.exercise_count}{' '}
-                                  {t('pages.workoutPlans.exercises')}
-                                </span>
-                              </button>
-                            ))}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setDialog({ type: 'new-day', planId: activePlan.id })
+              <>
+                <FilterBar
+                  className="mb-md"
+                  hasActiveFilters={hasPlanFilters}
+                  onClear={clearPlanFilters}
+                  activeFilters={[
+                    ...(planCategoryFilter !== 'all'
+                      ? [
+                          {
+                            key: 'category',
+                            label: `${t('pages.workoutPlans.category')}: ${t(`pages.workoutPlans.categories.${planCategoryFilter}`)}`,
+                            onRemove: () => setPlanCategoryFilter('all'),
+                          },
+                        ]
+                      : []),
+                    ...(planStatusFilter !== 'all'
+                      ? [
+                          {
+                            key: 'status',
+                            label: `${t('common.fields.status')}: ${
+                              planStatusFilter === 'active'
+                                ? t('pages.workoutPlans.active')
+                                : t('pages.workoutPlans.inactive')
+                            }`,
+                            onRemove: () => setPlanStatusFilter('all'),
+                          },
+                        ]
+                      : []),
+                  ]}
+                >
+                  <FilterField label={t('common.fields.category')} icon={Tag}>
+                    <Select
+                      value={planCategoryFilter}
+                      onValueChange={(v) =>
+                        setPlanCategoryFilter(v as WorkoutCategory | 'all')
+                      }
+                    >
+                      <SelectTrigger
+                        className="w-44"
+                        aria-label={t('pages.workoutPlans.allCategories')}
+                        startIcon={<Activity className="h-3.5 w-3.5" />}
+                      >
+                        <SelectValue
+                          placeholder={t('pages.workoutPlans.allCategories')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.workoutPlans.allCategories')}
+                        </SelectItem>
+                        {WORKOUT_CATEGORIES.map((key) => {
+                          const CatIcon = WORKOUT_CATEGORY_ICONS[key];
+                          return (
+                            <SelectItem
+                              key={key}
+                              value={key}
+                              icon={
+                                CatIcon ? <CatIcon className="h-4 w-4" /> : undefined
                               }
-                              className="gap-sm border-border p-sm hover:border-category-exercise/40 hover:bg-category-exercise/5 flex min-w-[100px] flex-col items-center justify-center rounded-lg border-2 border-dashed text-center transition-colors"
                             >
-                              <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-lg">
-                                <Plus className="text-muted-foreground h-4 w-4" />
-                              </div>
-                              <span className="text-muted-foreground text-xs">
-                                {t('pages.workoutPlans.newDayBtn')}
-                              </span>
-                            </button>
-                          </div>
+                              {t(`pages.workoutPlans.categories.${key}`)}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
+                  <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+                    <Select
+                      value={planStatusFilter}
+                      onValueChange={(v) =>
+                        setPlanStatusFilter(v as 'all' | 'active' | 'inactive')
+                      }
+                    >
+                      <SelectTrigger
+                        className="w-36"
+                        aria-label={t('pages.workoutPlans.allStatus')}
+                        startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                      >
+                        <SelectValue placeholder={t('pages.workoutPlans.allStatus')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.workoutPlans.allStatus')}
+                        </SelectItem>
+                        <SelectItem
+                          value="active"
+                          icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                        >
+                          {t('pages.workoutPlans.active')}
+                        </SelectItem>
+                        <SelectItem
+                          value="inactive"
+                          icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                        >
+                          {t('pages.workoutPlans.inactive')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
+                </FilterBar>
 
-                          {/* Exercícios da divisão selecionada */}
-                          {activePlanSelectedDay !== null &&
-                            (() => {
-                              const day = activePlan.days?.find(
-                                (d) => d.id === activePlanSelectedDay
-                              );
-                              if (!day) return null;
-                              return (
-                                <div className="mt-md border-category-exercise/25 bg-category-exercise/5 p-md rounded-lg border">
-                                  <div className="mb-sm flex items-center justify-between">
-                                    <div>
-                                      <p className="text-foreground font-semibold">
-                                        {day.name}
-                                      </p>
-                                      {day.muscle_groups && (
-                                        <p className="text-muted-foreground text-xs">
-                                          {day.muscle_groups}
-                                        </p>
-                                      )}
-                                    </div>
-                                    <div className="gap-xs flex">
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7"
-                                        onClick={() =>
-                                          setDialog({ type: 'edit-day', day })
-                                        }
-                                      >
-                                        <Edit className="h-3 w-3" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="text-destructive hover:text-destructive h-7 w-7"
-                                        onClick={() => handleDeleteDay(day)}
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  {day.exercises && day.exercises.length > 0 ? (
-                                    <ExerciseList
-                                      exercises={day.exercises}
-                                      onEdit={(ex) =>
-                                        setDialog({
-                                          type: 'edit-exercise',
-                                          exercise: ex,
-                                          day,
-                                        })
-                                      }
-                                      onDelete={handleDeleteExercise}
-                                    />
-                                  ) : (
-                                    <p className="py-sm text-muted-foreground text-center text-xs">
-                                      {t('pages.workoutPlans.noExercises')}
-                                    </p>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setDialog({ type: 'add-exercise', day })
-                                    }
-                                    className="mt-sm gap-sm border-category-exercise/30 py-sm text-category-exercise hover:border-category-exercise/60 hover:bg-category-exercise/5 flex w-full items-center justify-center rounded-lg border-2 border-dashed text-xs transition-colors"
-                                  >
-                                    <Plus className="h-3.5 w-3.5" />
-                                    {t('pages.workoutPlans.addExerciseBtn')}
-                                  </button>
-                                </div>
-                              );
-                            })()}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Outros planos */}
-                {inactivePlans.length > 0 && (
-                  <div className="space-y-sm">
-                    <div className="gap-sm flex items-center">
-                      <div className="bg-border h-px flex-1" />
-                      <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-                        {t('pages.workoutPlans.otherPlans')}
-                      </span>
-                      <div className="bg-border h-px flex-1" />
-                    </div>
-
-                    {inactivePlans.map((plan) => (
-                      <InactivePlanRow
-                        key={plan.id}
-                        plan={plan}
-                        expanded={expandedInactivePlans.has(plan.id)}
-                        expandedDays={expandedDays}
-                        onToggle={() => toggleInactivePlan(plan.id)}
-                        onToggleDay={toggleDay}
-                        onEdit={() => setDialog({ type: 'edit-plan', plan })}
-                        onDelete={() => handleDeletePlan(plan)}
-                        onNewDay={() => setDialog({ type: 'new-day', planId: plan.id })}
-                        onEditDay={(day) => setDialog({ type: 'edit-day', day })}
-                        onDeleteDay={handleDeleteDay}
-                        onAddExercise={(day) =>
-                          setDialog({ type: 'add-exercise', day })
-                        }
-                        onEditExercise={(ex, day) =>
-                          setDialog({ type: 'edit-exercise', exercise: ex, day })
-                        }
-                        onDeleteExercise={handleDeleteExercise}
-                        t={t}
-                      />
-                    ))}
-                  </div>
+                {filteredPlans.length === 0 ? (
+                  <EmptyState
+                    title={t('pages.workoutPlans.emptyPlans')}
+                    icon={<Dumbbell className="h-8 w-8" />}
+                  />
+                ) : (
+                  <PaginatedSlide
+                    key={`${planCategoryFilter}|${planStatusFilter}`}
+                    items={filteredPlans}
+                    pageSize={planColumns * PLANS_ROWS_PER_PAGE}
+                    centerList
+                    className="gap-md grid sm:grid-cols-2 lg:grid-cols-3"
+                  >
+                    {(pagePlans) =>
+                      pagePlans.map((plan) => (
+                        <PlanCard
+                          key={plan.id}
+                          plan={plan}
+                          onOpen={() => setViewPlanId(plan.id)}
+                          onEdit={() => setDialog({ type: 'edit-plan', plan })}
+                          onDelete={() => handleDeletePlan(plan)}
+                          t={t}
+                        />
+                      ))
+                    }
+                  </PaginatedSlide>
                 )}
-              </div>
+              </>
             )}
           </TabsContent>
 
           {/* ── Exercícios (catálogo) ────────────────────────────────────── */}
           <TabsContent value="exercises" className="mt-0 flex-1">
-            <div className="mb-md flex justify-end">
-              <Button onClick={() => setDialog({ type: 'new-catalog-exercise' })}>
-                <Plus className="mr-sm h-4 w-4" />
-                {t('pages.exercises.newBtn')}
-              </Button>
-            </div>
-
             {catalogExercises.length === 0 ? (
               <EmptyState
                 title={t('pages.exercises.empty')}
-                description={t('pages.exercises.emptyDesc')}
                 icon={<Dumbbell className="h-8 w-8" />}
-                action={{
-                  label: t('pages.exercises.emptyAction'),
-                  icon: <Plus className="mr-xs h-4 w-4" />,
-                  onClick: () => setDialog({ type: 'new-catalog-exercise' }),
-                }}
               />
             ) : (
               <>
@@ -1398,158 +1251,284 @@ export default function WorkoutPage() {
                       : []),
                   ]}
                 >
-                  <SearchInput
-                    placeholder={t('pages.exercises.searchPlaceholder')}
-                    value={exerciseSearch}
-                    onValueChange={setExerciseSearch}
-                    className="w-44"
-                  />
-                  <Select
-                    value={exerciseCategoryFilter}
-                    onValueChange={setExerciseCategoryFilter}
-                  >
-                    <SelectTrigger
+                  <FilterField label={t('common.filterLabels.search')} icon={Search}>
+                    <SearchInput
+                      placeholder={t('pages.exercises.searchPlaceholder')}
+                      value={exerciseSearch}
+                      onValueChange={setExerciseSearch}
                       className="w-44"
-                      aria-label={t('pages.exercises.allCategories')}
-                      startIcon={<Activity className="h-3.5 w-3.5" />}
+                    />
+                  </FilterField>
+                  <FilterField label={t('common.fields.category')} icon={Tag}>
+                    <Select
+                      value={exerciseCategoryFilter}
+                      onValueChange={setExerciseCategoryFilter}
                     >
-                      <SelectValue placeholder={t('pages.exercises.allCategories')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t('pages.exercises.allCategories')}
-                      </SelectItem>
-                      {WORKOUT_CATEGORIES.map((key) => (
-                        <SelectItem key={key} value={key}>
-                          {t(`pages.workoutPlans.categories.${key}`)}
+                      <SelectTrigger
+                        className="w-44"
+                        aria-label={t('pages.exercises.allCategories')}
+                        startIcon={<Activity className="h-3.5 w-3.5" />}
+                      >
+                        <SelectValue placeholder={t('pages.exercises.allCategories')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.exercises.allCategories')}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={exerciseTypeFilter}
-                    onValueChange={setExerciseTypeFilter}
-                  >
-                    <SelectTrigger
-                      className="w-44"
-                      aria-label={t('pages.exercises.allTypes')}
-                      startIcon={<Dumbbell className="h-3.5 w-3.5" />}
+                        {WORKOUT_CATEGORIES.map((key) => {
+                          const CatIcon = WORKOUT_CATEGORY_ICONS[key];
+                          return (
+                            <SelectItem
+                              key={key}
+                              value={key}
+                              icon={
+                                CatIcon ? <CatIcon className="h-4 w-4" /> : undefined
+                              }
+                            >
+                              {t(`pages.workoutPlans.categories.${key}`)}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
+                  <FilterField label={t('common.fields.type')} icon={Shapes}>
+                    <Select
+                      value={exerciseTypeFilter}
+                      onValueChange={setExerciseTypeFilter}
                     >
-                      <SelectValue placeholder={t('pages.exercises.allTypes')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t('pages.exercises.allTypes')}
-                      </SelectItem>
-                      {EXERCISE_TYPE_FILTER_KEYS.map((key) => (
-                        <SelectItem key={key} value={key}>
-                          {t(`pages.workoutPlans.muscleChips.${key}`)}
+                      <SelectTrigger
+                        className="w-44"
+                        aria-label={t('pages.exercises.allTypes')}
+                        startIcon={<Dumbbell className="h-3.5 w-3.5" />}
+                      >
+                        <SelectValue placeholder={t('pages.exercises.allTypes')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.exercises.allTypes')}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={exerciseMuscleFilter}
-                    onValueChange={setExerciseMuscleFilter}
-                  >
-                    <SelectTrigger
-                      className="w-44"
-                      aria-label={t('pages.exercises.allMuscles')}
-                      startIcon={<Layers className="h-3.5 w-3.5" />}
+                        {EXERCISE_TYPE_FILTER_KEYS.map((key) => (
+                          <SelectItem key={key} value={key}>
+                            {t(`pages.workoutPlans.muscleChips.${key}`)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
+                  <FilterField label={t('common.filterLabels.muscle')} icon={Dumbbell}>
+                    <Select
+                      value={exerciseMuscleFilter}
+                      onValueChange={setExerciseMuscleFilter}
                     >
-                      <SelectValue placeholder={t('pages.exercises.allMuscles')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        {t('pages.exercises.allMuscles')}
-                      </SelectItem>
-                      {EXERCISE_MUSCLE_FILTER_KEYS.map((key) => (
-                        <SelectItem key={key} value={key}>
-                          {t(`pages.workoutPlans.muscleChips.${key}`)}
+                      <SelectTrigger
+                        className="w-44"
+                        aria-label={t('pages.exercises.allMuscles')}
+                        startIcon={<Layers className="h-3.5 w-3.5" />}
+                      >
+                        <SelectValue placeholder={t('pages.exercises.allMuscles')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          {t('pages.exercises.allMuscles')}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        {EXERCISE_MUSCLE_FILTER_KEYS.map((key) => (
+                          <SelectItem key={key} value={key}>
+                            {t(`pages.workoutPlans.muscleChips.${key}`)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FilterField>
                 </FilterBar>
 
                 {filteredCatalogExercises.length === 0 ? (
                   <EmptyState
                     title={t('pages.exercises.noResults')}
-                    description={t('pages.exercises.noResultsDesc')}
                     icon={<Dumbbell className="h-8 w-8" />}
                   />
                 ) : (
-                  <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {pagedCatalogExercises.map((exercise) => (
-                      <ExerciseCatalogCard
-                        key={exercise.id}
-                        exercise={exercise}
-                        onEdit={() =>
-                          setDialog({ type: 'edit-catalog-exercise', exercise })
-                        }
-                        onDelete={() => handleDeleteCatalogExercise(exercise)}
-                        onChangeImage={() => setImagePickerExercise(exercise)}
-                      />
-                    ))}
-                  </div>
-                )}
-                {catalogTotalPages > 1 && (
-                  <div className="mt-md flex items-center justify-between">
-                    <p className="text-muted-foreground text-sm">
-                      {t('common.table.showing', {
-                        count: pagedCatalogExercises.length,
-                        total: filteredCatalogExercises.length,
-                      })}
-                    </p>
-                    <div className="gap-sm flex items-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        aria-label={t('common.table.previousPage')}
-                        disabled={catalogPage <= 1}
-                        onClick={() => setCatalogPage((p) => p - 1)}
-                      >
-                        <ChevronLeft />
-                      </Button>
-                      <span
-                        className="text-muted-foreground text-sm"
-                        aria-live="polite"
-                      >
-                        {t('common.table.pageOf', {
-                          page: catalogPage,
-                          totalPages: catalogTotalPages,
-                        })}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        aria-label={t('common.table.nextPage')}
-                        disabled={catalogPage >= catalogTotalPages}
-                        onClick={() => setCatalogPage((p) => p + 1)}
-                      >
-                        <ChevronRight />
-                      </Button>
-                    </div>
-                  </div>
+                  <PaginatedSlide
+                    // Filtro novo → remonta e volta à página 1
+                    key={`${exerciseSearch}|${exerciseCategoryFilter}|${exerciseTypeFilter}|${exerciseMuscleFilter}`}
+                    items={filteredCatalogExercises}
+                    pageSize={catalogColumns * CATALOG_ROWS_PER_PAGE}
+                    centerList
+                    className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  >
+                    {(pageExercises) =>
+                      pageExercises.map((exercise) => (
+                        <ExerciseCatalogCard
+                          key={exercise.id}
+                          exercise={exercise}
+                          onEdit={() =>
+                            setDialog({ type: 'edit-catalog-exercise', exercise })
+                          }
+                          onDelete={() => handleDeleteCatalogExercise(exercise)}
+                          onChangeImage={() => setImagePickerExercise(exercise)}
+                        />
+                      ))
+                    }
+                  </PaginatedSlide>
                 )}
               </>
             )}
           </TabsContent>
         </Tabs>
 
+        {/* ── Divisões do plano ─────────────────────────────────────────── */}
+        {/* Antes do Dialog principal: os formulários abertos daqui empilham por cima */}
+        <Dialog
+          open={!!viewedPlan}
+          onOpenChange={(open) => {
+            if (open) return;
+            setViewPlanId(null);
+            setViewDayId(null);
+          }}
+        >
+          <DialogContent className="max-w-5xl">
+            {viewedPlan && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="gap-sm flex items-center">
+                    <ClipboardList
+                      className="text-primary h-4 w-4 shrink-0"
+                      aria-hidden="true"
+                    />
+                    {viewedPlan.name}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {viewedPlan.day_count} {t('pages.workoutPlans.days')} ·{' '}
+                    {viewedPlan.exercise_count} {t('pages.workoutPlans.exercises')}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="px-xs py-xs">
+                  <PlanDaysList
+                    plan={viewedPlan}
+                    onOpenDay={(day) => setViewDayId(day.id)}
+                    t={t}
+                  />
+                </div>
+                <DialogCloseFooter>
+                  <Button
+                    onClick={() =>
+                      setDialog({ type: 'new-day', planId: viewedPlan.id })
+                    }
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t('pages.workoutPlans.newDayBtn')}
+                  </Button>
+                </DialogCloseFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* ── Exercícios da divisão (por cima do modal do plano) ──────────── */}
+        <Dialog open={!!viewedDay} onOpenChange={(open) => !open && setViewDayId(null)}>
+          <DialogContent className="max-w-5xl">
+            {viewedDay && (
+              <>
+                <DialogHeader>
+                  <div className="gap-sm flex items-start justify-between">
+                    <div className="min-w-0">
+                      <DialogTitle className="gap-sm flex items-center">
+                        <span className="text-primary">
+                          {getMuscleIcon(viewedDay.muscle_groups)}
+                        </span>
+                        {viewedDay.name}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {viewedDay.muscle_groups && `${viewedDay.muscle_groups} · `}
+                        {viewedDay.exercise_count} {t('pages.workoutPlans.exercises')}
+                      </DialogDescription>
+                    </div>
+                    <div className="gap-xs flex shrink-0">
+                      <Button
+                        aria-label={t('common.actions.edit')}
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDialog({ type: 'edit-day', day: viewedDay })}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        aria-label={t('common.actions.delete')}
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteDay(viewedDay)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </DialogHeader>
+                <div className="pr-xs">
+                  <div>
+                    {viewedDay.exercises && viewedDay.exercises.length > 0 ? (
+                      <ExerciseList
+                        exercises={viewedDay.exercises}
+                        onEdit={(ex) =>
+                          setDialog({
+                            type: 'edit-exercise',
+                            exercise: ex,
+                            day: viewedDay,
+                          })
+                        }
+                        onDelete={handleDeleteExercise}
+                      />
+                    ) : (
+                      <p className="py-lg text-muted-foreground text-center text-sm">
+                        {t('pages.workoutPlans.noExercises')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <DialogCloseFooter>
+                  <Button
+                    onClick={() => setDialog({ type: 'add-exercise', day: viewedDay })}
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t('pages.workoutPlans.addExerciseBtn')}
+                  </Button>
+                </DialogCloseFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+
         {/* ── Dialog ──────────────────────────────────────────────────────── */}
         <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
           <DialogContent
-            className={cn(
-              dialog?.type === 'new-session' || dialog?.type === 'edit-session'
-                ? 'max-w-2xl'
-                : dialog?.type === 'add-exercise' || dialog?.type === 'edit-exercise'
-                  ? 'max-h-[85vh] max-w-3xl overflow-y-auto'
-                  : 'max-h-[85vh] max-w-xl overflow-y-auto'
-            )}
+            className={
+              isExerciseDialog || dialog?.type === 'view-session'
+                ? 'max-w-5xl'
+                : isSessionDialog
+                  ? 'max-w-4xl'
+                  : dialog?.type === 'new-day' || dialog?.type === 'edit-day'
+                    ? 'max-w-2xl'
+                    : 'max-w-xl'
+            }
           >
             <DialogHeader>
-              <DialogTitle>{dialogTitle()}</DialogTitle>
+              <DialogTitle
+                mode={
+                  dialog?.type.startsWith('edit')
+                    ? 'edit'
+                    : dialog?.type.startsWith('new') || dialog?.type === 'add-exercise'
+                      ? 'create'
+                      : undefined
+                }
+                className={cn(
+                  dialog?.type === 'view-session' && 'gap-sm flex items-center'
+                )}
+              >
+                {dialog?.type === 'view-session' && (
+                  <Dumbbell className="text-primary h-5 w-5" />
+                )}
+                {dialogTitle()}
+              </DialogTitle>
               <DialogDescription>{dialogDesc()}</DialogDescription>
             </DialogHeader>
 
@@ -1591,6 +1570,7 @@ export default function WorkoutPage() {
 
             {(dialog?.type === 'add-exercise' || dialog?.type === 'edit-exercise') && (
               <WorkoutExerciseModal
+                bodyWeightKg={latestBodyWeightKg}
                 exercises={catalogExercises.filter(
                   (ex) =>
                     ex.category ===
@@ -1620,11 +1600,16 @@ export default function WorkoutPage() {
               />
             )}
 
+            {dialog?.type === 'view-session' && (
+              <SessionDetails session={dialog.session} t={t} />
+            )}
+
             {(dialog?.type === 'new-session' || dialog?.type === 'edit-session') && (
               <WorkoutSessionForm
                 workoutDays={allDaysList}
                 ownerId={ownerId}
                 session={dialog.type === 'edit-session' ? dialog.session : undefined}
+                bodyWeightKg={latestBodyWeightKg}
                 onSubmit={async (data) => {
                   if (dialog.type === 'edit-session') {
                     await updateSessionMutation.mutateAsync({
@@ -1666,119 +1651,6 @@ export default function WorkoutPage() {
                 }
               />
             )}
-
-            {dialog?.type === 'quick-log' && (
-              <QuickLogForm
-                plans={plans}
-                days={allDaysList}
-                ownerId={ownerId}
-                onSuccess={() => {
-                  void invalidateSessions();
-                  setDialog(null);
-                }}
-                onCancel={() => setDialog(null)}
-                t={t}
-              />
-            )}
-
-            {dialog?.type === 'ai-generate-plan' && (
-              <div className="space-y-md">
-                <div className="space-y-sm">
-                  <Label htmlFor="ai-goal">Objetivo *</Label>
-                  <Input
-                    id="ai-goal"
-                    placeholder="Ex: hipertrofia muscular, perda de gordura, resistência…"
-                    value={aiForm.goal}
-                    onChange={(e) => setAiForm((f) => ({ ...f, goal: e.target.value }))}
-                  />
-                </div>
-
-                <div className="space-y-sm">
-                  <Label>Nível</Label>
-                  <div className="gap-sm flex">
-                    {(['iniciante', 'intermediário', 'avançado'] as const).map(
-                      (lvl) => (
-                        <button
-                          key={lvl}
-                          type="button"
-                          onClick={() => setAiForm((f) => ({ ...f, level: lvl }))}
-                          className={cn(
-                            // eslint-disable-next-line no-restricted-syntax
-                            'flex-1 rounded-md border py-1.5 text-xs font-medium capitalize transition-colors',
-                            aiForm.level === lvl
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-input bg-background text-muted-foreground hover:bg-muted'
-                          )}
-                        >
-                          {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
-                        </button>
-                      )
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-sm">
-                  <Label htmlFor="ai-equipment">Equipamentos disponíveis</Label>
-                  <Input
-                    id="ai-equipment"
-                    placeholder="Ex: academia completa, halteres em casa, barra fixa…"
-                    value={aiForm.equipment}
-                    onChange={(e) =>
-                      setAiForm((f) => ({ ...f, equipment: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-sm">
-                  <Label>Dias por semana: {aiForm.days_per_week}</Label>
-                  <div className="gap-xs flex">
-                    {[2, 3, 4, 5, 6].map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => setAiForm((f) => ({ ...f, days_per_week: d }))}
-                        className={cn(
-                          'flex h-8 w-8 items-center justify-center rounded-md border text-xs font-bold transition-colors',
-                          aiForm.days_per_week === d
-                            ? 'border-primary bg-primary/10 text-primary'
-                            : 'border-input bg-background text-muted-foreground hover:bg-muted'
-                        )}
-                      >
-                        {d}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="gap-sm pt-sm flex">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setDialog(null)}
-                    disabled={aiGeneratePlanMutation.isPending}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    disabled={!aiForm.goal.trim() || aiGeneratePlanMutation.isPending}
-                    onClick={() => aiGeneratePlanMutation.mutate(aiForm)}
-                  >
-                    {aiGeneratePlanMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-                        Gerando…
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="mr-sm h-4 w-4" />
-                        Gerar Plano
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
           </DialogContent>
         </Dialog>
 
@@ -1798,222 +1670,6 @@ export default function WorkoutPage() {
   );
 }
 
-// ── Quick Log Form ──────────────────────────────────────────────────────────
-
-interface QuickLogFormProps {
-  plans: WorkoutPlan[];
-  days: WorkoutDay[];
-  ownerId: number;
-  onSuccess: () => void;
-  onCancel: () => void;
-  t: (key: string, opts?: Record<string, unknown>) => string;
-}
-
-function QuickLogForm({
-  plans,
-  days,
-  ownerId,
-  onSuccess,
-  onCancel,
-  t,
-}: QuickLogFormProps) {
-  const { toast } = useToast();
-  const [step, setStep] = useState<1 | 2>(1);
-  const [selectedDayId, setSelectedDayId] = useState<string>('none');
-  const [duration, setDuration] = useState<number>(45);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const activePlans = plans.filter((p) => p.is_active);
-  const relevantDays =
-    activePlans.length > 0
-      ? days.filter((d) => activePlans.some((p) => p.id === d.plan))
-      : days;
-  const selectedDayPreview =
-    selectedDayId !== 'none'
-      ? days.find((d) => d.id === Number(selectedDayId))
-      : undefined;
-
-  const handleDaySelect = (dayId: string) => {
-    setSelectedDayId(dayId);
-    const day = dayId !== 'none' ? days.find((d) => d.id === Number(dayId)) : undefined;
-    setDuration(day?.default_duration_minutes ?? 45);
-  };
-
-  const handleConfirm = async () => {
-    try {
-      setIsSubmitting(true);
-      const now = new Date();
-      const toTimeStr = (d: Date) =>
-        `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-
-      const selectedDay =
-        selectedDayId && selectedDayId !== 'none'
-          ? days.find((d) => d.id === Number(selectedDayId))
-          : undefined;
-
-      const started = selectedDay?.default_start_time
-        ? selectedDay.default_start_time.slice(0, 5)
-        : toTimeStr(now);
-      const [startH, startM] = started.split(':').map(Number);
-      const finishedTotal = (((startH * 60 + startM + duration) % 1440) + 1440) % 1440;
-      const finished = `${String(Math.floor(finishedTotal / 60)).padStart(2, '0')}:${String(finishedTotal % 60).padStart(2, '0')}`;
-
-      const session = await workoutSessionService.create({
-        date: format(now, 'yyyy-MM-dd'),
-        started_at: started,
-        finished_at: finished,
-        owner: ownerId,
-        workout_day: selectedDay?.id,
-      });
-
-      // auto-populate session exercises and sets from the plan day
-      if (selectedDay && selectedDay.exercises.length > 0) {
-        await Promise.all(
-          selectedDay.exercises.map(async (ex, idx) => {
-            const sessionEx = await workoutSessionExerciseService.create({
-              session: session.id,
-              exercise: ex.id,
-              exercise_name: ex.name,
-              sets_target: ex.sets,
-              reps_target_min: ex.reps_min,
-              reps_target_max: ex.reps_max,
-              load_target: ex.load || undefined,
-              load_target_unit: ex.load_unit,
-              order: idx,
-              owner: ownerId,
-            });
-
-            await Promise.all(
-              Array.from({ length: ex.sets }, (_, setIdx) =>
-                workoutSessionSetService.create({
-                  session_exercise: sessionEx.id,
-                  set_number: setIdx + 1,
-                  // Série não aceita 'bw': peso corporal = carga em branco
-                  load:
-                    ex.load_unit === 'bw'
-                      ? undefined
-                      : ex.set_targets?.[setIdx]?.load || ex.load || undefined,
-                  load_unit: ex.load_unit === 'bw' ? 'kg' : ex.load_unit,
-                  reps_done: ex.set_targets?.[setIdx]?.reps ?? ex.reps_min,
-                  completed: true,
-                  owner: ownerId,
-                })
-              )
-            );
-          })
-        );
-      }
-
-      toast({ title: t('pages.workoutSessions.quickLogSuccess') });
-      onSuccess();
-    } catch (err: unknown) {
-      toast({
-        title: t('pages.workoutSessions.saveError'),
-        description: getErrorMessage(err),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="space-y-lg">
-      {step === 1 && (
-        <div className="space-y-md">
-          <FormSection
-            title={t('pages.workoutSessions.quickLogStep1')}
-            icon={ClipboardList}
-          >
-            <div className="space-y-sm">
-              <Label>{t('pages.workoutSessions.quickLogPlanLabel')}</Label>
-              <select
-                value={selectedDayId}
-                onChange={(e) => handleDaySelect(e.target.value)}
-                className="border-border bg-background px-sm py-xs focus:ring-ring w-full rounded-md border text-sm focus:ring-2 focus:outline-none"
-              >
-                <option value="none">
-                  {t('pages.workoutSessions.quickLogNoPlan')}
-                </option>
-                {relevantDays.map((day) => (
-                  <option key={day.id} value={day.id.toString()}>
-                    {day.name}
-                    {day.muscle_groups ? ` — ${day.muscle_groups}` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </FormSection>
-          <div className="gap-sm pt-md flex justify-end border-t">
-            <Button type="button" variant="outline" onClick={onCancel}>
-              {t('common.actions.cancel')}
-            </Button>
-            <Button type="button" onClick={() => setStep(2)}>
-              {t('pages.workoutSessions.quickLogNext')}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="space-y-md">
-          <FormSection title={t('pages.workoutSessions.quickLogStep2')} icon={Clock}>
-            <div className="space-y-sm">
-              <div className="flex items-center justify-between">
-                <Label>{t('pages.workoutSessions.quickLogDuration')}</Label>
-                <span className="text-primary text-sm font-bold">
-                  {duration} {t('pages.workoutSessions.quickLogMin')}
-                </span>
-              </div>
-              <input
-                type="range"
-                min={15}
-                max={180}
-                step={5}
-                value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
-                className="accent-primary w-full"
-              />
-              <div className="text-muted-foreground flex justify-between text-xs">
-                <span>15 min</span>
-                <span>180 min</span>
-              </div>
-            </div>
-          </FormSection>
-          {selectedDayPreview && selectedDayPreview.exercises.length > 0 && (
-            <FormSection
-              title={t('pages.workoutPlans.exercisesSection')}
-              icon={Dumbbell}
-            >
-              <div className="space-y-xs">
-                {selectedDayPreview.exercises.map((ex) => (
-                  <div key={ex.id} className="gap-sm flex items-center">
-                    <ExerciseThumbnail thumbnailUrl={ex.thumbnail_url} size="sm" />
-                    <span className="text-sm">{ex.name}</span>
-                  </div>
-                ))}
-              </div>
-            </FormSection>
-          )}
-          <div className="gap-sm pt-md flex justify-end border-t">
-            <Button type="button" variant="outline" onClick={() => setStep(1)}>
-              {t('common.actions.back')}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => void handleConfirm()}
-              disabled={isSubmitting}
-            >
-              {isSubmitting && <Loader2 className="mr-sm h-4 w-4 animate-spin" />}
-              {t('pages.workoutSessions.quickLogConfirm')}
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Catalog exercise sub-components ────────────────────────────────────────
 
 function ExerciseCatalogCard({
@@ -2029,14 +1685,14 @@ function ExerciseCatalogCard({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="group border-border bg-card p-md relative flex flex-col rounded-lg border transition-shadow hover:shadow-md">
+    <div className="group border-border bg-card p-md relative flex flex-col rounded-lg border transition-colors">
       <div className="mb-sm gap-sm flex items-start justify-between">
         <ExerciseThumbnail
           gifUrl={exercise.gif_url}
           thumbnailUrl={exercise.thumbnail_url}
           size="lg"
         />
-        <div className="gap-xs flex opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="gap-xs flex">
           <Button
             variant="ghost"
             size="icon"
@@ -2046,10 +1702,17 @@ function ExerciseCatalogCard({
           >
             <ImagePlus className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+          <Button
+            aria-label={t('common.actions.edit')}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onEdit}
+          >
             <Edit className="h-3.5 w-3.5" />
           </Button>
           <Button
+            aria-label={t('common.actions.delete')}
             variant="ghost"
             size="icon"
             className="text-destructive hover:text-destructive h-7 w-7"
@@ -2179,117 +1842,103 @@ function ExerciseCatalogForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-lg">
-      {/* Header */}
-      <div className="gap-md bg-category-exercise/10 px-md py-sm ring-category-exercise/20 flex items-center rounded-lg ring-1">
-        <div className="bg-category-exercise/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-          <Dumbbell className="text-category-exercise h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-category-exercise text-sm font-semibold">
-            {exercise
-              ? t('pages.exercises.editTitle', 'Editar Exercício')
-              : t('pages.exercises.newTitle', 'Novo Exercício')}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {values.name ||
-              t('pages.exercises.newDesc', 'Cadastre um exercício no catálogo')}
-          </p>
-        </div>
+    <form onSubmit={handleSubmit} className="gap-md flex min-h-0 flex-1 flex-col">
+      {/* Só os campos rolam; título (DialogHeader) e rodapé ficam fixos */}
+      <div className="space-y-lg px-xs">
+        {/* Nome */}
+        <FormSection title={t('pages.exercises.fieldName')} icon={Dumbbell}>
+          <Input
+            placeholder={t('pages.exercises.fieldNamePlaceholder')}
+            value={values.name}
+            onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))}
+            required
+          />
+        </FormSection>
+
+        {/* Categoria */}
+        <FormSection title={t('pages.exercises.fieldCategory')} icon={Activity}>
+          <div className="gap-sm grid grid-cols-3">
+            {WORKOUT_CATEGORIES.map((key) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={values.category === key}
+                onClick={() => setValues((v) => ({ ...v, category: key }))}
+                className={cn(
+                  'px-sm py-sm rounded-lg border-2 text-sm font-medium transition',
+                  values.category === key
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border bg-card text-muted-foreground hover:border-primary/40'
+                )}
+              >
+                {t(`pages.workoutPlans.categories.${key}`)}
+              </button>
+            ))}
+          </div>
+        </FormSection>
+
+        {/* Grupos musculares */}
+        <FormSection title={t('pages.exercises.fieldMuscles')} icon={Layers}>
+          <div className="space-y-sm">
+            <div className="gap-xs flex flex-wrap">
+              {CATALOG_MUSCLE_CHIP_KEYS.map((key) => {
+                const label = t(`pages.workoutPlans.muscleChips.${key}`);
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => toggleChip(label)}
+                    className={cn(
+                      'px-sm py-xs rounded-full border text-xs font-medium transition',
+                      selectedChips.includes(label)
+                        ? 'border-primary bg-primary/15 text-primary'
+                        : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary'
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <Input
+              placeholder={t('pages.exercises.fieldMusclesPlaceholder')}
+              value={values.muscle_groups}
+              onChange={(e) => {
+                setValues((v) => ({ ...v, muscle_groups: e.target.value }));
+                setSelectedChips(
+                  e.target.value
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                );
+              }}
+            />
+          </div>
+        </FormSection>
+
+        {/* Descrição */}
+        <FormSection title={t('pages.exercises.fieldDescription')} icon={FileText}>
+          <Textarea
+            placeholder={t('pages.exercises.fieldDescriptionPlaceholder')}
+            rows={3}
+            value={values.description}
+            onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
+            className="resize-none"
+          />
+        </FormSection>
       </div>
 
-      {/* Nome */}
-      <FormSection title={t('pages.exercises.fieldName')} icon={Dumbbell}>
-        <Input
-          placeholder={t('pages.exercises.fieldNamePlaceholder')}
-          value={values.name}
-          onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))}
-          required
-        />
-      </FormSection>
-
-      {/* Categoria */}
-      <FormSection title={t('pages.exercises.fieldCategory')} icon={Activity}>
-        <div className="gap-sm grid grid-cols-3">
-          {WORKOUT_CATEGORIES.map((key) => (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={values.category === key}
-              onClick={() => setValues((v) => ({ ...v, category: key }))}
-              className={cn(
-                'px-sm py-sm rounded-lg border-2 text-sm font-medium transition',
-                values.category === key
-                  ? 'border-category-exercise bg-category-exercise/10 text-category-exercise'
-                  : 'border-border bg-card text-muted-foreground hover:border-category-exercise/40'
-              )}
-            >
-              {t(`pages.workoutPlans.categories.${key}`)}
-            </button>
-          ))}
-        </div>
-      </FormSection>
-
-      {/* Grupos musculares */}
-      <FormSection title={t('pages.exercises.fieldMuscles')} icon={Layers}>
-        <div className="space-y-sm">
-          <div className="gap-xs flex flex-wrap">
-            {CATALOG_MUSCLE_CHIP_KEYS.map((key) => {
-              const label = t(`pages.workoutPlans.muscleChips.${key}`);
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => toggleChip(label)}
-                  className={cn(
-                    'px-sm py-xs rounded-full border text-xs font-medium transition',
-                    selectedChips.includes(label)
-                      ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
-                      : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
-                  )}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-          <Input
-            placeholder={t('pages.exercises.fieldMusclesPlaceholder')}
-            value={values.muscle_groups}
-            onChange={(e) => {
-              setValues((v) => ({ ...v, muscle_groups: e.target.value }));
-              setSelectedChips(
-                e.target.value
-                  .split(',')
-                  .map((s) => s.trim())
-                  .filter(Boolean)
-              );
-            }}
-          />
-        </div>
-      </FormSection>
-
-      {/* Descrição */}
-      <FormSection title={t('pages.exercises.fieldDescription')} icon={FileText}>
-        <Textarea
-          placeholder={t('pages.exercises.fieldDescriptionPlaceholder')}
-          rows={3}
-          value={values.description}
-          onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
-          className="resize-none"
-        />
-      </FormSection>
-
-      <div className="gap-sm border-border pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-category-exercise hover:bg-category-exercise/90"
-        >
-          {isLoading && <Loader2 className="mr-sm h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
           {t('common.actions.save')}
         </Button>
       </div>
@@ -2335,66 +1984,73 @@ function SortableExerciseItem({
       >
         <GripVertical className="h-3.5 w-3.5" />
       </PlainButton>
-      <span className="bg-category-exercise/20 text-category-exercise flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold">
+      <span className="bg-primary/20 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold">
         {idx + 1}
       </span>
       <ExerciseThumbnail thumbnailUrl={ex.thumbnail_url} size="sm" />
-      <span className="flex-1 text-sm font-medium">{ex.name}</span>
-      <div className="gap-xs flex shrink-0 items-center">
-        {formatSetTargets(ex) ? (
-          <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
-            {formatSetTargets(ex)}
-          </span>
-        ) : (
-          formatExerciseLoad(ex, t) && (
+      {/* Nome em cima, badges embaixo quebrando linha: cabe em colunas estreitas */}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium" title={ex.name}>
+          {ex.name}
+        </p>
+        <div className="gap-xs mt-0.5 flex flex-wrap items-center">
+          {formatSetTargets(ex) ? (
             <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
-              {formatExerciseLoad(ex, t)}
+              {formatSetTargets(ex)}
             </span>
-          )
-        )}
-        {ex.sets > 0 ? (
-          <>
-            <span className="bg-category-exercise/15 px-xs text-category-exercise rounded-full py-px text-xs font-semibold">
-              {ex.sets}×
-            </span>
+          ) : (
+            formatExerciseLoad(ex, t) && (
+              <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
+                {formatExerciseLoad(ex, t)}
+              </span>
+            )
+          )}
+          {ex.sets > 0 ? (
+            <>
+              <span className="bg-primary/15 px-xs text-primary rounded-full py-px text-xs font-semibold">
+                {ex.sets}×
+              </span>
+              <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
+                {ex.reps_min}–{ex.reps_max}
+              </span>
+            </>
+          ) : (
             <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
-              {ex.reps_min}–{ex.reps_max}
+              {t('pages.workoutPlans.noSets')}
             </span>
-          </>
-        ) : (
-          <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
-            {t('pages.workoutPlans.noSets')}
-          </span>
-        )}
-        {ex.rest_seconds != null && ex.rest_seconds > 0 && (
-          <span className="bg-muted px-xs text-muted-foreground flex items-center gap-0.5 rounded-full py-px text-xs">
-            <Clock className="h-2.5 w-2.5" />
-            {ex.rest_seconds}s
-          </span>
-        )}
-        {(onEdit || onDelete) && (
-          <div className="gap-xs flex opacity-0 transition-opacity group-hover:opacity-100">
-            {onEdit && (
-              <PlainButton
-                type="button"
-                onClick={() => onEdit(ex)}
-                className="p-xs text-muted-foreground hover:text-foreground rounded"
-              >
-                <Edit className="h-3 w-3" />
-              </PlainButton>
-            )}
-            {onDelete && (
-              <PlainButton
-                type="button"
-                onClick={() => onDelete(ex)}
-                className="p-xs text-muted-foreground hover:text-destructive rounded"
-              >
-                <Trash2 className="h-3 w-3" />
-              </PlainButton>
-            )}
-          </div>
-        )}
+          )}
+          {ex.rest_seconds != null && ex.rest_seconds > 0 && (
+            <span className="bg-muted px-xs text-muted-foreground flex items-center gap-0.5 rounded-full py-px text-xs">
+              <Clock className="h-2.5 w-2.5" />
+              {ex.rest_seconds}s
+            </span>
+          )}
+        </div>
       </div>
+      {(onEdit || onDelete) && (
+        <div className="gap-xs flex shrink-0">
+          {onEdit && (
+            <PlainButton
+              aria-label={t('common.actions.edit')}
+              type="button"
+              onClick={() => onEdit(ex)}
+              className="p-xs hover:bg-muted rounded"
+            >
+              <Edit className="h-3 w-3" />
+            </PlainButton>
+          )}
+          {onDelete && (
+            <PlainButton
+              aria-label={t('common.actions.delete')}
+              type="button"
+              onClick={() => onDelete(ex)}
+              className="p-xs text-destructive hover:bg-destructive/10 rounded"
+            >
+              <Trash2 className="h-3 w-3" />
+            </PlainButton>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -2455,11 +2111,9 @@ function ExerciseList({
       collisionDetection={closestCenter}
       onDragEnd={(e) => void handleDragEnd(e)}
     >
-      <SortableContext
-        items={items.map((e) => e.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        <div className="space-y-xs">
+      <SortableContext items={items.map((e) => e.id)} strategy={rectSortingStrategy}>
+        {/* 2 por linha: 1º, 3º, 5º… à esquerda; 2º, 4º… à direita */}
+        <div className="gap-xs grid sm:grid-cols-2">
           {items.map((ex, idx) => (
             <SortableExerciseItem
               key={ex.id}
@@ -2475,87 +2129,73 @@ function ExerciseList({
   );
 }
 
-interface InactivePlanRowProps {
+interface PlanCardProps {
   plan: WorkoutPlan;
-  expanded: boolean;
-  expandedDays: Set<number>;
-  onToggle: () => void;
-  onToggleDay: (id: number) => void;
+  onOpen: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onNewDay: () => void;
-  onEditDay: (day: WorkoutDay) => void;
-  onDeleteDay: (day: WorkoutDay) => void;
-  onAddExercise: (day: WorkoutDay) => void;
-  onEditExercise: (ex: WorkoutExercise, day: WorkoutDay) => void;
-  onDeleteExercise: (ex: WorkoutExercise) => void;
   t: (key: string) => string;
 }
 
-function InactivePlanRow({
-  plan,
-  expanded,
-  expandedDays,
-  onToggle,
-  onToggleDay,
-  onEdit,
-  onDelete,
-  onNewDay,
-  onEditDay,
-  onDeleteDay,
-  onAddExercise,
-  onEditExercise,
-  onDeleteExercise,
-  t,
-}: InactivePlanRowProps) {
+function PlanCard({ plan, onOpen, onEdit, onDelete, t }: PlanCardProps) {
   return (
-    <div className="border-border overflow-hidden rounded-lg border">
-      <div className="gap-sm bg-card px-md py-sm flex items-center">
-        <button
-          type="button"
-          className="gap-sm flex min-w-0 flex-1 items-center text-left"
-          onClick={onToggle}
+    <div className="bg-card border-border flex flex-col overflow-hidden rounded-lg border">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="gap-sm p-md flex flex-1 items-start text-left"
+      >
+        <div
+          className={cn(
+            'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+            plan.is_active
+              ? 'bg-primary/15 text-primary'
+              : 'bg-muted text-muted-foreground'
+          )}
         >
-          <div className="bg-muted flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-            <ClipboardList className="text-muted-foreground h-4 w-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-foreground truncate font-semibold">{plan.name}</p>
-            <p className="text-muted-foreground text-xs">
-              {plan.day_count} {t('pages.workoutPlans.days')} · {plan.exercise_count}{' '}
-              {t('pages.workoutPlans.exercises')}
+          <ClipboardList className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-foreground truncate font-semibold">{plan.name}</p>
+          <p className="text-muted-foreground text-xs">
+            {t(`pages.workoutPlans.categories.${plan.category}`)}
+          </p>
+          {plan.description && (
+            <p className="mt-xs text-muted-foreground line-clamp-2 text-xs">
+              {plan.description}
             </p>
-          </div>
-          <div
-            className={cn(
-              'flex h-5 w-5 shrink-0 items-center justify-center rounded transition-transform',
-              expanded && 'rotate-90'
-            )}
+          )}
+          <p className="mt-sm text-muted-foreground text-xs">
+            {plan.day_count} {t('pages.workoutPlans.days')} · {plan.exercise_count}{' '}
+            {t('pages.workoutPlans.exercises')}
+          </p>
+        </div>
+      </button>
+      <div className="border-border px-md py-xs flex items-center justify-between border-t">
+        <Badge
+          variant={plan.is_active ? 'success' : 'secondary'}
+          className="gap-xs text-xs"
+        >
+          {(() => {
+            const StatusIcon =
+              TASK_STATUS_ICONS[plan.is_active ? 'active' : 'inactive'];
+            return <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />;
+          })()}
+          {plan.is_active
+            ? t('pages.workoutPlans.active')
+            : t('pages.workoutPlans.inactive')}
+        </Badge>
+        <div className="gap-xs flex">
+          <Button
+            aria-label={t('common.actions.edit')}
+            variant="ghost"
+            size="icon"
+            onClick={onEdit}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-muted-foreground"
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </div>
-        </button>
-        <div className="ml-sm gap-xs flex shrink-0 items-center">
-          <Badge variant="secondary" className="text-xs">
-            {t('pages.workoutPlans.inactive')}
-          </Badge>
-          <Button variant="ghost" size="icon" onClick={onEdit}>
             <Edit className="h-4 w-4" />
           </Button>
           <Button
+            aria-label={t('common.actions.delete')}
             variant="ghost"
             size="icon"
             className="text-destructive hover:text-destructive"
@@ -2565,137 +2205,49 @@ function InactivePlanRow({
           </Button>
         </div>
       </div>
-
-      <AnimatePresence initial={false}>
-        {expanded && (
-          <motion.div
-            key="inactive-plan-content"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: DURATION.fast, ease: 'easeInOut' }}
-            style={{ overflow: 'hidden' }}
-          >
-            <div className="space-y-sm border-border bg-background p-md border-t">
-              <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={onNewDay}>
-                  <Plus className="mr-xs h-3 w-3" />
-                  {t('pages.workoutPlans.newDayBtn')}
-                </Button>
-              </div>
-              {plan.days?.map((day) => (
-                <div
-                  key={day.id}
-                  className="border-border overflow-hidden rounded-lg border"
-                >
-                  <div className="bg-muted/30 px-sm py-xs flex items-center justify-between">
-                    <button
-                      type="button"
-                      className="gap-xs flex min-w-0 flex-1 items-center text-left"
-                      onClick={() => onToggleDay(day.id)}
-                    >
-                      <div className="text-muted-foreground flex h-5 w-5 shrink-0 items-center justify-center">
-                        {getMuscleIcon(day.muscle_groups)}
-                      </div>
-                      <span className="text-sm font-medium">{day.name}</span>
-                      {day.muscle_groups && (
-                        <span className="text-muted-foreground truncate text-xs">
-                          — {day.muscle_groups}
-                        </span>
-                      )}
-                    </button>
-                    <div className="gap-xs flex shrink-0 items-center">
-                      <span className="text-muted-foreground text-xs">
-                        {day.exercise_count} {t('pages.workoutPlans.exercises')}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => onEditDay(day)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive h-7 w-7"
-                        onClick={() => onDeleteDay(day)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  {expandedDays.has(day.id) && (
-                    <div className="space-y-xs px-sm pb-sm pt-xs">
-                      {day.exercises && day.exercises.length > 0 && (
-                        <ExerciseList
-                          exercises={day.exercises}
-                          onEdit={(ex) => onEditExercise(ex, day)}
-                          onDelete={onDeleteExercise}
-                        />
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => onAddExercise(day)}
-                        className="gap-sm border-category-exercise/30 py-xs text-category-exercise hover:border-category-exercise/60 hover:bg-category-exercise/5 flex w-full items-center justify-center rounded-lg border-2 border-dashed text-xs transition-colors"
-                      >
-                        <Plus className="h-3 w-3" />
-                        {t('pages.workoutPlans.addExerciseBtn')}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
 
-interface SessionsGroupedProps {
-  sessions: WorkoutSession[];
-  onEdit: (s: WorkoutSession) => void;
-  onDelete: (s: WorkoutSession) => Promise<void>;
-  t: (key: string, opts?: Record<string, unknown>) => string;
+interface PlanDaysListProps {
+  plan: WorkoutPlan;
+  onOpenDay: (day: WorkoutDay) => void;
+  t: (key: string) => string;
 }
 
-function SessionsGrouped({ sessions, onEdit, onDelete, t }: SessionsGroupedProps) {
-  const { thisWeek, lastWeek, older } = groupSessionsByWeek(sessions);
+/** Cards das divisões pela ordem; quebram linha em vez de rolar para o lado. */
+function PlanDaysList({ plan, onOpenDay, t }: PlanDaysListProps) {
+  const days = [...(plan.days ?? [])].sort((a, b) => a.order - b.order || a.id - b.id);
 
-  const groups = [
-    { key: 'thisWeek', label: t('pages.workoutSessions.thisWeek'), items: thisWeek },
-    { key: 'lastWeek', label: t('pages.workoutSessions.lastWeek'), items: lastWeek },
-    { key: 'older', label: t('pages.workoutSessions.older'), items: older },
-  ].filter((g) => g.items.length > 0);
+  if (days.length === 0) {
+    return <EmptyState title={t('pages.workoutHub.emptyDays')} />;
+  }
 
   return (
-    <div className="space-y-lg">
-      {groups.map((group) => (
-        <div key={group.key}>
-          <div className="mb-sm gap-sm flex items-center">
-            <div className="bg-border h-px flex-1" />
-            <span className="gap-xs bg-muted px-sm text-muted-foreground flex items-center rounded-full py-0.5 text-xs font-semibold">
-              <Calendar className="h-3 w-3" />
-              {group.label}
-              <span className="font-normal opacity-70">· {group.items.length}</span>
+    <div className="gap-sm flex flex-wrap justify-center">
+      {days.map((day) => (
+        <button
+          key={day.id}
+          type="button"
+          onClick={() => onOpenDay(day)}
+          // Larguras = colunas do antigo grid (2/3/5), descontando o gap; flex centraliza a última linha
+          className="p-sm border-border bg-background flex w-[calc((100%-var(--spacing-sm))/2)] flex-col items-start rounded-lg border-2 text-left sm:w-[calc((100%-2*var(--spacing-sm))/3)] lg:w-[calc((100%-4*var(--spacing-sm))/5)]"
+        >
+          <div className="mb-sm bg-primary/15 text-primary flex h-8 w-8 items-center justify-center rounded-lg">
+            {getMuscleIcon(day.muscle_groups)}
+          </div>
+          <span className="text-foreground text-sm leading-tight font-semibold">
+            {day.name}
+          </span>
+          {day.muscle_groups && (
+            <span className="text-muted-foreground mt-0.5 line-clamp-1 text-xs">
+              {day.muscle_groups}
             </span>
-            <div className="bg-border h-px flex-1" />
-          </div>
-          <div className="space-y-sm">
-            {group.items.map((session) => (
-              <SessionCard
-                key={session.id}
-                session={session}
-                onEdit={() => onEdit(session)}
-                onDelete={() => onDelete(session)}
-                t={t}
-              />
-            ))}
-          </div>
-        </div>
+          )}
+          <span className="mt-sm text-muted-foreground text-xs">
+            {day.exercise_count} {t('pages.workoutPlans.exercises')}
+          </span>
+        </button>
       ))}
     </div>
   );
@@ -2703,30 +2255,33 @@ function SessionsGrouped({ sessions, onEdit, onDelete, t }: SessionsGroupedProps
 
 interface SessionCardProps {
   session: WorkoutSession;
+  onView: () => void;
   onEdit: () => void;
   onDelete: () => void;
   t: (key: string, opts?: Record<string, unknown>) => string;
 }
 
-function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
-  const [expanded, setExpanded] = useState(false);
+function SessionCard({ session, onView, onEdit, onDelete, t }: SessionCardProps) {
   const exerciseCount = session.session_exercises?.length ?? 0;
-  const date = new Date(session.date + 'T12:00:00');
-  const dayNum = date.getDate();
-  const monthLabel = t(
-    `pages.planningDashboard.monthShort.${date.getMonth()}`
-  ).toUpperCase();
+  const dateLabel = formatDate(session.date);
 
   return (
-    <div className="group gap-md border-border bg-card p-md hover:border-category-exercise/30 flex rounded-lg border transition hover:shadow-sm">
+    // Card inteiro abre os detalhes; editar/excluir param a propagação
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onView}
+      onKeyDown={(e) => {
+        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onView();
+        }
+      }}
+      className="group gap-md border-border bg-card p-md focus-visible:ring-ring flex cursor-pointer rounded-lg border focus-visible:ring-2 focus-visible:outline-none"
+    >
       {/* Date block */}
-      <div className="bg-category-exercise/10 py-sm flex w-14 shrink-0 flex-col items-center justify-center rounded-lg text-center">
-        <span className="text-category-exercise text-2xl leading-none font-bold">
-          {dayNum}
-        </span>
-        <span className="text-category-exercise/70 text-2xs mt-0.5 font-semibold tracking-wide uppercase">
-          {monthLabel}
-        </span>
+      <div className="bg-primary/10 px-sm flex shrink-0 items-center justify-center rounded-lg">
+        <span className="text-primary text-sm font-bold tabular-nums">{dateLabel}</span>
       </div>
 
       {/* Content */}
@@ -2742,22 +2297,35 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
               </p>
             )}
           </div>
-          <div className="gap-xs flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+          <div className="gap-xs flex shrink-0">
+            <Button
+              aria-label={t('common.actions.edit')}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+            >
               <Edit className="h-3 w-3" />
             </Button>
             <Button
+              aria-label={t('common.actions.delete')}
               variant="ghost"
               size="icon"
               className="text-destructive hover:text-destructive h-7 w-7"
-              onClick={onDelete}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
             >
               <Trash2 className="h-3 w-3" />
             </Button>
           </div>
         </div>
 
-        <div className="mt-sm gap-xs flex flex-wrap items-center">
+        <div className="mt-sm gap-xs flex flex-wrap items-center justify-center">
           {session.session_exercises && session.session_exercises.length > 0 && (
             <div className="-space-x-sm flex">
               {session.session_exercises.slice(0, 4).map((se) => (
@@ -2804,86 +2372,130 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
             </span>
           )}
         </div>
-
-        {exerciseCount > 0 && (
-          <>
-            <button
-              type="button"
-              aria-expanded={expanded}
-              onClick={() => setExpanded((v) => !v)}
-              className="mt-sm gap-xs text-muted-foreground hover:text-foreground flex items-center text-xs font-medium"
-            >
-              <ChevronDown
-                className={cn(
-                  'h-3.5 w-3.5 transition-transform',
-                  expanded && 'rotate-180'
-                )}
-              />
-              {expanded
-                ? t('pages.workoutSessions.hideDetails')
-                : t('pages.workoutSessions.showDetails')}
-            </button>
-
-            {expanded && (
-              <div className="mt-sm space-y-sm">
-                {[...session.session_exercises]
-                  .sort((a, b) => a.order - b.order)
-                  .map((se) => (
-                    <div key={se.id} className="border-border/60 rounded-md border">
-                      <p className="bg-muted/30 px-sm py-xs text-sm font-medium">
-                        {se.exercise_name}
-                      </p>
-                      {se.sets.length === 0 ? (
-                        <p className="px-sm py-xs text-muted-foreground text-xs">
-                          {t('pages.workoutPlans.noSets')}
-                        </p>
-                      ) : (
-                        <table className="w-full text-xs">
-                          <thead className="text-muted-foreground">
-                            <tr>
-                              <th className="px-sm py-xs text-left font-medium">
-                                {t('pages.workoutSessions.setNumber')}
-                              </th>
-                              <th className="px-sm py-xs text-left font-medium">
-                                {t('pages.workoutSessions.load')}
-                              </th>
-                              <th className="px-sm py-xs text-left font-medium">
-                                {t('pages.workoutSessions.repsDone')}
-                              </th>
-                              <th className="px-sm py-xs w-6" />
-                            </tr>
-                          </thead>
-                          <tbody className="divide-border/40 divide-y">
-                            {[...se.sets]
-                              .sort((a, b) => a.set_number - b.set_number)
-                              .map((set) => (
-                                <tr key={set.id}>
-                                  <td className="px-sm py-xs">{set.set_number}</td>
-                                  <td className="px-sm py-xs">
-                                    {set.load != null
-                                      ? `${Number(set.load)} ${set.load_unit_display}`
-                                      : '—'}
-                                  </td>
-                                  <td className="px-sm py-xs">
-                                    {set.reps_done ?? '—'}
-                                  </td>
-                                  <td className="px-sm py-xs">
-                                    {set.completed && (
-                                      <Check className="text-success h-3.5 w-3.5" />
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
-                      )}
-                    </div>
-                  ))}
-              </div>
-            )}
-          </>
-        )}
       </div>
+    </div>
+  );
+}
+
+function SessionDetails({
+  session,
+  t,
+}: {
+  session: WorkoutSession;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}) {
+  const { i18n } = useTranslation();
+  const date = new Date(session.date + 'T12:00:00').toLocaleDateString(i18n.language);
+  const time = (v?: string | null) => (v ? v.slice(0, 5) : '—');
+  const fmtLoad = (v: string) =>
+    new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 }).format(
+      Number(v)
+    );
+  const exercises = [...(session.session_exercises ?? [])].sort(
+    (a, b) => a.order - b.order
+  );
+  const info = [
+    { icon: CalendarDays, label: t('pages.workoutSessions.date'), value: date },
+    {
+      icon: Clock,
+      label: `${t('pages.workoutSessions.startTime')} – ${t('pages.workoutSessions.endTime')}`,
+      value: `${time(session.started_at)} – ${time(session.finished_at)}`,
+    },
+    {
+      icon: Timer,
+      label: t('pages.workoutSessions.duration'),
+      value:
+        session.duration_minutes != null
+          ? formatDuration(session.duration_minutes)
+          : '—',
+    },
+  ];
+
+  return (
+    <div className="space-y-md">
+      <div className="gap-sm grid grid-cols-1 sm:grid-cols-3">
+        {info.map(({ icon: Icon, label, value }) => (
+          <div key={label} className="bg-muted/40 p-sm rounded-md">
+            <p className="gap-xs text-muted-foreground flex items-center text-xs">
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+            </p>
+            <p className="text-sm font-medium">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-sm">
+        <p className="gap-xs flex items-center text-sm font-medium">
+          <ListChecks className="text-muted-foreground h-4 w-4" />
+          {t('pages.workoutSessions.exercisesSection')}
+        </p>
+        <div className="gap-sm grid grid-cols-1 items-start md:grid-cols-2 xl:grid-cols-3">
+          {exercises.map((se) => (
+            <div key={se.id} className="border-border/60 rounded-md border">
+              <p className="bg-muted/30 px-sm py-xs text-sm font-medium">
+                {se.exercise_name}
+              </p>
+              {se.sets.length === 0 ? (
+                <p className="px-sm py-xs text-muted-foreground text-xs">
+                  {t('pages.workoutPlans.noSets')}
+                </p>
+              ) : (
+                <table className="w-full text-xs">
+                  <thead className="text-muted-foreground">
+                    <tr>
+                      <th className="px-sm py-xs text-left font-medium">
+                        {t('pages.workoutSessions.setNumber')}
+                      </th>
+                      <th className="px-sm py-xs text-left font-medium">
+                        {t('pages.workoutSessions.load')}
+                      </th>
+                      <th className="px-sm py-xs text-left font-medium">
+                        {t('pages.workoutSessions.repsDone')}
+                      </th>
+                      <th className="px-sm py-xs w-6" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-border/40 divide-y">
+                    {[...se.sets]
+                      .sort((a, b) => a.set_number - b.set_number)
+                      .map((set) => (
+                        <tr key={set.id}>
+                          <td className="px-sm py-xs">{set.set_number}</td>
+                          <td className="px-sm py-xs">
+                            {set.load != null
+                              ? `${fmtLoad(set.load)} ${set.load_unit_display}`
+                              : t('pages.workoutSessions.bodyweight')}
+                          </td>
+                          <td className="px-sm py-xs">{set.reps_done ?? '—'}</td>
+                          <td className="px-sm py-xs">
+                            {set.completed && (
+                              <Check className="text-success h-3.5 w-3.5" />
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {session.notes && (
+        <div className="space-y-xs">
+          <p className="gap-xs flex items-center text-sm font-medium">
+            <NotebookPen className="text-muted-foreground h-4 w-4" />
+            {t('pages.workoutSessions.sessionNotes')}
+          </p>
+          <p className="text-muted-foreground text-sm whitespace-pre-line">
+            {session.notes}
+          </p>
+        </div>
+      )}
+
+      <DialogCloseFooter />
     </div>
   );
 }
@@ -2893,154 +2505,161 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
 interface TodayPlanTabProps {
   activePlans: WorkoutPlan[];
   plansLoading: boolean;
-  onStartSession: () => void;
   t: (key: string, opts?: Record<string, unknown>) => string;
 }
 
-function TodayPlanTab({
-  activePlans,
-  plansLoading,
-  onStartSession,
-  t,
-}: TodayPlanTabProps) {
+function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
   // JS getDay(): 0=Sun,1=Mon,...,6=Sat → convert to Python convention 0=Mon,6=Sun
   const jsDay = new Date().getDay();
   const todayWeekday = jsDay === 0 ? 6 : jsDay - 1;
+  const [openDay, setOpenDay] = useState<WorkoutDay | null>(null);
 
   if (plansLoading) return <LoadingState />;
 
   return (
-    <div className="space-y-lg">
-      {/* Plano ativo */}
+    <div className="page-fill flex flex-1 flex-col">
       {(() => {
-        const plansForToday = activePlans.filter((plan) =>
-          plan.days.some(
-            (day) =>
-              day.days_of_week.length === 0 || day.days_of_week.includes(todayWeekday)
-          )
-        );
-
         if (activePlans.length === 0) {
           return (
             <EmptyState
               title={t('pages.workoutHub.noActivePlan')}
-              description={t('pages.workoutHub.createPlan')}
               icon={<Dumbbell className="h-8 w-8" />}
-              action={{
-                label: t('pages.workoutSessions.newSessionBtn'),
-                icon: <Plus className="mr-xs h-4 w-4" />,
-                onClick: onStartSession,
-              }}
             />
           );
         }
 
-        if (plansForToday.length === 0) {
+        // Divisões de hoje de todos os planos ativos, numa lista paginada única
+        const todayDays = activePlans.flatMap((plan) =>
+          plan.days
+            .filter(
+              (day) =>
+                day.days_of_week.length === 0 || day.days_of_week.includes(todayWeekday)
+            )
+            .map((day) => ({ plan, day }))
+        );
+
+        if (todayDays.length === 0) {
           return (
             <EmptyState
               title={t('pages.workoutHub.noTrainingToday')}
-              description={t('pages.workoutHub.noTrainingTodayDesc')}
               icon={<Dumbbell className="h-8 w-8" />}
             />
           );
         }
 
-        return plansForToday.map((plan) => (
-          <div key={plan.id} className="space-y-sm">
-            <div className="gap-sm flex items-center">
-              <div className="bg-category-exercise/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
-                <ClipboardList className="text-category-exercise h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-foreground text-sm font-semibold">{plan.name}</p>
-                {plan.description && (
-                  <p className="text-muted-foreground text-xs">{plan.description}</p>
-                )}
-              </div>
-            </div>
-
-            {plan.days.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                {t('pages.workoutPlans.emptyDays')}
-              </p>
-            ) : (
-              <div className="space-y-sm">
-                {plan.days
-                  .filter(
-                    (day) =>
-                      day.days_of_week.length === 0 ||
-                      day.days_of_week.includes(todayWeekday)
-                  )
-                  .map((day) => (
-                    <div
-                      key={day.id}
-                      className="border-border bg-card overflow-hidden rounded-lg border"
-                    >
-                      <div className="border-border/60 bg-muted/30 px-md py-sm flex items-center justify-between border-b">
-                        <div className="gap-sm flex items-center">
-                          {getMuscleIcon(day.muscle_groups)}
-                          <div>
-                            <p className="text-sm font-semibold">{day.name}</p>
-                            {day.muscle_groups && (
-                              <p className="text-muted-foreground text-xs">
-                                {day.muscle_groups}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {day.exercises.length}{' '}
-                          {day.exercises.length === 1
-                            ? t('pages.workoutPlans.exerciseSingular')
-                            : t('pages.workoutPlans.exercisePlural')}
-                        </Badge>
+        return (
+          <PaginatedSlide
+            items={todayDays}
+            pageSize={LIST_PAGE_SIZE}
+            className="space-y-sm"
+          >
+            {(pageDays) =>
+              pageDays.map(({ plan, day }, i) => (
+                <React.Fragment key={day.id}>
+                  {/* Nome do plano antes da primeira divisão dele na página */}
+                  {pageDays[i - 1]?.plan.id !== plan.id && (
+                    <div className="gap-sm flex items-center">
+                      <div className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
+                        <ClipboardList className="text-primary h-4 w-4" />
                       </div>
-                      {day.exercises.length > 0 && (
-                        <div className="divide-border/40 divide-y">
-                          {day.exercises.map((ex) => (
-                            <div
-                              key={ex.id}
-                              className="px-md py-xs flex items-center justify-between"
-                            >
-                              <div className="gap-sm flex items-center">
-                                <Dumbbell className="text-category-exercise/60 h-3.5 w-3.5 shrink-0" />
-                                <span className="text-sm">{ex.name}</span>
-                              </div>
-                              <div className="gap-sm text-muted-foreground flex items-center text-xs">
-                                {ex.sets > 0 ? (
-                                  <span>
-                                    {ex.sets}×
-                                    {ex.reps_min === ex.reps_max
-                                      ? ex.reps_min
-                                      : `${ex.reps_min}–${ex.reps_max}`}
-                                  </span>
-                                ) : (
-                                  <span>{t('pages.workoutPlans.noSets')}</span>
-                                )}
-                                {(formatSetTargets(ex) ??
-                                  formatExerciseLoad(ex, t)) && (
-                                  <span className="text-foreground font-medium">
-                                    {formatSetTargets(ex) ?? formatExerciseLoad(ex, t)}
-                                  </span>
-                                )}
-                                {ex.rest_seconds != null && ex.rest_seconds > 0 && (
-                                  <span className="flex items-center gap-0.5">
-                                    <Clock className="h-3 w-3" />
-                                    {ex.rest_seconds}s
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      <p className="text-foreground text-sm font-semibold">
+                        {plan.name}
+                      </p>
                     </div>
-                  ))}
-              </div>
-            )}
-          </div>
-        ));
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setOpenDay(day)}
+                    className="border-border bg-card w-full overflow-hidden rounded-lg border text-left"
+                  >
+                    <div className="px-md py-sm flex items-center justify-between">
+                      <div className="gap-sm flex items-center">
+                        <span className="text-primary">
+                          {getMuscleIcon(day.muscle_groups)}
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold">{day.name}</p>
+                          {day.muscle_groups && (
+                            <p className="text-muted-foreground text-xs">
+                              {day.muscle_groups}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {day.exercises.length}{' '}
+                        {day.exercises.length === 1
+                          ? t('pages.workoutPlans.exerciseSingular')
+                          : t('pages.workoutPlans.exercisePlural')}
+                      </Badge>
+                    </div>
+                  </button>
+                </React.Fragment>
+              ))
+            }
+          </PaginatedSlide>
+        );
       })()}
+
+      {/* Modal exercícios da divisão */}
+      <Dialog open={!!openDay} onOpenChange={(open) => !open && setOpenDay(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="gap-sm flex items-center">
+              <span className="text-primary shrink-0" aria-hidden="true">
+                {getMuscleIcon(openDay?.muscle_groups)}
+              </span>
+              {openDay?.name}
+            </DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>{openDay?.muscle_groups}</DialogDescription>
+            </VisuallyHidden>
+          </DialogHeader>
+          {openDay?.exercises.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              {t('pages.workoutPlans.noExercises')}
+            </p>
+          ) : (
+            <div className="divide-border/40 divide-y rounded-lg border">
+              {openDay?.exercises.map((ex) => (
+                <div
+                  key={ex.id}
+                  className="gap-sm px-md py-xs flex items-center justify-between"
+                >
+                  <div className="gap-sm flex items-center">
+                    <Dumbbell className="text-primary h-3.5 w-3.5 shrink-0" />
+                    <span className="text-sm">{ex.name}</span>
+                  </div>
+                  <div className="gap-sm text-muted-foreground flex items-center text-xs">
+                    {ex.sets > 0 ? (
+                      <span>
+                        {ex.sets}×
+                        {ex.reps_min === ex.reps_max
+                          ? ex.reps_min
+                          : `${ex.reps_min}–${ex.reps_max}`}
+                      </span>
+                    ) : (
+                      <span>{t('pages.workoutPlans.noSets')}</span>
+                    )}
+                    {(formatSetTargets(ex) ?? formatExerciseLoad(ex, t)) && (
+                      <span className="text-foreground font-medium">
+                        {formatSetTargets(ex) ?? formatExerciseLoad(ex, t)}
+                      </span>
+                    )}
+                    {ex.rest_seconds != null && ex.rest_seconds > 0 && (
+                      <span className="flex items-center gap-0.5">
+                        <Clock className="h-3 w-3" />
+                        {ex.rest_seconds}s
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <DialogCloseFooter />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

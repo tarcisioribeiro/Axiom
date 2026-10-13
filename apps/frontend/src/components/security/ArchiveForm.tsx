@@ -10,6 +10,8 @@ import {
   Package,
   Tag,
   Upload,
+  Save,
+  X,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ARCHIVE_CATEGORY_ICONS } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { archiveSchema, type ArchiveFormData } from '@/lib/validations';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Archive, Member } from '@/types';
@@ -152,7 +155,7 @@ export function ArchiveForm({
     }
 
     onSubmit(submitData);
-  });
+  }, notifyFormErrors);
 
   const watchedArchiveType = watch('archive_type');
 
@@ -171,12 +174,10 @@ export function ArchiveForm({
             <Input
               id="title"
               {...register('title')}
+              aria-invalid={!!errors.title}
               placeholder={t('pages.archives.form.titlePlaceholder')}
               disabled={isLoading}
             />
-            {errors.title && (
-              <p className="mt-xs text-destructive text-sm">{errors.title.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
@@ -191,7 +192,7 @@ export function ArchiveForm({
               }
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.category}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -200,7 +201,9 @@ export function ArchiveForm({
                     <span className="flex items-center gap-2">
                       {(() => {
                         const CatIcon = ARCHIVE_CATEGORY_ICONS[key];
-                        return CatIcon ? <CatIcon className="h-4 w-4" /> : null;
+                        return CatIcon ? (
+                          <CatIcon className="text-muted-foreground h-4 w-4 shrink-0" />
+                        ) : null;
                       })()}
                       {t(`pages.archives.categories.${key}`)}
                     </span>
@@ -208,11 +211,6 @@ export function ArchiveForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.category && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.category.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -225,14 +223,16 @@ export function ArchiveForm({
               <Upload className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.archives.form.typeLabel')}
             </Label>
-            <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
+            <div
+              className={`bg-muted/30 flex rounded-md border p-0.5 ${errors.archive_type ? 'border-destructive ring-destructive/50 ring-2' : 'border-border/70'}`}
+            >
               {ARCHIVE_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
                 <button
                   key={value}
                   type="button"
                   onClick={() => setValue('archive_type', value)}
                   disabled={isLoading}
-                  className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition duration-150 ${
+                  className={`duration-fast flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition ${
                     watchedArchiveType === value
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -245,11 +245,6 @@ export function ArchiveForm({
                 </button>
               ))}
             </div>
-            {errors.archive_type && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.archive_type.message}
-              </p>
-            )}
           </div>
 
           {watchedArchiveType === 'text' ? (
@@ -261,19 +256,12 @@ export function ArchiveForm({
               <Textarea
                 id="text_content"
                 {...register('text_content')}
+                aria-invalid={!!errors.text_content}
                 placeholder={t('pages.archives.form.contentPlaceholder')}
                 rows={10}
-                className="font-mono text-sm"
+                className="text-sm"
                 disabled={isLoading}
               />
-              {errors.text_content && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.text_content.message}
-                </p>
-              )}
-              <p className="text-muted-foreground text-xs">
-                {t('pages.archives.form.textContentHint')}
-              </p>
             </div>
           ) : (
             <div className="space-y-sm">
@@ -283,15 +271,6 @@ export function ArchiveForm({
                 {!archive && ' *'}
               </Label>
               <FileInput id="file" accept={FILE_TYPES_ACCEPT} onChange={() => {}} />
-              {archive ? (
-                <p className="text-warning text-xs">
-                  {t('pages.archives.form.fileHintEdit')}
-                </p>
-              ) : (
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.archives.form.fileHintNew')}
-                </p>
-              )}
             </div>
           )}
         </div>
@@ -307,15 +286,10 @@ export function ArchiveForm({
             <Input
               id="tags"
               {...register('tags')}
+              aria-invalid={!!errors.tags}
               placeholder={t('pages.archives.form.tagsPlaceholder')}
               disabled={isLoading}
             />
-            {errors.tags && (
-              <p className="mt-xs text-destructive text-sm">{errors.tags.message}</p>
-            )}
-            <p className="text-muted-foreground text-xs">
-              {t('pages.archives.form.tagsHint')}
-            </p>
           </div>
 
           <div className="space-y-sm">
@@ -326,30 +300,27 @@ export function ArchiveForm({
             <Textarea
               id="notes"
               {...register('notes')}
+              aria-invalid={!!errors.notes}
               placeholder={t('pages.archives.form.notesPlaceholder')}
-              rows={3}
+              rows={1}
               disabled={isLoading}
             />
-            {errors.notes && (
-              <p className="mt-xs text-destructive text-sm">{errors.notes.message}</p>
-            )}
           </div>
         </div>
       </FormSection>
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <>
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-              {t('common.actions.saving')}
-            </>
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            t('common.actions.save')
+            <Save className="h-4 w-4" />
           )}
+          {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>
     </form>

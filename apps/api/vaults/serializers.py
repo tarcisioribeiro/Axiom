@@ -190,6 +190,17 @@ class VaultWithdrawSerializer(serializers.Serializer):
     )
 
 
+class VaultApplyYieldSerializer(serializers.Serializer):
+    """Serializer para aplicar rendimento, com valor opcional editado."""
+
+    amount = serializers.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+        required=False,
+    )
+
+
 class VaultYieldUpdateSerializer(serializers.Serializer):
     """Serializer para atualizar taxa de rendimento e recalcular."""
 

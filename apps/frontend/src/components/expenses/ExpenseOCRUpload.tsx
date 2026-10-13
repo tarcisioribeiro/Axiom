@@ -1,4 +1,4 @@
-import { ScanText, Upload, X } from 'lucide-react';
+import { ScanText, Upload, X, Check, Loader2, ScanLine } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -74,8 +74,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
         toast({ title: t(msgKey), variant: 'destructive' });
       } else {
         toast({
-          title: t('pages.expenseOCR.success'),
-          description: t('pages.expenseOCR.successDesc'),
+          title: t('pages.expenseOCR.successDesc'),
         });
         onResult(result);
         setOpen(false);
@@ -109,7 +108,9 @@ export function ExpenseOCRUpload({ onResult }: Props) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('pages.expenseOCR.modalTitle')}</DialogTitle>
+            <DialogTitle icon={ScanLine}>
+              {t('pages.expenseOCR.modalTitle')}
+            </DialogTitle>
             <DialogDescription>{t('pages.expenseOCR.modalDesc')}</DialogDescription>
           </DialogHeader>
 
@@ -135,6 +136,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
                   {file?.name}
                 </Badge>
                 <PlainButton
+                  aria-label={t('common.actions.remove')}
                   type="button"
                   className="bg-background absolute top-2 right-2 rounded-full p-0.5 shadow"
                   onClick={(e) => {
@@ -166,7 +168,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
             onChange={handleInputChange}
           />
 
-          <div className="gap-sm flex justify-end">
+          <div className="dialog-footer gap-sm flex justify-end">
             <Button
               type="button"
               variant="outline"
@@ -175,6 +177,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
                 setOpen(false);
               }}
             >
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
@@ -182,6 +185,11 @@ export function ExpenseOCRUpload({ onResult }: Props) {
               onClick={() => void handleSubmit()}
               disabled={!file || uploading}
             >
+              {uploading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
               {uploading
                 ? t('pages.expenseOCR.uploading')
                 : t('common.actions.confirm')}

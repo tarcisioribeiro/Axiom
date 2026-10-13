@@ -1,6 +1,8 @@
+/* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
 import {
   Award,
+  CalendarDays,
   CheckCircle2,
   Flame,
   Medal,
@@ -9,18 +11,23 @@ import {
   TrendingUp,
   Trophy,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
+import { formatLocalDate } from '@/lib/utils';
 import { goalsService } from '@/services/goals-service';
 import type { IntellectBadge } from '@/services/intellect-badges-service';
 import { intellectBadgesService } from '@/services/intellect-badges-service';
@@ -41,6 +48,8 @@ type TimelineEvent =
 
 export default function Journey() {
   const { t } = useTranslation();
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   const { data: badges, isLoading: loadingBadges } = useQuery({
     queryKey: ['intellect-badges'],
@@ -76,6 +85,19 @@ export default function Journey() {
       goal: g,
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const filteredEvents = events.filter((ev) => {
+    const d = ev.date.slice(0, 10);
+    if (startDate && d < formatLocalDate(startDate)) return false;
+    if (endDate && d > formatLocalDate(endDate)) return false;
+    return true;
+  });
+
+  const hasActiveFilters = !!startDate || !!endDate;
+  const clearFilters = () => {
+    setStartDate(undefined);
+    setEndDate(undefined);
+  };
 
   if (isLoading) {
     return (
@@ -128,8 +150,8 @@ export default function Journey() {
             <CardContent>
               {(badges ?? []).length === 0 ? (
                 <EmptyState
+                  icon={<Medal className="h-6 w-6" />}
                   title={t('pages.journey.noBadges')}
-                  description={t('pages.journey.noBadgesDesc')}
                 />
               ) : (
                 <div className="gap-sm grid grid-cols-2">
@@ -161,50 +183,106 @@ export default function Journey() {
             <CardContent>
               {events.length === 0 ? (
                 <EmptyState
+                  icon={<Trophy className="h-6 w-6" />}
                   title={t('pages.journey.noEvents')}
-                  description={t('pages.journey.noEventsDesc')}
                 />
               ) : (
-                <ol className="border-border/50 pl-lg relative border-l">
-                  {events.map((ev, idx) => (
-                    <li key={idx} className="mb-md ml-sm last:mb-0">
-                      <div className="mt-xs bg-background absolute -left-1.5 h-3 w-3 rounded-full border">
-                        {ev.kind === 'badge' ? (
-                          <Award
-                            className="absolute -top-0.5 -left-0.5 h-2.5 w-2.5 text-amber-500"
-                            aria-hidden="true"
-                          />
-                        ) : (
-                          <CheckCircle2
-                            className="absolute -top-0.5 -left-0.5 h-2.5 w-2.5 text-[hsl(var(--success))]"
-                            aria-hidden="true"
-                          />
-                        )}
-                      </div>
-                      <p className="text-muted-foreground text-xs">
-                        {formatDate(ev.date)}
-                      </p>
-                      {ev.kind === 'badge' ? (
-                        <p className="mt-xs text-sm font-medium">
-                          {t('pages.journey.badgeEarned', {
-                            name: ev.badge.code_display,
-                          })}
-                          <Badge
-                            className={`ml-xs text-2xs ${BADGE_LEVEL_COLORS[ev.badge.level] ?? ''}`}
-                          >
-                            {ev.badge.level_display}
-                          </Badge>
-                        </p>
-                      ) : (
-                        <p className="mt-xs text-sm font-medium">
-                          {t('pages.journey.goalCompleted', {
-                            name: ev.goal.title,
-                          })}
-                        </p>
+                <>
+                  <FilterBar
+                    className="mb-md"
+                    hasActiveFilters={hasActiveFilters}
+                    onClear={clearFilters}
+                    activeFilters={[
+                      ...(startDate
+                        ? [
+                            {
+                              key: 'startDate',
+                              label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
+                              onRemove: () => setStartDate(undefined),
+                            },
+                          ]
+                        : []),
+                      ...(endDate
+                        ? [
+                            {
+                              key: 'endDate',
+                              label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
+                              onRemove: () => setEndDate(undefined),
+                            },
+                          ]
+                        : []),
+                    ]}
+                  >
+                    <FilterField
+                      label={t('common.filterLabels.period')}
+                      icon={CalendarDays}
+                    >
+                      <DateRangeFilter
+                        startDate={startDate}
+                        endDate={endDate}
+                        onStartChange={setStartDate}
+                        onEndChange={setEndDate}
+                      />
+                    </FilterField>
+                  </FilterBar>
+
+                  {filteredEvents.length === 0 ? (
+                    <EmptyState
+                      icon={<Trophy className="h-6 w-6" />}
+                      title={t('pages.journey.noEvents')}
+                    />
+                  ) : (
+                    <PaginatedSlide
+                      key={`${startDate ? formatLocalDate(startDate) : ''}|${endDate ? formatLocalDate(endDate) : ''}`}
+                      items={filteredEvents}
+                      pageSize={LIST_PAGE_SIZE}
+                      pinNav={false}
+                    >
+                      {(pageEvents) => (
+                        <ol className="border-border/50 pl-lg relative border-l">
+                          {pageEvents.map((ev, idx) => (
+                            <li key={idx} className="mb-md ml-sm last:mb-0">
+                              <div className="mt-xs bg-background absolute -left-1.5 h-3 w-3 rounded-full border">
+                                {ev.kind === 'badge' ? (
+                                  <Award
+                                    className="absolute -top-0.5 -left-0.5 h-2.5 w-2.5 text-amber-500"
+                                    aria-hidden="true"
+                                  />
+                                ) : (
+                                  <CheckCircle2
+                                    className="absolute -top-0.5 -left-0.5 h-2.5 w-2.5 text-[hsl(var(--success))]"
+                                    aria-hidden="true"
+                                  />
+                                )}
+                              </div>
+                              <p className="text-muted-foreground text-xs">
+                                {formatDate(ev.date)}
+                              </p>
+                              {ev.kind === 'badge' ? (
+                                <p className="mt-xs text-sm font-medium">
+                                  {t('pages.journey.badgeEarned', {
+                                    name: ev.badge.code_display,
+                                  })}
+                                  <Badge
+                                    className={`ml-xs text-2xs ${BADGE_LEVEL_COLORS[ev.badge.level] ?? ''}`}
+                                  >
+                                    {ev.badge.level_display}
+                                  </Badge>
+                                </p>
+                              ) : (
+                                <p className="mt-xs text-sm font-medium">
+                                  {t('pages.journey.goalCompleted', {
+                                    name: ev.goal.title,
+                                  })}
+                                </p>
+                              )}
+                            </li>
+                          ))}
+                        </ol>
                       )}
-                    </li>
-                  ))}
-                </ol>
+                    </PaginatedSlide>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>

@@ -279,7 +279,7 @@ class Vault(BaseModel):
             "as_of_date": as_of_date,
         }
 
-    def apply_yield(self, as_of_date=None, user=None):
+    def apply_yield(self, as_of_date=None, user=None, amount_override=None):
         """
         Aplica o rendimento calculado ao saldo do cofre.
 
@@ -289,6 +289,9 @@ class Vault(BaseModel):
             Data até a qual calcular e aplicar o rendimento.
         user : User, optional
             Usuário que está realizando a operação.
+        amount_override : Decimal, optional
+            Valor a aplicar no lugar do rendimento calculado (edição manual
+            confirmada pelo usuário antes de aplicar).
 
         Returns
         -------
@@ -298,7 +301,11 @@ class Vault(BaseModel):
         if as_of_date is None:
             as_of_date = timezone.now().date()
 
-        yield_value = self.calculate_yield(as_of_date)
+        yield_value = (
+            Decimal(amount_override)
+            if amount_override is not None
+            else self.calculate_yield(as_of_date)
+        )
 
         with transaction.atomic():
             if yield_value > 0:

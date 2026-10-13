@@ -1,14 +1,15 @@
 /* eslint-disable react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Building2, CalendarDays, Globe, Loader2 } from 'lucide-react';
+import { Building2, CalendarDays, Globe, Loader2, Save, X } from 'lucide-react';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -17,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { COUNTRY_ICON } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { publisherSchema, type PublisherFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
@@ -38,6 +40,7 @@ export function PublisherForm({
 }: PublisherFormProps) {
   const { t } = useTranslation();
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -80,7 +83,7 @@ export function PublisherForm({
   }, [publisher, setValue]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
       <FormSection
         title={t('pages.publishers.form.sectionIdentification')}
         icon={Building2}
@@ -94,12 +97,10 @@ export function PublisherForm({
             <Input
               id="name"
               {...register('name')}
+              aria-invalid={!!errors.name}
               placeholder={t('pages.publishers.form.namePlaceholder')}
               disabled={isLoading}
             />
-            {errors.name && (
-              <p className="mt-xs text-destructive text-sm">{errors.name.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -112,7 +113,7 @@ export function PublisherForm({
               onValueChange={(value) => setValue('country', value)}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.country}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -126,9 +127,6 @@ export function PublisherForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.country && (
-              <p className="mt-xs text-destructive text-sm">{errors.country.message}</p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -144,12 +142,10 @@ export function PublisherForm({
               id="website"
               type="url"
               {...register('website')}
+              aria-invalid={!!errors.website}
               placeholder={t('pages.publishers.form.websitePlaceholder')}
               disabled={isLoading}
             />
-            {errors.website && (
-              <p className="mt-xs text-destructive text-sm">{errors.website.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -157,39 +153,38 @@ export function PublisherForm({
               <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.publishers.form.foundedYearLabel')}
             </Label>
-            <Input
-              id="founded_year"
-              type="number"
-              min="1000"
-              max={new Date().getFullYear()}
-              {...register('founded_year', {
-                setValueAs: (value: string) =>
-                  value === '' ? undefined : parseInt(value),
-              })}
-              disabled={isLoading}
+            <Controller
+              control={control}
+              name="founded_year"
+              render={({ field }) => (
+                <NumberStepper
+                  id="founded_year"
+                  aria-invalid={!!errors.founded_year}
+                  disabled={isLoading}
+                  min={1000}
+                  max={new Date().getFullYear()}
+                  optional
+                  value={field.value}
+                  onChange={(v) => field.onChange(v ?? undefined)}
+                />
+              )}
             />
-            {errors.founded_year && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.founded_year.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <>
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-              {t('common.actions.saving')}
-            </>
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            t('common.actions.save')
+            <Save className="h-4 w-4" />
           )}
+          {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>
     </form>

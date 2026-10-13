@@ -265,8 +265,9 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
       onGoalChange?.();
     } catch (error) {
       toast({
-        title: t('pages.libraryDashboard.readingGoals.deleteError'),
-        description: getErrorMessage(error),
+        title: t('pages.libraryDashboard.readingGoals.deleteError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }
@@ -312,17 +313,15 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
       await refresh();
 
       toast({
-        title: editingGoal
-          ? t('pages.libraryDashboard.readingGoals.updated')
-          : t('pages.libraryDashboard.readingGoals.created'),
-        description: `Meta de ${data.books_goal} livros para ${data.year}.`,
+        title: `Meta de ${data.books_goal} livros para ${data.year}.`,
       });
       setIsModalOpen(false);
       onGoalChange?.();
     } catch (error) {
       toast({
-        title: t('pages.libraryDashboard.readingGoals.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.libraryDashboard.readingGoals.saveError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -378,7 +377,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
                 })}
               </p>
               <Button size="sm" variant="outline" onClick={openNewGoal}>
-                <Plus className="mr-xs h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5" />
                 {t('pages.libraryDashboard.readingGoals.setGoal')}
               </Button>
             </div>

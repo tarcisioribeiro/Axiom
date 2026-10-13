@@ -1,38 +1,41 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { format, parseISO, subDays } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-  Plus,
-  BookOpen,
-  Edit,
-  Trash2,
-  SmilePlus,
-  Smile,
-  Meh,
-  Frown,
   Angry,
+  BookOpen,
+  CalendarDays,
   ChevronDown,
   ChevronUp,
+  Edit,
+  Frown,
+  Meh,
+  Plus,
+  Search,
+  Smile,
+  SmilePlus,
+  Trash2,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { z } from 'zod';
 
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
-import { FilterBar } from '@/components/common/FilterBar';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { DailyReflectionForm } from '@/components/personal-planning/DailyReflectionForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -45,7 +48,8 @@ import {
 } from '@/components/ui/select';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { cn, formatLocalDate } from '@/lib/utils';
+import { formatDate } from '@/lib/formatters';
+import { cn } from '@/lib/utils';
 import type { dailyReflectionSchema } from '@/lib/validations';
 import { dailyReflectionsService } from '@/services/daily-reflections-service';
 import { MOOD_CHOICES, type DailyReflection } from '@/types';
@@ -64,14 +68,6 @@ const MOOD_VARIANT: Record<
   terrible: 'destructive',
 };
 
-const MOOD_DOT: Record<string, string> = {
-  excellent: 'bg-success',
-  good: 'bg-info',
-  neutral: 'bg-secondary',
-  bad: 'bg-warning',
-  terrible: 'bg-destructive',
-};
-
 function getMoodIcon(mood: string) {
   const cls = 'h-4 w-4';
   switch (mood) {
@@ -88,37 +84,6 @@ function getMoodIcon(mood: string) {
     default:
       return null;
   }
-}
-
-function MoodTimeline({ reflections }: { reflections: DailyReflection[] }) {
-  const today = new Date();
-  const days = Array.from({ length: 21 }, (_, i) => {
-    const d = subDays(today, 20 - i);
-    const key = formatLocalDate(d);
-    const ref = reflections.find((r) => r.date === key);
-    return { date: d, key, mood: ref?.mood };
-  });
-
-  return (
-    <div className="mb-lg gap-sm flex items-end">
-      {days.map(({ date, key, mood }) => (
-        <div key={key} className="gap-xs flex flex-col items-center">
-          <div
-            title={`${format(date, 'dd/MM')}${mood ? ` — ${mood}` : ''}`}
-            className={cn(
-              'h-3 w-3 rounded-full transition',
-              mood ? MOOD_DOT[mood] : 'bg-muted'
-            )}
-          />
-          {date.getDay() === 0 && (
-            <span className="text-muted-foreground text-2xs">
-              {format(date, 'dd/MM')}
-            </span>
-          )}
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function ReflectionCard({
@@ -144,18 +109,10 @@ function ReflectionCard({
     <Card className="group">
       <CardContent className="p-5 pt-5">
         <div className="gap-md flex items-start">
-          {/* Data estilo calendário */}
-          <div className="bg-muted/40 py-sm flex w-14 shrink-0 flex-col items-center rounded-lg border text-center">
-            <span className="text-muted-foreground text-2xs font-semibold uppercase">
-              {format(date, 'MMM', { locale: ptBR })}
-            </span>
-            <span className="text-2xl leading-tight font-bold">
-              {format(date, 'dd')}
-            </span>
-            <span className="text-muted-foreground text-2xs">
-              {format(date, 'yyyy')}
-            </span>
-          </div>
+          {/* Data (dd/mm/aaaa) */}
+          <span className="bg-muted/40 px-sm py-xs shrink-0 rounded-lg border text-sm font-bold tabular-nums">
+            {format(date, 'dd/MM/yyyy')}
+          </span>
 
           {/* Conteúdo */}
           <div className="min-w-0 flex-1">
@@ -194,7 +151,7 @@ function ReflectionCard({
           </div>
 
           {/* Ações */}
-          <div className="gap-xs flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="gap-xs flex shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -219,6 +176,7 @@ function ReflectionCard({
 }
 
 const EMPTY_REFLECTIONS: DailyReflection[] = [];
+const REFLECTIONS_PAGE_SIZE = 5;
 
 export default function DailyReflections() {
   const { t } = useTranslation();
@@ -229,14 +187,17 @@ export default function DailyReflections() {
   const [moodFilter, setMoodFilter] = useState<string>('all');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
-  const hasActiveFilters = moodFilter !== 'all' || !!startDate || !!endDate;
+  const hasActiveFilters =
+    moodFilter !== 'all' || !!startDate || !!endDate || !!searchTerm;
   const clearFilters = () => {
     setMoodFilter('all');
     setStartDate(undefined);
     setEndDate(undefined);
+    setSearchTerm('');
   };
 
   const { data: reflections = EMPTY_REFLECTIONS, isLoading } = useQuery({
@@ -246,8 +207,9 @@ export default function DailyReflections() {
         return await dailyReflectionsService.getAll();
       } catch (error: unknown) {
         toast({
-          title: t('pages.dailyReflections.loadError'),
-          description: getErrorMessage(error),
+          title: t('pages.dailyReflections.loadError', {
+            reason: getErrorMessage(error),
+          }),
           variant: 'destructive',
         });
         return EMPTY_REFLECTIONS;
@@ -260,8 +222,12 @@ export default function DailyReflections() {
     if (moodFilter !== 'all') result = result.filter((r) => r.mood === moodFilter);
     if (startDate) result = result.filter((r) => new Date(r.date) >= startDate);
     if (endDate) result = result.filter((r) => new Date(r.date) <= endDate);
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter((r) => r.reflection.toLowerCase().includes(q));
+    }
     return result;
-  }, [reflections, moodFilter, startDate, endDate]);
+  }, [reflections, moodFilter, startDate, endDate, searchTerm]);
 
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: ['daily-reflections'] });
@@ -289,13 +255,13 @@ export default function DailyReflections() {
       await dailyReflectionsService.delete(id);
       toast({
         title: t('pages.dailyReflections.deleted'),
-        description: t('pages.dailyReflections.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('pages.dailyReflections.deleteError'),
-        description: getErrorMessage(error),
+        title: t('pages.dailyReflections.deleteError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }
@@ -308,21 +274,20 @@ export default function DailyReflections() {
         await dailyReflectionsService.update(selected.id, data);
         toast({
           title: t('pages.dailyReflections.updated'),
-          description: t('pages.dailyReflections.updatedDesc'),
         });
       } else {
         await dailyReflectionsService.create(data);
         toast({
           title: t('pages.dailyReflections.created'),
-          description: t('pages.dailyReflections.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('pages.dailyReflections.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.dailyReflections.saveError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -344,72 +309,80 @@ export default function DailyReflections() {
         }}
       />
 
-      {/* Timeline de humores dos últimos 21 dias */}
-      {reflections.length > 0 && (
-        <div className="bg-card py-md rounded-lg border px-5">
-          <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
-            {t('pages.dailyReflections.moodTimeline')}
-          </p>
-          <MoodTimeline reflections={reflections} />
-          <div className="gap-md text-muted-foreground flex items-center text-xs">
-            {MOOD_CHOICES.map((c) => (
-              <span key={c.value} className="gap-xs flex items-center">
-                <span className={cn('h-2.5 w-2.5 rounded-full', MOOD_DOT[c.value])} />
-                {c.label}
-              </span>
-            ))}
-            <span className="gap-xs flex items-center">
-              <span className="bg-muted h-2.5 w-2.5 rounded-full" />
-              {t('pages.dailyReflections.noMood')}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Filtros */}
-      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
-        <Select value={moodFilter} onValueChange={setMoodFilter}>
-          <SelectTrigger
-            className="w-44"
-            startIcon={<SmilePlus className="h-3.5 w-3.5" />}
-          >
-            <SelectValue placeholder={t('pages.dailyReflections.filters.allMoods')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">
-              {t('pages.dailyReflections.filters.allMoods')}
-            </SelectItem>
-            {MOOD_CHOICES.map((choice) => (
-              <SelectItem
-                key={choice.value}
-                value={choice.value}
-                icon={getMoodIcon(choice.value)}
-              >
-                {t(`common.mood.${choice.value}`)}
+      <FilterBar
+        hasActiveFilters={hasActiveFilters}
+        onClear={clearFilters}
+        activeFilters={[
+          ...(moodFilter !== 'all'
+            ? [
+                {
+                  key: 'mood',
+                  label: t(`common.mood.${moodFilter}`),
+                  onRemove: () => setMoodFilter('all'),
+                },
+              ]
+            : []),
+          ...(startDate
+            ? [
+                {
+                  key: 'startDate',
+                  label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
+                  onRemove: () => setStartDate(undefined),
+                },
+              ]
+            : []),
+          ...(endDate
+            ? [
+                {
+                  key: 'endDate',
+                  label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
+                  onRemove: () => setEndDate(undefined),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.dailyReflections.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.filterLabels.mood')} icon={Smile}>
+          <Select value={moodFilter} onValueChange={setMoodFilter}>
+            <SelectTrigger
+              className="w-44"
+              startIcon={<SmilePlus className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.dailyReflections.filters.allMoods')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.dailyReflections.filters.allMoods')}
               </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="gap-xs flex items-center">
-          <span className="text-muted-foreground text-xs whitespace-nowrap">
-            {t('pages.dailyReflections.filters.startDate')}
-          </span>
-          <DatePicker
-            value={startDate ? formatLocalDate(startDate) : ''}
-            onChange={setStartDate}
-            placeholder={t('pages.dailyReflections.filters.startDate')}
-            clearable
+              {MOOD_CHOICES.map((choice) => (
+                <SelectItem
+                  key={choice.value}
+                  value={choice.value}
+                  icon={getMoodIcon(choice.value)}
+                >
+                  {t(`common.mood.${choice.value}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartChange={setStartDate}
+            onEndChange={setEndDate}
           />
-          <span className="text-muted-foreground text-xs whitespace-nowrap">
-            {t('pages.dailyReflections.filters.endDate')}
-          </span>
-          <DatePicker
-            value={endDate ? formatLocalDate(endDate) : ''}
-            onChange={setEndDate}
-            placeholder={t('pages.dailyReflections.filters.endDate')}
-            clearable
-          />
-        </div>
+        </FilterField>
       </FilterBar>
 
       {/* Entradas no estilo diário */}
@@ -417,39 +390,36 @@ export default function DailyReflections() {
         <EmptyState
           icon={<BookOpen className="h-12 w-12" />}
           title={t('pages.dailyReflections.emptyStateTitle')}
-          message={t('pages.dailyReflections.emptyState')}
-          action={{
-            label: t('pages.dailyReflections.newBtn'),
-            icon: <Plus className="h-4 w-4" />,
-            onClick: handleCreate,
-          }}
         />
       ) : (
-        <div className="space-y-3">
-          {filtered.map((r) => (
-            <ReflectionCard
-              key={r.id}
-              reflection={r}
-              onEdit={handleEdit}
-              onDelete={(id) => void handleDelete(id)}
-            />
-          ))}
-        </div>
+        <PaginatedSlide
+          key={`${moodFilter}-${startDate?.getTime()}-${endDate?.getTime()}-${searchTerm}`}
+          items={filtered}
+          pageSize={REFLECTIONS_PAGE_SIZE}
+          centerList
+          className="space-y-3"
+        >
+          {(pageReflections) =>
+            pageReflections.map((r) => (
+              <ReflectionCard
+                key={r.id}
+                reflection={r}
+                onEdit={handleEdit}
+                onDelete={(id) => void handleDelete(id)}
+              />
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-w-2xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle mode={selected ? 'edit' : 'create'}>
               {selected
                 ? t('pages.dailyReflections.editTitle')
                 : t('pages.dailyReflections.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selected
-                ? t('pages.dailyReflections.editDesc')
-                : t('pages.dailyReflections.newDesc')}
-            </DialogDescription>
           </DialogHeader>
           <DailyReflectionForm
             reflection={selected}

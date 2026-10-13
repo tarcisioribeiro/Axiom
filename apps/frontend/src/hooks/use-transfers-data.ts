@@ -86,7 +86,7 @@ export function useTransfersData() {
     [transfers, debouncedSearch, statusFilter, accountFilter, startDate, endDate]
   );
 
-  const PAGE_SIZE = 20;
+  const PAGE_SIZE = 5;
   const [page, setPage] = useState(1);
   const filtersKey = JSON.stringify([
     debouncedSearch,
@@ -106,21 +106,6 @@ export function useTransfersData() {
     [filteredTransfers, page]
   );
 
-  const totalVolume = useMemo(
-    () => transfers.reduce((s, tr) => s + parseFloat(tr.value), 0),
-    [transfers]
-  );
-  const completedCount = useMemo(
-    () => transfers.filter((tr) => getTransferStatus(tr) === 'completed').length,
-    [transfers]
-  );
-  const pendingCount = useMemo(
-    () =>
-      transfers.filter((tr) =>
-        ['pending', 'processing'].includes(getTransferStatus(tr))
-      ).length,
-    [transfers]
-  );
   const hasActiveFilters =
     !!searchTerm ||
     statusFilter !== 'all' ||
@@ -137,14 +122,12 @@ export function useTransfersData() {
       void invalidateTransfers();
       toast({
         title: t('pages.transfers.created'),
-        description: t('pages.transfers.createdDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -157,14 +140,12 @@ export function useTransfersData() {
       void invalidateTransfers();
       toast({
         title: t('pages.transfers.updated'),
-        description: t('pages.transfers.updatedDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -176,13 +157,11 @@ export function useTransfersData() {
       void invalidateTransfers();
       toast({
         title: t('pages.transfers.deleted'),
-        description: t('pages.transfers.deletedDesc'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -191,8 +170,7 @@ export function useTransfersData() {
   const handleCreate = () => {
     if (accounts.length < 2) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.transfers.noAccountMsg'),
+        title: t('pages.transfers.noAccountMsg'),
         variant: 'destructive',
       });
       return;
@@ -255,9 +233,6 @@ export function useTransfersData() {
     setStartDate,
     endDate,
     setEndDate,
-    totalVolume,
-    completedCount,
-    pendingCount,
     hasActiveFilters,
     clearFilters,
     handleCreate,

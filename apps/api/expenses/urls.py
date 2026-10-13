@@ -62,22 +62,6 @@ urlpatterns = [
         views.FixedExpensesStatsView.as_view(),
         name="fixed-expense-stats",
     ),
-    # Categorization Rules — apply/ must come before <int:pk>/
-    path(
-        "categorization-rules/apply/",
-        views.ApplyCategorizationRulesView.as_view(),
-        name="categorization-rule-apply",
-    ),
-    path(
-        "categorization-rules/",
-        views.CategorizationRuleListCreateView.as_view(),
-        name="categorization-rule-list",
-    ),
-    path(
-        "categorization-rules/<int:pk>/",
-        views.CategorizationRuleRetrieveUpdateDestroyView.as_view(),
-        name="categorization-rule-detail",
-    ),
     # Tags
     path("tags/", views.TagListCreateView.as_view(), name="tag-list-create"),
     path("tags/<int:pk>/", views.TagDetailView.as_view(), name="tag-detail"),

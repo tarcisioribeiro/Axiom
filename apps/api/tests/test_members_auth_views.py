@@ -220,14 +220,6 @@ class MemberViewTest(BaseAuthTestCase):
             [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND],
         )
 
-    def test_member_financial_report(self):
-        url = reverse("member-financial-report", args=[self.member.pk])
-        response = self.client.get(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND],
-        )
-
     def test_available_users(self):
         url = reverse("available-users")
         response = self.client.get(url)
