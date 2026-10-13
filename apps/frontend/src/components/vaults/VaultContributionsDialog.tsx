@@ -230,7 +230,7 @@ export function VaultContributionsDialog({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="contrib_day" className="block text-center">
+                  <Label htmlFor="contrib_day">
                     {t('pages.vaults.recurringContributions.fields.dayOfMonth')}
                   </Label>
                   <NumberStepper
@@ -239,7 +239,6 @@ export function VaultContributionsDialog({
                     max={31}
                     value={formData.day_of_month}
                     onChange={(v) => setFormData({ ...formData, day_of_month: v ?? 1 })}
-                    className="mx-auto"
                   />
                 </div>
                 <div>

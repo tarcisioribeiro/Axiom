@@ -130,9 +130,7 @@ export function VaultSimulatorDialog({
             />
           </div>
           <div className="space-y-xs">
-            <Label className="block text-center text-xs">
-              {t('pages.vaultSimulator.termMonths')}
-            </Label>
+            <Label className="text-xs">{t('pages.vaultSimulator.termMonths')}</Label>
             <NumberStepper
               min={1}
               max={600}
@@ -141,7 +139,6 @@ export function VaultSimulatorDialog({
               aria-label={t('pages.vaultSimulator.termMonths')}
               value={months === '' ? null : Number(months)}
               onChange={(v) => setMonths(v === null ? '' : String(v))}
-              className="mx-auto"
             />
           </div>
         </div>

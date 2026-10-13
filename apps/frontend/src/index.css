@@ -1613,6 +1613,28 @@ main .flex-col > :has(.page-fill:not(.bg-card [data-empty-state])) {
   @apply -mx-lg px-lg pt-lg pb-md border-border/60 bg-card sticky top-0 z-10 border-b;
 }
 
+/* Campo com stepper (NumberStepper, DecimalInput com step) em modal: label e
+   componente centralizados. Só quando há label (direto ou dentro do FormField),
+   para não afetar grades de séries sem label. */
+[role='dialog'] :is(:has(> label), :has(> div > label)):has(> [data-stepper]) {
+  text-align: center;
+}
+
+[role='dialog'] :has(> [data-stepper]) > label,
+[role='dialog'] :has(> [data-stepper]) > div:has(> label) {
+  justify-content: center;
+}
+
+[role='dialog'] :is(:has(> label), :has(> div > label)) > [data-stepper] {
+  width: fit-content;
+  margin-inline: auto;
+}
+
+[role='dialog'] :is(:has(> label), :has(> div > label)) > [data-stepper] input {
+  flex: none;
+  width: 4rem;
+}
+
 @layer components {
   /* ── Hierarquia tipográfica semântica ──────────────────────────────── */
 

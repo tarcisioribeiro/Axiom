@@ -74,6 +74,7 @@ export function NumberStepper({
 
   return (
     <div
+      data-stepper=""
       className={cn(
         'border-border/70 bg-background flex h-9 w-fit items-stretch overflow-hidden rounded-md border shadow-sm',
         ariaInvalid && 'border-destructive',

@@ -47,6 +47,7 @@ Há três tipos de modal:
 - **[pontual]** Ação que revela campos (ex.: alterar senha) abre um modal em vez de expandir a tela.
 - **[pontual]** Exclusão sensível em etapas, com confirmação.
 - **[pontual]** Campos de quantidade usam `number-stepper`.
+- **[regra]** Em modal, campo com `NumberStepper` ou `DecimalInput` com `step` (botões − / +) tem label e componente centralizados, e o `DecimalInput` fica compacto (largura do conteúdo). Status: automático via `data-stepper` + CSS em `index.css` escopado a `[role='dialog']`, quando o stepper tem label irmão (direto ou do `FormField`). Ficam de fora grades sem label (séries do treino) e stepper em linha com botão (recalcular parcelas).
 
 ### 2.3 Modal de detalhe
 

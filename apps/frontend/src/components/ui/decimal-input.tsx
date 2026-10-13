@@ -92,6 +92,7 @@ export function DecimalInput({
 
   return (
     <div
+      data-stepper={step ? '' : undefined}
       className={cn(
         'border-border/70 bg-background focus-within:border-ring/50 focus-within:ring-ring focus-within:ring-offset-background flex h-9 w-full items-stretch overflow-hidden rounded-md border shadow-sm transition-colors focus-within:ring-2 focus-within:ring-offset-2',
         ariaInvalid && 'border-destructive',
