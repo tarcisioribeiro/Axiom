@@ -4,7 +4,7 @@ import { useImperativeHandle, useState, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { GRID_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -26,8 +26,6 @@ import { getErrorMessage } from '@/utils/error-utils';
 import { FocusBlockTasksEditor } from './FocusBlockTasksEditor';
 import { BlockIcon, RoutineFocusBlockCard } from './RoutineFocusBlockCard';
 import { RoutineFocusBlockForm } from './RoutineFocusBlockForm';
-
-const LIST_PAGE_SIZE = 20;
 
 export interface RoutineFocusBlocksSectionHandle {
   create: () => void;
@@ -200,7 +198,7 @@ export function RoutineFocusBlocksSection({
       ) : (
         <PaginatedSlide
           items={visibleBlocks}
-          pageSize={LIST_PAGE_SIZE}
+          pageSize={GRID_PAGE_SIZE}
           className="gap-sm grid md:grid-cols-2 lg:grid-cols-4"
         >
           {(pageBlocks) =>
@@ -219,7 +217,7 @@ export function RoutineFocusBlocksSection({
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedBlock ? 'edit' : 'create'}>
               {selectedBlock
                 ? t('pages.routineTasks.focusBlocks.editBlockTitle')
@@ -264,7 +262,7 @@ export function RoutineFocusBlocksSection({
         }}
       >
         <DialogContent className="max-w-2xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle className="gap-sm flex items-center">
               <BlockIcon name={viewingBlock?.icon} className="h-4 w-4 shrink-0" />
               {viewingBlock?.name}

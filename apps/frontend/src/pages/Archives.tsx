@@ -623,7 +623,7 @@ export default function Archives() {
         {/* Dialog para criar/editar arquivo */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-2xl">
-            <DialogHeader sticky>
+            <DialogHeader>
               <DialogTitle mode={selectedArchive ? 'edit' : 'create'}>
                 {selectedArchive
                   ? t('pages.archives.editTitle')
@@ -651,7 +651,7 @@ export default function Archives() {
         <Dialog open={isContentDialogOpen} onOpenChange={setIsContentDialogOpen}>
           <DialogContent className="max-w-4xl">
             <DialogHeader>
-              <DialogTitle>{selectedArchive?.title}</DialogTitle>
+              <DialogTitle icon={FileText}>{selectedArchive?.title}</DialogTitle>
               <DialogDescription>
                 {t('pages.archives.decryptedContentDesc')} -{' '}
                 {selectedArchive?.category
@@ -705,7 +705,7 @@ export default function Archives() {
         >
           <DialogContent className="max-w-3xl">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle icon={Eye}>
                 {t('pages.archives.preview', { defaultValue: 'Pré-visualização' })}
               </DialogTitle>
             </DialogHeader>

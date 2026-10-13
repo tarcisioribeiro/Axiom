@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '../EmptyState';
 import { LoadingState } from '../LoadingState';
-import { PageSlide } from '../PaginatedSlide';
+import { LIST_PAGE_SIZE, PageSlide } from '../PaginatedSlide';
 
 export interface Column<T> {
   key: string;
@@ -71,8 +71,6 @@ export interface DataTableProps<T> {
   mobileCard?: (item: T) => React.ReactNode;
 }
 
-const DEFAULT_PAGE_SIZE = 10;
-
 const INTERACTIVE_SELECTOR =
   'button, a, input, select, textarea, label, [role="menuitem"], [role="checkbox"], [role="switch"]';
 
@@ -86,7 +84,7 @@ export function DataTable<T>({
   density = 'comfortable',
   emptyState,
   pagination,
-  pageSize = DEFAULT_PAGE_SIZE,
+  pageSize = LIST_PAGE_SIZE,
   pinNav,
   centerList,
   sorting,

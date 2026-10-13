@@ -177,7 +177,7 @@ export function DailyFocusBlocks({
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode="edit">
               {t('pages.routineTasks.focusBlocks.editBlockTitle')}
             </DialogTitle>

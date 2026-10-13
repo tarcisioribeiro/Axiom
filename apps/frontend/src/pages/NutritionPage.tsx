@@ -941,7 +941,7 @@ export default function NutritionPage() {
           <DialogContent
             className={cn('max-w-xl', dialog?.type.endsWith('option') && 'max-w-5xl')}
           >
-            <DialogHeader sticky>
+            <DialogHeader>
               <DialogTitle mode={dialog?.type.startsWith('edit') ? 'edit' : 'create'}>
                 {dialogTitle()}
               </DialogTitle>
@@ -1054,7 +1054,7 @@ export default function NutritionPage() {
           onOpenChange={(open) => !open && setOptionsMealTypeId(null)}
         >
           <DialogContent className="max-w-2xl">
-            <DialogHeader sticky>
+            <DialogHeader>
               <DialogTitle className="gap-sm flex items-center">
                 {getMealPeriodTheme(optionsMealType?.suggested_time).icon}
                 {optionsMealType?.name}

@@ -276,7 +276,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
             <div className="mb-md bg-muted mx-auto flex h-16 w-16 items-center justify-center rounded-full">
               <Lock className="text-muted-foreground h-8 w-8" />
             </div>
-            <DialogTitle className="text-2xl">
+            <DialogTitle icon={Lock} className="text-2xl">
               {t('pages.vaultGuard.expiry.renewTitle')}
             </DialogTitle>
             <DialogDescription className="sr-only">

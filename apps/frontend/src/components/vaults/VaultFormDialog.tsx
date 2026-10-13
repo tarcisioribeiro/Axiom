@@ -176,7 +176,7 @@ export function VaultFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader sticky>
+        <DialogHeader>
           <DialogTitle mode={selectedVault ? 'edit' : 'create'}>
             {selectedVault ? t('pages.vaults.editTitle') : t('pages.vaults.newTitle')}
           </DialogTitle>

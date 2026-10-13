@@ -33,12 +33,14 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { ReadingForm } from '@/components/library/ReadingForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -93,6 +95,8 @@ const TYPE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
   idea: 'outline',
 };
 
+// Itens de texto longo (destaques, resumos): menos por página para caber sem rolagem.
+const DETAIL_TEXT_PAGE_SIZE = 3;
 const EMPTY_HIGHLIGHTS: BookHighlight[] = [];
 const EMPTY_READINGS: Reading[] = [];
 const EMPTY_SUMMARIES: Summary[] = [];
@@ -749,9 +753,12 @@ export function BookDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[85vh] max-w-3xl flex-col">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle className="sr-only">{book.title}</DialogTitle>
+          <DialogTitle className="gap-sm flex items-center">
+            <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">{book.title}</span>
+          </DialogTitle>
           <DialogDescription className="sr-only">
             {t('pages.books.detail.dialogDesc', { title: book.title })}
           </DialogDescription>
@@ -800,8 +807,8 @@ export function BookDetailModal({
           ))}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <TabTransition key={activeTab} className="h-full">
+        <div>
+          <TabTransition key={activeTab}>
             {/* Info tab */}
             {activeTab === 'info' && (
               <>
@@ -824,14 +831,9 @@ export function BookDetailModal({
 
                   {/* Main info */}
                   <div className="min-w-0 flex-1 space-y-3">
-                    <div>
-                      <h2 className="text-xl leading-tight font-semibold">
-                        {book.title}
-                      </h2>
-                      <p className="mt-xs text-muted-foreground text-sm">
-                        {book.authors_names.join(', ')}
-                      </p>
-                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      {book.authors_names.join(', ')}
+                    </p>
 
                     <div className="gap-sm flex flex-wrap">
                       <Badge variant={statusVariant(book.read_status)}>
@@ -1046,70 +1048,77 @@ export function BookDetailModal({
                 ) : highlights.length === 0 && !showAddForm ? (
                   <EmptyState title={t('pages.books.detail.noHighlights')} />
                 ) : (
-                  <div className="space-y-sm">
-                    {highlights.map((h) =>
-                      editingHighlight?.id === h.id ? (
-                        <HighlightInlineForm
-                          key={h.id}
-                          bookId={book.id}
-                          ownerId={book.owner}
-                          highlight={h}
-                          onSaved={() => {
-                            setEditingHighlight(undefined);
-                            void refreshHighlights();
-                          }}
-                          onCancel={() => setEditingHighlight(undefined)}
-                        />
-                      ) : (
-                        <div
-                          key={h.id}
-                          className={`rounded-lg border-l-4 p-3 ${COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow}`}
-                        >
-                          <div className="mb-sm gap-sm flex items-start justify-between">
-                            <div className="gap-sm flex flex-wrap items-center">
-                              <Badge
-                                variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}
-                                className="text-xs"
-                              >
-                                {h.highlight_type_display}
-                              </Badge>
-                              {h.page_number && (
-                                <span className="text-muted-foreground text-xs">
-                                  p. {h.page_number}
-                                </span>
-                              )}
-                              {h.chapter && (
-                                <span className="text-muted-foreground text-xs">
-                                  {h.chapter}
-                                </span>
-                              )}
+                  <PaginatedSlide
+                    items={highlights}
+                    pageSize={DETAIL_TEXT_PAGE_SIZE}
+                    pinNav={false}
+                    className="space-y-sm"
+                  >
+                    {(pageHighlights) =>
+                      pageHighlights.map((h) =>
+                        editingHighlight?.id === h.id ? (
+                          <HighlightInlineForm
+                            key={h.id}
+                            bookId={book.id}
+                            ownerId={book.owner}
+                            highlight={h}
+                            onSaved={() => {
+                              setEditingHighlight(undefined);
+                              void refreshHighlights();
+                            }}
+                            onCancel={() => setEditingHighlight(undefined)}
+                          />
+                        ) : (
+                          <div
+                            key={h.id}
+                            className={`rounded-lg border-l-4 p-3 ${COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow}`}
+                          >
+                            <div className="mb-sm gap-sm flex items-start justify-between">
+                              <div className="gap-sm flex flex-wrap items-center">
+                                <Badge
+                                  variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}
+                                  className="text-xs"
+                                >
+                                  {h.highlight_type_display}
+                                </Badge>
+                                {h.page_number && (
+                                  <span className="text-muted-foreground text-xs">
+                                    p. {h.page_number}
+                                  </span>
+                                )}
+                                {h.chapter && (
+                                  <span className="text-muted-foreground text-xs">
+                                    {h.chapter}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex shrink-0 gap-0.5">
+                                <Button
+                                  aria-label={t('common.actions.edit')}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => setEditingHighlight(h)}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  aria-label={t('common.actions.delete')}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive h-6 w-6 p-0"
+                                  onClick={() => void handleDeleteHighlight(h.id)}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex shrink-0 gap-0.5">
-                              <Button
-                                aria-label={t('common.actions.edit')}
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={() => setEditingHighlight(h)}
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                aria-label={t('common.actions.delete')}
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive hover:text-destructive h-6 w-6 p-0"
-                                onClick={() => void handleDeleteHighlight(h.id)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
+                            <p className="text-sm leading-relaxed">{h.text}</p>
                           </div>
-                          <p className="text-sm leading-relaxed">{h.text}</p>
-                        </div>
+                        )
                       )
-                    )}
-                  </div>
+                    }
+                  </PaginatedSlide>
                 )}
               </div>
             )}
@@ -1139,68 +1148,75 @@ export function BookDetailModal({
                 ) : readings.length === 0 ? (
                   <EmptyState title={t('pages.books.detail.noReadings')} />
                 ) : (
-                  <div className="space-y-sm">
-                    {readings.map((r) => (
-                      <Card key={r.id}>
-                        <CardHeader className="pb-sm pt-3">
-                          <div className="gap-sm flex items-start justify-between">
-                            <div className="space-y-xs">
-                              <div className="gap-sm flex items-center text-sm">
-                                <Calendar className="text-muted-foreground h-3.5 w-3.5" />
-                                <span className="font-medium">
-                                  {formatDate(r.reading_date, 'dd/MM/yyyy')}
-                                </span>
-                              </div>
-                              <div className="text-muted-foreground flex items-center gap-3 text-xs">
-                                <span>
-                                  {t('pages.books.detail.readingPagesRead', {
-                                    count: r.pages_read,
-                                  })}
-                                </span>
-                                {r.reading_time > 0 && (
+                  <PaginatedSlide
+                    items={readings}
+                    pageSize={LIST_PAGE_SIZE}
+                    pinNav={false}
+                    className="space-y-sm"
+                  >
+                    {(pageReadings) =>
+                      pageReadings.map((r) => (
+                        <Card key={r.id}>
+                          <CardHeader className="pb-sm pt-3">
+                            <div className="gap-sm flex items-start justify-between">
+                              <div className="space-y-xs">
+                                <div className="gap-sm flex items-center text-sm">
+                                  <Calendar className="text-muted-foreground h-3.5 w-3.5" />
+                                  <span className="font-medium">
+                                    {formatDate(r.reading_date, 'dd/MM/yyyy')}
+                                  </span>
+                                </div>
+                                <div className="text-muted-foreground flex items-center gap-3 text-xs">
                                   <span>
-                                    {t('pages.books.detail.readingTime', {
-                                      count: r.reading_time,
+                                    {t('pages.books.detail.readingPagesRead', {
+                                      count: r.pages_read,
                                     })}
                                   </span>
-                                )}
+                                  {r.reading_time > 0 && (
+                                    <span>
+                                      {t('pages.books.detail.readingTime', {
+                                        count: r.reading_time,
+                                      })}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex shrink-0 gap-0.5">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  title={t('common.actions.edit')}
+                                  onClick={() => {
+                                    setEditingReading(r);
+                                    setIsReadingFormOpen(true);
+                                  }}
+                                >
+                                  <Edit className="h-3 w-3" aria-hidden="true" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive h-6 w-6 p-0"
+                                  title={t('common.actions.delete')}
+                                  onClick={() => void handleDeleteReading(r.id)}
+                                >
+                                  <Trash2 className="h-3 w-3" aria-hidden="true" />
+                                </Button>
                               </div>
                             </div>
-                            <div className="flex shrink-0 gap-0.5">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                title={t('common.actions.edit')}
-                                onClick={() => {
-                                  setEditingReading(r);
-                                  setIsReadingFormOpen(true);
-                                }}
-                              >
-                                <Edit className="h-3 w-3" aria-hidden="true" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive hover:text-destructive h-6 w-6 p-0"
-                                title={t('common.actions.delete')}
-                                onClick={() => void handleDeleteReading(r.id)}
-                              >
-                                <Trash2 className="h-3 w-3" aria-hidden="true" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        {r.notes && (
-                          <CardContent className="pt-0 pb-3">
-                            <p className="text-muted-foreground line-clamp-2 text-xs">
-                              {r.notes}
-                            </p>
-                          </CardContent>
-                        )}
-                      </Card>
-                    ))}
-                  </div>
+                          </CardHeader>
+                          {r.notes && (
+                            <CardContent className="pt-0 pb-3">
+                              <p className="text-muted-foreground line-clamp-2 text-xs">
+                                {r.notes}
+                              </p>
+                            </CardContent>
+                          )}
+                        </Card>
+                      ))
+                    }
+                  </PaginatedSlide>
                 )}
               </div>
             )}
@@ -1260,64 +1276,74 @@ export function BookDetailModal({
                 ) : summaries.length === 0 ? (
                   <EmptyState title={t('pages.books.detail.noSummaries')} />
                 ) : (
-                  <div className="space-y-sm">
-                    {summaries.map((s) => (
-                      <Card key={s.id}>
-                        <CardHeader className="pb-sm pt-3">
-                          <div className="gap-sm flex items-start justify-between">
-                            <div className="space-y-xs">
-                              <CardTitle className="text-sm">{s.title}</CardTitle>
-                              <div className="gap-sm flex items-center">
-                                {s.is_vectorized ? (
-                                  <Badge variant="default" className="gap-xs text-xs">
-                                    <CheckCircle2 className="h-3 w-3" />
-                                    {t('pages.summaries.vectorized')}
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="secondary" className="gap-xs text-xs">
-                                    <XCircle className="h-3 w-3" />
-                                    {t('pages.summaries.notVectorized')}
-                                  </Badge>
-                                )}
+                  <PaginatedSlide
+                    items={summaries}
+                    pageSize={DETAIL_TEXT_PAGE_SIZE}
+                    pinNav={false}
+                    className="space-y-sm"
+                  >
+                    {(pageSummaries) =>
+                      pageSummaries.map((s) => (
+                        <Card key={s.id}>
+                          <CardHeader className="pb-sm pt-3">
+                            <div className="gap-sm flex items-start justify-between">
+                              <div className="space-y-xs">
+                                <CardTitle className="text-sm">{s.title}</CardTitle>
+                                <div className="gap-sm flex items-center">
+                                  {s.is_vectorized ? (
+                                    <Badge variant="default" className="gap-xs text-xs">
+                                      <CheckCircle2 className="h-3 w-3" />
+                                      {t('pages.summaries.vectorized')}
+                                    </Badge>
+                                  ) : (
+                                    <Badge
+                                      variant="secondary"
+                                      className="gap-xs text-xs"
+                                    >
+                                      <XCircle className="h-3 w-3" />
+                                      {t('pages.summaries.notVectorized')}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex shrink-0 gap-0.5">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  title={t('common.actions.edit')}
+                                  onClick={() => openSummaryEdit(s)}
+                                >
+                                  <Edit className="h-3 w-3" aria-hidden="true" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive h-6 w-6 p-0"
+                                  title={t('common.actions.delete')}
+                                  onClick={() => void handleDeleteSummary(s.id)}
+                                >
+                                  <Trash2 className="h-3 w-3" aria-hidden="true" />
+                                </Button>
                               </div>
                             </div>
-                            <div className="flex shrink-0 gap-0.5">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                title={t('common.actions.edit')}
-                                onClick={() => openSummaryEdit(s)}
-                              >
-                                <Edit className="h-3 w-3" aria-hidden="true" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive hover:text-destructive h-6 w-6 p-0"
-                                title={t('common.actions.delete')}
-                                onClick={() => void handleDeleteSummary(s.id)}
-                              >
-                                <Trash2 className="h-3 w-3" aria-hidden="true" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0 pb-3">
-                          <p className="text-muted-foreground line-clamp-4 text-xs whitespace-pre-wrap">
-                            {s.text}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                          </CardHeader>
+                          <CardContent className="pt-0 pb-3">
+                            <p className="text-muted-foreground line-clamp-4 text-xs whitespace-pre-wrap">
+                              {s.text}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      ))
+                    }
+                  </PaginatedSlide>
                 )}
               </div>
             )}
 
             {/* Chat tab */}
             {activeTab === 'chat' && (
-              <div className="flex h-full flex-col gap-3">
+              <div className="flex h-[60vh] flex-col gap-3">
                 <div className="flex items-center gap-2">
                   <Brain className="text-primary h-4 w-4" />
                   <span className="text-sm font-medium">
@@ -1335,7 +1361,7 @@ export function BookDetailModal({
           {/* Reading form dialog */}
           <Dialog open={isReadingFormOpen} onOpenChange={setIsReadingFormOpen}>
             <DialogContent>
-              <DialogHeader sticky>
+              <DialogHeader>
                 <DialogTitle mode={editingReading ? 'edit' : 'create'}>
                   {editingReading
                     ? t('pages.readings.editTitle')
@@ -1363,7 +1389,7 @@ export function BookDetailModal({
           <Dialog open={isSummaryFormOpen} onOpenChange={setIsSummaryFormOpen}>
             <DialogContent className="max-w-2xl">
               <form onSubmit={(e) => void handleSummarySubmit(e)}>
-                <DialogHeader sticky>
+                <DialogHeader>
                   <DialogTitle mode={editingSummary ? 'edit' : 'create'}>
                     {editingSummary
                       ? t('pages.summaries.editTitle')
@@ -1437,14 +1463,12 @@ export function BookDetailModal({
           </Dialog>
         </div>
 
-        {/* Ações fora da área rolável para ficarem sempre visíveis */}
-        {activeTab === 'info' && (
-          <div className="dialog-footer gap-sm flex shrink-0 justify-between">
-            <div>
+        <DialogCloseFooter>
+          {activeTab === 'info' && (
+            <>
               {onAskIntellect && (
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={() => {
                     onOpenChange(false);
                     onAskIntellect(book);
@@ -1454,11 +1478,8 @@ export function BookDetailModal({
                   {t('pages.books.chatTabDesc')}
                 </Button>
               )}
-            </div>
-            <div className="gap-sm flex">
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => {
                   onOpenChange(false);
                   onDelete(book.id);
@@ -1469,7 +1490,6 @@ export function BookDetailModal({
                 {t('common.actions.delete')}
               </Button>
               <Button
-                size="sm"
                 onClick={() => {
                   onOpenChange(false);
                   onEdit(book);
@@ -1478,9 +1498,9 @@ export function BookDetailModal({
                 <Edit className="h-4 w-4" />
                 {t('common.actions.edit')}
               </Button>
-            </div>
-          </div>
-        )}
+            </>
+          )}
+        </DialogCloseFooter>
       </DialogContent>
     </Dialog>
   );

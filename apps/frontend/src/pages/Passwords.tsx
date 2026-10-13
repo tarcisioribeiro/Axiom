@@ -1331,7 +1331,7 @@ export default function Passwords() {
         >
           <DialogContent className="max-w-4xl">
             <DialogHeader>
-              <DialogTitle>{t('pages.passwordImport.title')}</DialogTitle>
+              <DialogTitle icon={Upload}>{t('pages.passwordImport.title')}</DialogTitle>
               <DialogDescription>
                 {t('pages.passwordImport.description')}
               </DialogDescription>
@@ -1343,7 +1343,7 @@ export default function Passwords() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader sticky>
+            <DialogHeader>
               <DialogTitle mode={selectedPassword ? 'edit' : 'create'}>
                 {selectedPassword
                   ? t('pages.passwords.editTitle')

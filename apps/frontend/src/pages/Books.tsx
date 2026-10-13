@@ -1071,8 +1071,8 @@ export default function Books() {
 
       {/* Create / Edit form dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader sticky>
+        <DialogContent className="max-w-6xl">
+          <DialogHeader>
             <DialogTitle mode={editingBook ? 'edit' : 'create'}>
               {editingBook ? t('pages.books.editTitle') : t('pages.books.newTitle')}
             </DialogTitle>

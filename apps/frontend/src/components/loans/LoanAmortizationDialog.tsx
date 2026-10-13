@@ -1,3 +1,4 @@
+import { TrendingDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -40,9 +41,11 @@ export function LoanAmortizationDialog({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="max-h-[80vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{t('pages.loans.amortization.title')}</DialogTitle>
+          <DialogTitle icon={TrendingDown}>
+            {t('pages.loans.amortization.title')}
+          </DialogTitle>
           <DialogDescription>{loan?.description}</DialogDescription>
         </DialogHeader>
         <div className="mb-md flex items-center gap-3">

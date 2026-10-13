@@ -439,7 +439,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
         }}
       >
         <DialogContent className="max-w-lg">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode="create">{t('pages.highlights.newTitle')}</DialogTitle>
             <VisuallyHidden>
               <DialogDescription>{t('pages.highlights.newDesc')}</DialogDescription>
@@ -458,7 +458,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       {/* Edit dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode="edit">{t('pages.highlights.editTitle')}</DialogTitle>
             <VisuallyHidden>
               <DialogDescription>{t('pages.highlights.editDesc')}</DialogDescription>

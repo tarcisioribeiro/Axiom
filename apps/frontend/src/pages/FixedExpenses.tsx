@@ -458,7 +458,7 @@ export default function FixedExpenses({
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedExpense ? 'edit' : 'create'}>
               {selectedExpense
                 ? t('pages.fixedExpenses.editTitle')

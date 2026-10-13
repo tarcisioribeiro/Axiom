@@ -355,7 +355,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-3xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedExpense ? 'edit' : 'create'}>
               {selectedExpense
                 ? t('pages.expenses.editTitle')

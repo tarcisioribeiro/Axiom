@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -293,7 +294,7 @@ export function SharePasswordModal({
                       onValueChange={setMemberSearch}
                       placeholder={t('pages.sharePassword.searchMembers')}
                     />
-                    <div className="max-h-52 overflow-y-auto rounded-lg border">
+                    <div className="rounded-lg border">
                       {isLoadingMembers ? (
                         <div className="py-md flex justify-center">
                           <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
@@ -303,34 +304,43 @@ export function SharePasswordModal({
                           {t('pages.sharePassword.noMembers')}
                         </p>
                       ) : (
-                        filteredMembers.map((member) => (
-                          <button
-                            key={member.id}
-                            type="button"
-                            className={cn(
-                              'gap-sm px-md py-sm hover:bg-accent/50 flex w-full items-center text-left transition-colors',
-                              selectedMember?.id === member.id && 'bg-primary/10'
-                            )}
-                            onClick={() => setSelectedMember(member)}
-                          >
-                            <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-                              <User className="text-muted-foreground h-4 w-4" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium">
-                                {member.name}
-                              </p>
-                              {member.email && (
-                                <p className="text-muted-foreground truncate text-xs">
-                                  {member.email}
-                                </p>
-                              )}
-                            </div>
-                            {selectedMember?.id === member.id && (
-                              <Check className="text-primary h-4 w-4 shrink-0" />
-                            )}
-                          </button>
-                        ))
+                        <PaginatedSlide
+                          key={memberSearch}
+                          items={filteredMembers}
+                          pageSize={LIST_PAGE_SIZE}
+                          pinNav={false}
+                        >
+                          {(pageMembers) =>
+                            pageMembers.map((member) => (
+                              <button
+                                key={member.id}
+                                type="button"
+                                className={cn(
+                                  'gap-sm px-md py-sm hover:bg-accent/50 flex w-full items-center text-left transition-colors',
+                                  selectedMember?.id === member.id && 'bg-primary/10'
+                                )}
+                                onClick={() => setSelectedMember(member)}
+                              >
+                                <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+                                  <User className="text-muted-foreground h-4 w-4" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-medium">
+                                    {member.name}
+                                  </p>
+                                  {member.email && (
+                                    <p className="text-muted-foreground truncate text-xs">
+                                      {member.email}
+                                    </p>
+                                  )}
+                                </div>
+                                {selectedMember?.id === member.id && (
+                                  <Check className="text-primary h-4 w-4 shrink-0" />
+                                )}
+                              </button>
+                            ))
+                          }
+                        </PaginatedSlide>
                       )}
                     </div>
                   </div>
@@ -506,41 +516,48 @@ export function SharePasswordModal({
           ) : tokens.length === 0 ? (
             <EmptyState title={t('pages.sharePassword.noLinks')} />
           ) : (
-            <div className="space-y-sm max-h-48 overflow-y-auto">
-              {tokens.map((token) => (
-                <div
-                  key={token.id}
-                  className="flex items-center justify-between rounded-lg border p-3 text-sm"
-                >
-                  <div className="space-y-xs min-w-0 flex-1">
-                    <div className="gap-sm flex items-center">
-                      {getTokenBadge(token)}
-                      <span className="text-muted-foreground text-xs">
-                        {token.use_count}/{token.max_uses}{' '}
-                        {t('pages.sharePassword.uses')}
-                      </span>
+            <PaginatedSlide
+              items={tokens}
+              pageSize={LIST_PAGE_SIZE}
+              pinNav={false}
+              className="space-y-sm"
+            >
+              {(pageTokens) =>
+                pageTokens.map((token) => (
+                  <div
+                    key={token.id}
+                    className="flex items-center justify-between rounded-lg border p-3 text-sm"
+                  >
+                    <div className="space-y-xs min-w-0 flex-1">
+                      <div className="gap-sm flex items-center">
+                        {getTokenBadge(token)}
+                        <span className="text-muted-foreground text-xs">
+                          {token.use_count}/{token.max_uses}{' '}
+                          {t('pages.sharePassword.uses')}
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-xs">
+                        {t('pages.sharePassword.expiresAt')}{' '}
+                        {formatDate(token.expires_at, 'dd/MM/yyyy HH:mm')}
+                      </p>
                     </div>
-                    <p className="text-muted-foreground text-xs">
-                      {t('pages.sharePassword.expiresAt')}{' '}
-                      {formatDate(token.expires_at, 'dd/MM/yyyy HH:mm')}
-                    </p>
+                    <div className="ml-sm gap-xs flex shrink-0">
+                      {!token.is_revoked && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => void handleRevoke(token.id)}
+                          title={t('pages.sharePassword.revokeBtn')}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="ml-sm gap-xs flex shrink-0">
-                    {!token.is_revoked && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => void handleRevoke(token.id)}
-                        title={t('pages.sharePassword.revokeBtn')}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))
+              }
+            </PaginatedSlide>
           )}
         </div>
       </DialogContent>

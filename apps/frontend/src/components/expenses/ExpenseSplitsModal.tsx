@@ -1,14 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, XCircle, Split, Save, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -110,11 +112,15 @@ export function ExpenseSplitsModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.expenses.splits.title')}</DialogTitle>
+          <DialogTitle icon={Split}>{t('pages.expenses.splits.title')}</DialogTitle>
           <DialogDescription>
             {expense?.description} — {expense && formatCurrency(expenseTotal)}
           </DialogDescription>
         </DialogHeader>
+
+        <p className="text-muted-foreground text-sm">
+          {expense?.description} — {expense && formatCurrency(expenseTotal)}
+        </p>
 
         <div className="space-y-sm">
           {isLoading ? (
@@ -124,49 +130,58 @@ export function ExpenseSplitsModal({
           ) : splits.length === 0 && !addingNew ? (
             <EmptyState title={t('pages.expenses.splits.empty')} />
           ) : (
-            <div className="space-y-xs">
-              {splits.map((split) => (
-                <div
-                  key={split.id}
-                  className="gap-sm border-border px-sm py-xs flex items-center rounded-md border"
-                >
-                  <Checkbox
-                    checked={split.payed}
-                    onCheckedChange={(v) =>
-                      toggleMutation.mutate({ splitId: split.id, payed: !!v })
-                    }
-                    aria-label={t('pages.expenses.splits.markPaid')}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{split.description}</p>
-                    {split.member_name && (
-                      <p className="text-muted-foreground text-xs">
-                        {split.member_name}
+            <PaginatedSlide
+              items={splits}
+              pageSize={LIST_PAGE_SIZE}
+              pinNav={false}
+              className="space-y-xs"
+            >
+              {(pageSplits) =>
+                pageSplits.map((split) => (
+                  <div
+                    key={split.id}
+                    className="gap-sm border-border px-sm py-xs flex items-center rounded-md border"
+                  >
+                    <Checkbox
+                      checked={split.payed}
+                      onCheckedChange={(v) =>
+                        toggleMutation.mutate({ splitId: split.id, payed: !!v })
+                      }
+                      aria-label={t('pages.expenses.splits.markPaid')}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {split.description}
                       </p>
-                    )}
+                      {split.member_name && (
+                        <p className="text-muted-foreground text-xs">
+                          {split.member_name}
+                        </p>
+                      )}
+                    </div>
+                    <div className="gap-sm flex shrink-0 items-center">
+                      <span
+                        className={`text-sm font-semibold ${split.payed ? 'text-success' : 'text-foreground'}`}
+                      >
+                        {formatCurrency(parseFloat(split.value))}
+                      </span>
+                      {split.payed ? (
+                        <CheckCircle2 className="text-success h-4 w-4" />
+                      ) : (
+                        <XCircle className="text-muted-foreground h-4 w-4" />
+                      )}
+                      <PlainButton
+                        aria-label={t('common.actions.delete')}
+                        onClick={() => void handleDelete(split.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </PlainButton>
+                    </div>
                   </div>
-                  <div className="gap-sm flex shrink-0 items-center">
-                    <span
-                      className={`text-sm font-semibold ${split.payed ? 'text-success' : 'text-foreground'}`}
-                    >
-                      {formatCurrency(parseFloat(split.value))}
-                    </span>
-                    {split.payed ? (
-                      <CheckCircle2 className="text-success h-4 w-4" />
-                    ) : (
-                      <XCircle className="text-muted-foreground h-4 w-4" />
-                    )}
-                    <PlainButton
-                      aria-label={t('common.actions.delete')}
-                      onClick={() => void handleDelete(split.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </PlainButton>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))
+              }
+            </PaginatedSlide>
           )}
 
           {splits.length > 0 && (
@@ -228,16 +243,18 @@ export function ExpenseSplitsModal({
                     !form.description || !form.value || createMutation.isPending
                   }
                 >
+                  <Save className="h-4 w-4" />
                   {t('common.actions.save')}
                 </Button>
                 <Button
                   size="sm"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => {
                     setAddingNew(false);
                     setForm(getDefaultForm());
                   }}
                 >
+                  <X className="h-4 w-4" />
                   {t('common.actions.cancel')}
                 </Button>
               </div>
@@ -254,6 +271,7 @@ export function ExpenseSplitsModal({
             </Button>
           )}
         </div>
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

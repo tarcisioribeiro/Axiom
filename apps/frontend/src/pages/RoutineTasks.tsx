@@ -679,8 +679,8 @@ export default function RoutineTasks({
       </Tabs>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-h-[98vh] max-w-5xl">
-          <DialogHeader sticky>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
             <DialogTitle mode={selectedTask ? 'edit' : 'create'}>
               {selectedTask
                 ? t('pages.routineTasks.editTitle')

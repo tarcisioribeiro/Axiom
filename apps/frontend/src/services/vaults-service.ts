@@ -49,8 +49,10 @@ class VaultsService extends BaseService<Vault, VaultFormData> {
     );
   }
 
-  async applyYield(id: number): Promise<VaultYieldResponse> {
-    return apiClient.post<VaultYieldResponse>(`${this.endpoint}${id}/apply-yield/`, {});
+  async applyYield(id: number, amount?: number): Promise<VaultYieldResponse> {
+    return apiClient.post<VaultYieldResponse>(`${this.endpoint}${id}/apply-yield/`, {
+      ...(amount !== undefined && { amount }),
+    });
   }
 
   async updateYield(
@@ -74,10 +76,13 @@ class VaultsService extends BaseService<Vault, VaultFormData> {
   }
 
   // Vault Transactions
-  async getTransactions(vaultId: number, type?: string): Promise<VaultTransaction[]> {
+  async getTransactions(
+    vaultId: number,
+    params?: { type?: string; start_date?: string; end_date?: string }
+  ): Promise<VaultTransaction[]> {
     const response = await apiClient.get<PaginatedResponse<VaultTransaction>>(
       `${this.endpoint}${vaultId}/transactions/`,
-      type ? { type } : undefined
+      params
     );
     return response.results;
   }

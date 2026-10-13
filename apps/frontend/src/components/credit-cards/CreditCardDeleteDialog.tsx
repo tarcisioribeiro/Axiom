@@ -1,7 +1,8 @@
-import { AlertTriangle, Loader2, X, FileText, Trash2 } from 'lucide-react';
+import { AlertTriangle, Loader2, X, FileText, Trash2, ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -102,26 +103,34 @@ export function CreditCardDeleteDialog({
                 {t('pages.creditCards.deleteFlow.pendingDesc')}
               </DialogDescription>
             </DialogHeader>
-            <ul className="space-y-xs max-h-60 overflow-y-auto">
-              {pendingBills.map((bill) => (
-                <li
-                  key={bill.id}
-                  className="bg-card px-md py-sm flex items-center justify-between rounded-md border text-sm"
-                >
-                  <span className="font-medium">
-                    {translate('months', bill.month)}/{bill.year}
-                  </span>
-                  <span className="gap-sm flex items-center">
-                    <span className="font-semibold">
-                      {formatCurrency(parseFloat(bill.total_amount))}
+            <p className="text-sm">{t('pages.creditCards.deleteFlow.pendingDesc')}</p>
+            <PaginatedSlide
+              items={pendingBills}
+              pageSize={LIST_PAGE_SIZE}
+              pinNav={false}
+              className="space-y-xs"
+            >
+              {(pageBills) =>
+                pageBills.map((bill) => (
+                  <div
+                    key={bill.id}
+                    className="bg-card px-md py-sm flex items-center justify-between rounded-md border text-sm"
+                  >
+                    <span className="font-medium">
+                      {translate('months', bill.month)}/{bill.year}
                     </span>
-                    <span className="text-muted-foreground text-xs">
-                      {t(`pages.creditCardExpenses.status.${bill.status}`)}
+                    <span className="gap-sm flex items-center">
+                      <span className="font-semibold">
+                        {formatCurrency(parseFloat(bill.total_amount))}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        {t(`pages.creditCardExpenses.status.${bill.status}`)}
+                      </span>
                     </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
+                  </div>
+                ))
+              }
+            </PaginatedSlide>
             <div className="dialog-footer gap-sm flex justify-end">
               <Button variant="outline" onClick={close}>
                 <X className="h-4 w-4" />
@@ -143,7 +152,7 @@ export function CreditCardDeleteDialog({
         ) : (
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle icon={ShieldAlert}>
                 {t('pages.creditCards.deleteFlow.credentialsTitle')}
               </DialogTitle>
               <DialogDescription>

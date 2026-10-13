@@ -435,7 +435,7 @@ function RuleFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
-        <DialogHeader sticky>
+        <DialogHeader>
           <DialogTitle mode={rule ? 'edit' : 'create'}>
             {rule
               ? t('pages.automationRules.editRule')

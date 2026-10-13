@@ -329,7 +329,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedRevenue ? 'edit' : 'create'}>
               {selectedRevenue
                 ? t('pages.revenues.editTitle')

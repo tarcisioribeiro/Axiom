@@ -21,7 +21,7 @@ import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -803,7 +803,7 @@ export default function BankReconciliationDetail() {
             onValueChange={setCandidateSearch}
           />
 
-          <div className="space-y-sm max-h-72 overflow-y-auto">
+          <div>
             {candidateLoading ? (
               <p className="py-md text-muted-foreground text-center text-sm">
                 {t('common.actions.loading')}
@@ -818,26 +818,38 @@ export default function BankReconciliationDetail() {
                 }
               />
             ) : (
-              candidates.map((c) => (
-                <div
-                  key={c.id}
-                  className="gap-sm p-sm flex items-center justify-between rounded-md border text-sm"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{c.description}</p>
-                    <p className="text-muted-foreground">
-                      {formatDate(c.date)} · {formatCurrency(Math.abs(Number(c.value)))}
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    disabled={updatingId === matchingEntry?.id}
-                    onClick={() => void handleManualMatch(c.id)}
-                  >
-                    {t('pages.bankReconciliation.detail.linkBtn')}
-                  </Button>
-                </div>
-              ))
+              <PaginatedSlide
+                key={candidateSearch}
+                items={candidates}
+                pageSize={LIST_PAGE_SIZE}
+                pinNav={false}
+                className="space-y-sm"
+              >
+                {(pageCandidates) =>
+                  pageCandidates.map((c) => (
+                    <div
+                      key={c.id}
+                      className="gap-sm p-sm flex items-center justify-between rounded-md border text-sm"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{c.description}</p>
+                        <p className="text-muted-foreground">
+                          {formatDate(c.date)} ·{' '}
+                          {formatCurrency(Math.abs(Number(c.value)))}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        disabled={updatingId === matchingEntry?.id}
+                        onClick={() => void handleManualMatch(c.id)}
+                      >
+                        <Link2 className="h-4 w-4" />
+                        {t('pages.bankReconciliation.detail.linkBtn')}
+                      </Button>
+                    </div>
+                  ))
+                }
+              </PaginatedSlide>
             )}
           </div>
           <DialogCloseFooter />

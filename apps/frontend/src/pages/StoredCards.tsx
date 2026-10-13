@@ -589,7 +589,7 @@ export default function StoredCards() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-2xl">
-            <DialogHeader sticky>
+            <DialogHeader>
               <DialogTitle mode={selectedCard ? 'edit' : 'create'}>
                 {selectedCard
                   ? t('pages.storedCards.editTitle')

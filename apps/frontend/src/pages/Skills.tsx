@@ -526,7 +526,7 @@ export default function Skills() {
           }}
         >
           <DialogContent className="max-w-md">
-            <DialogHeader sticky>
+            <DialogHeader>
               <div className="gap-sm flex items-center">
                 <div className="bg-primary/20 flex h-8 w-8 items-center justify-center rounded-lg">
                   <Brain className="text-primary h-4 w-4" />

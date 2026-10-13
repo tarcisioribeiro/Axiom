@@ -1,4 +1,4 @@
-import { AlertCircle, RefreshCw, X } from 'lucide-react';
+import { AlertCircle, RefreshCw, X, Handshake } from 'lucide-react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -63,9 +63,11 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{t('pages.creditCardBills.renegotiateTitle')}</DialogTitle>
+          <DialogTitle icon={Handshake}>
+            {t('pages.creditCardBills.renegotiateTitle')}
+          </DialogTitle>
           <DialogDescription>
             {t('pages.creditCardBills.renegotiateDesc')}
           </DialogDescription>

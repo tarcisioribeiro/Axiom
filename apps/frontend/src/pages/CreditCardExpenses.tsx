@@ -1103,7 +1103,7 @@ export default function CreditCardExpenses({
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-3xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedPurchase ? 'edit' : 'create'}>
               {selectedPurchase
                 ? t('pages.creditCardExpenses.editPurchaseTitle')
@@ -1129,7 +1129,7 @@ export default function CreditCardExpenses({
 
       <Dialog open={isInstallmentDialogOpen} onOpenChange={setIsInstallmentDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode="edit">
               {t('pages.creditCardExpenses.editInstallmentTitle')}
             </DialogTitle>
@@ -1154,7 +1154,9 @@ export default function CreditCardExpenses({
       <Dialog open={isAssignBillDialogOpen} onOpenChange={setIsAssignBillDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('pages.creditCardExpenses.assignBillTitle')}</DialogTitle>
+            <DialogTitle icon={Receipt}>
+              {t('pages.creditCardExpenses.assignBillTitle')}
+            </DialogTitle>
             <DialogDescription>
               {assigningInstallment && (
                 <>

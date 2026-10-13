@@ -57,8 +57,8 @@ export function ReceiptPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent size="lg" className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader sticky>
+      <DialogContent size="lg">
+        <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
             <Receipt className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
             {t('receipt.title', { typeLabel: data.typeLabel })}

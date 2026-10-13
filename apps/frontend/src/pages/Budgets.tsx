@@ -447,7 +447,7 @@ export default function Budgets() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedBudget ? 'edit' : 'create'}>
               {selectedBudget
                 ? t('pages.budgets.editTitle')

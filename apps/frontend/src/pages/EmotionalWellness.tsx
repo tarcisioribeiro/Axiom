@@ -40,6 +40,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -474,21 +475,25 @@ function SelfEsteemTab({
   return (
     <div className="flex flex-1 flex-col space-y-5">
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        {/* altura fixa: o modal não varia com o tamanho do texto da pergunta */}
-        <DialogContent size="sm" className="flex h-[26rem] flex-col">
+        {/* altura mínima fixa: o modal não varia com o tamanho do texto da pergunta */}
+        <DialogContent size="sm">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="gap-sm flex items-center">
+              <Star className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
               {t('pages.emotionalWellness.selfEsteem.dialogTitle')}
             </DialogTitle>
             <DialogDescription>
+              {t('pages.emotionalWellness.selfEsteem.dialogTitle')}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div key={step} className="animate-fade-in space-y-md min-h-56">
+            <p className="text-muted-foreground text-xs">
               {t('pages.emotionalWellness.selfEsteem.questionOf', {
                 current: step + 1,
                 total: ROSENBERG_QUESTION_KEYS.length,
               })}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div key={step} className="animate-fade-in space-y-md flex-1">
+            </p>
             <p className="text-sm leading-relaxed font-medium">
               {t(
                 `pages.emotionalWellness.selfEsteem.questions.${ROSENBERG_QUESTION_KEYS[step]}`
@@ -516,7 +521,11 @@ function SelfEsteemTab({
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-sm">
+            <Button variant="outline" onClick={() => setShowForm(false)}>
+              <X className="h-4 w-4" />
+              {t('common.actions.cancel')}
+            </Button>
             {isLastStep ? (
               <Button
                 onClick={handleSubmit}
@@ -546,6 +555,7 @@ function SelfEsteemTab({
             <>
               <DialogHeader>
                 <DialogTitle className="gap-sm flex items-center">
+                  <Star className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
                   {t('pages.emotionalWellness.selfEsteem.detailTitle', {
                     date: format(new Date(selected.assessed_at), 'dd/MM/yyyy'),
                   })}
@@ -559,6 +569,11 @@ function SelfEsteemTab({
                   })}
                 </DialogDescription>
               </DialogHeader>
+              <p className="text-sm font-medium">
+                {t('pages.emotionalWellness.selfEsteem.scoreOf', {
+                  score: selected.score,
+                })}
+              </p>
               <ol className="space-y-sm">
                 {ROSENBERG_QUESTION_KEYS.map((qKey, i) => (
                   <li key={i} className="text-sm">
@@ -583,6 +598,7 @@ function SelfEsteemTab({
                   </li>
                 ))}
               </ol>
+              <DialogCloseFooter />
             </>
           )}
         </DialogContent>
@@ -856,20 +872,24 @@ function CheckinTab({
     <div className="flex flex-1 flex-col space-y-5">
       <Dialog open={showForm} onOpenChange={setShowForm}>
         {/* altura fixa: o modal não varia entre os passos de escala e de texto */}
-        <DialogContent size="sm" className="flex h-[22rem] flex-col">
+        <DialogContent size="sm">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="gap-sm flex items-center">
+              <Heart className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
               {t('pages.emotionalWellness.checkin.dialogTitle')}
             </DialogTitle>
             <DialogDescription>
-              {t('pages.emotionalWellness.checkin.questionOf', {
-                current: step + 1,
-                total: CHECKIN_STEPS,
-              })}
+              {t('pages.emotionalWellness.checkin.dialogTitle')}
             </DialogDescription>
           </DialogHeader>
 
-          <div key={step} className="animate-fade-in flex-1">
+          <p className="text-muted-foreground text-xs">
+            {t('pages.emotionalWellness.checkin.questionOf', {
+              current: step + 1,
+              total: CHECKIN_STEPS,
+            })}
+          </p>
+          <div key={step} className="animate-fade-in flex h-36 flex-col">
             {scale ? (
               <ScaleInput
                 label={t(`pages.emotionalWellness.checkin.scales.${scale.key}`)}
@@ -900,7 +920,11 @@ function CheckinTab({
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-sm">
+            <Button variant="outline" onClick={() => setShowForm(false)}>
+              <X className="h-4 w-4" />
+              {t('common.actions.cancel')}
+            </Button>
             {isLastStep ? (
               <Button onClick={handleSubmit} disabled={mutation.isPending}>
                 <CheckCircle2 className="h-4 w-4" />
@@ -923,7 +947,8 @@ function CheckinTab({
           {selected && (
             <>
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="gap-sm flex items-center">
+                  <Heart className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
                   {t('pages.emotionalWellness.checkin.detailTitle', {
                     date: format(new Date(selected.checked_at), 'dd/MM/yyyy'),
                   })}
@@ -958,6 +983,7 @@ function CheckinTab({
                   </div>
                 ))}
               </div>
+              <DialogCloseFooter />
             </>
           )}
         </DialogContent>
@@ -1213,11 +1239,13 @@ function CrisisTab({
         <DialogContent size="md">
           <DialogHeader>
             <DialogTitle className="gap-sm flex items-center">
-              {step === 2 && (
+              {step === 2 ? (
                 <ListChecks
                   className="text-primary h-4 w-4 shrink-0"
                   aria-hidden="true"
                 />
+              ) : (
+                <Shield className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
               )}
               {step === 0
                 ? t('pages.emotionalWellness.crisis.step0Title')
@@ -1234,6 +1262,14 @@ function CrisisTab({
           </DialogHeader>
 
           <div key={step} className="animate-fade-in space-y-md">
+            {step < 2 && (
+              <p className="text-muted-foreground text-xs">
+                {t('pages.emotionalWellness.crisis.stepOf', {
+                  current: step + 1,
+                  total: CRISIS_STEPS,
+                })}
+              </p>
+            )}
             {step === 0 && (
               <>
                 <ChoiceGrid
@@ -1320,42 +1356,44 @@ function CrisisTab({
               ))}
           </div>
 
-          <DialogFooter>
-            {step === 0 && (
-              <Button onClick={() => setStep(1)} disabled={!emotionalState}>
-                {t('common.actions.confirm')}
-                <ChevronRight className="h-4 w-4" />
+          {step < 2 && (
+            <DialogFooter className="gap-sm">
+              <Button variant="outline" onClick={() => setShowForm(false)}>
+                <X className="h-4 w-4" />
+                {t('common.actions.cancel')}
               </Button>
-            )}
-            {step === 1 && (
-              <Button
-                onClick={handleSubmit}
-                disabled={!impulseType || createMutation.isPending}
-              >
-                <Send className="h-4 w-4" />
-                {createMutation.isPending
-                  ? t('pages.emotionalWellness.crisis.sending')
-                  : t('pages.emotionalWellness.crisis.requestHelpBtn')}
-              </Button>
-            )}
-            {step === 2 && (
-              <>
-                <Button variant="outline" onClick={() => setShowForm(false)}>
-                  <X className="h-4 w-4" />
-                  {t('common.actions.close')}
+              {step === 0 && (
+                <Button onClick={() => setStep(1)} disabled={!emotionalState}>
+                  {t('common.actions.confirm')}
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
-                {result && !result.resolved && (
-                  <Button
-                    onClick={() => resolveMutation.mutate(result.id)}
-                    disabled={resolveMutation.isPending}
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    {t('pages.emotionalWellness.crisis.overcameBtn')}
-                  </Button>
-                )}
-              </>
-            )}
-          </DialogFooter>
+              )}
+              {step === 1 && (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!impulseType || createMutation.isPending}
+                >
+                  <Send className="h-4 w-4" />
+                  {createMutation.isPending
+                    ? t('pages.emotionalWellness.crisis.sending')
+                    : t('pages.emotionalWellness.crisis.requestHelpBtn')}
+                </Button>
+              )}
+            </DialogFooter>
+          )}
+          {step === 2 && (
+            <DialogCloseFooter>
+              {result && !result.resolved && (
+                <Button
+                  onClick={() => resolveMutation.mutate(result.id)}
+                  disabled={resolveMutation.isPending}
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {t('pages.emotionalWellness.crisis.overcameBtn')}
+                </Button>
+              )}
+            </DialogCloseFooter>
+          )}
         </DialogContent>
       </Dialog>
 

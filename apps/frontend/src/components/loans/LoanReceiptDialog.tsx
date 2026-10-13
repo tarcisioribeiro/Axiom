@@ -1,5 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, CalendarClock, Wallet, Loader2, Save, X } from 'lucide-react';
+import {
+  AlertCircle,
+  CalendarClock,
+  Wallet,
+  Loader2,
+  Save,
+  X,
+  Banknote,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -122,7 +130,7 @@ export function LoanReceiptDialog({
     <Dialog open={!!loan} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.loans.receipt.title')}</DialogTitle>
+          <DialogTitle icon={Banknote}>{t('pages.loans.receipt.title')}</DialogTitle>
           <DialogDescription>
             {loan?.description} — {t('pages.loans.remainingBalance')}{' '}
             {formatCurrency(remaining)}

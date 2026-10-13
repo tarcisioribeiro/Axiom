@@ -659,8 +659,8 @@ export default function CreditCardBills({
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-h-[98vh] max-w-3xl">
-          <DialogHeader sticky>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
             <DialogTitle mode={selectedBill ? 'edit' : 'create'}>
               {selectedBill
                 ? t('pages.creditCardBills.editTitle')
@@ -685,7 +685,7 @@ export default function CreditCardBills({
 
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
         <DialogContent className="max-w-3xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle className="gap-sm flex items-center">
               <Wallet className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
               {t('pages.creditCardBills.payTitle')}

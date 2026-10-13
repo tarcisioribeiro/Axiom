@@ -173,7 +173,7 @@ export function LaunchRevenuesDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-6xl">
+      <DialogContent className="max-w-6xl">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
             <CalendarPlus className="text-success h-5 w-5" aria-hidden="true" />

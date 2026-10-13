@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { Pencil, Plus, Trash2, X } from 'lucide-react';
+import { CalendarClock, Loader2, Pencil, Plus, Save, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,9 +11,9 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -171,14 +171,14 @@ export function VaultContributionsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{t('pages.vaults.recurringContributions.title')}</DialogTitle>
-          <DialogDescription>
-            {vault &&
-              t('pages.vaults.recurringContributions.desc', {
-                name: vault.description,
-              })}
+          <DialogTitle className="gap-sm flex items-center">
+            <CalendarClock className="text-primary h-4 w-4" aria-hidden="true" />
+            {t('pages.vaults.recurringContributions.title')}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            {t('pages.vaults.recurringContributions.title')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-md">
@@ -230,7 +230,7 @@ export function VaultContributionsDialog({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="contrib_day">
+                  <Label htmlFor="contrib_day" className="block text-center">
                     {t('pages.vaults.recurringContributions.fields.dayOfMonth')}
                   </Label>
                   <NumberStepper
@@ -239,6 +239,7 @@ export function VaultContributionsDialog({
                     max={31}
                     value={formData.day_of_month}
                     onChange={(v) => setFormData({ ...formData, day_of_month: v ?? 1 })}
+                    className="mx-auto"
                   />
                 </div>
                 <div>
@@ -291,6 +292,7 @@ export function VaultContributionsDialog({
                     setEditing(null);
                   }}
                 >
+                  <X className="h-4 w-4" aria-hidden="true" />
                   {t('common.actions.cancel')}
                 </Button>
                 <Button
@@ -300,6 +302,11 @@ export function VaultContributionsDialog({
                     isSubmitting || !formData.description || formData.amount <= 0
                   }
                 >
+                  {isSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Save className="h-4 w-4" aria-hidden="true" />
+                  )}
                   {isSubmitting ? t('common.actions.saving') : t('common.actions.save')}
                 </Button>
               </div>
@@ -309,7 +316,7 @@ export function VaultContributionsDialog({
             <div className="py-xl text-muted-foreground text-center text-sm">
               {t('common.messages.loading')}
             </div>
-          ) : contributions.length === 0 ? (
+          ) : !isFormOpen && contributions.length === 0 ? (
             <EmptyState title={t('pages.vaults.recurringContributions.emptyState')} />
           ) : (
             <div className="space-y-sm">
@@ -382,12 +389,7 @@ export function VaultContributionsDialog({
             </div>
           )}
         </div>
-        <DialogFooter className="sm:justify-start">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            <X className="h-4 w-4" />
-            {t('common.actions.close')}
-          </Button>
-        </DialogFooter>
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

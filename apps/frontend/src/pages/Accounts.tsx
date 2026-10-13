@@ -515,7 +515,7 @@ export default function Accounts() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedAccount ? 'edit' : 'create'}>
               {selectedAccount
                 ? t('pages.accounts.editTitle')
@@ -647,7 +647,9 @@ export default function Accounts() {
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('pages.accounts.imports.dialogTitle')}</DialogTitle>
+            <DialogTitle icon={Upload}>
+              {t('pages.accounts.imports.dialogTitle')}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={(e) => void handleUploadSubmit(e)} className="space-y-md">
             <div className="space-y-sm">

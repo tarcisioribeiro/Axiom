@@ -130,7 +130,7 @@ export default function Transfers() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedTransfer ? 'edit' : 'create'}>
               {selectedTransfer
                 ? t('pages.transfers.editTitle')

@@ -872,79 +872,73 @@ export function CourseDetailModal({
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
-          {/* Colored header */}
-          <div className="bg-category-intellect/10 px-xl pb-md pt-xl">
-            <DialogHeader>
-              <div className="gap-md flex items-start justify-between">
-                <div className="gap-md flex min-w-0 flex-1 items-center">
-                  <div className="bg-category-intellect/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-                    <GraduationCap className="text-category-intellect h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <DialogTitle className="truncate text-lg font-bold">
-                      {displayCourse.title}
-                    </DialogTitle>
-                    <DialogDescription className="mt-xs gap-sm flex items-center">
-                      <span>{displayCourse.platform_display}</span>
-                      <span className="text-muted-foreground/50">·</span>
-                      <span>{displayCourse.category_display}</span>
-                    </DialogDescription>
-                  </div>
-                </div>
-                <Badge variant={STATUS_VARIANT[displayCourse.status] ?? 'outline'}>
-                  {displayCourse.status_display}
-                </Badge>
-              </div>
-
-              {/* Progress bar */}
-              <div className="mt-md">
-                <div className="mb-xs text-muted-foreground flex items-center justify-between text-xs">
-                  <span>{t('pages.courses.stats.progress')}</span>
-                  <span className="text-category-intellect font-semibold">
-                    {displayCourse.progress_percentage}%
-                  </span>
-                </div>
-                <Progress
-                  value={displayCourse.progress_percentage}
-                  className="bg-category-intellect/20 h-2"
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <div className="gap-md flex items-center justify-between">
+              <DialogTitle className="gap-sm flex min-w-0 items-center">
+                <GraduationCap
+                  className="text-category-intellect h-4 w-4 shrink-0"
+                  aria-hidden="true"
                 />
-              </div>
+                <span className="truncate">{displayCourse.title}</span>
+              </DialogTitle>
+              <Badge variant={STATUS_VARIANT[displayCourse.status] ?? 'outline'}>
+                {displayCourse.status_display}
+              </Badge>
+            </div>
+            <DialogDescription>
+              {displayCourse.platform_display} · {displayCourse.category_display}
+            </DialogDescription>
+          </DialogHeader>
 
-              {/* Stats row */}
-              <div className="mt-md gap-sm grid grid-cols-3">
-                <div className="bg-background/60 p-sm rounded-lg text-center">
-                  <div className="text-category-intellect text-lg font-bold">
-                    {displayCourse.completed_lessons}/{displayCourse.total_lessons}
-                  </div>
-                  <div className="text-muted-foreground text-xs">
-                    {t('pages.courses.stats.lessons')}
-                  </div>
+          <div className="bg-category-intellect/10 p-md rounded-lg">
+            {/* Progress bar */}
+            <div>
+              <div className="mb-xs text-muted-foreground flex items-center justify-between text-xs">
+                <span>{t('pages.courses.stats.progress')}</span>
+                <span className="text-category-intellect font-semibold">
+                  {displayCourse.progress_percentage}%
+                </span>
+              </div>
+              <Progress
+                value={displayCourse.progress_percentage}
+                className="bg-category-intellect/20 h-2"
+              />
+            </div>
+
+            {/* Stats row */}
+            <div className="mt-md gap-sm grid grid-cols-3">
+              <div className="bg-background/60 p-sm rounded-lg text-center">
+                <div className="text-category-intellect text-lg font-bold">
+                  {displayCourse.completed_lessons}/{displayCourse.total_lessons}
                 </div>
-                <div className="bg-background/60 p-sm rounded-lg text-center">
-                  <div className="text-category-intellect text-lg font-bold">
-                    {displayCourse.invested_hours.toFixed(1)}h
-                  </div>
-                  <div className="text-muted-foreground text-xs">
-                    {t('pages.courses.stats.investedHours')}
-                  </div>
-                </div>
-                <div className="bg-background/60 p-sm rounded-lg text-center">
-                  <div className="text-category-intellect text-lg font-bold">
-                    {displayCourse.estimated_hours
-                      ? `${displayCourse.estimated_hours}h`
-                      : '—'}
-                  </div>
-                  <div className="text-muted-foreground text-xs">
-                    {t('pages.courses.stats.estimatedHours')}
-                  </div>
+                <div className="text-muted-foreground text-xs">
+                  {t('pages.courses.stats.lessons')}
                 </div>
               </div>
-            </DialogHeader>
+              <div className="bg-background/60 p-sm rounded-lg text-center">
+                <div className="text-category-intellect text-lg font-bold">
+                  {displayCourse.invested_hours.toFixed(1)}h
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  {t('pages.courses.stats.investedHours')}
+                </div>
+              </div>
+              <div className="bg-background/60 p-sm rounded-lg text-center">
+                <div className="text-category-intellect text-lg font-bold">
+                  {displayCourse.estimated_hours
+                    ? `${displayCourse.estimated_hours}h`
+                    : '—'}
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  {t('pages.courses.stats.estimatedHours')}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="modules" className="p-xl pt-md">
+          <Tabs defaultValue="modules">
             <TabsList className="w-full">
               <TabsTrigger value="overview" className="flex-1">
                 <BookOpen className="mr-xs h-4 w-4" />
@@ -1259,10 +1253,8 @@ export function CourseDetailModal({
             </TabsContent>
           </Tabs>
 
-          {/* Ações fixas na base do modal (o DialogContent aqui é p-0) */}
-          <div className="dialog-footer gap-sm px-xl! mx-0! flex justify-end">
+          <DialogCloseFooter>
             <Button
-              size="sm"
               variant="outline"
               className="text-destructive hover:text-destructive"
               onClick={() => onDelete(displayCourse)}
@@ -1270,19 +1262,21 @@ export function CourseDetailModal({
               <Trash2 className="h-4 w-4" />
               {t('common.actions.delete')}
             </Button>
-            <Button size="sm" onClick={() => onEdit(displayCourse)}>
+            <Button onClick={() => onEdit(displayCourse)}>
               <Edit className="h-4 w-4" />
               {t('common.actions.edit')}
             </Button>
-          </div>
+          </DialogCloseFooter>
         </DialogContent>
       </Dialog>
 
       {displayCourse.completion_certificate && certificateStreamUrl && (
         <Dialog open={showCertPreview} onOpenChange={setShowCertPreview}>
-          <DialogContent size="xl" className="max-h-[90vh]">
+          <DialogContent size="xl">
             <DialogHeader>
-              <DialogTitle>{t('pages.courses.certificate.previewTitle')}</DialogTitle>
+              <DialogTitle icon={Award}>
+                {t('pages.courses.certificate.previewTitle')}
+              </DialogTitle>
             </DialogHeader>
             <div className="bg-muted/20 border-border h-[75vh] w-full overflow-auto rounded-md border">
               {isCertificateImage ? (

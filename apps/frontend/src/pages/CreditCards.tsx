@@ -21,7 +21,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { CreditCardDeleteDialog } from '@/components/credit-cards/CreditCardDeleteDialog';
-import { CreditCardDetailSheet } from '@/components/credit-cards/CreditCardDetailSheet';
+import { CreditCardDetailModal } from '@/components/credit-cards/CreditCardDetailModal';
 import { CreditCardForm } from '@/components/credit-cards/CreditCardForm';
 import { CreditLimitAdjustDialog } from '@/components/credit-cards/CreditLimitAdjustDialog';
 import { Badge } from '@/components/ui/badge';
@@ -181,7 +181,8 @@ export default function CreditCards({
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
-  const [hubCard, setHubCard] = useState<CreditCard | undefined>();
+  const [detailCard, setDetailCard] = useState<CreditCard | undefined>();
+  const [editCard, setEditCard] = useState<CreditCard | undefined>();
   const [limitCard, setLimitCard] = useState<CreditCard | undefined>();
   const [deleteState, setDeleteState] = useState<
     { card: CreditCard; pendingBills: CreditCardBill[] } | undefined
@@ -190,11 +191,12 @@ export default function CreditCards({
   const [flagFilter, setFlagFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const setExtraLabel = useBreadcrumbExtraStore((s) => s.setExtraLabel);
+  const isFormOpen = isCreateOpen || !!editCard;
 
   useEffect(() => {
-    setExtraLabel(hubCard?.name ?? null);
+    setExtraLabel(detailCard?.name ?? editCard?.name ?? null);
     return () => setExtraLabel(null);
-  }, [hubCard, setExtraLabel]);
+  }, [detailCard, editCard, setExtraLabel]);
 
   const { data: cardsPageData, isLoading } = useQuery({
     queryKey: ['credit-cards'],
@@ -223,14 +225,22 @@ export default function CreditCards({
   const accounts = cardsPageData?.accounts ?? EMPTY_ACCOUNTS;
   const allBills = cardsPageData?.allBills ?? EMPTY_BILLS;
 
+  const closeForm = () => {
+    onCreateOpenChange(false);
+    setEditCard(undefined);
+  };
+
   const handleSubmit = async (data: CreditCardFormData) => {
     try {
       setIsSubmitting(true);
-      await creditCardsService.create(data);
-      toast({
-        title: t('pages.creditCards.created'),
-      });
-      onCreateOpenChange(false);
+      if (editCard) {
+        await creditCardsService.update(editCard.id, data);
+        toast({ title: t('pages.creditCards.updated') });
+      } else {
+        await creditCardsService.create(data);
+        toast({ title: t('pages.creditCards.created') });
+      }
+      closeForm();
       void queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
     } catch (error: unknown) {
       toast({
@@ -438,9 +448,8 @@ export default function CreditCards({
                     delay: creditCards.indexOf(card) * 0.05,
                   }}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => setHubCard(card)}
+                  onClick={() => setDetailCard(card)}
                   className="cursor-pointer"
-                  title={t('pages.creditCardHub.openHub')}
                 >
                   <Card className="overflow-hidden">
                     <div className="px-md pb-lg pt-md relative">
@@ -488,7 +497,7 @@ export default function CreditCards({
                               className="h-8 w-8"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setHubCard(card);
+                                setEditCard(card);
                               }}
                               title={t('common.actions.edit')}
                               aria-label={t('common.actions.edit')}
@@ -587,31 +596,36 @@ export default function CreditCards({
         onOpenChange={(open) => !open && setLimitCard(undefined)}
       />
 
-      <Dialog open={isCreateOpen} onOpenChange={onCreateOpenChange}>
+      <Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader sticky>
-            <DialogTitle mode="create">{t('pages.creditCards.newTitle')}</DialogTitle>
+          <DialogHeader>
+            <DialogTitle mode={editCard ? 'edit' : 'create'}>
+              {editCard
+                ? t('pages.creditCards.editTitle')
+                : t('pages.creditCards.newTitle')}
+            </DialogTitle>
             <VisuallyHidden>
-              <DialogDescription>{t('pages.creditCards.newDesc')}</DialogDescription>
+              <DialogDescription>
+                {editCard
+                  ? t('pages.creditCards.editDesc')
+                  : t('pages.creditCards.newDesc')}
+              </DialogDescription>
             </VisuallyHidden>
           </DialogHeader>
           <CreditCardForm
+            key={editCard?.id ?? 'create'}
+            creditCard={editCard}
             accounts={accounts}
             onSubmit={handleSubmit}
-            onCancel={() => onCreateOpenChange(false)}
+            onCancel={closeForm}
             isLoading={isSubmitting}
           />
         </DialogContent>
       </Dialog>
 
-      <CreditCardDetailSheet
-        card={hubCard ?? null}
-        accounts={accounts}
-        onClose={() => setHubCard(undefined)}
-        onCardUpdated={() => {
-          void queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
-          setHubCard(undefined);
-        }}
+      <CreditCardDetailModal
+        card={detailCard ?? null}
+        onClose={() => setDetailCard(undefined)}
       />
 
       <CreditCardDeleteDialog

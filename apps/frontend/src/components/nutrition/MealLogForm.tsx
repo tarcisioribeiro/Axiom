@@ -333,8 +333,8 @@ export function MealLogForm({
         onOpenChange={(open) => !open && setDetailOption(null)}
       >
         <DialogContent className="max-w-lg">
-          <DialogHeader sticky>
-            <DialogTitle>{detailOption?.name}</DialogTitle>
+          <DialogHeader>
+            <DialogTitle icon={UtensilsCrossed}>{detailOption?.name}</DialogTitle>
             <DialogDescription className="sr-only">
               {t('pages.nutritionLog.menuOption')}
             </DialogDescription>

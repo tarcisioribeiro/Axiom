@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { Pencil, Loader2, Save, X } from 'lucide-react';
+import { Pencil, Loader2, Save, X, ListOrdered } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -184,9 +184,9 @@ export function InstallmentsPlanDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle icon={ListOrdered}>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 

@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
+import { BarChart3 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -132,9 +133,9 @@ export function LoanProgressDialog({
 
   return (
     <Dialog open={!!loan} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{p('title', 'lentTitle')}</DialogTitle>
+          <DialogTitle icon={BarChart3}>{p('title', 'lentTitle')}</DialogTitle>
           <DialogDescription>{loan?.description}</DialogDescription>
         </DialogHeader>
 

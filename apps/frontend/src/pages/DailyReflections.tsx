@@ -412,7 +412,7 @@ export default function DailyReflections() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selected ? 'edit' : 'create'}>
               {selected
                 ? t('pages.dailyReflections.editTitle')

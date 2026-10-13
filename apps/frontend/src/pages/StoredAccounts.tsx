@@ -696,7 +696,7 @@ export default function StoredAccounts() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-2xl">
-            <DialogHeader sticky>
+            <DialogHeader>
               <DialogTitle mode={selectedAccount ? 'edit' : 'create'}>
                 {selectedAccount
                   ? t('pages.storedAccounts.editTitle')

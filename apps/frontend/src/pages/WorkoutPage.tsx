@@ -62,10 +62,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogClose,
   DialogCloseFooter,
   DialogContent,
-  DialogFooter,
   DialogDescription,
   DialogHeader,
   DialogTitle,
@@ -268,14 +266,6 @@ export default function WorkoutPage() {
   const latestBodyWeightKg = bodyMetrics.find((m) => m.weight_kg)?.weight_kg ?? null;
   const isSessionDialog =
     dialog?.type === 'new-session' || dialog?.type === 'edit-session';
-  // Formulários de plano/divisão/exercício: altura fixa, só os campos rolam
-  const isFixedFormDialog =
-    dialog?.type === 'new-plan' ||
-    dialog?.type === 'edit-plan' ||
-    dialog?.type === 'new-day' ||
-    dialog?.type === 'edit-day' ||
-    dialog?.type === 'new-catalog-exercise' ||
-    dialog?.type === 'edit-catalog-exercise';
   const isExerciseDialog =
     dialog?.type === 'add-exercise' || dialog?.type === 'edit-exercise';
 
@@ -1389,34 +1379,30 @@ export default function WorkoutPage() {
             setViewDayId(null);
           }}
         >
-          {/* Altura justa para 1 linha de cards; mais linhas rolam dentro do modal */}
-          <DialogContent className="flex h-[min(70vh,26rem)] max-w-5xl flex-col overflow-hidden">
+          <DialogContent className="max-w-5xl">
             {viewedPlan && (
               <>
                 <DialogHeader>
-                  <DialogTitle>{viewedPlan.name}</DialogTitle>
+                  <DialogTitle className="gap-sm flex items-center">
+                    <ClipboardList
+                      className="text-primary h-4 w-4 shrink-0"
+                      aria-hidden="true"
+                    />
+                    {viewedPlan.name}
+                  </DialogTitle>
                   <DialogDescription>
                     {viewedPlan.day_count} {t('pages.workoutPlans.days')} ·{' '}
                     {viewedPlan.exercise_count} {t('pages.workoutPlans.exercises')}
                   </DialogDescription>
                 </DialogHeader>
-                {/* my-auto centraliza os cards quando cabem e vira 0 quando rola */}
-                <div className="px-xs flex min-h-0 flex-1 flex-col overflow-y-auto">
-                  <div className="py-xs my-auto">
-                    <PlanDaysList
-                      plan={viewedPlan}
-                      onOpenDay={(day) => setViewDayId(day.id)}
-                      t={t}
-                    />
-                  </div>
+                <div className="px-xs py-xs">
+                  <PlanDaysList
+                    plan={viewedPlan}
+                    onOpenDay={(day) => setViewDayId(day.id)}
+                    t={t}
+                  />
                 </div>
-                <DialogFooter className="gap-sm sm:justify-start">
-                  <DialogClose asChild>
-                    <Button variant="outline">
-                      <X className="h-4 w-4" />
-                      {t('common.actions.close')}
-                    </Button>
-                  </DialogClose>
+                <DialogCloseFooter>
                   <Button
                     onClick={() =>
                       setDialog({ type: 'new-day', planId: viewedPlan.id })
@@ -1425,7 +1411,7 @@ export default function WorkoutPage() {
                     <Plus className="h-4 w-4" />
                     {t('pages.workoutPlans.newDayBtn')}
                   </Button>
-                </DialogFooter>
+                </DialogCloseFooter>
               </>
             )}
           </DialogContent>
@@ -1433,7 +1419,7 @@ export default function WorkoutPage() {
 
         {/* ── Exercícios da divisão (por cima do modal do plano) ──────────── */}
         <Dialog open={!!viewedDay} onOpenChange={(open) => !open && setViewDayId(null)}>
-          <DialogContent className="flex h-[70vh] max-w-5xl flex-col overflow-hidden">
+          <DialogContent className="max-w-5xl">
             {viewedDay && (
               <>
                 <DialogHeader>
@@ -1471,9 +1457,8 @@ export default function WorkoutPage() {
                     </div>
                   </div>
                 </DialogHeader>
-                {/* my-auto centraliza quando a lista cabe e vira 0 quando rola */}
-                <div className="pr-xs flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
-                  <div className="my-auto">
+                <div className="pr-xs">
+                  <div>
                     {viewedDay.exercises && viewedDay.exercises.length > 0 ? (
                       <ExerciseList
                         exercises={viewedDay.exercises}
@@ -1493,20 +1478,14 @@ export default function WorkoutPage() {
                     )}
                   </div>
                 </div>
-                <DialogFooter className="gap-sm sm:justify-start">
-                  <DialogClose asChild>
-                    <Button variant="outline">
-                      <X className="h-4 w-4" />
-                      {t('common.actions.close')}
-                    </Button>
-                  </DialogClose>
+                <DialogCloseFooter>
                   <Button
                     onClick={() => setDialog({ type: 'add-exercise', day: viewedDay })}
                   >
                     <Plus className="h-4 w-4" />
                     {t('pages.workoutPlans.addExerciseBtn')}
                   </Button>
-                </DialogFooter>
+                </DialogCloseFooter>
               </>
             )}
           </DialogContent>
@@ -1515,31 +1494,15 @@ export default function WorkoutPage() {
         {/* ── Dialog ──────────────────────────────────────────────────────── */}
         <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
           <DialogContent
-            className={cn(
-              isFixedFormDialog || isExerciseDialog
-                ? // Altura fixa: só os campos rolam (ver WorkoutPlanForm/WorkoutDayForm/
-                  // ExerciseCatalogForm/WorkoutExerciseModal)
-                  cn(
-                    'flex flex-col overflow-hidden',
-                    // Exercício: largo para as 3 seções lado a lado; altura justa
-                    // para 3 séries (mais séries rolam dentro do modal)
-                    isExerciseDialog
-                      ? 'h-[min(85vh,40rem)] max-w-5xl'
-                      : // Divisão: altura justa para o formulário, sem sobra embaixo
-                        dialog?.type === 'new-day' || dialog?.type === 'edit-day'
-                        ? 'h-[min(85vh,40rem)] max-w-2xl'
-                        : // Plano/catálogo: altura do conteúdo, sem sobra embaixo
-                          'max-h-[85vh] max-w-xl'
-                  )
+            className={
+              isExerciseDialog || dialog?.type === 'view-session'
+                ? 'max-w-5xl'
                 : isSessionDialog
-                  ? // Modal não rola: só a lista de exercícios encolhe/rola (ver
-                    // WorkoutSessionForm). overflow-hidden também evita que os
-                    // calendários flutuantes fechados aumentem a área rolável.
-                    'flex h-[85vh] max-w-4xl flex-col overflow-hidden'
-                  : dialog?.type === 'view-session'
-                    ? 'max-h-[90vh] max-w-5xl overflow-y-auto'
-                    : 'max-h-[85vh] max-w-xl overflow-y-auto'
-            )}
+                  ? 'max-w-4xl'
+                  : dialog?.type === 'new-day' || dialog?.type === 'edit-day'
+                    ? 'max-w-2xl'
+                    : 'max-w-xl'
+            }
           >
             <DialogHeader>
               <DialogTitle
@@ -1559,11 +1522,7 @@ export default function WorkoutPage() {
                 )}
                 {dialogTitle()}
               </DialogTitle>
-              <DialogDescription
-                className={cn(dialog?.type !== 'view-session' && 'sr-only')}
-              >
-                {dialogDesc()}
-              </DialogDescription>
+              <DialogDescription>{dialogDesc()}</DialogDescription>
             </DialogHeader>
 
             {(dialog?.type === 'new-plan' || dialog?.type === 'edit-plan') && (
@@ -1878,7 +1837,7 @@ function ExerciseCatalogForm({
   return (
     <form onSubmit={handleSubmit} className="gap-md flex min-h-0 flex-1 flex-col">
       {/* Só os campos rolam; título (DialogHeader) e rodapé ficam fixos */}
-      <div className="space-y-lg px-xs min-h-0 flex-1 overflow-y-auto">
+      <div className="space-y-lg px-xs">
         {/* Nome */}
         <FormSection title={t('pages.exercises.fieldName')} icon={Dumbbell}>
           <Input
@@ -2660,7 +2619,7 @@ function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
               {t('pages.workoutPlans.noExercises')}
             </p>
           ) : (
-            <div className="divide-border/40 max-h-[60vh] divide-y overflow-y-auto rounded-lg border">
+            <div className="divide-border/40 divide-y rounded-lg border">
               {openDay?.exercises.map((ex) => (
                 <div
                   key={ex.id}

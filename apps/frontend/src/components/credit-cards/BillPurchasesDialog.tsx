@@ -56,8 +56,8 @@ export function BillPurchasesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
-        <DialogHeader sticky>
+      <DialogContent className="max-w-5xl">
+        <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
             <ShoppingCart
               className="text-primary h-4 w-4 shrink-0"

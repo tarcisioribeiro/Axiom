@@ -649,7 +649,7 @@ export default function Courses() {
           }}
         >
           <DialogContent className="max-w-lg">
-            <DialogHeader sticky>
+            <DialogHeader>
               <div className="gap-sm flex items-center">
                 <div className="bg-primary/20 flex h-8 w-8 items-center justify-center rounded-lg">
                   <GraduationCap className="text-primary h-4 w-4" />

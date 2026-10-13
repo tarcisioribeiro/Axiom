@@ -10,8 +10,9 @@ import {
   CalendarRange,
   Tag,
   CircleDot,
+  MoreHorizontal,
 } from 'lucide-react';
-import { useState, useMemo, type ReactNode } from 'react';
+import { useState, useMemo, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -24,6 +25,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { IncreaseValueDialog } from '@/components/payables/IncreaseValueDialog';
+import { PayableDetailModal } from '@/components/payables/PayableDetailModal';
 import { PayableForm } from '@/components/payables/PayableForm';
 import { PayableInstallmentsDialog } from '@/components/payables/PayableInstallmentsDialog';
 import { PayablePaymentDialog } from '@/components/payables/PayablePaymentDialog';
@@ -38,6 +40,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -127,6 +135,13 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
   const [installmentsPayable, setInstallmentsPayable] = useState<Payable | null>(null);
   const [installments, setInstallments] = useState<PayableInstallment[]>([]);
   const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
+  const [detailPayable, setDetailPayable] = useState<Payable | null>(null);
+  // Radix portals the "..." menu outside the card's DOM subtree, so a click
+  // on one of its items can still resolve onto the card underneath once the
+  // menu closes. Marked on pointerdown (before Radix unmounts the portal),
+  // checked once by the card's own click handler. Only one menu can be open
+  // at a time, so a single shared ref (not one per card) is enough.
+  const suppressDetailRef = useRef(false);
 
   const loadInstallments = async (payable: Payable) => {
     setIsLoadingInstallments(true);
@@ -361,10 +376,33 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
                 return null;
               };
               const dueBadge = getDueBadge();
+              const hasOverflowActions =
+                (payable.installments ?? 0) > 1 ||
+                payable.is_cumulative ||
+                (payable.status !== 'paid' && payable.status !== 'cancelled');
               return (
                 <div
                   key={payable.id}
-                  className="bg-card p-md space-y-3 rounded-lg border"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    if (suppressDetailRef.current) {
+                      suppressDetailRef.current = false;
+                      return;
+                    }
+                    if (!(e.target as HTMLElement).closest('button'))
+                      setDetailPayable(payable);
+                  }}
+                  onKeyDown={(e) => {
+                    if (
+                      (e.key === 'Enter' || e.key === ' ') &&
+                      !(e.target as HTMLElement).closest('button')
+                    ) {
+                      e.preventDefault();
+                      setDetailPayable(payable);
+                    }
+                  }}
+                  className="bg-card p-md cursor-pointer space-y-3 rounded-lg border"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -432,46 +470,12 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
                     );
                   })()}
 
-                  <div className="space-y-xs text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t('pages.payables.totalValue')}
-                      </span>
-                      <span className="font-medium">
-                        {formatCurrency(payable.value)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t('pages.payables.remainingBalance')}
-                      </span>
-                      <span className="text-destructive font-medium">
-                        {formatCurrency(
-                          parseFloat(payable.value) - parseFloat(payable.paid_value)
-                        )}
-                      </span>
-                    </div>
-                    {payable.due_date && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {t('pages.payables.dueDate')}
-                        </span>
-                        <span className="font-medium">
-                          {formatDate(payable.due_date, 'dd/MM/yyyy')}
-                        </span>
-                      </div>
-                    )}
-                    {payable.member_name && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {t('pages.payables.responsible')}
-                        </span>
-                        <span className="font-medium">{payable.member_name}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
+                  <div
+                    role="presentation"
+                    className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
                     {payable.status !== 'paid' && payable.status !== 'cancelled' && (
                       <Button
                         variant="outline"
@@ -484,38 +488,51 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
                         {t('pages.payables.payBtn')}
                       </Button>
                     )}
-                    {(payable.installments ?? 0) > 1 || payable.is_cumulative ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => void handleOpenInstallments(payable)}
-                        title={t('pages.payables.manageDebtBtn')}
-                        className="gap-xs text-xs"
-                      >
-                        <List className="h-3 w-3" />
-                        {t('pages.payables.manageDebtBtn')}
-                      </Button>
-                    ) : (
-                      payable.status !== 'paid' &&
-                      payable.status !== 'cancelled' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPaymentPlanPayable(payable)}
-                          title={t('pages.payables.form.paymentPlanTitle')}
-                          className="gap-xs text-xs"
-                        >
-                          <CalendarRange className="h-3 w-3" />
-                          {t('pages.payables.form.createPaymentPlanBtn')}
-                        </Button>
-                      )
-                    )}
                     <ReceiptButton
                       source={{ type: 'payable', data: payable }}
                       memberName={getMemberDisplayName(payable.member_name, user)}
                       variant="ghost"
                       size="icon"
                     />
+                    {hasOverflowActions && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title={t('common.actions.moreOptions')}
+                            aria-label={t('common.actions.moreOptions')}
+                          >
+                            <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          onPointerDown={() => {
+                            suppressDetailRef.current = true;
+                          }}
+                        >
+                          {(payable.installments ?? 0) > 1 || payable.is_cumulative ? (
+                            <DropdownMenuItem
+                              onClick={() => void handleOpenInstallments(payable)}
+                            >
+                              <List className="mr-sm h-4 w-4" aria-hidden="true" />
+                              {t('pages.payables.manageDebtBtn')}
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => setPaymentPlanPayable(payable)}
+                            >
+                              <CalendarRange
+                                className="mr-sm h-4 w-4"
+                                aria-hidden="true"
+                              />
+                              {t('pages.payables.form.createPaymentPlanBtn')}
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -545,7 +562,7 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedPayable ? 'edit' : 'create'}>
               {selectedPayable
                 ? t('pages.payables.editTitle')
@@ -567,6 +584,11 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
           />
         </DialogContent>
       </Dialog>
+
+      <PayableDetailModal
+        payable={detailPayable}
+        onClose={() => setDetailPayable(null)}
+      />
 
       <PayablePaymentDialog
         payable={paymentPayable}

@@ -21,6 +21,7 @@
       "hide": "Ocultar",
       "copy": "Copiar",
       "download": "Baixar",
+      "moreOptions": "Mais opções",
       "filter": "Filtros",
       "clearFilters": "Limpar Filtros",
       "favorite": "Favoritar",
@@ -1347,7 +1348,6 @@
       "allStatus": "Todos Status"
     },
     "creditCardHub": {
-      "openHub": "Ver detalhes do cartão",
       "usedCredit": "Crédito utilizado",
       "currentBill": "Fatura atual"
     },
@@ -1999,6 +1999,8 @@
       "depositBtn": "Depositar",
       "withdrawBtn": "Sacar",
       "applyYieldBtn": "Aplicar Rendimento",
+      "applyYieldAmountLabel": "Valor do Rendimento a Aplicar *",
+      "applyYieldTotalAfter": "Total do cofre após a aplicação",
       "transactionsBtn": "Ver Transações",
       "depositAction": "Depositando...",
       "withdrawAction": "Sacando...",

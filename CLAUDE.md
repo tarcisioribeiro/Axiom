@@ -64,6 +64,12 @@ Axiom/
 
 **Mudanças visuais**: antes de implementar qualquer mudança visual (layout, espaçamento, posição de elementos, cores, animação, tabelas, modais, etc.), leia `documentation/frontend/design-patterns.md` e descreva como a tela vai ficar (antes → depois) para o usuário confirmar, antes de editar o código. Isso vale mesmo quando o pedido já parece específico — o documento registra decisões anteriores do product owner que a mudança pode contradizer sem querer. Depois de aplicar uma mudança visual nova e confirmada, atualize esse documento com o padrão resultante.
 
+**Testar mudança visual no navegador**: quando a alteração for puramente visual (frontend/web) e o usuário pedir para testá-la, faça o build do frontend com:
+```bash
+docker compose -f infra/docker/docker-compose.yml --project-directory . up frontend --build -d && docker system prune -af
+```
+Depois, usando a extensão claude-in-chrome, abra `localhost:39101` e faça login como usuário comum usando os valores de `AXIOM_LOCAL_USERNAME` e `AXIOM_LOCAL_USER_PASSWORD` do `.env`.
+
 **Stack**: React 19, Vite 7, TypeScript 5.9, TailwindCSS 3, Radix UI, Zustand, React Router v7, Recharts, Framer Motion, React Hook Form + Zod, TanStack Query v5
 
 **Data fetching**: use `useQuery` + `useMutation` (TanStack Query) — not the older `use-crud-page.ts`. Client in `src/lib/query-client.ts`.
@@ -90,7 +96,7 @@ Axiom/
 
 **UI Primitives** (`components/ui/`): `button`, `input`, `select`, `checkbox`, `dialog`, `alert-dialog`, `form-field`, `date-picker`, `dropdown-menu`, `popover`, `badge`, `card`, `progress`, `radio-group`, `star-rating`, `textarea`, `toast`, `toaster`, `tooltip`, `skeleton`, `skeleton-variants`, `scroll-area`, `table`, `label`, `visually-hidden`, `file-input`, `icon-picker`, `circular-progress`, `success-animation`, `currency-input` (BRL, `accentColor` variants), `form-section`, `status-toggle`, `number-stepper` (integer − / + with ↑/↓ keys, typeable, `optional` for empty), `decimal-input` (pt-BR comma, `unit` suffix, optional `step` − / +), `slider` (styled native range, `tone`, `floor`), `color-picker` (swatch + popover palette + hex). Never use raw `<input type="number|range|color|checkbox">`.
 
-**Form dialogs (create/edit)**: `<DialogHeader sticky>` + `<DialogTitle mode={x ? 'edit' : 'create'}>` (renders Pencil/Plus) + `DialogDescription` wrapped in `VisuallyHidden`; buttons in a sticky footer (`DialogFooter` or `.dialog-footer`), "Cancelar" = `variant="outline"`, "Salvar" = default variant (no category colors). No subtitle, no card repeating the title, no helper text under fields/buttons. Validation errors do not render under fields: each message goes to a toast (`notifyFormErrors` from `@/lib/form-errors`, passed as `handleSubmit(onSubmit, notifyFormErrors)`) and the invalid field gets a red border via `aria-invalid` (primitives in `components/ui/` already style it). Live computed values stay.
+**Dialogs** (rules in `documentation/frontend/design-patterns.md` §2): `DialogHeader` is always sticky and `DialogDescription` is always `sr-only` (primitive enforces both). Title needs an icon: `<DialogTitle mode={x ? 'edit' : 'create'}>` for forms, `<DialogTitle icon={Icon}>` for detail/action. Forms/actions: sticky footer (`DialogFooter` or `.dialog-footer`), "Cancelar" = `variant="outline"` + `X`, "Salvar" = default variant + `Save` (no category colors). Detail: `<DialogCloseFooter>{actions}</DialogCloseFooter>` (Fechar left, actions right). No `max-h-[NNvh]`/fixed heights/inner `overflow-y-auto` — at ≥1920×1080 no dialog may scroll; paginate long lists inside with `PaginatedSlide pinNav={false}` (≤5). No subtitle, no card repeating the title, no helper text under fields/buttons. Validation errors do not render under fields: each message goes to a toast (`notifyFormErrors` from `@/lib/form-errors`, passed as `handleSubmit(onSubmit, notifyFormErrors)`) and the invalid field gets a red border via `aria-invalid` (primitives in `components/ui/` already style it). Live computed values stay.
 
 **Routing**: `ProtectedRoute` HOC; all protected pages lazy-loaded. Public routes redirect home if authenticated.
 

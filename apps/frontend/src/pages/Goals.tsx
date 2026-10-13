@@ -36,7 +36,7 @@ import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { GoalForm } from '@/components/personal-planning/GoalForm';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +46,7 @@ import { CircularProgress } from '@/components/ui/circular-progress';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -780,7 +781,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
       {/* Modal edição/criação */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedGoal ? 'edit' : 'create'}>
               {selectedGoal ? t('pages.goals.editTitle') : t('pages.goals.newTitle')}
             </DialogTitle>
@@ -906,32 +907,37 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
       >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{t('pages.goals.failuresHistoryTitle')}</DialogTitle>
+            <DialogTitle className="gap-sm flex items-center">
+              <History className="h-4 w-4" aria-hidden="true" />
+              {t('pages.goals.failuresHistoryTitle')}
+            </DialogTitle>
             <DialogDescription>{viewingFailuresGoal?.title}</DialogDescription>
           </DialogHeader>
-          <ul className="space-y-sm max-h-80 overflow-y-auto">
-            {viewingFailuresGoal?.failures.map((failure) => (
-              <li
-                key={failure.id}
-                className="gap-sm p-sm flex items-center justify-between rounded-md border text-sm"
-              >
-                <span className="text-muted-foreground">
-                  {formatDate(failure.failure_date)}
-                </span>
-                <span className="font-medium">
-                  {t('pages.goals.failureStreakReached', {
-                    count: failure.streak_at_failure,
-                  })}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <DialogFooter className="sm:justify-start">
-            <Button variant="outline" onClick={() => setViewingFailuresGoal(undefined)}>
-              <X className="h-4 w-4" />
-              {t('common.actions.close')}
-            </Button>
-          </DialogFooter>
+          <PaginatedSlide
+            items={viewingFailuresGoal?.failures ?? []}
+            pageSize={LIST_PAGE_SIZE}
+            pinNav={false}
+            className="space-y-sm"
+          >
+            {(pageFailures) =>
+              pageFailures.map((failure) => (
+                <div
+                  key={failure.id}
+                  className="gap-sm p-sm flex items-center justify-between rounded-md border text-sm"
+                >
+                  <span className="text-muted-foreground">
+                    {formatDate(failure.failure_date)}
+                  </span>
+                  <span className="font-medium">
+                    {t('pages.goals.failureStreakReached', {
+                      count: failure.streak_at_failure,
+                    })}
+                  </span>
+                </div>
+              ))
+            }
+          </PaginatedSlide>
+          <DialogCloseFooter />
         </DialogContent>
       </Dialog>
     </Wrapper>

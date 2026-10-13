@@ -148,7 +148,7 @@ export function ReadingGoalModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
-        <DialogHeader sticky>
+        <DialogHeader>
           <DialogTitle mode={goal ? 'edit' : 'create'}>
             {goal
               ? t('pages.libraryDashboard.readingGoals.editTitle')

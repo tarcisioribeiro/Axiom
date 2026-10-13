@@ -101,7 +101,7 @@ export function WorkoutPlanForm({
       className="gap-md flex min-h-0 flex-1 flex-col"
     >
       {/* Só os campos rolam; título (DialogHeader) e rodapé ficam fixos */}
-      <div className="space-y-lg px-xs min-h-0 flex-1 overflow-y-auto">
+      <div className="space-y-lg px-xs">
         {/* Identificação */}
         <FormSection title={t('pages.workoutPlans.planName')} icon={ClipboardList}>
           <div className="space-y-sm">

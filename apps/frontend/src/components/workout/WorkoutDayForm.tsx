@@ -182,7 +182,7 @@ export function WorkoutDayForm({
     >
       {/* Só os campos rolam; título (DialogHeader) e rodapé ficam fixos */}
       {/* px-xs: folga para o anel de foco dos campos não ser cortado pela rolagem */}
-      <div className="space-y-lg px-xs min-h-0 flex-1 overflow-y-auto">
+      <div className="space-y-lg px-xs">
         {/* Nome e ordem */}
         <FormSection title={t('pages.workoutPlans.dayName')} icon={Dumbbell}>
           <div className="gap-sm grid grid-cols-[1fr_auto]">

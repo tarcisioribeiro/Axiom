@@ -542,7 +542,7 @@ export default function Flashcards() {
 
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogContent className="max-w-md">
-            <DialogHeader sticky>
+            <DialogHeader>
               <DialogTitle mode="create">{t('pages.flashcards.newCard')}</DialogTitle>
             </DialogHeader>
             <form onSubmit={(e) => void handleCreateSubmit(e)} className="space-y-md">

@@ -480,7 +480,7 @@ export default function Members() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedMember ? 'edit' : 'create'}>
               {selectedMember
                 ? t('pages.members.editTitle')

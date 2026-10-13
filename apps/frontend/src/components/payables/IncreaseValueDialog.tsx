@@ -1,4 +1,4 @@
-import { ArrowRight, Loader2, X } from 'lucide-react';
+import { ArrowRight, Loader2, X, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -104,7 +104,9 @@ export function IncreaseValueDialog({
     <Dialog open={!!payable} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.payables.form.increaseValueTitle')}</DialogTitle>
+          <DialogTitle icon={TrendingUp}>
+            {t('pages.payables.form.increaseValueTitle')}
+          </DialogTitle>
           <DialogDescription>
             {payable.description} — {t('pages.payables.form.increaseValueDesc')}
           </DialogDescription>

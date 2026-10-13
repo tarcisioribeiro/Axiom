@@ -386,7 +386,7 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
       {/* Registro da leitura (reaproveita ReadingForm) */}
       <Dialog open={!!confirmBook} onOpenChange={(open) => !open && closeConfirm()}>
         <DialogContent>
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode="create">{t('pages.readings.newTitle')}</DialogTitle>
             <VisuallyHidden>
               <DialogDescription>{confirmBook?.title}</DialogDescription>
@@ -409,7 +409,7 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
       <Dialog open={!!confirmCourse} onOpenChange={(open) => !open && closeConfirm()}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle icon={Timer}>
               {t('pages.libraryDashboard.studyTimerConfirmTitle')}
             </DialogTitle>
             <DialogDescription>{confirmCourse?.title}</DialogDescription>

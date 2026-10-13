@@ -341,7 +341,7 @@ export default function Publishers() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedPublisher ? 'edit' : 'create'}>
               {selectedPublisher
                 ? t('pages.publishers.editTitle')

@@ -80,18 +80,14 @@ export default function UserProfile() {
       </Card>
 
       <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-        {/* Título e rodapé fixos: a lista só rola em telas pequenas. */}
-        <DialogContent size="xl" className="flex flex-col overflow-hidden">
+        <DialogContent size="xl">
           <DialogHeader>
             <DialogTitle className="gap-sm flex items-center">
               <Bell className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
               {t('pages.notificationPreferences.title')}
             </DialogTitle>
           </DialogHeader>
-          <NotificationPreferencesContent
-            bodyClassName="-mx-lg px-lg min-h-0 flex-1 overflow-y-auto py-px"
-            onClose={() => setNotificationsOpen(false)}
-          />
+          <NotificationPreferencesContent onClose={() => setNotificationsOpen(false)} />
         </DialogContent>
       </Dialog>
     </PageContainer>

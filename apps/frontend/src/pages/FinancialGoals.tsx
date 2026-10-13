@@ -691,7 +691,7 @@ export default function FinancialGoals() {
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedGoal ? 'edit' : 'create'}>
               {selectedGoal
                 ? t('pages.financialGoals.editTitle')

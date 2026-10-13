@@ -13,6 +13,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
+import { ReceivableDetailModal } from '@/components/receivables/ReceivableDetailModal';
 import { ReceivableForm } from '@/components/receivables/ReceivableForm';
 import { ReceivableReceiptDialog } from '@/components/receivables/ReceivableReceiptDialog';
 import { Badge } from '@/components/ui/badge';
@@ -82,6 +83,7 @@ export default function Receivables({
     Receivable | undefined
   >();
   const [receiptReceivable, setReceiptReceivable] = useState<Receivable | null>(null);
+  const [detailReceivable, setDetailReceivable] = useState<Receivable | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -404,7 +406,22 @@ export default function Receivables({
               return (
                 <div
                   key={receivable.id}
-                  className="bg-card p-md space-y-3 rounded-lg border"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    if (!(e.target as HTMLElement).closest('button'))
+                      setDetailReceivable(receivable);
+                  }}
+                  onKeyDown={(e) => {
+                    if (
+                      (e.key === 'Enter' || e.key === ' ') &&
+                      !(e.target as HTMLElement).closest('button')
+                    ) {
+                      e.preventDefault();
+                      setDetailReceivable(receivable);
+                    }
+                  }}
+                  className="bg-card p-md cursor-pointer space-y-3 rounded-lg border"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -461,43 +478,6 @@ export default function Receivables({
                     </div>
                   </div>
 
-                  <div className="space-y-xs text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t('pages.receivables.totalValue')}
-                      </span>
-                      <span className="font-medium">
-                        {formatCurrency(receivable.value)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t('pages.receivables.remainingBalance')}
-                      </span>
-                      <span className="text-success font-medium">
-                        {formatCurrency(total - received)}
-                      </span>
-                    </div>
-                    {receivable.due_date && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {t('pages.receivables.dueDate')}
-                        </span>
-                        <span className="font-medium">
-                          {formatDate(receivable.due_date, 'dd/MM/yyyy')}
-                        </span>
-                      </div>
-                    )}
-                    {receivable.member_name && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {t('pages.receivables.debtor')}
-                        </span>
-                        <span className="font-medium">{receivable.member_name}</span>
-                      </div>
-                    )}
-                  </div>
-
                   <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
                     {receivable.status !== 'received' &&
                       receivable.status !== 'cancelled' && (
@@ -538,7 +518,7 @@ export default function Receivables({
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedReceivable ? 'edit' : 'create'}>
               {selectedReceivable
                 ? t('pages.receivables.editTitle')
@@ -560,6 +540,11 @@ export default function Receivables({
           />
         </DialogContent>
       </Dialog>
+
+      <ReceivableDetailModal
+        receivable={detailReceivable}
+        onClose={() => setDetailReceivable(null)}
+      />
 
       <ReceivableReceiptDialog
         receivable={receiptReceivable}

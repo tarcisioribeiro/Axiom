@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { vaultsService } from '@/services/vaults-service';
@@ -76,19 +77,15 @@ export function VaultDepositDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-[21rem]">
         <DialogHeader>
-          <DialogTitle>{t('pages.vaults.depositTitle')}</DialogTitle>
-          <DialogDescription>
-            {vault && (
-              <>
-                {t('pages.vaults.depositVaultDesc', { name: vault.description })}
-                <br />
-                {t('pages.vaults.availableAccountBalance')}{' '}
-                {formatCurrency(parseFloat(vault.account_available_balance))}
-              </>
-            )}
-          </DialogDescription>
+          <DialogTitle className="gap-sm flex items-center">
+            <ArrowDownToLine className="text-primary h-4 w-4" aria-hidden="true" />
+            {t('pages.vaults.depositTitle')}
+          </DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>{t('pages.vaults.depositTitle')}</DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
         <div className="space-y-md">
           <div>
@@ -195,19 +192,15 @@ export function VaultWithdrawDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-[21rem]">
         <DialogHeader>
-          <DialogTitle>{t('pages.vaults.withdrawTitle')}</DialogTitle>
-          <DialogDescription>
-            {vault && (
-              <>
-                {t('pages.vaults.withdrawVaultDesc', { name: vault.description })}
-                <br />
-                {t('pages.vaults.availableVaultBalance')}{' '}
-                {formatCurrency(parseFloat(vault.current_balance))}
-              </>
-            )}
-          </DialogDescription>
+          <DialogTitle className="gap-sm flex items-center">
+            <ArrowUpFromLine className="text-primary h-4 w-4" aria-hidden="true" />
+            {t('pages.vaults.withdrawTitle')}
+          </DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>{t('pages.vaults.withdrawTitle')}</DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
         <div className="space-y-md">
           <div>

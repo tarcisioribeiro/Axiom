@@ -396,12 +396,12 @@ describe('CreditCards page', () => {
     await waitFor(() =>
       expect(within(dialog).getByText('Compra 1')).toBeInTheDocument()
     );
-    expect(within(dialog).getByText('Compra 10')).toBeInTheDocument();
-    expect(within(dialog).queryByText('Compra 11')).not.toBeInTheDocument();
+    expect(within(dialog).getByText('Compra 5')).toBeInTheDocument();
+    expect(within(dialog).queryByText('Compra 6')).not.toBeInTheDocument();
     expect(within(dialog).getByText(/R\$\s*1\.200,00/)).toBeInTheDocument();
 
     fireEvent.click(within(dialog).getByRole('button', { name: /próxima|próximo/i }));
-    expect(await within(dialog).findByText('Compra 11')).toBeInTheDocument();
+    expect(await within(dialog).findByText('Compra 6')).toBeInTheDocument();
     expect(within(dialog).queryByText('Compra 1')).not.toBeInTheDocument();
   });
 });

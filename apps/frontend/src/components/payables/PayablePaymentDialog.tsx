@@ -1,6 +1,14 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, CalendarClock, CreditCard, Loader2, Save, X } from 'lucide-react';
+import {
+  AlertCircle,
+  CalendarClock,
+  CreditCard,
+  Loader2,
+  Save,
+  X,
+  Wallet,
+} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -186,7 +194,7 @@ export function PayablePaymentDialog({
     <Dialog open={!!payable} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.payables.payment.title')}</DialogTitle>
+          <DialogTitle icon={Wallet}>{t('pages.payables.payment.title')}</DialogTitle>
           <DialogDescription>
             {payable?.description} — {t('pages.payables.remainingBalance')}{' '}
             {formatCurrency(remaining)}

@@ -1,4 +1,4 @@
-import { Loader2, Save, X } from 'lucide-react';
+import { Loader2, Save, X, CalendarClock } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -79,7 +79,9 @@ export function LoanPaymentPlanDialog({
     <Dialog open={!!loan} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.loans.paymentPlan.title')}</DialogTitle>
+          <DialogTitle icon={CalendarClock}>
+            {t('pages.loans.paymentPlan.title')}
+          </DialogTitle>
           <DialogDescription>
             {loan.description} — {t('pages.loans.paymentPlan.desc')}
           </DialogDescription>

@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,7 +28,8 @@ interface ExerciseDatasetPickerProps {
   onSelect: (entry: ExerciseDatasetEntry) => void;
 }
 
-const SKELETON_ITEMS = Array.from({ length: 8 }, (_, i) => i);
+const PICKER_PAGE_SIZE = 8;
+const SKELETON_ITEMS = Array.from({ length: PICKER_PAGE_SIZE }, (_, i) => i);
 
 export function ExerciseDatasetPicker({
   open,
@@ -120,7 +122,7 @@ export function ExerciseDatasetPicker({
           placeholder={t('pages.exercises.picker.searchPlaceholder')}
         />
 
-        <div className="max-h-[55vh] overflow-y-auto">
+        <div>
           {showSkeleton ? (
             <div className="gap-sm grid grid-cols-3 sm:grid-cols-4">
               {SKELETON_ITEMS.map((i) => (
@@ -130,15 +132,23 @@ export function ExerciseDatasetPicker({
           ) : showEmpty ? (
             <EmptyState title={t('pages.exercises.picker.empty')} />
           ) : (
-            <div className="gap-sm grid grid-cols-3 sm:grid-cols-4">
-              {results.map((entry) => (
-                <ExerciseDatasetPickerItem
-                  key={entry.id}
-                  entry={entry}
-                  onSelect={() => onSelect(entry)}
-                />
-              ))}
-            </div>
+            <PaginatedSlide
+              key={query}
+              items={results}
+              pageSize={PICKER_PAGE_SIZE}
+              pinNav={false}
+              className="gap-sm grid grid-cols-3 sm:grid-cols-4"
+            >
+              {(pageEntries) =>
+                pageEntries.map((entry) => (
+                  <ExerciseDatasetPickerItem
+                    key={entry.id}
+                    entry={entry}
+                    onSelect={() => onSelect(entry)}
+                  />
+                ))
+              }
+            </PaginatedSlide>
           )}
         </div>
 

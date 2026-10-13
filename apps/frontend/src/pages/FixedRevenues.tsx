@@ -501,7 +501,7 @@ export default function FixedRevenues({
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedRevenue ? 'edit' : 'create'}>
               {selectedRevenue
                 ? t('pages.fixedRevenues.editTitle')
@@ -639,8 +639,8 @@ export default function FixedRevenues({
 
             {/* Seção: Configuração */}
             <FormSection title={t('common.form.sections.paymentConfig')} icon={Tag}>
-              <div className="gap-md grid grid-cols-1 items-start md:grid-cols-3">
-                <div className="space-y-sm">
+              <div className="gap-md grid grid-cols-1 items-start md:grid-cols-2">
+                <div className="space-y-sm md:order-last md:col-span-2">
                   <Label htmlFor="notes" className="gap-xs flex items-center">
                     <Tag className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.fixedRevenues.form.notesLabel')}

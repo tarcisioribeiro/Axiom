@@ -748,7 +748,7 @@ export default function BodyMetrics() {
         {/* ── Dialog de formulário ── */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-4xl">
-            <DialogHeader sticky>
+            <DialogHeader>
               <DialogTitle mode="create">
                 {recalcMode
                   ? t('pages.bodyMetrics.recalcTitle')

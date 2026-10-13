@@ -500,8 +500,8 @@ export default function Webhooks() {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader sticky>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
             <DialogTitle mode={editingWebhook ? 'edit' : 'create'}>
               {editingWebhook
                 ? t('webhooks.form.editTitle')
@@ -577,7 +577,7 @@ export default function Webhooks() {
 
             <div className="space-y-sm">
               <Label>{t('webhooks.form.eventsLabel')}</Label>
-              <div className="gap-xs p-sm grid max-h-48 grid-cols-1 overflow-y-auto rounded-md border">
+              <div className="gap-xs p-sm grid grid-cols-1 rounded-md border sm:grid-cols-2">
                 {(events ?? []).map((ev) => (
                   <div key={ev.value} className="gap-sm flex items-center">
                     <Checkbox

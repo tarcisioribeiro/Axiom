@@ -1,4 +1,4 @@
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, LayoutList, Trash2 } from 'lucide-react';
 import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -14,9 +14,7 @@ export function BlockIcon({
   name?: string | null;
   className?: string;
 }) {
-  const icon = getIconByName(name);
-  if (!icon) return null;
-  return createElement(icon, { className });
+  return createElement(getIconByName(name) ?? LayoutList, { className });
 }
 
 interface RoutineFocusBlockCardProps {

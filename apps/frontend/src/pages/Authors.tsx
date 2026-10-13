@@ -386,7 +386,7 @@ export default function Authors() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
-          <DialogHeader sticky>
+          <DialogHeader>
             <DialogTitle mode={selectedAuthor ? 'edit' : 'create'}>
               {selectedAuthor
                 ? t('pages.authors.editTitle')

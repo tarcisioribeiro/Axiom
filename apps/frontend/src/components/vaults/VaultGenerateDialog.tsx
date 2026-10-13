@@ -1,4 +1,4 @@
-import { Loader2, Save, X } from 'lucide-react';
+import { Loader2, Save, X, Repeat } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -90,7 +90,7 @@ export function VaultGenerateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle icon={Repeat}>
             {t('pages.vaults.recurringContributions.generateTitle')}
           </DialogTitle>
           <DialogDescription>

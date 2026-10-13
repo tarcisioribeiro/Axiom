@@ -1,4 +1,4 @@
-import { ScanText, Upload, X, Check, Loader2 } from 'lucide-react';
+import { ScanText, Upload, X, Check, Loader2, ScanLine } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -108,7 +108,9 @@ export function ExpenseOCRUpload({ onResult }: Props) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('pages.expenseOCR.modalTitle')}</DialogTitle>
+            <DialogTitle icon={ScanLine}>
+              {t('pages.expenseOCR.modalTitle')}
+            </DialogTitle>
             <DialogDescription>{t('pages.expenseOCR.modalDesc')}</DialogDescription>
           </DialogHeader>
 

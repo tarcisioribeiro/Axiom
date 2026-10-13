@@ -19,8 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VaultApplyYieldDialog } from '@/components/vaults/VaultApplyYieldDialog';
 import { VaultCard } from '@/components/vaults/VaultCard';
 import { VaultContributionsDialog } from '@/components/vaults/VaultContributionsDialog';
+import { VaultDetailModal } from '@/components/vaults/VaultDetailModal';
 import { VaultFormDialog } from '@/components/vaults/VaultFormDialog';
 import { VaultGenerateDialog } from '@/components/vaults/VaultGenerateDialog';
 import {
@@ -31,7 +33,6 @@ import { VaultSimulatorDialog } from '@/components/vaults/VaultSimulatorDialog';
 import { VaultTransactionsDialog } from '@/components/vaults/VaultTransactionsDialog';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/formatters';
 import { accountsService } from '@/services/accounts-service';
 import { vaultsService } from '@/services/vaults-service';
 import type { Account, Vault as VaultType } from '@/types';
@@ -47,12 +48,14 @@ export default function Vaults() {
   const queryClient = useQueryClient();
 
   const [selectedVault, setSelectedVault] = useState<VaultType | undefined>();
+  const [detailVault, setDetailVault] = useState<VaultType | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
   const [accountFilter, setAccountFilter] = useState('all');
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [isApplyYieldOpen, setIsApplyYieldOpen] = useState(false);
   const [isTransactionsOpen, setIsTransactionsOpen] = useState(false);
   const [isContributionsOpen, setIsContributionsOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
@@ -121,31 +124,6 @@ export default function Vaults() {
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleApplyYield = async (vault: VaultType) => {
-    try {
-      const response = await vaultsService.applyYield(vault.id);
-      toast(
-        response.yield_applied > 0
-          ? {
-              title: t('pages.vaults.yieldApplied'),
-              description: t('pages.vaults.yieldAppliedDesc', {
-                amount: formatCurrency(response.yield_applied),
-              }),
-            }
-          : {
-              title: t('pages.vaults.noYield'),
-              description: t('pages.vaults.noYieldDesc'),
-            }
-      );
-      void refresh();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -262,7 +240,7 @@ export default function Vaults() {
                     key={vault.id}
                     vault={vault}
                     index={index}
-                    totalBalance={totalBalance}
+                    onOpenDetail={(v) => setDetailVault(v)}
                     onDeposit={(v) => {
                       setSelectedVault(v);
                       setIsDepositOpen(true);
@@ -271,7 +249,10 @@ export default function Vaults() {
                       setSelectedVault(v);
                       setIsWithdrawOpen(true);
                     }}
-                    onApplyYield={(v) => void handleApplyYield(v)}
+                    onApplyYield={(v) => {
+                      setSelectedVault(v);
+                      setIsApplyYieldOpen(true);
+                    }}
                     onTransactions={(v) => {
                       setSelectedVault(v);
                       setIsTransactionsOpen(true);
@@ -301,6 +282,11 @@ export default function Vaults() {
         accounts={accounts}
         onSuccess={() => void refresh()}
       />
+      <VaultDetailModal
+        vault={detailVault ?? null}
+        totalBalance={totalBalance}
+        onClose={() => setDetailVault(undefined)}
+      />
       <VaultDepositDialog
         open={isDepositOpen}
         onOpenChange={setIsDepositOpen}
@@ -310,6 +296,12 @@ export default function Vaults() {
       <VaultWithdrawDialog
         open={isWithdrawOpen}
         onOpenChange={setIsWithdrawOpen}
+        vault={selectedVault}
+        onSuccess={() => void refresh()}
+      />
+      <VaultApplyYieldDialog
+        open={isApplyYieldOpen}
+        onOpenChange={setIsApplyYieldOpen}
         vault={selectedVault}
         onSuccess={() => void refresh()}
       />

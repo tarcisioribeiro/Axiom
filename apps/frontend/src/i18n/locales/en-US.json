@@ -21,6 +21,7 @@
       "hide": "Hide",
       "copy": "Copy",
       "download": "Download",
+      "moreOptions": "More options",
       "filter": "Filters",
       "clearFilters": "Clear Filters",
       "favorite": "Favorite",
@@ -1347,7 +1348,6 @@
       "allStatus": "All Status"
     },
     "creditCardHub": {
-      "openHub": "View card details",
       "usedCredit": "Used credit",
       "currentBill": "Current bill"
     },
@@ -1950,6 +1950,8 @@
       "depositBtn": "Deposit",
       "withdrawBtn": "Withdraw",
       "applyYieldBtn": "Apply Yield",
+      "applyYieldAmountLabel": "Yield Amount to Apply *",
+      "applyYieldTotalAfter": "Vault total after applying",
       "transactionsBtn": "View Transactions",
       "depositAction": "Depositing...",
       "withdrawAction": "Withdrawing...",

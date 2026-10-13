@@ -41,7 +41,7 @@ export function TagFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
-        <DialogHeader sticky>
+        <DialogHeader>
           <DialogTitle mode={selected ? 'edit' : 'create'}>
             {selected ? t('pages.tags.editTitle') : t('pages.tags.newTitle')}
           </DialogTitle>

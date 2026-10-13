@@ -28,7 +28,7 @@ const DialogOverlay = React.forwardRef<
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 const dialogContentVariants = cva(
-  'fixed left-[50%] top-[50%] z-50 grid w-full max-h-[90vh] overflow-y-auto translate-x-[-50%] translate-y-[-50%] gap-md border border-border/60 bg-card p-lg shadow-xl data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out sm:rounded-lg',
+  'fixed left-[50%] top-[50%] z-50 flex flex-col [&>*]:shrink-0 w-full max-h-[calc(100dvh-2rem)] overflow-y-auto translate-x-[-50%] translate-y-[-50%] gap-md border border-border/60 bg-card p-lg shadow-xl data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out sm:rounded-lg',
   {
     variants: {
       size: {
@@ -75,17 +75,14 @@ const DialogContent = React.forwardRef<
 ));
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
-/** `sticky`: cabeçalho fixo no topo enquanto o conteúdo rola (ver
- * `.dialog-header-sticky` em index.css). */
+/** Sempre fixo no topo do modal (ver `.dialog-header-sticky` em index.css). */
 const DialogHeader = ({
   className,
-  sticky,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & { sticky?: boolean }) => (
+}: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      'space-y-sm flex flex-col text-center sm:text-left',
-      sticky && 'dialog-header-sticky',
+      'dialog-header-sticky space-y-sm flex flex-col text-center sm:text-left',
       className
     )}
     {...props}
@@ -107,29 +104,32 @@ const DialogFooter = ({
 );
 DialogFooter.displayName = 'DialogFooter';
 
-/** Rodapé fixo com só "Fechar", para modais informativos sem outra ação de saída. */
-const DialogCloseFooter = () => {
+/** Rodapé de modal de detalhe: "Fechar" à esquerda; `children` (ações) à direita. */
+const DialogCloseFooter = ({ children }: { children?: React.ReactNode }) => {
   const { t } = useTranslation();
   return (
-    <DialogFooter className="sm:justify-start">
+    <DialogFooter className="gap-sm sm:justify-between sm:space-x-0">
       <DialogClose asChild>
         <Button variant="outline">
           <X className="h-4 w-4" />
           {t('common.actions.close')}
         </Button>
       </DialogClose>
+      {children && <div className="gap-sm flex flex-wrap justify-end">{children}</div>}
     </DialogFooter>
   );
 };
 
-/** `mode`: modal de formulário — ícone padrão de inclusão (+) ou edição (lápis). */
+/** `mode`: modal de formulário — ícone padrão de inclusão (+) ou edição (lápis).
+ * `icon`: ícone dos demais modais (detalhe, ação). */
 const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title> & {
     mode?: 'create' | 'edit';
+    icon?: React.ElementType;
   }
->(({ className, mode, children, ...props }, ref) => {
-  const ModeIcon = mode === 'edit' ? Pencil : mode === 'create' ? Plus : null;
+>(({ className, mode, icon, children, ...props }, ref) => {
+  const ModeIcon = icon ?? (mode === 'edit' ? Pencil : mode === 'create' ? Plus : null);
   return (
     <DialogPrimitive.Title
       ref={ref}
@@ -155,7 +155,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn('text-sm', className)}
+    className={cn(className, 'sr-only')}
     {...props}
   />
 ));
