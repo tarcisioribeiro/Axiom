@@ -1,9 +1,8 @@
-import { Pencil, Trash2, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogCloseFooter,
@@ -19,17 +18,9 @@ interface Props {
   member: Member | null;
   roles: string;
   onClose: () => void;
-  onEdit: (member: Member) => void;
-  onDelete: (id: number) => void;
 }
 
-export function MemberDetailModal({
-  member: selected,
-  roles,
-  onClose,
-  onEdit,
-  onDelete,
-}: Props) {
+export function MemberDetailModal({ member: selected, roles, onClose }: Props) {
   const { t } = useTranslation();
   // Mantém o último membro para o modal sair inteiro na animação de fechamento.
   const [member, setMember] = useState(selected);
@@ -79,16 +70,7 @@ export function MemberDetailModal({
           ))}
         </div>
 
-        <DialogCloseFooter>
-          <Button variant="outline" onClick={() => onDelete(member.id)}>
-            <Trash2 className="text-destructive h-4 w-4" />
-            {t('common.actions.delete')}
-          </Button>
-          <Button onClick={() => onEdit(member)}>
-            <Pencil className="h-4 w-4" />
-            {t('common.actions.edit')}
-          </Button>
-        </DialogCloseFooter>
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

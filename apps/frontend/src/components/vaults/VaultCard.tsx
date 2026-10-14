@@ -3,25 +3,16 @@ import {
   ArrowUpFromLine,
   CalendarClock,
   History,
-  MoreHorizontal,
-  Pencil,
   RefreshCcw,
-  Trash2,
   TrendingUp,
   Vault,
 } from 'lucide-react';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { CardActions } from '@/components/common/CardActions';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { formatCurrency } from '@/lib/formatters';
 import type { Vault as VaultType } from '@/types';
 
@@ -107,82 +98,54 @@ export function VaultCard({
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
         >
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onDeposit(vault)}
-            disabled={!vault.is_active}
-            className="gap-xs text-xs"
-          >
-            <ArrowDownToLine className="text-success h-3 w-3" aria-hidden="true" />
-            {t('pages.vaults.depositBtn')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onWithdraw(vault)}
-            disabled={!vault.is_active || balance <= 0}
-            className="gap-xs text-xs"
-          >
-            <ArrowUpFromLine className="text-destructive h-3 w-3" aria-hidden="true" />
-            {t('pages.vaults.withdrawBtn')}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                title={t('common.actions.moreOptions')}
-                aria-label={t('common.actions.moreOptions')}
-              >
-                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              onPointerDown={() => {
-                suppressDetailRef.current = true;
-              }}
-            >
-              <DropdownMenuItem
-                onClick={() => onApplyYield(vault)}
-                disabled={!vault.is_active || vault.pending_yield <= 0}
-              >
-                <RefreshCcw className="mr-sm h-4 w-4" aria-hidden="true" />
-                {t('pages.vaults.applyYieldBtn')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onTransactions(vault)}>
-                <History className="mr-sm h-4 w-4" aria-hidden="true" />
-                {t('pages.vaults.transactionsBtn')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onContributions(vault)}>
-                <CalendarClock className="mr-sm h-4 w-4" aria-hidden="true" />
-                {t('pages.vaults.recurringContributions.btn')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onSimulator(vault)}>
-                <TrendingUp className="mr-sm h-4 w-4" aria-hidden="true" />
-                {t('pages.vaultSimulator.title')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(vault)}
-            title={t('common.actions.edit')}
-            aria-label={t('common.actions.edit')}
-          >
-            <Pencil className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(vault.id)}
-            title={t('common.actions.delete')}
-            aria-label={t('common.actions.delete')}
-          >
-            <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
-          </Button>
+          <CardActions
+            onEdit={() => onEdit(vault)}
+            onDelete={() => onDelete(vault.id)}
+            onMenuPointerDown={() => {
+              suppressDetailRef.current = true;
+            }}
+            menuActions={[
+              {
+                icon: ArrowDownToLine,
+                label: t('pages.vaults.depositBtn'),
+                onClick: () => onDeposit(vault),
+                color: 'deposit',
+                disabled: !vault.is_active,
+              },
+              {
+                icon: ArrowUpFromLine,
+                label: t('pages.vaults.withdrawBtn'),
+                onClick: () => onWithdraw(vault),
+                color: 'withdraw',
+                disabled: !vault.is_active || balance <= 0,
+              },
+              {
+                icon: RefreshCcw,
+                label: t('pages.vaults.applyYieldBtn'),
+                onClick: () => onApplyYield(vault),
+                color: 'yield',
+                disabled: !vault.is_active || vault.pending_yield <= 0,
+              },
+              {
+                icon: History,
+                label: t('pages.vaults.transactionsBtn'),
+                onClick: () => onTransactions(vault),
+                color: 'transactions',
+              },
+              {
+                icon: CalendarClock,
+                label: t('pages.vaults.recurringContributions.btn'),
+                onClick: () => onContributions(vault),
+                color: 'contributions',
+              },
+              {
+                icon: TrendingUp,
+                label: t('pages.vaultSimulator.title'),
+                onClick: () => onSimulator(vault),
+                color: 'simulator',
+              },
+            ]}
+          />
         </div>
       </CardContent>
     </Card>

@@ -22,7 +22,6 @@ import {
   CheckCircle2,
   CheckSquare,
   CreditCard,
-  FileUp,
   GitCompareArrows,
   Home,
   Landmark,
@@ -129,11 +128,6 @@ const extraRoutes: Record<string, ExtraRoute> = {
   '/security/activity-logs': {
     labelKey: 'pages.activityLogs.title',
     icon: ScrollText,
-    moduleId: 'security',
-  },
-  '/security/password-import': {
-    labelKey: 'pages.passwordImport.title',
-    icon: FileUp,
     moduleId: 'security',
   },
   '/security/health': {

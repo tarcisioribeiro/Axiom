@@ -92,7 +92,6 @@ const VaultSimulator = lazy(() => import('./pages/VaultSimulator'));
 
 // Security extras
 const ActivityLogs = lazy(() => import('./pages/ActivityLogs'));
-const PasswordImport = lazy(() => import('./pages/PasswordImport'));
 const Permissions = lazy(() => import('./pages/Permissions'));
 
 // Planning extras
@@ -368,14 +367,6 @@ function AnimatedRoutes() {
           element={
             <PageWrapper>
               <ActivityLogs />
-            </PageWrapper>
-          }
-        />
-        <Route
-          path="/security/password-import"
-          element={
-            <PageWrapper>
-              <PasswordImport />
             </PageWrapper>
           }
         />

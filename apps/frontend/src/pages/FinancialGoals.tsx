@@ -8,8 +8,6 @@ import {
   Link,
   Link2,
   Loader2,
-  MoreHorizontal,
-  Pencil,
   PiggyBank,
   Plus,
   Save,
@@ -17,7 +15,6 @@ import {
   Sliders,
   Tag,
   Target,
-  Trash2,
   TrendingDown,
   TrendingUp,
   Vault as VaultIcon,
@@ -27,6 +24,7 @@ import {
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { CardActions } from '@/components/common/CardActions';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -53,7 +51,6 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { FormSection } from '@/components/ui/form-section';
@@ -247,54 +244,28 @@ function GoalCard({
           {ring(72)}
 
           <div className="gap-xs pt-sm flex items-center justify-end border-t">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t('common.actions.moreOptions')}
-                  title={t('common.actions.moreOptions')}
-                >
-                  <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                onPointerDown={() => {
-                  suppressRef.current = true;
-                }}
-              >
-                <DropdownMenuItem onClick={() => onManageVaults(goal)}>
-                  <Link className="mr-sm h-4 w-4" aria-hidden="true" />
-                  {t('pages.financialGoals.manageVaults')}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => onCheckCompletion(goal)}
-                  disabled={goal.is_completed}
-                >
-                  <CheckCircle2 className="mr-sm h-4 w-4" aria-hidden="true" />
-                  {t('pages.financialGoals.checkCompletion')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit(goal)}
-              aria-label={t('common.actions.edit')}
-              title={t('common.actions.edit')}
-            >
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(goal.id)}
-              aria-label={t('common.actions.delete')}
-              title={t('common.actions.delete')}
-            >
-              <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
-            </Button>
+            <CardActions
+              onEdit={() => onEdit(goal)}
+              onDelete={() => onDelete(goal.id)}
+              onMenuPointerDown={() => {
+                suppressRef.current = true;
+              }}
+              menuActions={[
+                {
+                  icon: Link,
+                  label: t('pages.financialGoals.manageVaults'),
+                  onClick: () => onManageVaults(goal),
+                  color: 'manage-vaults',
+                },
+                {
+                  icon: CheckCircle2,
+                  label: t('pages.financialGoals.checkCompletion'),
+                  onClick: () => onCheckCompletion(goal),
+                  color: 'check-completion',
+                  disabled: goal.is_completed,
+                },
+              ]}
+            />
           </div>
         </CardContent>
       </Card>
@@ -360,27 +331,7 @@ function GoalCard({
               </p>
             </div>
           </div>
-          <DialogCloseFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setDetailOpen(false);
-                onDelete(goal.id);
-              }}
-            >
-              <Trash2 className="text-destructive h-4 w-4" />
-              {t('common.actions.delete')}
-            </Button>
-            <Button
-              onClick={() => {
-                setDetailOpen(false);
-                onEdit(goal);
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-              {t('common.actions.edit')}
-            </Button>
-          </DialogCloseFooter>
+          <DialogCloseFooter />
         </DialogContent>
       </Dialog>
     </>

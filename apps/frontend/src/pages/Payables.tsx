@@ -7,18 +7,16 @@ import {
   CircleDot,
   CreditCard,
   List,
-  MoreHorizontal,
-  Pencil,
   Plus,
   Receipt,
   Search,
   Tag,
-  Trash2,
 } from 'lucide-react';
 import { useState, useMemo, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
+import { CardActions } from '@/components/common/CardActions';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
@@ -33,7 +31,7 @@ import { PayableForm } from '@/components/payables/PayableForm';
 import { PayableInstallmentsDialog } from '@/components/payables/PayableInstallmentsDialog';
 import { PayablePaymentDialog } from '@/components/payables/PayablePaymentDialog';
 import { PaymentPlanDialog } from '@/components/payables/PaymentPlanDialog';
-import { ReceiptButton } from '@/components/receipts';
+import { ReceiptPreviewDialog } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,12 +41,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -62,12 +54,13 @@ import { BILL_STATUS_ICONS, EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { usePayablesPage } from '@/hooks/use-payables-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
-import { getMemberDisplayName } from '@/lib/receipt-utils';
+import { getMemberDisplayName, mapPayableToReceipt } from '@/lib/receipt-utils';
 import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { payableInstallmentsService } from '@/services/payable-installments-service';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Payable, PayableInstallment } from '@/types';
+import type { ReceiptData } from '@/types/receipt';
 
 const STATUS_VARIANTS: Record<
   string,
@@ -144,6 +137,7 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
   // checked once by the card's own click handler. Only one menu can be open
   // at a time, so a single shared ref (not one per card) is enough.
   const suppressDetailRef = useRef(false);
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
 
   const loadInstallments = async (payable: Payable) => {
     try {
@@ -377,10 +371,10 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
                 return null;
               };
               const dueBadge = getDueBadge();
-              const hasOverflowActions =
-                (payable.installments ?? 0) > 1 ||
-                payable.is_cumulative ||
-                (payable.status !== 'paid' && payable.status !== 'cancelled');
+              const isOpen =
+                payable.status !== 'paid' && payable.status !== 'cancelled';
+              const hasInstallments =
+                (payable.installments ?? 0) > 1 || payable.is_cumulative;
               return (
                 <div
                   key={payable.id}
@@ -475,81 +469,50 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => e.stopPropagation()}
                   >
-                    {payable.status !== 'paid' && payable.status !== 'cancelled' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPaymentPayable(payable)}
-                        title={t('pages.payables.payment.title')}
-                        className="gap-xs text-xs"
-                      >
-                        <CreditCard className="h-3 w-3" />
-                        {t('pages.payables.payBtn')}
-                      </Button>
-                    )}
-                    <ReceiptButton
-                      source={{ type: 'payable', data: payable }}
-                      memberName={getMemberDisplayName(payable.member_name, user)}
-                      variant="ghost"
-                      size="icon"
+                    <CardActions
+                      onEdit={() => handleEdit(payable)}
+                      onDelete={() => handleDelete(payable)}
+                      onMenuPointerDown={() => {
+                        suppressDetailRef.current = true;
+                      }}
+                      menuActions={[
+                        ...(isOpen
+                          ? [
+                              {
+                                icon: CreditCard,
+                                label: t('pages.payables.payBtn'),
+                                onClick: () => setPaymentPayable(payable),
+                                color: 'pay' as const,
+                              },
+                            ]
+                          : []),
+                        {
+                          icon: Receipt,
+                          label: t('receipt.button.tooltip'),
+                          onClick: () =>
+                            setReceiptData(
+                              mapPayableToReceipt(
+                                payable,
+                                getMemberDisplayName(payable.member_name, user)
+                              )
+                            ),
+                          color: 'receipt' as const,
+                        },
+                        hasInstallments
+                          ? {
+                              icon: List,
+                              label: t('pages.payables.manageDebtBtn'),
+                              onClick: () => void handleOpenInstallments(payable),
+                              color: 'installments' as const,
+                            }
+                          : {
+                              icon: CalendarRange,
+                              label: t('pages.payables.form.createPaymentPlanBtn'),
+                              onClick: () => setPaymentPlanPayable(payable),
+                              color: 'plan' as const,
+                            },
+                      ]}
                     />
-                    {hasOverflowActions && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            title={t('common.actions.moreOptions')}
-                            aria-label={t('common.actions.moreOptions')}
-                          >
-                            <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          onPointerDown={() => {
-                            suppressDetailRef.current = true;
-                          }}
-                        >
-                          {(payable.installments ?? 0) > 1 || payable.is_cumulative ? (
-                            <DropdownMenuItem
-                              onClick={() => void handleOpenInstallments(payable)}
-                            >
-                              <List className="mr-sm h-4 w-4" aria-hidden="true" />
-                              {t('pages.payables.manageDebtBtn')}
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem
-                              onClick={() => setPaymentPlanPayable(payable)}
-                            >
-                              <CalendarRange
-                                className="mr-sm h-4 w-4"
-                                aria-hidden="true"
-                              />
-                              {t('pages.payables.form.createPaymentPlanBtn')}
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(payable)}
-                      title={t('common.actions.edit')}
-                      aria-label={t('common.actions.edit')}
-                    >
-                      <Pencil className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(payable)}
-                      title={t('common.actions.delete')}
-                      aria-label={t('common.actions.delete')}
-                    >
-                      <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
-                    </Button>
                   </div>
                 </div>
               );
@@ -583,6 +546,12 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
           />
         </DialogContent>
       </Dialog>
+
+      <ReceiptPreviewDialog
+        open={!!receiptData}
+        onOpenChange={(open) => !open && setReceiptData(null)}
+        data={receiptData}
+      />
 
       <PayableDetailModal
         payable={detailPayable}

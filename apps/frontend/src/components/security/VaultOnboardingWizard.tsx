@@ -1,14 +1,13 @@
+import { motion, AnimatePresence } from 'framer-motion';
 import {
+  ArrowRight,
   CheckCircle2,
+  ChevronLeft,
   FileArchive,
-  Import,
   KeyRound,
   Lock,
   ShieldCheck,
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  SkipForward,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,9 +17,13 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { slideVariants } from '@/lib/animations';
+import { cn } from '@/lib/utils';
 
 const STORAGE_KEY = 'vault_onboarding_completed';
 
@@ -29,16 +32,24 @@ interface Props {
   onClose: () => void;
 }
 
+/** Boas-vindas do cofre em etapas (§2.4), no mesmo formato do Planejamento Pessoal. */
 export function VaultOnboardingWizard({ open, onClose }: Props) {
   const { t } = useTranslation();
-  const [step, setStep] = useState(1);
   const navigate = useNavigate();
+  const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(1);
 
-  const STEPS = [
-    { id: 1, icon: <Lock className="text-primary h-10 w-10" /> },
-    { id: 2, icon: <KeyRound className="text-primary h-10 w-10" /> },
-    { id: 3, icon: <CheckCircle2 className="text-chart-2 h-10 w-10" /> },
+  const steps = [
+    { icon: Lock, title: t('vaultOnboarding.step1Title') },
+    { icon: KeyRound, title: t('vaultOnboarding.step2Title') },
+    { icon: CheckCircle2, title: t('vaultOnboarding.step3Title') },
   ];
+  const isLast = step === steps.length - 1;
+
+  const goTo = (next: number) => {
+    setDirection(next > step ? 1 : -1);
+    setStep(next);
+  };
 
   const handleComplete = () => {
     localStorage.setItem(STORAGE_KEY, 'true');
@@ -50,180 +61,121 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
     void navigate(path);
   };
 
+  const shortcuts = [
+    { icon: KeyRound, label: 'step3AddPassword', path: '/security/passwords' },
+    { icon: ShieldCheck, label: 'step3HealthReport', path: '/security/health' },
+    { icon: FileArchive, label: 'step3StoreArchive', path: '/security/archives' },
+  ];
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        if (!o) handleComplete();
-      }}
-    >
-      <DialogContent className="max-w-md">
+    <Dialog open={open} onOpenChange={(o) => !o && handleComplete()}>
+      <DialogContent size="sm">
         <DialogHeader>
-          <DialogTitle className="gap-sm flex items-center">
-            <ShieldCheck className="text-primary h-5 w-5" />
-            {t('vaultOnboarding.dialogTitle')}
-          </DialogTitle>
+          <DialogTitle icon={steps[step].icon}>{steps[step].title}</DialogTitle>
+          <DialogDescription>{steps[step].title}</DialogDescription>
         </DialogHeader>
 
-        {/* Stepper indicator */}
-        <div className="gap-sm py-sm flex items-center justify-center">
-          {STEPS.map((s) => (
-            <div key={s.id} className="gap-sm flex items-center">
-              <div
-                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                  step === s.id
-                    ? 'bg-primary text-primary-foreground'
-                    : step > s.id
-                      ? 'bg-chart-2 text-white'
-                      : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                {step > s.id ? <CheckCircle2 className="h-4 w-4" /> : s.id}
-              </div>
-              {s.id < STEPS.length && (
-                <div
-                  className={`h-px w-8 ${step > s.id ? 'bg-chart-2' : 'bg-muted'}`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Step content */}
-        <div className="gap-md py-md flex flex-col items-center text-center">
-          {step === 1 && (
-            <>
-              <Lock className="text-primary h-16 w-16" />
-              <div className="space-y-xs">
-                <h3 className="text-lg font-semibold">
-                  {t('vaultOnboarding.step1Title')}
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  {t('vaultOnboarding.step1Desc')}
-                </p>
-              </div>
-              <div className="border-warning/30 bg-warning/10 w-full rounded-lg border p-3 text-left">
-                <p className="text-warning text-xs font-medium">
-                  {t('vaultOnboarding.step1Warning')}
-                </p>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('vaultOnboarding.step1WarningDesc')}
-                </p>
-              </div>
-            </>
-          )}
-
-          {step === 2 && (
-            <>
-              <KeyRound className="text-primary h-16 w-16" />
-              <div className="space-y-xs">
-                <h3 className="text-lg font-semibold">
-                  {t('vaultOnboarding.step2Title')}
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  {t('vaultOnboarding.step2Desc')}
-                </p>
-              </div>
-              <div className="space-y-xs w-full text-left">
-                <p className="text-xs font-medium">
-                  {t('vaultOnboarding.step2TipsTitle')}
-                </p>
-                {[
-                  t('vaultOnboarding.step2Tip1'),
-                  t('vaultOnboarding.step2Tip2'),
-                  t('vaultOnboarding.step2Tip3'),
-                  t('vaultOnboarding.step2Tip4'),
-                ].map((tip) => (
-                  <div
-                    key={tip}
-                    className="gap-xs text-muted-foreground flex items-center text-xs"
-                  >
-                    <CheckCircle2 className="text-chart-2 h-3 w-3 flex-shrink-0" />
-                    {tip}
+        <div className="overflow-hidden">
+          <AnimatePresence mode="wait" initial={false} custom={direction}>
+            <motion.div
+              key={step}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="space-y-md"
+            >
+              {step === 0 && (
+                <>
+                  <p className="text-muted-foreground text-sm">
+                    {t('vaultOnboarding.step1Desc')}
+                  </p>
+                  <div className="border-warning/30 bg-warning/10 p-sm rounded-lg border">
+                    <p className="text-warning text-xs font-medium">
+                      {t('vaultOnboarding.step1Warning')}
+                    </p>
+                    <p className="text-muted-foreground mt-xs text-xs">
+                      {t('vaultOnboarding.step1WarningDesc')}
+                    </p>
                   </div>
+                </>
+              )}
+
+              {step === 1 && (
+                <>
+                  <p className="text-muted-foreground text-sm">
+                    {t('vaultOnboarding.step2Desc')}
+                  </p>
+                  <div className="space-y-xs">
+                    <p className="text-xs font-medium">
+                      {t('vaultOnboarding.step2TipsTitle')}
+                    </p>
+                    {[1, 2, 3, 4].map((n) => (
+                      <div
+                        key={n}
+                        className="gap-xs text-muted-foreground flex items-center text-xs"
+                      >
+                        <CheckCircle2 className="text-success h-3 w-3 shrink-0" />
+                        {t(`vaultOnboarding.step2Tip${n}`)}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {isLast && (
+                <>
+                  <p className="text-muted-foreground text-sm">
+                    {t('vaultOnboarding.step3Desc')}
+                  </p>
+                  <div className="gap-sm grid">
+                    {shortcuts.map(({ icon: Icon, label, path }) => (
+                      <Button
+                        key={path}
+                        variant="outline"
+                        className="justify-start"
+                        onClick={() => handleAction(path)}
+                      >
+                        <Icon />
+                        {t(`vaultOnboarding.${label}`)}
+                      </Button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <div className="gap-xs flex justify-center">
+                {steps.map((s, i) => (
+                  <span
+                    key={s.title}
+                    className={cn(
+                      'h-1.5 rounded-full transition-[width,background-color]',
+                      i === step ? 'bg-primary w-6' : 'bg-muted w-1.5'
+                    )}
+                  />
                 ))}
               </div>
-              <Button className="w-full" onClick={() => handleAction('/security')}>
-                <Lock aria-hidden="true" />
-                {t('vaultOnboarding.step2ConfigureBtn')}
-              </Button>
-            </>
-          )}
-
-          {step === 3 && (
-            <>
-              <CheckCircle2 className="text-chart-2 h-16 w-16" />
-              <div className="space-y-xs">
-                <h3 className="text-lg font-semibold">
-                  {t('vaultOnboarding.step3Title')}
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  {t('vaultOnboarding.step3Desc')}
-                </p>
-              </div>
-              <div className="gap-sm grid w-full grid-cols-1">
-                <Button
-                  variant="outline"
-                  className="gap-sm justify-start"
-                  onClick={() => handleAction('/security/passwords')}
-                >
-                  <KeyRound className="h-4 w-4" />
-                  {t('vaultOnboarding.step3AddPassword')}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-sm justify-start"
-                  onClick={() => handleAction('/security/password-import')}
-                >
-                  <Import className="h-4 w-4" />
-                  {t('vaultOnboarding.step3ImportPasswords')}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-sm justify-start"
-                  onClick={() => handleAction('/security/health')}
-                >
-                  <ShieldCheck className="h-4 w-4" />
-                  {t('vaultOnboarding.step3HealthReport')}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-sm justify-start"
-                  onClick={() => handleAction('/security/archives')}
-                >
-                  <FileArchive className="h-4 w-4" />
-                  {t('vaultOnboarding.step3StoreArchive')}
-                </Button>
-              </div>
-            </>
-          )}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        {/* Navigation */}
-        <div className="dialog-footer gap-sm flex justify-between">
-          {step > 1 ? (
-            <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
-              <ArrowLeft className="h-4 w-4" />
+        <DialogFooter className="gap-sm">
+          <Button variant="outline" onClick={handleComplete}>
+            <X />
+            {t('common.actions.cancel')}
+          </Button>
+          {step > 0 && (
+            <Button variant="outline" onClick={() => goTo(step - 1)}>
+              <ChevronLeft />
               {t('vaultOnboarding.back')}
             </Button>
-          ) : (
-            <Button variant="ghost" onClick={handleComplete}>
-              <SkipForward className="h-4 w-4" />
-              {t('vaultOnboarding.skip')}
-            </Button>
           )}
-          {step < STEPS.length ? (
-            <Button onClick={() => setStep((s) => s + 1)}>
-              <ArrowRight className="h-4 w-4" />
-              {t('vaultOnboarding.next')}
-            </Button>
-          ) : (
-            <Button onClick={handleComplete}>
-              <Check className="h-4 w-4" />
-              {t('vaultOnboarding.finish')}
-            </Button>
-          )}
-        </div>
+          <Button onClick={isLast ? handleComplete : () => goTo(step + 1)}>
+            <ArrowRight />
+            {isLast ? t('vaultOnboarding.finish') : t('vaultOnboarding.next')}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

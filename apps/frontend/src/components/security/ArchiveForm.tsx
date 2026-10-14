@@ -5,8 +5,6 @@ import {
   FileImage,
   FileText,
   FolderOpen,
-  Loader2,
-  MoreHorizontal,
   Package,
   Tag,
   Upload,
@@ -30,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ARCHIVE_CATEGORY_ICONS } from '@/config/icons';
+import { useToast } from '@/hooks/use-toast';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { archiveSchema, type ArchiveFormData } from '@/lib/validations';
 import { useAuthStore } from '@/stores/auth-store';
@@ -91,6 +90,7 @@ export function ArchiveForm({
 }: ArchiveFormProps) {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  const { toast } = useToast();
   const {
     register,
     handleSubmit,
@@ -125,12 +125,15 @@ export function ArchiveForm({
     const file = fileInput?.files?.[0];
 
     if (!archive && !file && data.archive_type !== 'text') {
-      alert(t('pages.archives.form.alertSelectFile'));
+      toast({
+        title: t('pages.archives.form.alertSelectFile'),
+        variant: 'destructive',
+      });
       return;
     }
 
     if (!archive && data.archive_type === 'text' && !data.text_content) {
-      alert(t('pages.archives.form.alertEnterText'));
+      toast({ title: t('pages.archives.form.alertEnterText'), variant: 'destructive' });
       return;
     }
 
@@ -150,7 +153,10 @@ export function ArchiveForm({
       !data.text_content &&
       archive.archive_type === 'text'
     ) {
-      alert(t('pages.archives.form.alertTextNotEmpty'));
+      toast({
+        title: t('pages.archives.form.alertTextNotEmpty'),
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -161,165 +167,163 @@ export function ArchiveForm({
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-lg">
-      <FormSection
-        title={t('pages.archives.form.sectionIdentification')}
-        icon={FileText}
-      >
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="title" className="gap-xs flex items-center">
-              <FileText className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.archives.form.titleLabel')}
-            </Label>
-            <Input
-              id="title"
-              {...register('title')}
-              aria-invalid={!!errors.title}
-              placeholder={t('pages.archives.form.titlePlaceholder')}
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="space-y-sm md:col-span-2">
-            <Label className="gap-xs flex items-center">
-              <FolderOpen className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.archives.form.categoryLabel')}
-            </Label>
-            <Select
-              value={watch('category')}
-              onValueChange={(value) =>
-                setValue('category', value as ArchiveFormData['category'])
-              }
-              disabled={isLoading}
-            >
-              <SelectTrigger aria-invalid={!!errors.category}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ARCHIVE_CATEGORY_KEYS.map((key) => (
-                  <SelectItem key={key} value={key}>
-                    <span className="flex items-center gap-2">
-                      {(() => {
-                        const CatIcon = ARCHIVE_CATEGORY_ICONS[key];
-                        return CatIcon ? (
-                          <CatIcon className="text-muted-foreground h-4 w-4 shrink-0" />
-                        ) : null;
-                      })()}
-                      {t(`pages.archives.categories.${key}`)}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </FormSection>
-
-      <FormSection title={t('pages.archives.form.sectionTypeContent')} icon={Upload}>
-        <div className="space-y-md">
-          {/* Adaptação visual: toggle de tipo com ícones */}
-          <div className="space-y-sm">
-            <Label className="gap-xs flex items-center">
-              <Upload className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.archives.form.typeLabel')}
-            </Label>
-            <div
-              className={`bg-muted/30 flex rounded-md border p-0.5 ${errors.archive_type ? 'border-destructive ring-destructive/50 ring-2' : 'border-border/70'}`}
-            >
-              {ARCHIVE_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setValue('archive_type', value)}
+      <div className="gap-lg grid lg:grid-cols-2">
+        <div className="space-y-lg">
+          <FormSection
+            title={t('pages.archives.form.sectionIdentification')}
+            icon={FileText}
+          >
+            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+              <div className="space-y-sm md:col-span-2">
+                <Label htmlFor="title" className="gap-xs flex items-center">
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.archives.form.titleLabel')}
+                </Label>
+                <Input
+                  id="title"
+                  {...register('title')}
+                  aria-invalid={!!errors.title}
+                  placeholder={t('pages.archives.form.titlePlaceholder')}
                   disabled={isLoading}
-                  className={`duration-fast flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition ${
-                    watchedArchiveType === value
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                />
+              </div>
+
+              <div className="space-y-sm md:col-span-2">
+                <Label className="gap-xs flex items-center">
+                  <FolderOpen className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.archives.form.categoryLabel')}
+                </Label>
+                <Select
+                  value={watch('category')}
+                  onValueChange={(value) =>
+                    setValue('category', value as ArchiveFormData['category'])
+                  }
+                  disabled={isLoading}
                 >
-                  <Icon className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">
-                    {t(`pages.archives.types.${translationKey}`)}
-                  </span>
-                </button>
-              ))}
+                  <SelectTrigger aria-invalid={!!errors.category}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ARCHIVE_CATEGORY_KEYS.map((key) => (
+                      <SelectItem key={key} value={key}>
+                        <span className="flex items-center gap-2">
+                          {(() => {
+                            const CatIcon = ARCHIVE_CATEGORY_ICONS[key];
+                            return CatIcon ? (
+                              <CatIcon className="text-muted-foreground h-4 w-4 shrink-0" />
+                            ) : null;
+                          })()}
+                          {t(`pages.archives.categories.${key}`)}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
+          </FormSection>
 
-          {watchedArchiveType === 'text' ? (
-            <div className="space-y-sm">
-              <Label htmlFor="text_content" className="gap-xs flex items-center">
-                <MoreHorizontal className="text-muted-foreground h-3.5 w-3.5" />
-                {t('pages.archives.form.contentLabel')}
-              </Label>
-              <Textarea
-                id="text_content"
-                {...register('text_content')}
-                aria-invalid={!!errors.text_content}
-                placeholder={t('pages.archives.form.contentPlaceholder')}
-                rows={10}
-                className="text-sm"
-                disabled={isLoading}
-              />
+          <FormSection title={t('pages.archives.form.sectionOrganization')} icon={Tag}>
+            <div className="gap-md grid">
+              <div className="space-y-sm">
+                <Label htmlFor="tags" className="gap-xs flex items-center">
+                  <Tag className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.archives.form.tagsLabel')}
+                </Label>
+                <Input
+                  id="tags"
+                  {...register('tags')}
+                  aria-invalid={!!errors.tags}
+                  placeholder={t('pages.archives.form.tagsPlaceholder')}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-sm">
+                <Label htmlFor="notes" className="gap-xs flex items-center">
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.archives.form.notesLabel')}
+                </Label>
+                <Textarea
+                  id="notes"
+                  {...register('notes')}
+                  aria-invalid={!!errors.notes}
+                  placeholder={t('pages.archives.form.notesPlaceholder')}
+                  rows={1}
+                  disabled={isLoading}
+                />
+              </div>
             </div>
-          ) : (
+          </FormSection>
+        </div>
+        <FormSection title={t('pages.archives.form.sectionTypeContent')} icon={Upload}>
+          <div className="space-y-md">
+            {/* Adaptação visual: toggle de tipo com ícones */}
             <div className="space-y-sm">
-              <Label htmlFor="file" className="gap-xs flex items-center">
+              <Label className="gap-xs flex items-center">
                 <Upload className="text-muted-foreground h-3.5 w-3.5" />
-                {t('pages.archives.form.fileLabel')}
-                {!archive && ' *'}
+                {t('pages.archives.form.typeLabel')}
               </Label>
-              <FileInput id="file" accept={FILE_TYPES_ACCEPT} onChange={() => {}} />
+              <div
+                className={`bg-muted/30 flex rounded-md border p-0.5 ${errors.archive_type ? 'border-destructive ring-destructive/50 ring-2' : 'border-border/70'}`}
+              >
+                {ARCHIVE_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setValue('archive_type', value)}
+                    disabled={isLoading}
+                    className={`duration-fast flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition ${
+                      watchedArchiveType === value
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">
+                      {t(`pages.archives.types.${translationKey}`)}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
-        </div>
-      </FormSection>
 
-      <FormSection title={t('pages.archives.form.sectionOrganization')} icon={Tag}>
-        <div className="gap-md grid">
-          <div className="space-y-sm">
-            <Label htmlFor="tags" className="gap-xs flex items-center">
-              <Tag className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.archives.form.tagsLabel')}
-            </Label>
-            <Input
-              id="tags"
-              {...register('tags')}
-              aria-invalid={!!errors.tags}
-              placeholder={t('pages.archives.form.tagsPlaceholder')}
-              disabled={isLoading}
-            />
+            {watchedArchiveType === 'text' ? (
+              <div className="space-y-sm">
+                <Label htmlFor="text_content" className="gap-xs flex items-center">
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.archives.form.contentLabel')}
+                </Label>
+                <Textarea
+                  id="text_content"
+                  {...register('text_content')}
+                  aria-invalid={!!errors.text_content}
+                  placeholder={t('pages.archives.form.contentPlaceholder')}
+                  rows={10}
+                  className="text-sm"
+                  disabled={isLoading}
+                />
+              </div>
+            ) : (
+              <div className="space-y-sm">
+                <Label htmlFor="file" className="gap-xs flex items-center">
+                  <Upload className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.archives.form.fileLabel')}
+                  {!archive && ' *'}
+                </Label>
+                <FileInput id="file" accept={FILE_TYPES_ACCEPT} onChange={() => {}} />
+              </div>
+            )}
           </div>
-
-          <div className="space-y-sm">
-            <Label htmlFor="notes" className="gap-xs flex items-center">
-              <FileText className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.archives.form.notesLabel')}
-            </Label>
-            <Textarea
-              id="notes"
-              {...register('notes')}
-              aria-invalid={!!errors.notes}
-              placeholder={t('pages.archives.form.notesPlaceholder')}
-              rows={1}
-              disabled={isLoading}
-            />
-          </div>
-        </div>
-      </FormSection>
-
+        </FormSection>
+      </div>
       <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
           {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>

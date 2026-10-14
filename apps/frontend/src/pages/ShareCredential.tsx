@@ -111,7 +111,7 @@ export default function ShareCredential() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{credential.title}</CardTitle>
-                <Badge variant="default" className="bg-green-600">
+                <Badge variant="success">
                   <CheckCircle className="mr-xs h-3 w-3" />
                   {t('pages.shareCredential.valid')}
                 </Badge>
@@ -159,15 +159,17 @@ export default function ShareCredential() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setShowPassword((v) => !v)}
+                    aria-label={
+                      showPassword
+                        ? t('common.actions.hide')
+                        : t('common.actions.reveal')
+                    }
                   >
                     {showPassword ? (
                       <EyeOff aria-hidden="true" />
                     ) : (
                       <Eye aria-hidden="true" />
                     )}
-                    {showPassword
-                      ? t('common.actions.hide')
-                      : t('common.actions.reveal')}
                   </Button>
                   <Button
                     aria-label={t('common.actions.copy')}

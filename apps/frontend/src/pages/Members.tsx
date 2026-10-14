@@ -5,16 +5,15 @@ import {
   CheckCircle2,
   CircleDot,
   HandCoins,
-  Pencil,
   Plus,
   Search,
   Shield,
-  Trash2,
   Users,
 } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { CardActions } from '@/components/common/CardActions';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -411,32 +410,13 @@ export default function Members() {
 
                   <CardContent className="pb-sm mt-auto">
                     <div className="pt-sm gap-xs flex items-center justify-end border-t">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => {
+                      <CardActions
+                        onEdit={() => {
                           setSelectedMember(member);
                           setIsDialogOpen(true);
                         }}
-                        aria-label={t('common.actions.edit')}
-                        title={t('common.actions.edit')}
-                      >
-                        <Pencil className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleDelete(member.id)}
-                        aria-label={t('common.actions.delete')}
-                        title={t('common.actions.delete')}
-                      >
-                        <Trash2
-                          className="text-destructive h-4 w-4"
-                          aria-hidden="true"
-                        />
-                      </Button>
+                        onDelete={() => handleDelete(member.id)}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -450,15 +430,6 @@ export default function Members() {
         member={detailMember}
         roles={detailMember ? memberRoles(detailMember) : ''}
         onClose={() => setDetailMember(null)}
-        onEdit={(member) => {
-          setDetailMember(null);
-          setSelectedMember(member);
-          setIsDialogOpen(true);
-        }}
-        onDelete={(id) => {
-          setDetailMember(null);
-          void handleDelete(id);
-        }}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

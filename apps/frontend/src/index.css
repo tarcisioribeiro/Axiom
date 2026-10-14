@@ -127,6 +127,34 @@
     --destructive: 6 66% 48%;
     --destructive-foreground: 48 100% 96%;
 
+    /* Ações de card (§4): uma variável por ação; ajuste aqui a cor de cada uma.
+       Referenciam o tema, então seguem claro/escuro automaticamente. */
+    --action-edit: var(--info);
+    --action-delete: var(--destructive);
+    --action-more: var(--muted-foreground);
+    --action-pay: var(--success);
+    --action-receive: var(--success);
+    --action-deposit: var(--success);
+    --action-withdraw: var(--warning);
+    --action-yield: var(--success);
+    --action-receipt: var(--primary);
+    --action-favorite: var(--warning);
+    --action-copy: var(--primary);
+    --action-share: var(--muted-foreground);
+    --action-reveal: var(--muted-foreground);
+    --action-check-leak: var(--muted-foreground);
+    --action-download: var(--muted-foreground);
+    --action-preview: var(--muted-foreground);
+    --action-installments: var(--muted-foreground);
+    --action-plan: var(--muted-foreground);
+    --action-progress: var(--muted-foreground);
+    --action-amortization: var(--muted-foreground);
+    --action-transactions: var(--muted-foreground);
+    --action-contributions: var(--muted-foreground);
+    --action-simulator: var(--muted-foreground);
+    --action-manage-vaults: var(--muted-foreground);
+    --action-check-completion: var(--muted-foreground);
+
     /* Success - Green Alucard (#14710A) */
     --success: 114 84% 24%;
     --success-foreground: 48 100% 96%;

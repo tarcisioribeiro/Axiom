@@ -1,10 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ['class'],
-  content: [
-    './index.html',
-    './src/**/*.{js,ts,jsx,tsx}',
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     screens: {
       sm: '640px',
@@ -68,6 +65,33 @@ export default {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+        },
+        action: {
+          edit: 'hsl(var(--action-edit))',
+          delete: 'hsl(var(--action-delete))',
+          more: 'hsl(var(--action-more))',
+          pay: 'hsl(var(--action-pay))',
+          receive: 'hsl(var(--action-receive))',
+          deposit: 'hsl(var(--action-deposit))',
+          withdraw: 'hsl(var(--action-withdraw))',
+          yield: 'hsl(var(--action-yield))',
+          receipt: 'hsl(var(--action-receipt))',
+          favorite: 'hsl(var(--action-favorite))',
+          copy: 'hsl(var(--action-copy))',
+          share: 'hsl(var(--action-share))',
+          reveal: 'hsl(var(--action-reveal))',
+          'check-leak': 'hsl(var(--action-check-leak))',
+          download: 'hsl(var(--action-download))',
+          preview: 'hsl(var(--action-preview))',
+          installments: 'hsl(var(--action-installments))',
+          plan: 'hsl(var(--action-plan))',
+          progress: 'hsl(var(--action-progress))',
+          amortization: 'hsl(var(--action-amortization))',
+          transactions: 'hsl(var(--action-transactions))',
+          contributions: 'hsl(var(--action-contributions))',
+          simulator: 'hsl(var(--action-simulator))',
+          'manage-vaults': 'hsl(var(--action-manage-vaults))',
+          'check-completion': 'hsl(var(--action-check-completion))',
         },
         success: {
           DEFAULT: 'hsl(var(--success))',
@@ -177,4 +201,4 @@ export default {
       addVariant('hoverable', '@media (hover: hover) and (pointer: fine)');
     },
   ],
-}
+};

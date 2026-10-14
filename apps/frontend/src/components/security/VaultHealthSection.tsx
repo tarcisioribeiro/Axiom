@@ -6,15 +6,16 @@ import {
   CheckCircle2,
   Clock,
   Copy,
-  RefreshCw,
   ShieldAlert,
   ShieldCheck,
+  TrendingUp,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,7 +74,7 @@ function CircularScore({ score }: CircularScoreProps) {
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
           transform="rotate(-90 70 70)"
-          style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+          className="duration-slow transition-[stroke-dashoffset]"
         />
         <text
           x="70"
@@ -153,12 +154,8 @@ function PasswordRow({ pw, onNavigate }: PasswordRowProps) {
     duplicate: 'outline',
     outdated: 'outline',
   };
-  const hasCritical = pw.issues.includes('weak');
-
   return (
-    <div
-      className={`gap-xs flex flex-col rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between ${hasCritical ? 'border-destructive/30 bg-destructive/5' : ''}`}
-    >
+    <div className="gap-xs px-sm py-xs flex flex-col rounded-md border sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">{pw.title}</p>
         <p className="text-muted-foreground truncate text-xs">{pw.username}</p>
@@ -246,7 +243,8 @@ function ScoreHistoryChart({ data }: { data: VaultHealthSnapshot[] }) {
 // VaultHealthSection (redesigned — #198)
 // ============================================================================
 
-export function VaultHealthSection() {
+/** `children`: card extra na mesma linha (ex.: Atividade Recente no painel). */
+export function VaultHealthSection({ children }: { children?: React.ReactNode }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -282,12 +280,18 @@ export function VaultHealthSection() {
   const attentionCount = criticalPasswords.length + otherIssues.length;
 
   return (
-    <div className="gap-md grid grid-cols-1 lg:grid-cols-3">
+    <div
+      className={
+        children
+          ? 'gap-md grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4'
+          : 'gap-md grid grid-cols-1 lg:grid-cols-3'
+      }
+    >
       {/* Saúde do Cofre */}
       <Card className="flex flex-col">
         <CardHeader>
-          <CardTitle className="gap-sm flex items-center">
-            <ShieldCheck className="h-5 w-5" />
+          <CardTitle className="gap-sm flex items-center text-base">
+            <ShieldCheck className="h-4 w-4" />
             {t('pages.vaultHealth.title')}
           </CardTitle>
           <p className="text-muted-foreground text-sm">
@@ -334,9 +338,7 @@ export function VaultHealthSection() {
       </Card>
 
       {/* Senhas que precisam de atenção */}
-      <Card
-        className={`flex flex-col ${criticalPasswords.length > 0 ? 'border-destructive/30' : ''}`}
-      >
+      <Card className="flex flex-col">
         <CardHeader className="pb-sm">
           <CardTitle className="gap-sm flex items-center text-base">
             <AlertTriangle className="text-warning h-4 w-4" />
@@ -353,15 +355,22 @@ export function VaultHealthSection() {
         </CardHeader>
         <CardContent className="flex min-h-0 flex-1 flex-col">
           {attentionCount > 0 ? (
-            <div className="space-y-sm pr-xs min-h-0 flex-1 overflow-y-auto">
-              {[...criticalPasswords, ...otherIssues].map((pw) => (
-                <PasswordRow
-                  key={pw.id}
-                  pw={pw}
-                  onNavigate={() => navigate('/security/passwords')}
-                />
-              ))}
-            </div>
+            <PaginatedSlide
+              items={[...criticalPasswords, ...otherIssues]}
+              pageSize={LIST_PAGE_SIZE}
+              pinNav={false}
+              className="space-y-sm"
+            >
+              {(pageItems) =>
+                pageItems.map((pw) => (
+                  <PasswordRow
+                    key={pw.id}
+                    pw={pw}
+                    onNavigate={() => void navigate('/security/passwords')}
+                  />
+                ))
+              }
+            </PaginatedSlide>
           ) : total_passwords > 0 ? (
             <div className="gap-sm flex flex-1 flex-col items-center justify-center">
               <CheckCircle2 className="text-chart-2 h-10 w-10" />
@@ -376,24 +385,12 @@ export function VaultHealthSection() {
       {/* Evolução do Score */}
       <Card className="flex flex-col">
         <CardHeader className="pb-sm">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">
-              {t('pages.vaultHealth.scoreHistory', {
-                defaultValue: 'Evolução do Score',
-              })}
-            </CardTitle>
-            {history.length > 1 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-xs text-xs"
-                onClick={() => navigate('/security/health')}
-              >
-                <RefreshCw className="h-3 w-3" />
-                {t('common.actions.refresh')}
-              </Button>
-            )}
-          </div>
+          <CardTitle className="gap-sm flex items-center text-base">
+            <TrendingUp className="h-4 w-4" />
+            {t('pages.vaultHealth.scoreHistory', {
+              defaultValue: 'Evolução do Score',
+            })}
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex min-h-0 flex-1 flex-col">
           {history.length > 1 ? (
@@ -408,6 +405,7 @@ export function VaultHealthSection() {
           )}
         </CardContent>
       </Card>
+      {children}
     </div>
   );
 }

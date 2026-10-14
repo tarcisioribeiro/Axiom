@@ -4,11 +4,9 @@ import {
   CalendarDays,
   CheckCircle2,
   CircleDot,
-  Pencil,
   Plus,
   Search,
   Tag,
-  Trash2,
   TrendingUp,
   Wallet,
 } from 'lucide-react';
@@ -16,6 +14,7 @@ import { useState, useMemo, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
+import { CardActions } from '@/components/common/CardActions';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
@@ -420,7 +419,8 @@ export default function Receivables({
                   role="button"
                   tabIndex={0}
                   onClick={(e) => {
-                    if (!(e.target as HTMLElement).closest('button'))
+                    const target = e.target as HTMLElement;
+                    if (e.currentTarget.contains(target) && !target.closest('button'))
                       setDetailReceivable(receivable);
                   }}
                   onKeyDown={(e) => {
@@ -488,35 +488,23 @@ export default function Receivables({
                   </div>
 
                   <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
-                    {receivable.status !== 'received' &&
-                      receivable.status !== 'cancelled' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setReceiptReceivable(receivable)}
-                          title={t('pages.receivables.receipt.title')}
-                          className="gap-xs text-success text-xs"
-                        >
-                          <Wallet className="h-3 w-3" />
-                          {t('pages.receivables.receiveBtn')}
-                        </Button>
-                      )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(receivable)}
-                      title={t('common.actions.edit')}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => void handleDelete(receivable)}
-                      title={t('common.actions.delete')}
-                    >
-                      <Trash2 className="text-destructive h-4 w-4" />
-                    </Button>
+                    <CardActions
+                      onEdit={() => handleEdit(receivable)}
+                      onDelete={() => void handleDelete(receivable)}
+                      menuActions={
+                        receivable.status !== 'received' &&
+                        receivable.status !== 'cancelled'
+                          ? [
+                              {
+                                icon: Wallet,
+                                label: t('pages.receivables.receiveBtn'),
+                                onClick: () => setReceiptReceivable(receivable),
+                                color: 'receive' as const,
+                              },
+                            ]
+                          : []
+                      }
+                    />
                   </div>
                 </div>
               );

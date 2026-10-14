@@ -7,7 +7,6 @@ import {
   Copy,
   EyeOff,
   Hash,
-  Loader2,
   RefreshCw,
   Ruler,
 } from 'lucide-react';
@@ -35,19 +34,19 @@ const strengthConfig = {
     labelKey: 'common.passwordStrength.weak',
     color: 'bg-destructive',
     badgeVariant: 'destructive' as const,
-    width: 'w-1/3',
+    width: 'scale-x-[0.34]',
   },
   medium: {
     labelKey: 'common.passwordStrength.medium',
     color: 'bg-warning',
     badgeVariant: 'secondary' as const,
-    width: 'w-2/3',
+    width: 'scale-x-[0.67]',
   },
   strong: {
     labelKey: 'common.passwordStrength.strong',
     color: 'bg-success',
     badgeVariant: 'default' as const,
-    width: 'w-full',
+    width: 'scale-x-100',
   },
 };
 
@@ -223,18 +222,11 @@ export function PasswordGenerator({
       </div>
 
       {/* Generate Button */}
-      <Button onClick={handleGenerate} disabled={isGenerating} className="w-full">
-        {isGenerating ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            {t('pages.passwords.generator.generating')}
-          </>
-        ) : (
-          <>
-            <RefreshCw className="h-4 w-4" />
-            {t('pages.passwords.generatePassword')}
-          </>
-        )}
+      <Button onClick={handleGenerate} loading={isGenerating} className="w-full">
+        {!isGenerating && <RefreshCw className="h-4 w-4" />}
+        {isGenerating
+          ? t('pages.passwords.generator.generating')
+          : t('pages.passwords.generatePassword')}
       </Button>
 
       {/* Result */}
@@ -252,7 +244,7 @@ export function PasswordGenerator({
               className="shrink-0"
             >
               {copied ? (
-                <Check className="h-4 w-4 text-[hsl(var(--success))]" />
+                <Check className="text-success h-4 w-4" />
               ) : (
                 <Copy className="h-4 w-4" />
               )}
@@ -273,7 +265,7 @@ export function PasswordGenerator({
               <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                 <div
                   className={cn(
-                    'duration-medium h-full rounded-full transition-[width,background-color]',
+                    'duration-medium h-full w-full origin-left rounded-full transition-transform',
                     strengthInfo.color,
                     strengthInfo.width
                   )}

@@ -9,19 +9,18 @@ import {
   Download,
   HandCoins,
   List,
-  MoreHorizontal,
-  Pencil,
   Plus,
   Search,
   Shield,
   TableProperties,
   Tag,
-  Trash2,
   Users,
+  Receipt,
 } from 'lucide-react';
 import { useState, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { CardActions } from '@/components/common/CardActions';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
@@ -38,7 +37,7 @@ import { LoanPaymentDialog } from '@/components/loans/LoanPaymentDialog';
 import { LoanPaymentPlanDialog } from '@/components/loans/LoanPaymentPlanDialog';
 import { LoanProgressDialog } from '@/components/loans/LoanProgressDialog';
 import { LoanReceiptDialog } from '@/components/loans/LoanReceiptDialog';
-import { ReceiptButton } from '@/components/receipts';
+import { ReceiptPreviewDialog } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,12 +47,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -70,11 +63,12 @@ import {
 import { EXPENSE_CATEGORY_ICONS, LOAN_STATUS_ICONS } from '@/config/icons';
 import { useLoansPage } from '@/hooks/use-loans-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { getMemberDisplayName } from '@/lib/receipt-utils';
+import { getMemberDisplayName, mapLoanToReceipt } from '@/lib/receipt-utils';
 import { cn } from '@/lib/utils';
 import { loanInstallmentsService } from '@/services/loan-installments-service';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AmortizationSchedule, LoanInstallment, Loan } from '@/types';
+import type { ReceiptData } from '@/types/receipt';
 
 const STATUS_VARIANTS: Record<
   string,
@@ -125,6 +119,7 @@ export default function Loans() {
   // checked once by the card's own click handler. Only one menu can be open
   // at a time, so a single shared ref (not one per card) is enough.
   const suppressDetailRef = useRef(false);
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
 
   const [installmentsLoan, setInstallmentsLoan] = useState<Loan | null>(null);
   const [installments, setInstallments] = useState<LoanInstallment[]>([]);
@@ -475,115 +470,94 @@ export default function Loans() {
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => e.stopPropagation()}
                   >
-                    {loan.status !== 'paid' &&
-                      loan.status !== 'cancelled' &&
-                      (Number(loan.creditor) === currentUserMemberId ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setReceiptLoan(loan)}
-                          title={t('pages.loans.receipt.title')}
-                          className="gap-xs text-success text-xs"
-                        >
-                          <CreditCard className="h-3 w-3" />
-                          {t('pages.loans.receiveBtn')}
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPaymentLoan(loan)}
-                          disabled={Number(loan.benefited) !== currentUserMemberId}
-                          title={t('pages.loans.payment.title')}
-                          className="gap-xs text-xs"
-                        >
-                          <CreditCard className="h-3 w-3" />
-                          {t('pages.loans.payBtn')}
-                        </Button>
-                      ))}
-                    <ReceiptButton
-                      source={{ type: 'loan', data: loan }}
-                      memberName={getMemberDisplayName(loan.benefited_name, user)}
-                      variant="ghost"
-                      size="icon"
+                    <CardActions
+                      onEdit={() => handleEdit(loan)}
+                      onDelete={() => handleDelete(loan)}
+                      onMenuPointerDown={() => {
+                        suppressDetailRef.current = true;
+                      }}
+                      menuActions={[
+                        ...(loan.status !== 'paid' && loan.status !== 'cancelled'
+                          ? Number(loan.creditor) === currentUserMemberId
+                            ? [
+                                {
+                                  icon: CreditCard,
+                                  label: t('pages.loans.receiveBtn'),
+                                  onClick: () => setReceiptLoan(loan),
+                                  color: 'receive' as const,
+                                },
+                              ]
+                            : [
+                                {
+                                  icon: CreditCard,
+                                  label: t('pages.loans.payBtn'),
+                                  onClick: () => setPaymentLoan(loan),
+                                  color: 'pay' as const,
+                                  disabled:
+                                    Number(loan.benefited) !== currentUserMemberId,
+                                },
+                              ]
+                          : []),
+                        {
+                          icon: Receipt,
+                          label: t('receipt.button.tooltip'),
+                          onClick: () =>
+                            setReceiptData(
+                              mapLoanToReceipt(
+                                loan,
+                                getMemberDisplayName(loan.benefited_name, user)
+                              )
+                            ),
+                          color: 'receipt' as const,
+                        },
+                        ...(loan.installments > 1
+                          ? [
+                              {
+                                icon: List,
+                                label: t('pages.loans.installments.title'),
+                                onClick: () => void handleOpenInstallments(loan),
+                                color: 'installments' as const,
+                              },
+                            ]
+                          : loan.status !== 'paid' && loan.status !== 'cancelled'
+                            ? [
+                                {
+                                  icon: CalendarRange,
+                                  label: t('pages.loans.paymentPlan.createBtn'),
+                                  onClick: () => setPaymentPlanLoan(loan),
+                                  color: 'plan' as const,
+                                },
+                              ]
+                            : []),
+                        {
+                          icon: CheckCircle2,
+                          label: t('pages.loans.progress.progressBtn'),
+                          onClick: () => setProgressLoan(loan),
+                          color: 'progress' as const,
+                        },
+                        {
+                          icon: TableProperties,
+                          label: t('pages.loans.amortizationBtn'),
+                          onClick: () => void handleOpenAmortization(loan),
+                          color: 'amortization' as const,
+                        },
+                        ...(loan.contract_document
+                          ? [
+                              {
+                                icon: Download,
+                                label: t('common.actions.download'),
+                                onClick: () =>
+                                  window.open(
+                                    loan.contract_document!,
+                                    '_blank',
+                                    'noopener,noreferrer'
+                                  ),
+                                color: 'download' as const,
+                              },
+                            ]
+                          : []),
+                      ]}
                     />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title={t('common.actions.moreOptions')}
-                          aria-label={t('common.actions.moreOptions')}
-                        >
-                          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        onPointerDown={() => {
-                          suppressDetailRef.current = true;
-                        }}
-                      >
-                        {loan.installments > 1 ? (
-                          <DropdownMenuItem
-                            onClick={() => void handleOpenInstallments(loan)}
-                          >
-                            <List className="mr-sm h-4 w-4" aria-hidden="true" />
-                            {t('pages.loans.installments.title')}
-                          </DropdownMenuItem>
-                        ) : (
-                          loan.status !== 'paid' &&
-                          loan.status !== 'cancelled' && (
-                            <DropdownMenuItem onClick={() => setPaymentPlanLoan(loan)}>
-                              <CalendarRange
-                                className="mr-sm h-4 w-4"
-                                aria-hidden="true"
-                              />
-                              {t('pages.loans.paymentPlan.createBtn')}
-                            </DropdownMenuItem>
-                          )
-                        )}
-                        <DropdownMenuItem onClick={() => setProgressLoan(loan)}>
-                          <CheckCircle2 className="mr-sm h-4 w-4" aria-hidden="true" />
-                          {t('pages.loans.progress.progressBtn')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => void handleOpenAmortization(loan)}
-                        >
-                          <TableProperties
-                            className="mr-sm h-4 w-4"
-                            aria-hidden="true"
-                          />
-                          {t('pages.loans.amortizationBtn')}
-                        </DropdownMenuItem>
-                        {loan.contract_document && (
-                          <DropdownMenuItem asChild>
-                            <a href={loan.contract_document} download>
-                              <Download className="mr-sm h-4 w-4" aria-hidden="true" />
-                              {t('common.actions.download')}
-                            </a>
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(loan)}
-                      title={t('common.actions.edit')}
-                      aria-label={t('common.actions.edit')}
-                    >
-                      <Pencil className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(loan)}
-                      title={t('common.actions.delete')}
-                      aria-label={t('common.actions.delete')}
-                    >
-                      <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
-                    </Button>
                   </div>
                 </div>
               );
@@ -616,6 +590,12 @@ export default function Loans() {
           />
         </DialogContent>
       </Dialog>
+
+      <ReceiptPreviewDialog
+        open={!!receiptData}
+        onOpenChange={(open) => !open && setReceiptData(null)}
+        data={receiptData}
+      />
 
       <LoanDetailModal
         loan={detailLoan}
