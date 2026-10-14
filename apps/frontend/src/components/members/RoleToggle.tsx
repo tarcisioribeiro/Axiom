@@ -9,7 +9,6 @@ interface RoleToggleProps {
   tone: 'primary' | 'success';
   icon: LucideIcon;
   title: string;
-  subtitle: string;
 }
 
 const TONES = {
@@ -30,7 +29,6 @@ export function RoleToggle({
   tone,
   icon: Icon,
   title,
-  subtitle,
 }: RoleToggleProps) {
   return (
     <div
@@ -41,14 +39,14 @@ export function RoleToggle({
         if ((e.key === 'Enter' || e.key === ' ') && !disabled) onToggle();
       }}
       className={cn(
-        'gap-sm p-sm flex cursor-pointer items-start rounded-lg border text-left transition',
+        'gap-sm p-sm flex cursor-pointer items-center rounded-lg border text-left transition',
         checked ? TONES[tone].card : 'border-border/60 bg-muted/20 opacity-70',
         disabled && 'pointer-events-none opacity-50'
       )}
     >
       <div
         className={cn(
-          'mt-0.5 rounded-full p-1',
+          'rounded-full p-1',
           checked ? TONES[tone].icon : 'bg-muted text-muted-foreground'
         )}
       >
@@ -67,7 +65,6 @@ export function RoleToggle({
             {checked && <Check className="h-3 w-3" />}
           </div>
         </div>
-        <p className="text-muted-foreground mt-0.5 text-xs">{subtitle}</p>
       </div>
     </div>
   );

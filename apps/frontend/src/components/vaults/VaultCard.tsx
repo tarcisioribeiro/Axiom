@@ -25,48 +25,8 @@ import {
 import { formatCurrency } from '@/lib/formatters';
 import type { Vault as VaultType } from '@/types';
 
-const VAULT_COLORS = [
-  {
-    bg: 'from-emerald-500/20 to-teal-500/10',
-    accent: 'text-emerald-600 dark:text-emerald-400',
-    border: 'border-emerald-500/30',
-    barColor: 'hsl(var(--success))',
-  },
-  {
-    bg: 'from-blue-500/20 to-indigo-500/10',
-    accent: 'text-blue-600 dark:text-blue-400',
-    border: 'border-blue-500/30',
-    barColor: 'hsl(var(--info))',
-  },
-  {
-    bg: 'from-violet-500/20 to-purple-500/10',
-    accent: 'text-violet-600 dark:text-violet-400',
-    border: 'border-violet-500/30',
-    barColor: 'hsl(var(--primary))',
-  },
-  {
-    bg: 'from-amber-500/20 to-orange-500/10',
-    accent: 'text-amber-600 dark:text-amber-400',
-    border: 'border-amber-500/30',
-    barColor: 'hsl(var(--warning))',
-  },
-  {
-    bg: 'from-rose-500/20 to-pink-500/10',
-    accent: 'text-rose-600 dark:text-rose-400',
-    border: 'border-rose-500/30',
-    barColor: 'hsl(var(--destructive))',
-  },
-  {
-    bg: 'from-cyan-500/20 to-sky-500/10',
-    accent: 'text-cyan-600 dark:text-cyan-400',
-    border: 'border-cyan-500/30',
-    barColor: 'hsl(var(--accent))',
-  },
-];
-
 interface VaultCardProps {
   vault: VaultType;
-  index: number;
   onOpenDetail: (v: VaultType) => void;
   onDeposit: (v: VaultType) => void;
   onWithdraw: (v: VaultType) => void;
@@ -80,7 +40,6 @@ interface VaultCardProps {
 
 export function VaultCard({
   vault,
-  index,
   onOpenDetail,
   onDeposit,
   onWithdraw,
@@ -92,7 +51,6 @@ export function VaultCard({
   onDelete,
 }: VaultCardProps) {
   const { t } = useTranslation();
-  const color = VAULT_COLORS[index % VAULT_COLORS.length];
   const balance = parseFloat(vault.current_balance);
   // Radix portals the dropdown content outside this card's DOM subtree, so a
   // click on one of its items can still resolve onto the card underneath
@@ -102,7 +60,7 @@ export function VaultCard({
 
   return (
     <Card
-      className={`overflow-hidden border ${color.border} cursor-pointer`}
+      className="cursor-pointer overflow-hidden"
       role="button"
       tabIndex={0}
       onClick={(e) => {
@@ -122,10 +80,10 @@ export function VaultCard({
         }
       }}
     >
-      <div className={`bg-gradient-to-br ${color.bg} px-md pb-md pt-md`}>
+      <div className="p-md">
         <div className="flex items-start justify-between">
           <div className="gap-sm flex items-center">
-            <Vault className={`h-8 w-8 ${color.accent}`} />
+            <Vault className="text-primary h-8 w-8" />
             <div>
               <p className="leading-tight font-semibold">{vault.description}</p>
               <p className="text-muted-foreground text-xs">{vault.account_name}</p>
@@ -139,9 +97,7 @@ export function VaultCard({
           <p className="text-muted-foreground text-xs">
             {t('pages.vaults.columns.currentBalance')}
           </p>
-          <p className={`text-2xl font-bold ${color.accent}`}>
-            {formatCurrency(balance)}
-          </p>
+          <p className="text-2xl font-bold">{formatCurrency(balance)}</p>
         </div>
       </div>
       <CardContent className="pt-3">

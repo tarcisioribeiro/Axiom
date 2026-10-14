@@ -695,6 +695,11 @@
       "available": "Available: {{value}}",
       "reservedInVaults": "Reserved in vaults: {{value}}",
       "availableForSpending": "Available to spend: {{value}}",
+      "detailLabels": {
+        "available": "Available",
+        "reservedInVaults": "Reserved in vaults",
+        "availableForSpending": "Available to spend"
+      },
       "bankReconciliation": "Bank Reconciliation",
       "bankReconciliationTitle": "Bank Reconciliation — {{account}}",
       "bankReconciliationDesc": "Import bank statements to reconcile with your transactions.",
@@ -972,7 +977,6 @@
         "principal": "Principal",
         "interest": "Interest",
         "balance": "Balance",
-        "loading": "Calculating...",
         "noData": "No amortization data available."
       },
       "stats": {
@@ -1158,6 +1162,15 @@
         "income": "Income:"
       },
       "noRole": "No role defined",
+      "you": "You",
+      "detailLabels": {
+        "phone": "Phone",
+        "email": "Email",
+        "document": "Document",
+        "income": "Monthly income",
+        "createdAt": "Registered on",
+        "roles": "Roles"
+      },
       "emptySearch": "No members found.",
       "searchPlaceholder": "Search member",
       "allStatus": "All statuses",
@@ -1723,7 +1736,7 @@
         "progressLabel": "{{paid}} of {{total}} paid",
         "paymentProgress": "Payment progress",
         "paymentFrequencyLabel": "Payment Frequency",
-        "isCumulativeLabel": "Cumulative debt (allows increasing the value later)",
+        "isCumulativeLabel": "Cumulative debt",
         "installmentsLabel": "Installments",
         "createPaymentPlanBtn": "Create payment plan",
         "increaseValueBtn": "Increase value",
@@ -2378,6 +2391,7 @@
     },
     "vaultSimulator": {
       "title": "Vault Simulator",
+      "bestReturn": "Best return",
       "scenarioLabel": "Scenario {{index}}",
       "addScenario": "Add Scenario",
       "calculate": "Simulate",
@@ -6553,6 +6567,7 @@
       "transferred": "Transferred",
       "failed": "Failed"
     },
+    "selectDay": "Select a day to see its transactions",
     "dayDetail": "Due dates on {{date}}",
     "loading": "Loading calendar...",
     "weekDays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -7121,6 +7136,21 @@
     "selectBoth": "Select both periods to see the comparison"
   },
   "monthlyPlanner": {
+    "sections": { "revenues": "Revenues", "expenses": "Expenses" },
+    "preview": {
+      "title": "Plan preview — {{month}}",
+      "revenues": "Revenues to post",
+      "expenses": "Expenses to post",
+      "budgets": "Budgets",
+      "empty": "Nothing to post",
+      "actions": {
+        "create": "Will be posted",
+        "update": "Value updated",
+        "existing": "Already posted",
+        "settled": "Already settled",
+        "blocked": "No card limit"
+      }
+    },
     "title": "Monthly Financial Planner",
     "projectedRevenues": "Expected Revenues",
     "projectedExpenses": "Expected Expenses",

@@ -57,12 +57,10 @@ export function VaultDetailModal({ vault, totalBalance, onClose }: Props) {
         <div className="gap-md grid grid-cols-2">
           <div>
             <p className="gap-xs text-muted-foreground flex items-center text-xs">
-              <Sparkles className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+              <Sparkles className="text-warning h-3.5 w-3.5" aria-hidden="true" />
               {t('pages.vaults.columns.yields')}
             </p>
-            <p className="font-semibold text-amber-600 dark:text-amber-400">
-              {formatCurrency(accYield)}
-            </p>
+            <p className="text-warning font-semibold">{formatCurrency(accYield)}</p>
           </div>
           {vault.pending_yield > 0 && (
             <div>

@@ -3,10 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle,
   CalendarCheck,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
   CircleDollarSign,
   CreditCard,
   Landmark,
@@ -16,6 +14,7 @@ import {
   TrendingUp,
   Trash2,
   Wallet,
+  X,
 } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -26,12 +25,25 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import {
+  LIST_PAGE_SIZE,
+  PageSlide,
+  PaginatedSlide,
+} from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Collapse } from '@/components/ui/collapsible-section';
 import { MaskedCurrencyInput } from '@/components/ui/currency-input';
+import {
+  Dialog,
+  DialogCloseFooter,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { API_CONFIG } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
@@ -42,6 +54,7 @@ import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
 import type { BlockedCard } from '@/types';
+import { getErrorMessage } from '@/utils/error-utils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -485,56 +498,304 @@ function ExtraItemRow({
   );
 }
 
-/** Collapsible sub-section (same visual language as CardSubSection) that
- * lists real, already-posted records for context/transparency. Collapsed
- * by default since the list can be long. */
-function ActualItemsSection({
+/** Avulsas: lista editável paginada; ao adicionar, vai para a última página (§2.5). */
+function ExtraItemsList({
+  items,
+  onChange,
+  onToggle,
+  onRemove,
+  onAdd,
+  removeLabel,
+  addLabel,
+}: {
+  items: ExtraItem[];
+  onChange: React.ComponentProps<typeof ExtraItemRow>['onChange'];
+  onToggle: React.ComponentProps<typeof ExtraItemRow>['onToggle'];
+  onRemove: React.ComponentProps<typeof ExtraItemRow>['onRemove'];
+  onAdd: () => void;
+  removeLabel: string;
+  addLabel: string;
+}) {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(items.length / LIST_PAGE_SIZE));
+  const current = Math.min(page, totalPages);
+  const start = (current - 1) * LIST_PAGE_SIZE;
+  return (
+    <>
+      {items.length > 0 && (
+        <PageSlide
+          page={current}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          pinNav={false}
+          className="space-y-xs"
+        >
+          {items.slice(start, start + LIST_PAGE_SIZE).map((item, i) => (
+            <ExtraItemRow
+              key={start + i}
+              item={item}
+              index={start + i}
+              onChange={onChange}
+              onToggle={onToggle}
+              onRemove={onRemove}
+              removeLabel={removeLabel}
+            />
+          ))}
+        </PageSlide>
+      )}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          onAdd();
+          setPage(Infinity);
+        }}
+        className="gap-xs w-full text-xs"
+      >
+        <Plus className="h-3 w-3" />
+        {addLabel}
+      </Button>
+    </>
+  );
+}
+
+// ─── Cards clicáveis e prévia do "Aplicar Plano" ─────────────────────────────
+
+type PreviewAction = 'create' | 'update' | 'existing' | 'settled' | 'blocked';
+
+interface ApplyPreview {
+  is_reapply: boolean;
+  revenues: { id: number; description: string; value: string; action: PreviewAction }[];
+  expenses: {
+    id: number;
+    description: string;
+    credit_card_name: string | null;
+    value: string;
+    action: PreviewAction;
+  }[];
+  budgets: { category: string; amount: string; action: 'create' | 'update' }[];
+  totals: { revenues: string; expenses: string; budgets: string };
+}
+
+function clickableProps(onClick: () => void) {
+  return {
+    role: 'button',
+    tabIndex: 0,
+    onClick,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick();
+      }
+    },
+  } as const;
+}
+
+function SummaryTile({
+  icon,
+  label,
+  value,
+  valueClassName,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  valueClassName?: string;
+  onClick: () => void;
+}) {
+  return (
+    <Card className="cursor-pointer" {...clickableProps(onClick)}>
+      <div className="p-md">
+        <div className="gap-sm flex items-center">
+          {icon}
+          <span className="text-muted-foreground text-xs">{label}</span>
+        </div>
+        <p className={cn('mt-xs text-lg font-bold', valueClassName)}>{value}</p>
+      </div>
+    </Card>
+  );
+}
+
+function SectionTile({
+  icon: Icon,
+  title,
+  value,
+  valueClassName,
+  onClick,
+}: {
+  icon: React.ElementType;
+  title: string;
+  value: string;
+  valueClassName?: string;
+  onClick: () => void;
+}) {
+  return (
+    <Card className="cursor-pointer" {...clickableProps(onClick)}>
+      <div className="p-md flex items-center justify-between">
+        <div className="gap-sm flex items-center">
+          <Icon className="text-muted-foreground h-4 w-4" />
+          <span className="text-sm font-semibold">{title}</span>
+        </div>
+        <span className={cn('text-lg font-bold', valueClassName)}>{value}</span>
+      </div>
+    </Card>
+  );
+}
+
+const PREVIEW_ACTION_VARIANT: Record<
+  PreviewAction,
+  'success' | 'secondary' | 'outline' | 'destructive' | 'warning'
+> = {
+  create: 'success',
+  update: 'warning',
+  existing: 'secondary',
+  settled: 'outline',
+  blocked: 'destructive',
+};
+
+function PreviewColumn({
   title,
   icon: Icon,
-  items,
+  total,
+  rows,
   emptyText,
-  renderItem,
-  summary,
 }: {
   title: string;
   icon: React.ElementType;
-  items: unknown[];
+  total: string;
+  rows: { key: string; label: string; sub?: string; value: string; badge: ReactNode }[];
   emptyText: string;
-  renderItem: (item: unknown, idx: number) => ReactNode;
-  summary?: ReactNode;
 }) {
-  const [expanded, setExpanded] = useState(false);
   return (
-    <div className="space-y-sm">
-      <button
-        className="gap-xs flex w-full items-center"
-        onClick={() => setExpanded((v) => !v)}
-      >
-        <Icon className="text-muted-foreground h-3.5 w-3.5" />
-        <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-          {title}
-        </span>
-        <Badge variant="secondary" className="text-xs">
-          {items.length}
-        </Badge>
-        <div className="bg-border/50 h-px flex-1" />
-        {expanded ? (
-          <ChevronUp className="text-muted-foreground h-4 w-4" />
-        ) : (
-          <ChevronDown className="text-muted-foreground h-4 w-4" />
-        )}
-      </button>
-      {summary}
-      <Collapse open={expanded}>
-        <div className="space-y-xs">
-          {items.length === 0 ? (
-            <EmptyState title={emptyText} />
-          ) : (
-            items.map((item, idx) => renderItem(item, idx))
-          )}
+    <CardSubSection title={title} icon={Icon} total={parseFloat(total)}>
+      {rows.length === 0 ? (
+        <EmptyState title={emptyText} />
+      ) : (
+        <PaginatedSlide
+          items={rows}
+          pageSize={LIST_PAGE_SIZE}
+          pinNav={false}
+          className="space-y-xs"
+        >
+          {(pageItems) =>
+            pageItems.map((r) => (
+              <div
+                key={r.key}
+                className="bg-muted/30 px-sm py-xs gap-sm flex items-center justify-between rounded-lg text-sm"
+              >
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate font-medium" title={r.label}>
+                    {r.label}
+                  </span>
+                  <div className="gap-xs flex items-center">
+                    {r.badge}
+                    {r.sub && (
+                      <span className="text-muted-foreground truncate text-xs">
+                        {r.sub}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span className="shrink-0 font-semibold">{r.value}</span>
+              </div>
+            ))
+          }
+        </PaginatedSlide>
+      )}
+    </CardSubSection>
+  );
+}
+
+function ApplyPreviewDialog({
+  preview,
+  monthLabel,
+  isApplying,
+  onCancel,
+  onConfirm,
+}: {
+  preview: ApplyPreview | null;
+  monthLabel: string;
+  isApplying: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const { t } = useTranslation();
+  // Mantém a última prévia para o modal sair inteiro na animação de fechamento.
+  const [shown, setShown] = useState(preview);
+  if (preview && preview !== shown) setShown(preview);
+  if (!shown) return null;
+
+  const actionBadge = (action: PreviewAction) => (
+    <Badge variant={PREVIEW_ACTION_VARIANT[action]} className="shrink-0 text-xs">
+      {t(`monthlyPlanner.preview.actions.${action}`)}
+    </Badge>
+  );
+
+  return (
+    <Dialog open={!!preview} onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent className="max-w-5xl">
+        <DialogHeader>
+          <DialogTitle icon={CalendarCheck}>
+            {t('monthlyPlanner.preview.title', { month: monthLabel })}
+          </DialogTitle>
+          <DialogDescription>
+            {t('monthlyPlanner.preview.title', { month: monthLabel })}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="gap-lg grid items-start lg:grid-cols-3">
+          <PreviewColumn
+            title={t('monthlyPlanner.preview.revenues')}
+            icon={TrendingUp}
+            total={shown.totals.revenues}
+            emptyText={t('monthlyPlanner.preview.empty')}
+            rows={shown.revenues.map((r) => ({
+              key: `r-${r.id}`,
+              label: r.description,
+              value: formatCurrency(r.value),
+              badge: actionBadge(r.action),
+            }))}
+          />
+          <PreviewColumn
+            title={t('monthlyPlanner.preview.expenses')}
+            icon={TrendingDown}
+            total={shown.totals.expenses}
+            emptyText={t('monthlyPlanner.preview.empty')}
+            rows={shown.expenses.map((e) => ({
+              key: `e-${e.id}`,
+              label: e.description,
+              sub: e.credit_card_name ?? undefined,
+              value: formatCurrency(e.value),
+              badge: actionBadge(e.action),
+            }))}
+          />
+          <PreviewColumn
+            title={t('monthlyPlanner.preview.budgets')}
+            icon={Target}
+            total={shown.totals.budgets}
+            emptyText={t('monthlyPlanner.preview.empty')}
+            rows={shown.budgets.map((b) => ({
+              key: `b-${b.category}`,
+              label: translateCategory(b.category, 'expense'),
+              value: formatCurrency(b.amount),
+              badge: actionBadge(b.action),
+            }))}
+          />
         </div>
-      </Collapse>
-    </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel}>
+            <X className="h-4 w-4" />
+            {t('common.actions.cancel')}
+          </Button>
+          <Button onClick={onConfirm} disabled={isApplying}>
+            <CalendarCheck className="h-4 w-4" />
+            {shown.is_reapply
+              ? t('monthlyPlanner.reapplyPlan')
+              : t('monthlyPlanner.applyPlan')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -554,9 +815,17 @@ export default function MonthlyPlanner({
   embedded = false,
   headerTarget,
 }: MonthlyPlannerProps) {
+  const [summaryDetail, setSummaryDetail] = useState<
+    'revenues' | 'expenses' | 'projected' | 'accounts' | null
+  >(null);
+  const [sectionModal, setSectionModal] = useState<
+    'revenues' | 'expenses' | 'budgets' | null
+  >(null);
+  const [applyPreview, setApplyPreview] = useState<ApplyPreview | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
-  const { showConfirm, showAlert } = useAlertDialog();
+  const { showAlert } = useAlertDialog();
   const { toast } = useToast();
 
   const now = new Date();
@@ -659,23 +928,29 @@ export default function MonthlyPlanner({
     },
   });
 
+  // Antes de aplicar, mostra a prévia do que será lançado (mesma regra do backend).
   const handleApply = async () => {
     if (!planId) return;
-    const monthName = monthNames[month - 1];
-    const confirmed = await showConfirm({
-      title: isApplied
-        ? t('monthlyPlanner.reapplyConfirmTitle')
-        : t('monthlyPlanner.applyConfirmTitle'),
-      description: isApplied
-        ? t('monthlyPlanner.reapplyConfirmDescription', {
-            month: `${monthName} ${year}`,
-          })
-        : t('monthlyPlanner.applyConfirmDescription', {
-            month: `${monthName} ${year}`,
-          }),
-      variant: 'warning',
-    });
-    if (confirmed) applyMutation.mutate(planId);
+    setIsLoadingPreview(true);
+    try {
+      // Salva alterações pendentes para a prévia refletir a tela.
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+        await saveMutation.mutateAsync({ id: planId, payload: buildPayload() });
+      }
+      const res = await apiClient.get<ApplyPreview>(
+        `${API_CONFIG.ENDPOINTS.MONTHLY_PLAN}${planId}/apply/preview/`
+      );
+      setApplyPreview(res);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingPreview(false);
+    }
   };
 
   const navigateMonth = (delta: number) => {
@@ -956,10 +1231,50 @@ export default function MonthlyPlanner({
   const actualRevenueItems = data?.actual_revenue_items ?? [];
   const actualExpenseItems = data?.actual_expense_items ?? [];
 
+  // Navegação do mês e "Aplicar Plano" na linha do título (§4), sem linha própria.
   const header = (
     <PageHeader
       title={t('monthlyPlanner.title')}
       icon={<CalendarCheck className="h-5 w-5" />}
+      actions={
+        <div className="gap-md flex items-center">
+          <div className="gap-sm flex items-center">
+            <Button
+              aria-label={t('financialCalendar.prevMonth')}
+              variant="outline"
+              size="sm"
+              onClick={() => navigateMonth(-1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="min-w-44 text-center text-lg font-semibold">
+              {monthNames[month - 1]} {year}
+            </span>
+            <Button
+              aria-label={t('financialCalendar.nextMonth')}
+              variant="outline"
+              size="sm"
+              onClick={() => navigateMonth(1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <Button
+            onClick={() => void handleApply()}
+            disabled={applyMutation.isPending || isLoadingPreview || !planId}
+            size="sm"
+            variant={isApplied ? 'outline' : 'default'}
+          >
+            <CalendarCheck className="h-4 w-4" />
+            {applyMutation.isPending
+              ? t('monthlyPlanner.applyingPlan')
+              : isApplied
+                ? t('monthlyPlanner.reapplyPlan')
+                : t('monthlyPlanner.applyPlan')}
+          </Button>
+        </div>
+      }
     />
   );
 
@@ -967,172 +1282,190 @@ export default function MonthlyPlanner({
     <Wrapper>
       {headerTarget ? createPortal(header, headerTarget) : header}
 
-      {/* Month navigation */}
-      <div className="mb-lg flex items-center justify-between">
-        <div className="gap-sm flex items-center">
-          <Button
-            aria-label={t('financialCalendar.prevMonth')}
-            variant="outline"
-            size="sm"
-            onClick={() => navigateMonth(-1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="min-w-44 text-center text-2xl font-bold tracking-tight">
-            {monthNames[month - 1]} {year}
-          </span>
-          <Button
-            aria-label={t('financialCalendar.nextMonth')}
-            variant="outline"
-            size="sm"
-            onClick={() => navigateMonth(1)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <Button
-          onClick={() => void handleApply()}
-          disabled={applyMutation.isPending || !planId}
-          size="sm"
-          variant={isApplied ? 'outline' : 'default'}
-        >
-          <CalendarCheck className="h-4 w-4" />
-          {applyMutation.isPending
-            ? t('monthlyPlanner.applyingPlan')
-            : isApplied
-              ? t('monthlyPlanner.reapplyPlan')
-              : t('monthlyPlanner.applyPlan')}
-        </Button>
-      </div>
-
-      {/* Summary stats */}
+      {/* Resumo: só o valor principal; o detalhamento abre num modal. */}
       <div className="mb-lg gap-md grid grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="pt-md">
-            <div className="gap-sm flex items-center">
-              <TrendingUp className="h-4 w-4 text-emerald-500" />
-              <span className="text-muted-foreground text-xs">
-                {t('monthlyPlanner.totalRevenues')}
-              </span>
-            </div>
-            <p className="mt-xs text-lg font-bold text-emerald-600">
-              {formatCurrency(totalRevenues)}
-            </p>
-            <p className="text-muted-foreground text-xs">
-              {t('monthlyPlanner.openingBalance')}: {formatCurrency(openingBalance)} ·{' '}
-              {t('monthlyPlanner.monthRevenues')}: {formatCurrency(monthRevenues)}
-            </p>
-            <VaultSplit total={totalRevenues} inVaults={totalVaults} />
-            {hasActualData && (
-              <p className="text-muted-foreground text-xs">
-                {t('monthlyPlanner.actual')}: {formatCurrency(actualRevenues)}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-md">
-            <div className="gap-sm flex items-center">
-              <TrendingDown className="text-destructive h-4 w-4" />
-              <span className="text-muted-foreground text-xs">
-                {t('monthlyPlanner.totalExpenses')}
-              </span>
-            </div>
-            <p className="mt-xs text-destructive text-lg font-bold">
-              {formatCurrency(totalExpenses)}
-            </p>
-            {totalBudgets > 0 && (
-              <p className="text-muted-foreground text-xs">
-                {t('monthlyPlanner.budgets')}: {formatCurrency(totalBudgets)}
-              </p>
-            )}
-            {hasActualData && (
-              <p className="text-muted-foreground text-xs">
-                {t('monthlyPlanner.actual')}: {formatCurrency(actualExpenses)}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-md">
-            <div className="gap-sm flex items-center">
-              <Wallet className="text-primary h-4 w-4" />
-              <span className="text-muted-foreground text-xs">
-                {t('monthlyPlanner.projectedBalance')}
-              </span>
-            </div>
-            <p
-              className={cn(
-                'mt-xs text-lg font-bold',
-                projectedBalance >= 0 ? 'text-primary' : 'text-destructive'
-              )}
-            >
-              {formatCurrency(projectedBalance)}
-            </p>
-            <VaultSplit total={projectedBalance} inVaults={totalVaults} />
-            {hasActualData && (
-              <p className="text-muted-foreground text-xs">
-                {t('monthlyPlanner.actual')}: {formatCurrency(actualBalance)}
-              </p>
-            )}
-            {totalOverdraft > 0 && (
-              <div className="mt-xs gap-xs px-xs py-xs flex items-center rounded-md border border-yellow-500/30 bg-yellow-500/10">
-                <AlertTriangle className="h-3 w-3 shrink-0 text-yellow-500" />
-                <span className="text-xs text-yellow-600 dark:text-yellow-400">
-                  {t('monthlyPlanner.withOverdraft')}:{' '}
-                  {formatCurrency(projectedBalanceWithOverdraft)}
-                </span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-md">
-            <div className="gap-sm flex items-center">
-              <Landmark className="text-primary h-4 w-4" />
-              <span className="text-muted-foreground text-xs">
-                {t('monthlyPlanner.accountBalance')}
-              </span>
-            </div>
-            <p className="mt-xs text-primary text-lg font-bold">
-              {formatCurrency(totalAccountBalance)}
-            </p>
-            <VaultSplit total={totalAccountBalance} inVaults={totalVaults} />
-            {totalOverdraft > 0 && (
-              <p className="text-muted-foreground text-xs">
-                {t('monthlyPlanner.overdraftLimit')}: {formatCurrency(totalOverdraft)}
-              </p>
-            )}
-            <p className="text-primary text-xs font-medium">
-              {t('monthlyPlanner.totalAvailable')}: {formatCurrency(totalAvailable)}
-            </p>
-          </CardContent>
-        </Card>
+        <SummaryTile
+          icon={<TrendingUp className="text-success h-4 w-4" />}
+          label={t('monthlyPlanner.totalRevenues')}
+          value={formatCurrency(totalRevenues)}
+          valueClassName="text-success"
+          onClick={() => setSummaryDetail('revenues')}
+        />
+        <SummaryTile
+          icon={<TrendingDown className="text-destructive h-4 w-4" />}
+          label={t('monthlyPlanner.totalExpenses')}
+          value={formatCurrency(totalExpenses)}
+          valueClassName="text-destructive"
+          onClick={() => setSummaryDetail('expenses')}
+        />
+        <SummaryTile
+          icon={<Wallet className="text-primary h-4 w-4" />}
+          label={t('monthlyPlanner.projectedBalance')}
+          value={formatCurrency(projectedBalance)}
+          valueClassName={projectedBalance >= 0 ? 'text-primary' : 'text-destructive'}
+          onClick={() => setSummaryDetail('projected')}
+        />
+        <SummaryTile
+          icon={<Landmark className="text-primary h-4 w-4" />}
+          label={t('monthlyPlanner.accountBalance')}
+          value={formatCurrency(totalAccountBalance)}
+          valueClassName="text-primary"
+          onClick={() => setSummaryDetail('accounts')}
+        />
       </div>
 
-      {/* Revenues + Expenses */}
-      <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
-        {/* Left: Revenues + Budgets */}
-        <div className="space-y-sm">
-          <Card>
-            <CardHeader className="pb-sm">
-              <div className="flex items-center justify-between">
-                <div className="gap-sm flex items-center">
-                  <CircleDollarSign className="text-muted-foreground h-4 w-4" />
-                  <CardTitle className="text-sm font-semibold">
-                    {t('monthlyPlanner.totalRevenues')}
-                  </CardTitle>
-                </div>
-                <span className="text-success text-sm font-semibold">
+      {/* Receitas e orçamentos à esquerda, despesas à direita; registros em modais. */}
+      <div className="gap-md grid items-start lg:grid-cols-2">
+        <div className="space-y-md">
+          <SectionTile
+            icon={CircleDollarSign}
+            title={t('monthlyPlanner.sections.revenues')}
+            value={formatCurrency(monthRevenues)}
+            valueClassName="text-success"
+            onClick={() => setSectionModal('revenues')}
+          />
+          <SectionTile
+            icon={Target}
+            title={t('monthlyPlanner.budgetByCategory')}
+            value={formatCurrency(totalBudgets)}
+            onClick={() => setSectionModal('budgets')}
+          />
+        </div>
+        <SectionTile
+          icon={TrendingDown}
+          title={t('monthlyPlanner.sections.expenses')}
+          value={formatCurrency(totalExpenses - totalBudgets)}
+          valueClassName="text-destructive"
+          onClick={() => setSectionModal('expenses')}
+        />
+      </div>
+
+      <Dialog
+        open={summaryDetail !== null}
+        onOpenChange={(open) => !open && setSummaryDetail(null)}
+      >
+        <DialogContent size="lg">
+          <DialogHeader>
+            <DialogTitle
+              icon={
+                summaryDetail === 'expenses'
+                  ? TrendingDown
+                  : summaryDetail === 'revenues'
+                    ? TrendingUp
+                    : summaryDetail === 'projected'
+                      ? Wallet
+                      : Landmark
+              }
+            >
+              {summaryDetail === 'revenues'
+                ? t('monthlyPlanner.totalRevenues')
+                : summaryDetail === 'expenses'
+                  ? t('monthlyPlanner.totalExpenses')
+                  : summaryDetail === 'projected'
+                    ? t('monthlyPlanner.projectedBalance')
+                    : t('monthlyPlanner.accountBalance')}
+            </DialogTitle>
+            <DialogDescription>{t('monthlyPlanner.title')}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-sm text-sm [&_p]:text-sm">
+            {summaryDetail === 'revenues' && (
+              <>
+                <p className="text-success text-2xl font-bold">
                   {formatCurrency(totalRevenues)}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-lg">
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {t('monthlyPlanner.openingBalance')}: {formatCurrency(openingBalance)}{' '}
+                  · {t('monthlyPlanner.monthRevenues')}: {formatCurrency(monthRevenues)}
+                </p>
+                <VaultSplit total={totalRevenues} inVaults={totalVaults} />
+                {hasActualData && (
+                  <p className="text-muted-foreground text-xs">
+                    {t('monthlyPlanner.actual')}: {formatCurrency(actualRevenues)}
+                  </p>
+                )}
+              </>
+            )}
+            {summaryDetail === 'expenses' && (
+              <>
+                <p className="text-destructive text-2xl font-bold">
+                  {formatCurrency(totalExpenses)}
+                </p>
+                {totalBudgets > 0 && (
+                  <p className="text-muted-foreground text-xs">
+                    {t('monthlyPlanner.budgets')}: {formatCurrency(totalBudgets)}
+                  </p>
+                )}
+                {hasActualData && (
+                  <p className="text-muted-foreground text-xs">
+                    {t('monthlyPlanner.actual')}: {formatCurrency(actualExpenses)}
+                  </p>
+                )}
+              </>
+            )}
+            {summaryDetail === 'projected' && (
+              <>
+                <p
+                  className={cn(
+                    'text-2xl font-bold',
+                    projectedBalance >= 0 ? 'text-primary' : 'text-destructive'
+                  )}
+                >
+                  {formatCurrency(projectedBalance)}
+                </p>
+                <VaultSplit total={projectedBalance} inVaults={totalVaults} />
+                {hasActualData && (
+                  <p className="text-muted-foreground text-xs">
+                    {t('monthlyPlanner.actual')}: {formatCurrency(actualBalance)}
+                  </p>
+                )}
+                {totalOverdraft > 0 && (
+                  <div className="mt-xs gap-xs px-xs py-xs border-warning/30 bg-warning/10 flex items-center rounded-md border">
+                    <AlertTriangle className="text-warning h-3 w-3 shrink-0" />
+                    <span className="text-warning text-xs">
+                      {t('monthlyPlanner.withOverdraft')}:{' '}
+                      {formatCurrency(projectedBalanceWithOverdraft)}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+            {summaryDetail === 'accounts' && (
+              <>
+                <p className="text-primary text-2xl font-bold">
+                  {formatCurrency(totalAccountBalance)}
+                </p>
+                <VaultSplit total={totalAccountBalance} inVaults={totalVaults} />
+                {totalOverdraft > 0 && (
+                  <p className="text-muted-foreground text-xs">
+                    {t('monthlyPlanner.overdraftLimit')}:{' '}
+                    {formatCurrency(totalOverdraft)}
+                  </p>
+                )}
+                <p className="text-primary text-xs font-medium">
+                  {t('monthlyPlanner.totalAvailable')}: {formatCurrency(totalAvailable)}
+                </p>
+              </>
+            )}
+          </div>
+          <DialogCloseFooter />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={sectionModal === 'revenues'}
+        onOpenChange={(open) => !open && setSectionModal(null)}
+      >
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle icon={CircleDollarSign}>
+              {t('monthlyPlanner.sections.revenues')} · {formatCurrency(monthRevenues)}
+            </DialogTitle>
+            <DialogDescription>
+              {t('monthlyPlanner.sections.revenues')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="gap-lg grid items-start lg:grid-cols-2">
+            <div className="space-y-lg">
               <CardSubSection
                 title={t('monthlyPlanner.fixedRevenues')}
                 icon={CircleDollarSign}
@@ -1141,26 +1474,36 @@ export default function MonthlyPlanner({
                 {(data?.fixed_revenues.length ?? 0) === 0 && (
                   <EmptyState title={t('monthlyPlanner.noFixedRevenues')} />
                 )}
-                {data?.fixed_revenues.map((r) => (
-                  <EditableFixedItem
-                    key={r.id}
-                    id={r.id}
-                    label={r.description}
-                    defaultValue={r.default_value}
-                    sub={
-                      r.account_name || t('monthlyPlanner.dueDay', { day: r.due_day })
-                    }
-                    override={fixedRevenueOverrides[String(r.id)]}
-                    alreadyPosted={r.already_posted}
-                    settledLabel={
-                      r.already_received
-                        ? t('monthlyPlanner.alreadyReceived')
-                        : undefined
-                    }
-                    onToggle={toggleFixedRevenue}
-                    onValueChange={updateFixedRevenueValue}
-                  />
-                ))}
+                <PaginatedSlide
+                  items={data?.fixed_revenues ?? []}
+                  pageSize={LIST_PAGE_SIZE}
+                  pinNav={false}
+                  className="space-y-xs"
+                >
+                  {(pageItems) =>
+                    pageItems.map((r) => (
+                      <EditableFixedItem
+                        key={r.id}
+                        id={r.id}
+                        label={r.description}
+                        defaultValue={r.default_value}
+                        sub={
+                          r.account_name ||
+                          t('monthlyPlanner.dueDay', { day: r.due_day })
+                        }
+                        override={fixedRevenueOverrides[String(r.id)]}
+                        alreadyPosted={r.already_posted}
+                        settledLabel={
+                          r.already_received
+                            ? t('monthlyPlanner.alreadyReceived')
+                            : undefined
+                        }
+                        onToggle={toggleFixedRevenue}
+                        onValueChange={updateFixedRevenueValue}
+                      />
+                    ))
+                  }
+                </PaginatedSlide>
               </CardSubSection>
 
               <CardSubSection
@@ -1168,185 +1511,79 @@ export default function MonthlyPlanner({
                 icon={CircleDollarSign}
                 total={totalExtra}
               >
-                {extraRevenues.map((r, i) => (
-                  <ExtraItemRow
-                    key={i}
-                    item={r}
-                    index={i}
-                    onChange={updateExtraRevenue}
-                    onToggle={toggleExtraRevenue}
-                    onRemove={removeExtraRevenue}
-                    removeLabel={t('monthlyPlanner.removeItem')}
-                  />
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={addExtraRevenue}
-                  className="gap-xs w-full text-xs"
-                >
-                  <Plus className="h-3 w-3" />
-                  {t('monthlyPlanner.addItem')}
-                </Button>
+                <ExtraItemsList
+                  items={extraRevenues}
+                  onChange={updateExtraRevenue}
+                  onToggle={toggleExtraRevenue}
+                  onRemove={removeExtraRevenue}
+                  onAdd={addExtraRevenue}
+                  removeLabel={t('monthlyPlanner.removeItem')}
+                  addLabel={t('monthlyPlanner.addItem')}
+                />
               </CardSubSection>
-
-              <ActualItemsSection
-                title={t('monthlyPlanner.registeredRevenues')}
-                icon={TrendingUp}
-                items={actualRevenueItems}
-                emptyText={t('monthlyPlanner.noRegisteredRevenues')}
-                summary={<VaultSplit total={actualRevenues} inVaults={totalVaults} />}
-                renderItem={(item, idx) => {
-                  const r = item as ActualRevenueItem;
-                  return (
-                    <div
-                      key={idx}
-                      className="bg-muted/30 px-sm py-xs flex items-center justify-between rounded-lg text-sm"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">
-                          {r.description}
-                        </span>
-                        <span className="text-muted-foreground text-xs">
-                          {translateCategory(r.category, 'revenue')} ·{' '}
-                          {formatDate(r.date)}
-                        </span>
-                      </div>
-                      <span className="ml-sm text-success shrink-0 font-semibold">
-                        {formatCurrency(r.value)}
-                      </span>
-                    </div>
-                  );
-                }}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Budget by category */}
-          <Card>
-            <CardHeader className="pb-sm">
-              <div className="flex items-center justify-between">
-                <div className="gap-sm flex items-center">
-                  <Target className="text-muted-foreground h-4 w-4" />
-                  <CardTitle className="text-sm font-semibold">
-                    {t('monthlyPlanner.budgetByCategory')}
-                  </CardTitle>
-                </div>
-                <span className="text-sm font-semibold">
-                  {formatCurrency(totalBudgets)}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {allCategories.length === 0 && (
-                <EmptyState title={t('monthlyPlanner.noBudgetSuggestions')} />
-              )}
-              <div className="gap-sm grid grid-cols-1 sm:grid-cols-2">
-                {allCategories.map((cat) => {
-                  const suggested = budgetSuggestionMap[cat];
-                  const existing = existingBudgetMap[cat];
-                  const currentOverride = budgetOverrides[cat] ?? existing ?? '';
-                  const isDisabled = budgetDisabledCategories.includes(cat);
-                  const limitAmount = parseFloat(
-                    currentOverride || String(suggested ?? 0)
-                  );
-                  const catActual = parseFloat(actualExpensesByCategory[cat] ?? '0');
-                  const executionPct =
-                    limitAmount > 0 && catActual > 0
-                      ? Math.min(100, Math.round((catActual / limitAmount) * 100))
-                      : null;
-
-                  return (
-                    <div
-                      key={cat}
-                      className={cn(
-                        'space-y-xs bg-muted/20 p-sm rounded-lg border transition-opacity',
-                        isDisabled && 'opacity-40'
-                      )}
-                    >
-                      <div className="gap-xs flex items-center justify-between">
-                        <div className="gap-xs flex min-w-0 items-center">
-                          <Checkbox
-                            checked={!isDisabled}
-                            onCheckedChange={(checked) =>
-                              toggleBudgetCategory(cat, !!checked)
-                            }
-                            className="shrink-0"
-                          />
-                          <span className="truncate text-xs font-medium">
-                            {translateCategory(cat, 'expense')}
-                          </span>
-                        </div>
-                        {suggested !== undefined && (
-                          <span className="text-muted-foreground shrink-0 text-xs">
-                            {t('monthlyPlanner.overrideHint', {
-                              value: formatCurrency(suggested),
-                            })}
-                          </span>
-                        )}
-                      </div>
-                      <MoneyInput
-                        value={currentOverride}
-                        onChange={(v) => updateBudgetOverride(cat, v, catActual)}
-                        className="h-7 text-right text-sm"
-                        disabled={isDisabled}
-                      />
-                      {currentOverride !== '' &&
-                        !isNaN(parseFloat(currentOverride)) &&
-                        parseFloat(currentOverride) < catActual && (
-                          <p className="text-destructive text-xs">
-                            {t('monthlyPlanner.budgetMinValueWarning', {
-                              value: formatCurrency(catActual),
-                            })}
-                          </p>
-                        )}
-                      {executionPct !== null && !isDisabled && (
-                        <div>
-                          <p className="mb-xs text-muted-foreground text-xs">
-                            {t('monthlyPlanner.executionPercent', {
-                              percent: executionPct,
-                            })}
-                          </p>
-                          <div className="bg-muted h-1.5 w-full rounded-full">
-                            <div
-                              className={cn(
-                                'h-1.5 rounded-full transition',
-                                executionPct >= 100
-                                  ? 'bg-destructive'
-                                  : executionPct >= 80
-                                    ? 'bg-yellow-500'
-                                    : 'bg-primary'
-                              )}
-                              style={{ width: `${executionPct}%` }}
-                            />
+            </div>
+            <CardSubSection
+              title={t('monthlyPlanner.registeredRevenues')}
+              icon={TrendingUp}
+              total={actualRevenues}
+            >
+              {actualRevenueItems.length === 0 ? (
+                <EmptyState title={t('monthlyPlanner.noRegisteredRevenues')} />
+              ) : (
+                <PaginatedSlide
+                  items={actualRevenueItems}
+                  pageSize={LIST_PAGE_SIZE}
+                  pinNav={false}
+                  className="space-y-xs"
+                >
+                  {(pageItems) =>
+                    pageItems.map((item, idx) => {
+                      const r = item;
+                      return (
+                        <div
+                          key={idx}
+                          className="bg-muted/30 px-sm py-xs flex items-center justify-between rounded-lg text-sm"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">
+                              {r.description}
+                            </span>
+                            <span className="text-muted-foreground text-xs">
+                              {translateCategory(r.category, 'revenue')} ·{' '}
+                              {formatDate(r.date)}
+                            </span>
                           </div>
+                          <span className="ml-sm text-success shrink-0 font-semibold">
+                            {formatCurrency(r.value)}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                      );
+                    })
+                  }
+                </PaginatedSlide>
+              )}
+            </CardSubSection>
+          </div>
+          <DialogCloseFooter />
+        </DialogContent>
+      </Dialog>
 
-        {/* Right: Expenses */}
-        <div className="space-y-sm">
-          <Card>
-            <CardHeader className="pb-sm">
-              <div className="flex items-center justify-between">
-                <div className="gap-sm flex items-center">
-                  <TrendingDown className="text-muted-foreground h-4 w-4" />
-                  <CardTitle className="text-sm font-semibold">
-                    {t('monthlyPlanner.totalExpenses')}
-                  </CardTitle>
-                </div>
-                <span className="text-destructive text-sm font-semibold">
-                  {formatCurrency(totalExpenses)}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-lg">
+      <Dialog
+        open={sectionModal === 'expenses'}
+        onOpenChange={(open) => !open && setSectionModal(null)}
+      >
+        <DialogContent className="max-w-6xl">
+          <DialogHeader>
+            <DialogTitle icon={TrendingDown}>
+              {t('monthlyPlanner.sections.expenses')} ·{' '}
+              {formatCurrency(totalExpenses - totalBudgets)}
+            </DialogTitle>
+            <DialogDescription>
+              {t('monthlyPlanner.sections.expenses')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="gap-lg grid items-start lg:grid-cols-2">
+            <div className="space-y-lg">
               <CardSubSection
                 title={t('monthlyPlanner.fixedExpenses')}
                 icon={TrendingDown}
@@ -1355,32 +1592,57 @@ export default function MonthlyPlanner({
                 {(data?.fixed_expenses.length ?? 0) === 0 && (
                   <EmptyState title={t('monthlyPlanner.noFixedExpenses')} />
                 )}
-                {data?.fixed_expenses.map((e) => (
-                  <EditableFixedItem
-                    key={e.id}
-                    id={e.id}
-                    label={e.description}
-                    defaultValue={e.default_value}
-                    sub={e.credit_card_name || e.account_name}
-                    override={fixedExpenseOverrides[String(e.id)]}
-                    alreadyPosted={e.already_posted && !e.credit_card_name}
-                    settledLabel={
-                      e.already_paid
-                        ? t(
-                            e.credit_card_name
-                              ? 'monthlyPlanner.alreadyRegistered'
-                              : 'monthlyPlanner.alreadyPaid'
-                          )
-                        : undefined
-                    }
-                    forceDisabled={e.already_posted && Boolean(e.credit_card_name)}
-                    debtName={e.related_loan_name ?? e.related_payable_name}
-                    onToggle={toggleFixedExpense}
-                    onValueChange={updateFixedExpenseValue}
-                  />
-                ))}
+                <PaginatedSlide
+                  items={data?.fixed_expenses ?? []}
+                  pageSize={LIST_PAGE_SIZE}
+                  pinNav={false}
+                  className="space-y-xs"
+                >
+                  {(pageItems) =>
+                    pageItems.map((e) => (
+                      <EditableFixedItem
+                        key={e.id}
+                        id={e.id}
+                        label={e.description}
+                        defaultValue={e.default_value}
+                        sub={e.credit_card_name || e.account_name}
+                        override={fixedExpenseOverrides[String(e.id)]}
+                        alreadyPosted={e.already_posted && !e.credit_card_name}
+                        settledLabel={
+                          e.already_paid
+                            ? t(
+                                e.credit_card_name
+                                  ? 'monthlyPlanner.alreadyRegistered'
+                                  : 'monthlyPlanner.alreadyPaid'
+                              )
+                            : undefined
+                        }
+                        forceDisabled={e.already_posted && Boolean(e.credit_card_name)}
+                        debtName={e.related_loan_name ?? e.related_payable_name}
+                        onToggle={toggleFixedExpense}
+                        onValueChange={updateFixedExpenseValue}
+                      />
+                    ))
+                  }
+                </PaginatedSlide>
               </CardSubSection>
-
+              <CardSubSection
+                title={t('monthlyPlanner.extraExpenses')}
+                icon={TrendingDown}
+                total={totalExtraExp}
+              >
+                <ExtraItemsList
+                  items={extraExpenses}
+                  onChange={updateExtraExpense}
+                  onToggle={toggleExtraExpense}
+                  onRemove={removeExtraExpense}
+                  onAdd={addExtraExpense}
+                  removeLabel={t('monthlyPlanner.removeItem')}
+                  addLabel={t('monthlyPlanner.addItem')}
+                />
+              </CardSubSection>
+            </div>
+            <div className="space-y-lg">
               <CardSubSection
                 title={t('monthlyPlanner.creditCardBills')}
                 icon={CreditCard}
@@ -1401,74 +1663,184 @@ export default function MonthlyPlanner({
               </CardSubSection>
 
               <CardSubSection
-                title={t('monthlyPlanner.extraExpenses')}
-                icon={TrendingDown}
-                total={totalExtraExp}
-              >
-                {extraExpenses.map((e, i) => (
-                  <ExtraItemRow
-                    key={i}
-                    item={e}
-                    index={i}
-                    onChange={updateExtraExpense}
-                    onToggle={toggleExtraExpense}
-                    onRemove={removeExtraExpense}
-                    removeLabel={t('monthlyPlanner.removeItem')}
-                  />
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={addExtraExpense}
-                  className="gap-xs w-full text-xs"
-                >
-                  <Plus className="h-3 w-3" />
-                  {t('monthlyPlanner.addItem')}
-                </Button>
-              </CardSubSection>
-
-              <ActualItemsSection
                 title={t('monthlyPlanner.registeredExpenses')}
                 icon={TrendingDown}
-                items={actualExpenseItems}
-                emptyText={t('monthlyPlanner.noRegisteredExpenses')}
-                renderItem={(item, idx) => {
-                  const e = item as ActualExpenseItem;
-                  return (
-                    <div
-                      key={idx}
-                      className="bg-muted/30 px-sm py-xs flex items-center justify-between rounded-lg text-sm"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="gap-xs flex items-center">
-                          <span className="block truncate font-medium">
-                            {e.description}
-                          </span>
-                          {!e.payed && (
-                            <Badge
-                              variant="outline"
-                              className="text-warning shrink-0 text-xs"
-                            >
-                              {t('monthlyPlanner.pending')}
-                            </Badge>
-                          )}
-                        </div>
-                        <span className="text-muted-foreground text-xs">
-                          {translateCategory(e.category, 'expense')} ·{' '}
-                          {formatDate(e.date)}
+                total={actualExpenses}
+              >
+                {actualExpenseItems.length === 0 ? (
+                  <EmptyState title={t('monthlyPlanner.noRegisteredExpenses')} />
+                ) : (
+                  <PaginatedSlide
+                    items={actualExpenseItems}
+                    pageSize={LIST_PAGE_SIZE}
+                    pinNav={false}
+                    className="space-y-xs"
+                  >
+                    {(pageItems) =>
+                      pageItems.map((item, idx) => {
+                        const e = item;
+                        return (
+                          <div
+                            key={idx}
+                            className="bg-muted/30 px-sm py-xs flex items-center justify-between rounded-lg text-sm"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="gap-xs flex items-center">
+                                <span className="block truncate font-medium">
+                                  {e.description}
+                                </span>
+                                {!e.payed && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-warning shrink-0 text-xs"
+                                  >
+                                    {t('monthlyPlanner.pending')}
+                                  </Badge>
+                                )}
+                              </div>
+                              <span className="text-muted-foreground text-xs">
+                                {translateCategory(e.category, 'expense')} ·{' '}
+                                {formatDate(e.date)}
+                              </span>
+                            </div>
+                            <span className="ml-sm text-destructive shrink-0 font-semibold">
+                              {formatCurrency(e.value)}
+                            </span>
+                          </div>
+                        );
+                      })
+                    }
+                  </PaginatedSlide>
+                )}
+              </CardSubSection>
+            </div>
+          </div>
+          <DialogCloseFooter />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={sectionModal === 'budgets'}
+        onOpenChange={(open) => !open && setSectionModal(null)}
+      >
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle icon={Target}>
+              {t('monthlyPlanner.budgetByCategory')} · {formatCurrency(totalBudgets)}
+            </DialogTitle>
+            <DialogDescription>
+              {t('monthlyPlanner.budgetByCategory')}
+            </DialogDescription>
+          </DialogHeader>
+          {allCategories.length === 0 && (
+            <EmptyState title={t('monthlyPlanner.noBudgetSuggestions')} />
+          )}
+          <PaginatedSlide
+            items={allCategories}
+            pageSize={6}
+            pinNav={false}
+            className="gap-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {(pageItems) =>
+              pageItems.map((cat) => {
+                const suggested = budgetSuggestionMap[cat];
+                const existing = existingBudgetMap[cat];
+                const currentOverride = budgetOverrides[cat] ?? existing ?? '';
+                const isDisabled = budgetDisabledCategories.includes(cat);
+                const limitAmount = parseFloat(
+                  currentOverride || String(suggested ?? 0)
+                );
+                const catActual = parseFloat(actualExpensesByCategory[cat] ?? '0');
+                const executionPct =
+                  limitAmount > 0 && catActual > 0
+                    ? Math.min(100, Math.round((catActual / limitAmount) * 100))
+                    : null;
+
+                return (
+                  <div
+                    key={cat}
+                    className={cn(
+                      'space-y-xs bg-muted/20 p-sm rounded-lg border transition-opacity',
+                      isDisabled && 'opacity-40'
+                    )}
+                  >
+                    <div className="gap-xs flex items-center justify-between">
+                      <div className="gap-xs flex min-w-0 items-center">
+                        <Checkbox
+                          checked={!isDisabled}
+                          onCheckedChange={(checked) =>
+                            toggleBudgetCategory(cat, !!checked)
+                          }
+                          className="shrink-0"
+                        />
+                        <span className="truncate text-xs font-medium">
+                          {translateCategory(cat, 'expense')}
                         </span>
                       </div>
-                      <span className="ml-sm text-destructive shrink-0 font-semibold">
-                        {formatCurrency(e.value)}
-                      </span>
+                      {suggested !== undefined && (
+                        <span className="text-muted-foreground shrink-0 text-xs">
+                          {t('monthlyPlanner.overrideHint', {
+                            value: formatCurrency(suggested),
+                          })}
+                        </span>
+                      )}
                     </div>
-                  );
-                }}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+                    <MoneyInput
+                      value={currentOverride}
+                      onChange={(v) => updateBudgetOverride(cat, v, catActual)}
+                      className="h-7 text-right text-sm"
+                      disabled={isDisabled}
+                    />
+                    {currentOverride !== '' &&
+                      !isNaN(parseFloat(currentOverride)) &&
+                      parseFloat(currentOverride) < catActual && (
+                        <p className="text-destructive text-xs">
+                          {t('monthlyPlanner.budgetMinValueWarning', {
+                            value: formatCurrency(catActual),
+                          })}
+                        </p>
+                      )}
+                    {executionPct !== null && !isDisabled && (
+                      <div>
+                        <p className="mb-xs text-muted-foreground text-xs">
+                          {t('monthlyPlanner.executionPercent', {
+                            percent: executionPct,
+                          })}
+                        </p>
+                        <div className="bg-muted h-1.5 w-full rounded-full">
+                          <div
+                            className={cn(
+                              'h-1.5 w-full origin-left rounded-full transition-transform',
+                              executionPct >= 100
+                                ? 'bg-destructive'
+                                : executionPct >= 80
+                                  ? 'bg-warning'
+                                  : 'bg-primary'
+                            )}
+                            style={{ transform: `scaleX(${executionPct / 100})` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            }
+          </PaginatedSlide>
+          <DialogCloseFooter />
+        </DialogContent>
+      </Dialog>
+
+      <ApplyPreviewDialog
+        preview={applyPreview}
+        monthLabel={`${monthNames[month - 1]} ${year}`}
+        isApplying={applyMutation.isPending}
+        onCancel={() => setApplyPreview(null)}
+        onConfirm={() => {
+          if (planId) applyMutation.mutate(planId);
+          setApplyPreview(null);
+        }}
+      />
     </Wrapper>
   );
 }

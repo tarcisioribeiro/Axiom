@@ -4,12 +4,13 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  FileText,
   Link2,
   Loader2,
+  Save,
   Tag,
   TrendingUp,
   Wallet,
-  Save,
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -149,7 +150,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
             <Label className="gap-xs flex items-center">
-              <TrendingUp className="text-muted-foreground h-3.5 w-3.5" />
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.revenues.form.descriptionLabel')}
             </Label>
             <Input

@@ -36,18 +36,14 @@ export function RecalculationPreviewDialog({
   const { t } = useTranslation();
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && onCancel()}>
+    <Dialog open={open && !!preview} onOpenChange={(next) => !next && onCancel()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle icon={Calculator}>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
-        {!preview ? (
-          <div className="py-xl text-muted-foreground text-center text-sm">
-            {t('common.actions.loading')}
-          </div>
-        ) : (
+        {preview && (
           <div className="space-y-md">
             <div className="gap-sm bg-muted/40 p-sm grid grid-cols-2 rounded-md text-sm">
               <div>

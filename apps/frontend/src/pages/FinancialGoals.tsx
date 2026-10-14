@@ -6,7 +6,9 @@ import {
   ChevronDown,
   FileText,
   Link,
+  Link2,
   Loader2,
+  MoreHorizontal,
   Pencil,
   PiggyBank,
   Plus,
@@ -22,7 +24,7 @@ import {
   Wallet,
   X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -40,6 +42,7 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -50,6 +53,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { FormSection } from '@/components/ui/form-section';
@@ -73,7 +77,7 @@ import {
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useNow } from '@/hooks/use-now';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { vaultsService, financialGoalsService } from '@/services/vaults-service';
@@ -119,7 +123,6 @@ function ProgressRing({
         strokeWidth={6}
         strokeDasharray={`${filled} ${circ - filled}`}
         strokeLinecap="round"
-        style={{ transition: 'stroke-dasharray 0.5s ease' }}
       />
     </svg>
   );
@@ -144,6 +147,9 @@ function GoalCard({
   onManageVaults,
   onCheckCompletion,
 }: GoalCardProps) {
+  const [detailOpen, setDetailOpen] = useState(false);
+  // Portal do menu "...": o clique num item não pode abrir o detalhe do card.
+  const suppressRef = useRef(false);
   const cp = goal.computed_progress;
   const currentVal = parseFloat(cp.current_value);
   const targetVal = parseFloat(cp.target_value);
@@ -177,51 +183,103 @@ function GoalCard({
       )
     : null;
 
-  return (
-    <Card
-      className={`overflow-hidden transition-colors ${
-        goal.is_completed ? 'border-success/50 bg-success/[0.03]' : ''
-      }`}
+  const statusBadge = (
+    <Badge
+      variant={goal.is_completed ? 'success' : 'secondary'}
+      className="shrink-0 text-xs"
     >
-      <CardContent className="p-md pt-md">
-        <div className="flex items-start justify-between">
-          <div className="gap-sm flex items-center">
-            {config.icon}
-            <div>
-              <p className="leading-tight font-semibold">{goal.description}</p>
-              <p className="text-muted-foreground text-xs">
-                {t(`pages.financialGoals.categories.${goal.category}`, {
-                  defaultValue: goal.category_display,
-                })}
-              </p>
+      {goal.is_completed
+        ? t('pages.financialGoals.goalCompletedLabel')
+        : t('pages.financialGoals.activeGoal')}
+    </Badge>
+  );
+  const ring = (size: number) => (
+    <div className="relative flex justify-center">
+      <ProgressRing pct={pct} size={size} color={config.ringColor} />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className={`text-sm font-bold ${config.color}`}>{pct.toFixed(0)}%</span>
+      </div>
+    </div>
+  );
+
+  // Card enxuto (§5): ícone, título, categoria, anel e status; valores no detalhe.
+  return (
+    <>
+      <Card
+        role="button"
+        tabIndex={0}
+        onClick={(e) => {
+          if (suppressRef.current) {
+            suppressRef.current = false;
+            return;
+          }
+          if (!(e.target as HTMLElement).closest('button')) setDetailOpen(true);
+        }}
+        onKeyDown={(e) => {
+          if (
+            (e.key === 'Enter' || e.key === ' ') &&
+            !(e.target as HTMLElement).closest('button')
+          ) {
+            e.preventDefault();
+            setDetailOpen(true);
+          }
+        }}
+        className="cursor-pointer overflow-hidden"
+      >
+        <CardContent className="p-md pt-md space-y-sm">
+          <div className="gap-sm flex items-start justify-between">
+            <div className="gap-sm flex min-w-0 items-center">
+              {config.icon}
+              <div className="min-w-0">
+                <p className="truncate leading-tight font-semibold">
+                  {goal.description}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {t(`pages.financialGoals.categories.${goal.category}`, {
+                    defaultValue: goal.category_display,
+                  })}
+                </p>
+              </div>
             </div>
+            {statusBadge}
           </div>
-          <div className="gap-xs flex">
+
+          {ring(72)}
+
+          <div className="gap-xs pt-sm flex items-center justify-end border-t">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t('common.actions.moreOptions')}
+                  title={t('common.actions.moreOptions')}
+                >
+                  <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                onPointerDown={() => {
+                  suppressRef.current = true;
+                }}
+              >
+                <DropdownMenuItem onClick={() => onManageVaults(goal)}>
+                  <Link className="mr-sm h-4 w-4" aria-hidden="true" />
+                  {t('pages.financialGoals.manageVaults')}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onCheckCompletion(goal)}
+                  disabled={goal.is_completed}
+                >
+                  <CheckCircle2 className="mr-sm h-4 w-4" aria-hidden="true" />
+                  {t('pages.financialGoals.checkCompletion')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               variant="ghost"
               size="icon"
-              tooltipSide="bottom"
-              onClick={() => onManageVaults(goal)}
-              aria-label={t('pages.financialGoals.manageVaults')}
-              title={t('pages.financialGoals.manageVaults')}
-            >
-              <Link className="text-info h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              tooltipSide="bottom"
-              onClick={() => onCheckCompletion(goal)}
-              aria-label={t('pages.financialGoals.checkCompletion')}
-              title={t('pages.financialGoals.checkCompletion')}
-              disabled={goal.is_completed}
-            >
-              <CheckCircle2 className="text-success h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              tooltipSide="bottom"
               onClick={() => onEdit(goal)}
               aria-label={t('common.actions.edit')}
               title={t('common.actions.edit')}
@@ -231,7 +289,6 @@ function GoalCard({
             <Button
               variant="ghost"
               size="icon"
-              tooltipSide="bottom"
               onClick={() => onDelete(goal.id)}
               aria-label={t('common.actions.delete')}
               title={t('common.actions.delete')}
@@ -239,74 +296,94 @@ function GoalCard({
               <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Anel de progresso centralizado */}
-        <div className="my-md relative flex justify-center">
-          <ProgressRing pct={pct} size={80} color={config.ringColor} />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`text-sm font-bold ${config.color}`}>
-              {pct.toFixed(0)}%
-            </span>
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent size="lg">
+          <DialogHeader>
+            <DialogTitle icon={Target}>{goal.description}</DialogTitle>
+            <DialogDescription>{goal.description}</DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground text-sm">
+              {t(`pages.financialGoals.categories.${goal.category}`, {
+                defaultValue: goal.category_display,
+              })}
+            </p>
+            {statusBadge}
           </div>
-        </div>
-
-        {/* Valores */}
-        <div className="space-y-xs text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              {t('pages.financialGoals.columns.current')}
-            </span>
-            <span className={`font-semibold ${config.color}`}>
-              {formatCurrency(currentVal)}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              {t('pages.financialGoals.columns.target')}
-            </span>
-            <span className="font-semibold">{formatCurrency(targetVal)}</span>
-          </div>
-          {goal.vaults_count > 0 && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                {t('pages.financialGoals.columns.vaults')}
-              </span>
-              <Badge variant="outline" className="text-xs">
-                {t('pages.financialGoals.vaultsCount', { count: goal.vaults_count })}
-              </Badge>
+          {ring(96)}
+          <div className="gap-md grid grid-cols-2">
+            <div>
+              <p className="text-muted-foreground text-xs">
+                {t('pages.financialGoals.columns.current')}
+              </p>
+              <p className={`font-semibold ${config.color}`}>
+                {formatCurrency(currentVal)}
+              </p>
             </div>
-          )}
-        </div>
-
-        {/* Prazo */}
-        {daysLeft !== null && (
-          <div
-            className={`mt-sm text-center text-xs font-medium ${
-              daysLeft <= 0
-                ? 'text-destructive'
-                : daysLeft <= 30
-                  ? 'text-warning'
-                  : 'text-muted-foreground'
-            }`}
-          >
-            {daysLeft > 0
-              ? t('pages.financialGoals.daysLeft', { count: daysLeft })
-              : t('pages.financialGoals.deadlinePassed')}
+            <div>
+              <p className="text-muted-foreground text-xs">
+                {t('pages.financialGoals.columns.target')}
+              </p>
+              <p className="font-semibold">{formatCurrency(targetVal)}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs">
+                {t('pages.financialGoals.columns.targetDate')}
+              </p>
+              <p
+                className={`font-semibold ${
+                  daysLeft !== null && daysLeft <= 0
+                    ? 'text-destructive'
+                    : daysLeft !== null && daysLeft <= 30
+                      ? 'text-warning'
+                      : ''
+                }`}
+              >
+                {goal.target_date
+                  ? `${formatDate(goal.target_date)} · ${
+                      daysLeft !== null && daysLeft > 0
+                        ? t('pages.financialGoals.daysLeft', { count: daysLeft })
+                        : t('pages.financialGoals.deadlinePassed')
+                    }`
+                  : '—'}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs">
+                {t('pages.financialGoals.columns.vaults')}
+              </p>
+              <p className="font-semibold">
+                {t('pages.financialGoals.vaultsCount', { count: goal.vaults_count })}
+              </p>
+            </div>
           </div>
-        )}
-
-        {/* Conquista */}
-        {goal.is_completed && (
-          <div className="mt-sm gap-xs text-success flex items-center justify-center">
-            <CheckCircle2 className="h-4 w-4" />
-            <span className="text-xs font-semibold">
-              {t('pages.financialGoals.goalCompletedLabel')}
-            </span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          <DialogCloseFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDetailOpen(false);
+                onDelete(goal.id);
+              }}
+            >
+              <Trash2 className="text-destructive h-4 w-4" />
+              {t('common.actions.delete')}
+            </Button>
+            <Button
+              onClick={() => {
+                setDetailOpen(false);
+                onEdit(goal);
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+              {t('common.actions.edit')}
+            </Button>
+          </DialogCloseFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -797,7 +874,7 @@ export default function FinancialGoals() {
                 {TRANSACTION_BASED_CATEGORIES.has(formData.category) && (
                   <div className="space-y-sm">
                     <Label className="gap-xs flex items-center">
-                      <Link className="text-muted-foreground h-3.5 w-3.5" />
+                      <Link2 className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.financialGoals.form.linkedAccountLabel')}
                     </Label>
                     <Select

@@ -378,7 +378,7 @@ export default function Receivables({
           key={`${searchTerm}-${statusFilter}-${categoryFilter}-${String(startDate)}-${String(endDate)}`}
           items={filteredReceivables}
           pageSize={GRID_PAGE_SIZE}
-          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
         >
           {(pageItems) =>
             pageItems.map((receivable) => {
@@ -432,7 +432,7 @@ export default function Receivables({
                       setDetailReceivable(receivable);
                     }
                   }}
-                  className="bg-card p-md cursor-pointer space-y-3 rounded-lg border"
+                  className="bg-card px-md py-sm space-y-sm cursor-pointer rounded-lg border"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -469,24 +469,22 @@ export default function Receivables({
                     </Badge>
                   </div>
 
-                  <div className="space-y-xs">
-                    <div className="bg-muted h-2 overflow-hidden rounded-full">
+                  <div className="gap-sm text-muted-foreground flex items-center text-xs">
+                    <span className="shrink-0">
+                      {t('pages.receivables.receivedAmount', {
+                        value: formatCurrency(received),
+                      })}
+                    </span>
+                    <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                       <div
                         className={cn(
-                          'h-full rounded-full transition-[width]',
+                          'h-full w-full origin-left rounded-full transition-transform',
                           barColor
                         )}
-                        style={{ width: `${pct}%` }}
+                        style={{ transform: `scaleX(${pct / 100})` }}
                       />
                     </div>
-                    <div className="text-muted-foreground flex justify-between text-xs">
-                      <span>
-                        {t('pages.receivables.receivedAmount', {
-                          value: formatCurrency(received),
-                        })}
-                      </span>
-                      <span>{pct.toFixed(0)}%</span>
-                    </div>
+                    <span className="shrink-0">{pct.toFixed(0)}%</span>
                   </div>
 
                   <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">

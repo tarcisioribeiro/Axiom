@@ -1,4 +1,4 @@
-import { Percent, PiggyBank, Timer, Trash2, Wallet } from 'lucide-react';
+import { Percent, Timer, Trash2, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -79,7 +79,7 @@ export function ScenarioCard({
         </div>
         <div className="space-y-xs">
           <Label className="gap-xs flex items-center text-xs">
-            <PiggyBank className="text-muted-foreground h-3.5 w-3.5" />
+            <Wallet className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.vaultSimulator.monthlyDeposit')}
           </Label>
           <CurrencyInput

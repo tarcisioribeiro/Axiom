@@ -18,6 +18,7 @@ from credit_cards.models import CreditCardBill, CreditCardInstallment
 from expenses.models import Expense, FixedExpense
 from monthly_planning.models import MonthlyPlan
 from monthly_planning.serializers import MonthlyPlanSerializer
+from monthly_planning.services import CREATE, UPDATE, build_apply_preview
 from revenues.models import FixedRevenue, Revenue
 from vaults.models import Vault
 
@@ -489,22 +490,23 @@ class MonthlyPlanApplyView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        is_reapply = bool(plan.applied_at)
+        # Mesma lista da prévia: respeita itens desmarcados, valores
+        # ajustados e não mexe em lançamentos já quitados.
+        preview = build_apply_preview(plan, user)
+        is_reapply = preview["is_reapply"]
         month_str = f"{plan.year}-{plan.month:02d}"
         results: dict = {}
+        to_launch = (CREATE, UPDATE)
 
         from revenues.services import bulk_generate_fixed_revenues
 
-        fixed_revenues = list(
-            FixedRevenue.objects.filter(
-                created_by=user, is_active=True, is_deleted=False
-            )
-        )
-        if fixed_revenues:
-            revenue_values = [
-                {"fixed_revenue_id": r.id, "value": float(r.default_value)}
-                for r in fixed_revenues
-            ]
+        revenue_values = [
+            {"fixed_revenue_id": r["id"], "value": float(r["value"])}
+            for r in preview["revenues"]
+            if r["action"] in to_launch
+        ]
+        results["revenues_created"] = 0
+        if revenue_values:
             try:
                 result = bulk_generate_fixed_revenues(
                     month=month_str,
@@ -517,20 +519,17 @@ class MonthlyPlanApplyView(APIView):
                 logger.exception(
                     "Failed to generate fixed revenues for plan %s", pk
                 )
-                results["revenues_created"] = 0
 
         from expenses.services import bulk_generate_fixed_expenses
 
-        fixed_expenses = list(
-            FixedExpense.objects.filter(
-                created_by=user, is_active=True, is_deleted=False
-            )
-        )
-        if fixed_expenses:
-            expense_values = [
-                {"fixed_expense_id": e.id, "value": float(e.default_value)}
-                for e in fixed_expenses
-            ]
+        expense_values = [
+            {"fixed_expense_id": e["id"], "value": float(e["value"])}
+            for e in preview["expenses"]
+            if e["action"] in to_launch
+        ]
+        results["expenses_created"] = 0
+        results["blocked_cards"] = preview["blocked_cards"]
+        if expense_values:
             try:
                 result = bulk_generate_fixed_expenses(
                     month=month_str,
@@ -544,25 +543,27 @@ class MonthlyPlanApplyView(APIView):
                 logger.exception(
                     "Failed to generate fixed expenses for plan %s", pk
                 )
-                results["expenses_created"] = 0
 
-        budget_overrides = plan.budget_overrides or {}
         budgets_created = 0
-        for category, amount in budget_overrides.items():
+        for budget in preview["budgets"]:
             try:
                 _, created = Budget.objects.update_or_create(
-                    category=category,
+                    category=budget["category"],
                     month=plan.month,
                     year=plan.year,
                     created_by=user,
                     is_deleted=False,
-                    defaults={"limit_amount": amount, "updated_by": user},
+                    defaults={
+                        "limit_amount": budget["amount"],
+                        "updated_by": user,
+                    },
                 )
                 if created:
                     budgets_created += 1
             except Exception:
                 logger.exception(
-                    "Failed to create budget for category %s", category
+                    "Failed to create budget for category %s",
+                    budget["category"],
                 )
         results["budgets_created"] = budgets_created
 
@@ -577,3 +578,26 @@ class MonthlyPlanApplyView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class MonthlyPlanApplyPreviewView(APIView):
+    """
+    GET /api/v1/monthly-plan/<pk>/apply/preview/
+
+    O que o "Aplicar Plano" vai lançar, sem gravar nada.
+    """
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request: Request, pk: int) -> Response:
+        user = cast(User, request.user)
+        try:
+            plan = MonthlyPlan.objects.get(
+                pk=pk, created_by=user, is_deleted=False
+            )
+        except MonthlyPlan.DoesNotExist:
+            return Response(
+                {"error": "Plan not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(build_apply_preview(plan, user))

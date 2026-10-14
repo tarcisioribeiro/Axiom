@@ -3,7 +3,6 @@ import { ShoppingCart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { LoadingState } from '@/components/common/LoadingState';
 import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import {
   Dialog,
@@ -42,7 +41,7 @@ export function BillPurchasesDialog({
 }: BillPurchasesDialogProps) {
   const { t } = useTranslation();
 
-  const { data: installments = [], isLoading } = useQuery({
+  const { data: installments = [], isPending } = useQuery({
     queryKey: ['credit-card-bills', bill?.id, 'installments'],
     queryFn: () => creditCardInstallmentsService.getByBill(bill!.id),
     enabled: open && !!bill,
@@ -55,7 +54,8 @@ export function BillPurchasesDialog({
   const total = sorted.reduce((sum, i) => sum + Number(i.value), 0);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    // Abre só com os dados prontos (sem "Carregando…" que faz o modal saltar de tamanho).
+    <Dialog open={open && !isPending} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
@@ -73,9 +73,7 @@ export function BillPurchasesDialog({
           </VisuallyHidden>
         </DialogHeader>
 
-        {isLoading ? (
-          <LoadingState />
-        ) : sorted.length === 0 ? (
+        {sorted.length === 0 ? (
           <EmptyState
             icon={<ShoppingCart className="text-muted-foreground h-10 w-10" />}
             title={t('pages.creditCardBills.purchases.empty')}

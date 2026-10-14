@@ -137,7 +137,6 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
 
   const [installmentsPayable, setInstallmentsPayable] = useState<Payable | null>(null);
   const [installments, setInstallments] = useState<PayableInstallment[]>([]);
-  const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
   const [detailPayable, setDetailPayable] = useState<Payable | null>(null);
   // Radix portals the "..." menu outside the card's DOM subtree, so a click
   // on one of its items can still resolve onto the card underneath once the
@@ -147,14 +146,11 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
   const suppressDetailRef = useRef(false);
 
   const loadInstallments = async (payable: Payable) => {
-    setIsLoadingInstallments(true);
     try {
       const data = await payableInstallmentsService.getByPayable(payable.id);
       setInstallments(data);
     } catch {
       setInstallments([]);
-    } finally {
-      setIsLoadingInstallments(false);
     }
   };
 
@@ -163,9 +159,11 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
     ? (payables.find((p) => p.id === installmentsPayable.id) ?? installmentsPayable)
     : null;
 
+  // Abre só com os dados prontos: abrir em "Carregando…" e depois crescer até a
+  // tabela faz o modal saltar de tamanho (efeito de "modal fantasma").
   const handleOpenInstallments = async (payable: Payable) => {
-    setInstallmentsPayable(payable);
     await loadInstallments(payable);
+    setInstallmentsPayable(payable);
   };
 
   const displayedPayables = useMemo(() => {
@@ -348,7 +346,7 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
           key={`${searchTerm}-${statusFilter}-${categoryFilter}-${dueStartDate?.getTime()}-${dueEndDate?.getTime()}`}
           items={displayedPayables}
           pageSize={GRID_PAGE_SIZE}
-          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
         >
           {(pageItems) =>
             pageItems.map((payable) => {
@@ -405,7 +403,7 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
                       setDetailPayable(payable);
                     }
                   }}
-                  className="bg-card p-md cursor-pointer space-y-3 rounded-lg border"
+                  className="bg-card px-md py-sm space-y-sm cursor-pointer rounded-lg border"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -451,24 +449,22 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
                           ? 'bg-warning'
                           : 'bg-destructive';
                     return (
-                      <div className="space-y-xs">
-                        <div className="bg-muted h-2 overflow-hidden rounded-full">
+                      <div className="gap-sm text-muted-foreground flex items-center text-xs">
+                        <span className="shrink-0">
+                          {t('pages.payables.paidAmount', {
+                            value: formatCurrency(paid),
+                          })}
+                        </span>
+                        <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                           <div
                             className={cn(
-                              'h-full rounded-full transition-[width]',
+                              'h-full w-full origin-left rounded-full transition-transform',
                               barColor
                             )}
-                            style={{ width: `${pct}%` }}
+                            style={{ transform: `scaleX(${pct / 100})` }}
                           />
                         </div>
-                        <div className="text-muted-foreground flex justify-between text-xs">
-                          <span>
-                            {t('pages.payables.paidAmount', {
-                              value: formatCurrency(paid),
-                            })}
-                          </span>
-                          <span>{pct.toFixed(0)}%</span>
-                        </div>
+                        <span className="shrink-0">{pct.toFixed(0)}%</span>
                       </div>
                     );
                   })()}
@@ -564,7 +560,7 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-5xl">
           <DialogHeader>
             <DialogTitle mode={selectedPayable ? 'edit' : 'create'}>
               {selectedPayable
@@ -602,7 +598,6 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
       <PayableInstallmentsDialog
         payable={managedPayable}
         installments={installments}
-        isLoading={isLoadingInstallments}
         onClose={() => setInstallmentsPayable(null)}
         onUpdated={() => {
           invalidatePayables();

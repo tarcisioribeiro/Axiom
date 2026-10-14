@@ -1,11 +1,4 @@
-import {
-  Calculator,
-  Percent,
-  PiggyBank,
-  Timer,
-  TrendingUp,
-  Wallet,
-} from 'lucide-react';
+import { Calculator, Percent, Timer, TrendingUp, Wallet } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -118,7 +111,7 @@ export function VaultSimulatorDialog({
           </div>
           <div className="space-y-xs">
             <Label className="gap-xs flex items-center text-xs">
-              <PiggyBank className="text-muted-foreground h-3.5 w-3.5" />
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.vaultSimulator.monthlyDeposit')}
             </Label>
             <CurrencyInput

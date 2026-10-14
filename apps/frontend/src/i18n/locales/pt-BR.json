@@ -695,6 +695,11 @@
       "available": "Disponível: {{value}}",
       "reservedInVaults": "Reservado em cofres: {{value}}",
       "availableForSpending": "Disponível p/ débito: {{value}}",
+      "detailLabels": {
+        "available": "Disponível",
+        "reservedInVaults": "Reservado em cofres",
+        "availableForSpending": "Disponível p/ débito"
+      },
       "bankReconciliation": "Conciliação Bancária",
       "bankReconciliationTitle": "Conciliação Bancária — {{account}}",
       "bankReconciliationDesc": "Importe extratos bancários para conciliar com suas transações.",
@@ -972,7 +977,6 @@
         "principal": "Amortização",
         "interest": "Juros",
         "balance": "Saldo",
-        "loading": "Calculando...",
         "noData": "Sem dados de amortização."
       },
       "stats": {
@@ -1158,6 +1162,15 @@
         "income": "Renda:"
       },
       "noRole": "Sem papel definido",
+      "you": "Você",
+      "detailLabels": {
+        "phone": "Telefone",
+        "email": "E-mail",
+        "document": "Documento",
+        "income": "Renda mensal",
+        "createdAt": "Cadastrado em",
+        "roles": "Papéis"
+      },
       "emptySearch": "Nenhum membro encontrado.",
       "searchPlaceholder": "Buscar membro",
       "allStatus": "Todos os status",
@@ -1723,7 +1736,7 @@
         "progressLabel": "{{paid}} de {{total}} pagos",
         "paymentProgress": "Progresso do pagamento",
         "paymentFrequencyLabel": "Frequência de Pagamento",
-        "isCumulativeLabel": "Dívida cumulativa (permite aumentar o valor depois)",
+        "isCumulativeLabel": "Dívida cumulativa",
         "installmentsLabel": "Parcelas",
         "createPaymentPlanBtn": "Criar plano de pagamento",
         "increaseValueBtn": "Aumentar valor",
@@ -2434,6 +2447,7 @@
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",
+      "bestReturn": "Melhor retorno",
       "scenarioLabel": "Cenário {{index}}",
       "addScenario": "Adicionar Cenário",
       "calculate": "Simular",
@@ -6598,6 +6612,7 @@
       "transferred": "Transferido",
       "failed": "Falhou"
     },
+    "selectDay": "Selecione um dia para ver as transações",
     "dayDetail": "Vencimentos em {{date}}",
     "loading": "Carregando calendário...",
     "weekDays": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
@@ -7152,6 +7167,21 @@
     "selectBoth": "Selecione os dois períodos para ver a comparação"
   },
   "monthlyPlanner": {
+    "sections": { "revenues": "Receitas", "expenses": "Despesas" },
+    "preview": {
+      "title": "Prévia do plano — {{month}}",
+      "revenues": "Receitas a lançar",
+      "expenses": "Despesas a lançar",
+      "budgets": "Orçamentos",
+      "empty": "Nada a lançar",
+      "actions": {
+        "create": "Será lançada",
+        "update": "Valor atualizado",
+        "existing": "Já lançada",
+        "settled": "Já quitada",
+        "blocked": "Sem limite no cartão"
+      }
+    },
     "title": "Planejador Financeiro Mensal",
     "projectedRevenues": "Receitas Previstas",
     "projectedExpenses": "Despesas Previstas",

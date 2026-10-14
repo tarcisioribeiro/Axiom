@@ -128,7 +128,6 @@ export default function Loans() {
 
   const [installmentsLoan, setInstallmentsLoan] = useState<Loan | null>(null);
   const [installments, setInstallments] = useState<LoanInstallment[]>([]);
-  const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
 
   const [paymentPlanLoan, setPaymentPlanLoan] = useState<Loan | null>(null);
 
@@ -139,40 +138,33 @@ export default function Loans() {
   const [amortizationMethod, setAmortizationMethod] = useState<'price' | 'sac'>(
     'price'
   );
-  const [isLoadingAmortization, setIsLoadingAmortization] = useState(false);
 
   const loadInstallments = async (loan: Loan) => {
-    setIsLoadingInstallments(true);
     try {
       const data = await loanInstallmentsService.getByLoan(loan.id);
       setInstallments(data);
     } catch {
       setInstallments([]);
-    } finally {
-      setIsLoadingInstallments(false);
     }
   };
 
+  // Abre só com os dados prontos: abrir em "Carregando…" e depois crescer até a
+  // tabela faz o modal saltar de tamanho (efeito de "modal fantasma").
   const handleOpenInstallments = async (loan: Loan) => {
-    setInstallmentsLoan(loan);
     await loadInstallments(loan);
+    setInstallmentsLoan(loan);
   };
 
   const handleOpenAmortization = async (
     loan: Loan,
     method: 'price' | 'sac' = 'price'
   ) => {
-    setAmortizationLoan(loan);
+    const data = await loanInstallmentsService
+      .getAmortization(loan.id, method)
+      .catch(() => null);
+    setAmortization(data);
     setAmortizationMethod(method);
-    setIsLoadingAmortization(true);
-    try {
-      const data = await loanInstallmentsService.getAmortization(loan.id, method);
-      setAmortization(data);
-    } catch {
-      setAmortization(null);
-    } finally {
-      setIsLoadingAmortization(false);
-    }
+    setAmortizationLoan(loan);
   };
 
   const roleFilteredLoans = useMemo(() => {
@@ -399,7 +391,7 @@ export default function Loans() {
           key={`${roleFilter}-${statusFilter}-${categoryFilter}-${dueStartDate?.getTime()}-${dueEndDate?.getTime()}-${searchTerm}`}
           items={roleFilteredLoans}
           pageSize={GRID_PAGE_SIZE}
-          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
         >
           {(pageItems) =>
             pageItems.map((loan) => {
@@ -429,7 +421,7 @@ export default function Loans() {
                       setDetailLoan(loan);
                     }
                   }}
-                  className="bg-card p-md cursor-pointer space-y-3 rounded-lg border transition-colors"
+                  className="bg-card px-md py-sm space-y-sm cursor-pointer rounded-lg border transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -452,47 +444,29 @@ export default function Loans() {
                     </Badge>
                   </div>
 
-                  {/* Amortization progress */}
-                  <div className="space-y-xs">
-                    <div className="text-muted-foreground flex justify-between text-xs">
-                      <span>{t('pages.loans.payoff')}</span>
-                      <span className="font-medium">{Math.round(pct)}%</span>
-                    </div>
-                    <div className="bg-muted h-2 overflow-hidden rounded-full">
+                  <div className="gap-sm text-muted-foreground flex items-center text-xs">
+                    <span className="shrink-0">
+                      {t(
+                        isCreditor
+                          ? 'pages.loans.receivedAmount'
+                          : 'pages.loans.paidAmount',
+                        { value: formatCurrency(loan.payed_value) }
+                      )}
+                    </span>
+                    <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                       <div
                         className={cn(
-                          'h-full rounded-full transition',
+                          'h-full w-full origin-left rounded-full transition-transform',
                           pct >= 100
                             ? 'bg-success'
                             : loan.status === 'defaulted'
                               ? 'bg-destructive'
                               : 'bg-primary'
                         )}
-                        style={{ width: `${pct}%` }}
+                        style={{ transform: `scaleX(${pct / 100})` }}
                       />
                     </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-success">
-                        {t(
-                          isCreditor
-                            ? 'pages.loans.receivedAmount'
-                            : 'pages.loans.paidAmount',
-                          {
-                            value: formatCurrency(loan.payed_value),
-                          }
-                        )}
-                      </span>
-                      <span className="text-destructive">
-                        {t(
-                          isCreditor
-                            ? 'pages.loans.toReceiveAmount'
-                            : 'pages.loans.remainingAmount',
-                          {
-                            value: formatCurrency(total - paid),
-                          }
-                        )}
-                      </span>
-                    </div>
+                    <span className="shrink-0">{pct.toFixed(0)}%</span>
                   </div>
 
                   <div
@@ -620,7 +594,7 @@ export default function Loans() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className={selectedLoan ? 'max-w-5xl' : 'max-w-2xl'}>
           <DialogHeader>
             <DialogTitle mode={selectedLoan ? 'edit' : 'create'}>
               {selectedLoan ? t('pages.loans.editTitle') : t('pages.loans.newTitle')}
@@ -672,7 +646,6 @@ export default function Loans() {
       <LoanInstallmentsDialog
         loan={installmentsLoan}
         installments={installments}
-        isLoading={isLoadingInstallments}
         onClose={() => setInstallmentsLoan(null)}
         onUpdated={() => {
           void invalidateLoans();
@@ -690,7 +663,6 @@ export default function Loans() {
         loan={amortizationLoan}
         amortization={amortization}
         method={amortizationMethod}
-        isLoading={isLoadingAmortization}
         onClose={() => {
           setAmortizationLoan(null);
           setAmortization(null);
