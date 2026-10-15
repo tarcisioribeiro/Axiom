@@ -3,21 +3,18 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BookOpen,
   Calendar,
-  ChevronDown,
-  ChevronUp,
-  Edit,
   Globe,
   Plus,
   Search,
-  Trash2,
   User,
   UserCircle,
   UserPen,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { useNavigate } from 'react-router';
 
+import { CardActions } from '@/components/common/CardActions';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -26,17 +23,10 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { AuthorForm } from '@/components/library/AuthorForm';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -52,145 +42,177 @@ import {
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { ACTION_COLOR } from '@/lib/action-colors';
+import { cn } from '@/lib/utils';
 import { authorsService } from '@/services/authors-service';
 import { NATIONALITIES } from '@/types';
 import type { Author, AuthorFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
+function AuthorAvatar({ author, size }: { author: Author; size: 'sm' | 'lg' }) {
+  const box = size === 'sm' ? 'h-10 w-10' : 'h-20 w-20';
+  return author.photo ? (
+    <img
+      src={author.photo}
+      alt={author.name}
+      className={cn('ring-border shrink-0 rounded-full object-cover ring-2', box)}
+      loading="lazy"
+      decoding="async"
+    />
+  ) : (
+    <div
+      className={cn(
+        'bg-muted ring-border flex shrink-0 items-center justify-center rounded-full ring-2',
+        box
+      )}
+    >
+      <UserCircle className="text-muted-foreground h-1/2 w-1/2" />
+    </div>
+  );
+}
+
+function useAuthorLabels() {
+  const { t } = useTranslation();
+  const nationality = (a: Author) =>
+    a.nationality
+      ? t(`pages.authors.nationalities.${a.nationality}`, {
+          defaultValue: a.nationality_display,
+        })
+      : a.nationality_display;
+  const years = (a: Author) =>
+    [
+      a.birth_year &&
+        `${a.birth_year} ${a.birth_era ? t(`pages.authors.eras.${a.birth_era}`) : ''}`,
+      a.death_year &&
+        `${a.death_year} ${a.death_era ? t(`pages.authors.eras.${a.death_era}`) : ''}`,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  const books = (a: Author) =>
+    a.books_count === 0
+      ? t('pages.authors.booksCountZero')
+      : t('pages.authors.booksCount', { count: a.books_count });
+  return { nationality, years, books };
+}
+
+/**
+ * Card de grade (§5): foto + nome + nacionalidade + nº de livros. Anos e
+ * biografia ficam no modal de detalhe.
+ */
 function AuthorCard({
   author,
+  onOpen,
   onEdit,
   onDelete,
 }: {
   author: Author;
-  onEdit: (a: Author) => void;
-  onDelete: (id: number) => void;
+  onOpen: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
-  const [bioExpanded, setBioExpanded] = useState(false);
-  const { t } = useTranslation();
-  const hasBioOverflow = author.biography && author.biography.length > 120;
-
+  const labels = useAuthorLabels();
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="pb-3">
-        <div className="gap-sm flex items-start justify-between">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            {author.photo ? (
-              <img
-                src={author.photo}
-                alt={author.name}
-                className="ring-border h-16 w-16 shrink-0 rounded-full object-cover ring-2"
-                loading="lazy"
-                decoding="async"
-              />
-            ) : (
-              <div className="bg-muted ring-border flex h-16 w-16 shrink-0 items-center justify-center rounded-full ring-2">
-                <UserCircle className="text-muted-foreground h-9 w-9" />
-              </div>
-            )}
-            <div className="min-w-0">
-              <CardTitle className="text-base leading-tight">{author.name}</CardTitle>
-              <CardDescription className="mt-0.5">
-                {author.nationality
-                  ? t('pages.authors.nationalities.' + author.nationality, {
-                      defaultValue: author.nationality_display,
-                    })
-                  : author.nationality_display}
-              </CardDescription>
-            </div>
-          </div>
-          <div className="gap-xs flex shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => onEdit(author)}
-              aria-label={t('common.actions.edit')}
-            >
-              <Edit className="h-3.5 w-3.5" aria-hidden="true" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-destructive hover:text-destructive h-8 w-8"
-              onClick={() => onDelete(author.id)}
-              aria-label={t('common.actions.delete')}
-            >
-              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-            </Button>
-          </div>
+    <div
+      role="button"
+      tabIndex={0}
+      className="bg-card border-border flex cursor-pointer flex-col rounded-lg border"
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') onOpen();
+      }}
+    >
+      <div className="gap-sm px-md py-sm flex flex-1 items-center">
+        <AuthorAvatar author={author} size="sm" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold">{author.name}</p>
+          <p className="text-muted-foreground truncate text-xs">
+            {labels.nationality(author)}
+          </p>
         </div>
-      </CardHeader>
+        <span className="gap-xs text-muted-foreground flex shrink-0 items-center text-xs">
+          <BookOpen className="h-3.5 w-3.5" />
+          {labels.books(author)}
+        </span>
+      </div>
+      <div
+        role="presentation"
+        className="gap-xs px-sm py-xs flex items-center justify-end border-t"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <CardActions onEdit={onEdit} onDelete={onDelete} />
+      </div>
+    </div>
+  );
+}
 
-      <CardContent className="flex flex-1 flex-col gap-3">
-        {(author.birth_year || author.death_year) && (
-          <div className="gap-sm flex items-center">
-            <Calendar className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-            <Badge variant="outline" className="text-xs font-normal">
-              {author.birth_year && (
-                <>
-                  {author.birth_year}{' '}
-                  {author.birth_era
-                    ? t('pages.authors.eras.' + author.birth_era)
-                    : author.birth_era_display || ''}
-                </>
-              )}
-              {author.birth_year && author.death_year && (
-                <span className="mx-xs text-muted-foreground">·</span>
-              )}
-              {author.death_year && (
-                <>
-                  {author.death_year}{' '}
-                  {author.death_era
-                    ? t('pages.authors.eras.' + author.death_era)
-                    : author.death_era_display || ''}
-                </>
-              )}
-            </Badge>
-          </div>
-        )}
-
-        {author.biography && (
-          <div>
-            <p
-              className={`text-muted-foreground text-sm leading-relaxed ${!bioExpanded ? 'line-clamp-3' : ''}`}
-            >
-              {author.biography}
-            </p>
-            {hasBioOverflow && (
-              <button
-                className="mt-xs gap-xs text-primary flex items-center text-xs hover:underline"
-                onClick={() => setBioExpanded((v) => !v)}
-              >
-                {bioExpanded ? (
-                  <>
-                    <ChevronUp className="h-3 w-3" /> {t('common.actions.seeLess')}
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-3 w-3" /> {t('common.actions.seeMore')}
-                  </>
+function AuthorDetailModal({
+  author,
+  onClose,
+}: {
+  author: Author | undefined;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const labels = useAuthorLabels();
+  return (
+    <Dialog open={!!author} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-lg">
+        {author && (
+          <>
+            <DialogHeader>
+              <DialogTitle icon={UserPen}>{author.name}</DialogTitle>
+              <VisuallyHidden>
+                <DialogDescription>{t('pages.authors.detailDesc')}</DialogDescription>
+              </VisuallyHidden>
+            </DialogHeader>
+            <div className="gap-md flex items-start">
+              <AuthorAvatar author={author} size="lg" />
+              <div className="space-y-sm min-w-0 flex-1 text-sm">
+                <p className="gap-xs flex items-center">
+                  <Globe className="text-muted-foreground h-4 w-4" />
+                  {labels.nationality(author)}
+                </p>
+                {labels.years(author) && (
+                  <p className="gap-xs flex items-center">
+                    <Calendar className="text-muted-foreground h-4 w-4" />
+                    {labels.years(author)}
+                  </p>
                 )}
-              </button>
+                <p className="gap-xs flex items-center">
+                  <BookOpen className="text-muted-foreground h-4 w-4" />
+                  {labels.books(author)}
+                </p>
+              </div>
+            </div>
+            {author.biography && (
+              <p
+                className="text-muted-foreground line-clamp-[10] text-sm leading-relaxed"
+                title={author.biography}
+              >
+                {author.biography}
+              </p>
             )}
-          </div>
+            <DialogCloseFooter>
+              {author.books_count > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    void navigate(
+                      `/library/books?search=${encodeURIComponent(author.name)}`
+                    )
+                  }
+                >
+                  <BookOpen className={cn('h-4 w-4', ACTION_COLOR.preview)} />
+                  {t('pages.authors.viewBooks')}
+                </Button>
+              )}
+            </DialogCloseFooter>
+          </>
         )}
-
-        <div className="pt-sm mt-auto flex items-center justify-between">
-          <Link to={`/library/books?search=${encodeURIComponent(author.name)}`}>
-            <Badge
-              variant="secondary"
-              className="gap-sm hover:bg-secondary/70 flex items-center text-xs"
-            >
-              <BookOpen className="h-3 w-3" />
-              {author.books_count === 0
-                ? t('pages.authors.booksCountZero')
-                : t('pages.authors.booksCount', { count: author.books_count })}
-            </Badge>
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -201,6 +223,7 @@ export default function Authors() {
   const [selectedAuthor, setSelectedAuthor] = useState<Author | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
+  const [detailAuthor, setDetailAuthor] = useState<Author | undefined>();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
@@ -210,7 +233,7 @@ export default function Authors() {
     queryKey: ['authors'],
     queryFn: async () => {
       try {
-        return await authorsService.getAll();
+        return await authorsService.getAllPages();
       } catch (error: unknown) {
         toast({
           title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
@@ -305,7 +328,7 @@ export default function Authors() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.authors.title')} icon={<UserPen />}>
-        <Button onClick={handleCreate} className="gap-sm">
+        <Button onClick={handleCreate}>
           <Plus className="h-4 w-4" />
           {t('pages.authors.newBtn')}
         </Button>
@@ -370,20 +393,26 @@ export default function Authors() {
           key={`${searchTerm}-${nationalityFilter}`}
           items={filteredAuthors}
           pageSize={GRID_PAGE_SIZE}
-          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
         >
           {(pageItems) =>
             pageItems.map((author) => (
               <AuthorCard
                 key={author.id}
                 author={author}
-                onEdit={handleEdit}
-                onDelete={(id) => void handleDelete(id)}
+                onOpen={() => setDetailAuthor(author)}
+                onEdit={() => handleEdit(author)}
+                onDelete={() => void handleDelete(author.id)}
               />
             ))
           }
         </PaginatedSlide>
       )}
+
+      <AuthorDetailModal
+        author={detailAuthor}
+        onClose={() => setDetailAuthor(undefined)}
+      />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>

@@ -25,6 +25,7 @@ export const ACTION_COLOR = {
   simulator: 'text-action-simulator',
   'manage-vaults': 'text-action-manage-vaults',
   'check-completion': 'text-action-check-completion',
+  chat: 'text-action-chat',
 } as const;
 
 export type ActionColor = keyof typeof ACTION_COLOR;

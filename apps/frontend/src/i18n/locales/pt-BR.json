@@ -377,7 +377,9 @@
       "financeAgenda": "Agenda Financeira",
       "financeAnalytics": "Análises",
       "financialHealth": "Saúde Financeira",
-      "emotionalWellness": "Bem-Estar Emocional"
+      "emotionalWellness": "Bem-Estar Emocional",
+      "intellectToday": "Hoje no Intelecto",
+      "flashcards": "Flash Cards"
     },
     "agents": "Agentes IA"
   },
@@ -3087,7 +3089,8 @@
           "essay": "Ensaio"
         },
         "sectionGoal": "Meta Anual",
-        "sectionQuantities": "Quantidades"
+        "sectionQuantities": "Quantidades",
+        "saved": "Meta de {{count}} livros para {{year}}."
       },
       "exportCSV": "Exportar CSV",
       "exportCSVTitle": "Exportar estatísticas em CSV",
@@ -3169,13 +3172,50 @@
       "studyTimerPagesRead": "Páginas lidas",
       "readingTimerTitle": "Timer de Leitura",
       "studyTimerNoLessons": "Cadastre módulos e aulas no curso antes de iniciar o timer.",
-      "studyTimerCourseNotFound": "Curso não encontrado."
+      "studyTimerCourseNotFound": "Curso não encontrado.",
+      "csv": {
+        "fileName": "biblioteca_stats",
+        "metric": "Métrica",
+        "value": "Valor",
+        "totalBooks": "Total de Livros",
+        "totalAuthors": "Total de Autores",
+        "totalPublishers": "Total de Editoras",
+        "booksReading": "Livros Lendo",
+        "booksToRead": "Livros Para Ler",
+        "booksRead": "Livros Lidos",
+        "averageRating": "Avaliação Média",
+        "totalPagesRead": "Total de Páginas Lidas",
+        "readingHours": "Horas de Leitura",
+        "speed": "Velocidade (pág/hora)",
+        "totalSessions": "Total de Sessões",
+        "avgPagesPerSession": "Média de Páginas por Sessão",
+        "longestSession": "Maior Sessão (páginas)",
+        "currentStreak": "Sequência Atual (dias)",
+        "longestStreak": "Maior Sequência (dias)",
+        "timeOfDay": "Período do Dia",
+        "sessions": "Sessões",
+        "pages": "Páginas",
+        "genre": "Gênero",
+        "bookCount": "Quantidade de Livros"
+      },
+      "weekdays": {
+        "1": "Segunda",
+        "2": "Terça",
+        "3": "Quarta",
+        "4": "Quinta",
+        "5": "Sexta",
+        "6": "Sábado",
+        "7": "Domingo"
+      },
+      "sectionReading": "Leitura",
+      "sectionCollection": "Acervo",
+      "sectionLearning": "Aprendizado"
     },
     "books": {
       "title": "Obras",
-      "newBtn": "Novo Livro",
-      "editTitle": "Editar Livro",
-      "newTitle": "Novo Livro",
+      "newBtn": "Nova Obra",
+      "editTitle": "Editar Obra",
+      "newTitle": "Nova Obra",
       "editDesc": "Atualize as informações do livro",
       "newDesc": "Adicione um novo livro à sua biblioteca",
       "deleteTitle": "Excluir livro",
@@ -3278,7 +3318,8 @@
         "sectionAuthorPublisher": "Autoria & Publicação",
         "sectionReading": "Leitura",
         "sectionSynopsis": "Sinopse",
-        "readStatusLabel": "Status de Leitura"
+        "readStatusLabel": "Status de Leitura",
+        "titleDuplicate": "Você já possui um livro com este título."
       },
       "detail": {
         "tabInfo": "Informações",
@@ -3382,7 +3423,9 @@
         "paused": "Pausado"
       },
       "chatTab": "Chat",
-      "chatTabDesc": "Converse com o agente sobre este livro"
+      "chatTabDesc": "Converse com o agente sobre este livro",
+      "agentContext": "Livro: {{title}}",
+      "readingGoalBtn": "Meta de Leitura"
     },
     "authors": {
       "title": "Autores",
@@ -3474,7 +3517,9 @@
       },
       "booksCount_one": "{{count}} livro",
       "booksCount_other": "{{count}} livros",
-      "booksCountZero": "0 livros"
+      "booksCountZero": "0 livros",
+      "detailDesc": "Detalhes do autor",
+      "viewBooks": "Ver livros"
     },
     "publishers": {
       "title": "Editoras",
@@ -3514,7 +3559,8 @@
       },
       "booksCount_one": "{{count}} livro",
       "booksCount_other": "{{count}} livros",
-      "booksCountZero": "0 livros"
+      "booksCountZero": "0 livros",
+      "detailDesc": "Detalhes da editora"
     },
     "summaries": {
       "title": "Resumos",
@@ -3627,7 +3673,10 @@
       "errorSave": "Não foi possível salvar a ordem. {{reason}}",
       "priorityHigh": "Alta",
       "priorityMedium": "Média",
-      "priorityLow": "Baixa"
+      "priorityLow": "Baixa",
+      "dragToReorder": "Arrastar para reordenar",
+      "estimatedDays_one": "~{{count}} dia",
+      "estimatedDays_other": "~{{count}} dias"
     },
     "readingsTab": {
       "sessionSingular": "sessão",
@@ -3685,7 +3734,9 @@
         "allColors": "Todas as cores"
       },
       "paginationInfo_one": "{{count}} destaque — página {{page}} de {{totalPages}}",
-      "paginationInfo_other": "{{count}} destaques — página {{page}} de {{totalPages}}"
+      "paginationInfo_other": "{{count}} destaques — página {{page}} de {{totalPages}}",
+      "pageShort": "p. {{page}}",
+      "exportFileName": "destaques"
     },
     "courses": {
       "title": "Cursos",
@@ -3841,8 +3892,15 @@
         "removed": "Comprovante removido",
         "uploadError": "Erro ao enviar comprovante",
         "replace": "Clique para substituir o comprovante",
-        "needsCompletion": "Conclua todas as aulas e registre horas de estudo suficientes para atingir a carga horária estimada antes de anexar o certificado."
-      }
+        "needsCompletion": "Conclua todas as aulas e registre horas de estudo suficientes para atingir a carga horária estimada antes de anexar o certificado.",
+        "view": "Visualizar",
+        "uploadBtn": "Enviar comprovante",
+        "replaceBtn": "Substituir comprovante"
+      },
+      "modulesAndLessons": "Módulos e aulas",
+      "detailDesc": "Detalhes do curso",
+      "hoursValue": "{{hours}}h",
+      "agentContext": "Curso: {{title}}"
     },
     "skills": {
       "title": "Habilidades",
@@ -3897,7 +3955,8 @@
         "notesPlaceholder": "Ex.: Praticar diariamente",
         "coursesLabel": "Cursos que desenvolveram esta habilidade",
         "coursesPlaceholder": "Selecione",
-        "removeCourse": "Remover {{name}}"
+        "removeCourse": "Remover {{name}}",
+        "nameDuplicate": "Já existe uma habilidade com esse nome."
       },
       "radarChart": {
         "title": "Radar de Habilidades",
@@ -3908,7 +3967,8 @@
         "noHistory": "Sem histórico disponível",
         "timeline": "Linha do tempo de evolução",
         "viewHistory": "Ver histórico"
-      }
+      },
+      "detailDesc": "Detalhes da habilidade"
     },
     "planningOnboarding": {
       "skip": "Pular",
@@ -4923,7 +4983,6 @@
       "clearFilters": "Limpar",
       "userPlaceholder": "Buscar usuário",
       "allActions": "Todas as ações",
-      "applyFilters": "Aplicar filtros",
       "columns": {
         "datetime": "Data/Hora",
         "user": "Usuário",
@@ -4932,7 +4991,6 @@
         "description": "Descrição",
         "ip": "IP"
       },
-      "loadingLogs": "Carregando logs...",
       "noLogs": "Nenhum log encontrado",
       "actions": {
         "view": "Visualização",
@@ -4947,12 +5005,12 @@
         "failed_vault_unlock": "Cofre Falho",
         "other": "Outro",
         "purge": "Purga (LGPD)",
-        "shared_reveal": "Acesso Compartilhado"
+        "shared_reveal": "Acesso Compartilhado",
+        "copy": "Cópia"
       }
     },
     "adminOverview": {
       "title": "Visão Geral do Sistema",
-      "updatedAt": "Atualizado às {{time}}",
       "refresh": "Atualizar",
       "statusHealthy": "Todos os serviços operacionais",
       "statusWarning": "Sistema operacional com avisos",
@@ -5004,12 +5062,7 @@
       "model": "Modelo:",
       "checking": "Verificando...",
       "restartAllBtn": "Reiniciar todos os pods",
-      "restartingToast": "Reiniciando todos os pods",
-      "restartingDesc": "Você será desconectado. Aguarde os serviços subirem e faça login novamente.",
-      "restartError": "Não foi possível reiniciar. {{reason}}",
-      "disconnecting": "Desconectando...",
       "sendTestEmail": "Enviar email de teste",
-      "emailPlaceholder": "destinatario@exemplo.com",
       "sendBtn": "Enviar",
       "emailSent": "Email enviado",
       "emailError": "Não foi possível enviar o email. {{reason}}",
@@ -5028,7 +5081,11 @@
         "not_configured": "Não configurado",
         "unknown": "Desconhecido",
         "not_active": "Inativo"
-      }
+      },
+      "modelsCount_one": "{{count}} modelo",
+      "modelsCount_other": "{{count}} modelos",
+      "models": "Modelos",
+      "recipient": "Destinatário"
     },
     "adminConfig": {
       "title": "Configurações do Sistema",
@@ -5041,7 +5098,6 @@
       "save": "Salvar",
       "newValuePlaceholder": "Novo valor",
       "newSecretPlaceholder": "Novo valor",
-      "restartRequired": "Esta configuração requer reinicialização do container para ter efeito.",
       "helpAriaLabel": "Ver ajuda",
       "popover": {
         "acceptedValues": "Valores aceitos",
@@ -5054,17 +5110,13 @@
       "emptyValue": "Valor vazio",
       "emptyValueDesc": "Informe um valor para salvar.",
       "restartError": "Não foi possível reiniciar. {{reason}}",
-      "restartWarning": "Configurações marcadas com \"Requer reinicialização\" só terão efeito após reiniciar o container da API. Use o botão \"Reiniciar e Aplicar\" para aplicar as mudanças e atualizar o .env.",
       "restartModal": {
         "title": "Reiniciar e Aplicar Configurações",
         "desc": "Escolha o ambiente de execução. As configurações salvas no banco serão aplicadas ao reiniciar. Você será deslogado automaticamente.",
         "countdown": "Reinicializando... logout em {{seconds}}s",
         "docker": "Docker",
-        "dockerDesc": "Reinicia o container via socket",
         "kubernetes": "Kubernetes",
-        "kubernetesDesc": "Rollout restart dos pods",
         "cancel": "Cancelar",
-        "sending": "Enviando...",
         "confirm": "Confirmar Reinicialização"
       },
       "categories": {
@@ -5216,7 +5268,8 @@
           "hint": "Senha root do MinIO. Armazenada criptografada no banco. Deve coincidir com a senha configurada no serviço MinIO. O Console MinIO está disponível em http://localhost:39106.",
           "warning": "Esta senha deve ser idêntica à configurada no serviço MinIO. Uma divergência causa falha de autenticação e torna o armazenamento de arquivos inacessível."
         }
-      }
+      },
+      "valueLabel": "Valor"
     },
     "receivables": {
       "title": "Valores a Receber",
@@ -5870,7 +5923,13 @@
       "selectBook": "Selecionar livro (opcional)",
       "searchPlaceholder": "Buscar flashcard",
       "allStatus": "Todos Status",
-      "allBooks": "Todos os Livros"
+      "allBooks": "Todos os Livros",
+      "viewFilter": "Exibir",
+      "updated": "Card atualizado",
+      "deleted": "Card excluído",
+      "editCard": "Editar card",
+      "detailTitle": "Flash card",
+      "allCards": "Todos os cards"
     },
     "intellectToday": {
       "title": "Hoje no Intelecto",
@@ -5893,7 +5952,10 @@
       "weekProgress": "Progresso da semana",
       "badges": "Conquistas recentes",
       "viewAll": "Ver tudo",
-      "noStreak": "Comece sua sequência hoje!"
+      "noStreak": "Comece sua sequência hoje!",
+      "coursesInProgress": "Cursos em andamento",
+      "openCourses": "Ver cursos",
+      "noBadges": "Nenhuma conquista ainda"
     },
     "workoutHub": {
       "title": "Treino",
@@ -6254,6 +6316,26 @@
         "savingLabel": "Salvando...",
         "completedToast": "Intervenção concluída!",
         "registerError": "Erro ao registrar"
+      }
+    },
+    "intellectBadges": {
+      "codes": {
+        "first_book": "Primeiro Livro Lido",
+        "reader_5": "Leitor Dedicado (5 livros)",
+        "reader_10": "Maratonista (10 livros)",
+        "reader_25": "Devorador de Livros (25 livros)",
+        "first_course": "Primeiro Curso Concluído",
+        "learner_3": "Aprendiz Ativo (3 cursos)",
+        "learner_10": "Especialista (10 cursos)",
+        "streak_7": "Leitura Constante (7 dias)",
+        "streak_30": "Leitura Consistente (30 dias)",
+        "first_highlight": "Primeiro Destaque",
+        "annotator_10": "Anotador (10 destaques)",
+        "annotator_50": "Curador (50 destaques)",
+        "knowledge_builder": "Construtor de Conhecimento (10 nós no grafo)",
+        "knowledge_master": "Mestre do Conhecimento (50 nós no grafo)",
+        "first_skill": "Primeira Habilidade",
+        "skill_collector": "Colecionador de Habilidades (5 habilidades)"
       }
     }
   },
@@ -7172,7 +7254,10 @@
     "selectBoth": "Selecione os dois períodos para ver a comparação"
   },
   "monthlyPlanner": {
-    "sections": { "revenues": "Receitas", "expenses": "Despesas" },
+    "sections": {
+      "revenues": "Receitas",
+      "expenses": "Despesas"
+    },
     "preview": {
       "title": "Prévia do plano — {{month}}",
       "revenues": "Receitas a lançar",

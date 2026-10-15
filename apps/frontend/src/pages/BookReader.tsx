@@ -12,37 +12,41 @@ import {
   Palette,
   PanelRight,
   Plus,
+  FileText,
   Save,
   Shapes,
   Sun,
+  Trash2,
   X,
 } from 'lucide-react';
 // Configure PDF.js worker via Vite ?url import for reliable asset bundling
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-import { useParams } from 'react-router';
 
 // ============================================================================
 // COMPONENT PROPS
 // ============================================================================
 
 interface BookReaderProps {
-  /** When provided, the reader runs embedded (modal mode) using this book id. */
-  bookIdProp?: number;
-  /** Called when the user closes the reader in modal mode. */
-  onClose?: () => void;
+  /** Book shown in the fullscreen reader overlay (opened from Livros). */
+  bookIdProp: number;
+  /** Closes the overlay. */
+  onClose: () => void;
 }
 
 import { EmptyState } from '@/components/common/EmptyState';
+import {
+  DETAIL_TEXT_PAGE_SIZE,
+  PaginatedSlide,
+} from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -54,7 +58,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { API_CONFIG } from '@/config/constants';
 import { useTheme } from '@/hooks/use-theme';
 import { useToast } from '@/hooks/use-toast';
-import { formatLocalDate } from '@/lib/utils';
+import { ACTION_COLOR } from '@/lib/action-colors';
+import { HIGHLIGHT_DOT, HIGHLIGHT_TYPE_KEY, highlightBg } from '@/lib/highlight-colors';
+import { cn, formatLocalDate } from '@/lib/utils';
 import { bookHighlightsService } from '@/services/book-highlights-service';
 import { booksService } from '@/services/books-service';
 import { membersService } from '@/services/members-service';
@@ -83,66 +89,45 @@ interface ThemeConfig {
 }
 
 // ============================================================================
-// THEME DEFINITIONS — 6 variants: 3 reader modes × 2 app themes (Alucard/Dracula)
-// Colors are derived from the active app palette so the reader is visually
-// coherent with the rest of the UI.  All values are concrete (no CSS vars) so
-// they can be safely injected into EPUB iframes without resolution.
+// THEME DEFINITIONS — 3 reader modes (light / sepia / dark). The colors come
+// from the `--reader-*` tokens in `index.css` (redefined under `.dark`), and
+// are resolved to concrete `hsl()` strings so they can be injected into the
+// EPUB iframe, where the app's CSS variables don't exist.
 // ============================================================================
 
-function buildThemes(
-  isDark: boolean,
-  _labels: { light: string; sepia: string; dark: string }
-): Record<ReaderTheme, ThemeConfig> {
-  if (isDark) {
-    // ── Dracula palette variants ─────────────────────────────────────────────
+function readerToken(mode: ReaderTheme, part: 'bg' | 'fg' | 'border' | 'link'): string {
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(`--reader-${mode}-${part}`)
+    .trim();
+  return `hsl(${value})`;
+}
+
+/** `hsl(H S L)` → `hsl(H S L / alpha)`. */
+function withAlpha(color: string, alpha: number): string {
+  return color.replace(')', ` / ${alpha})`);
+}
+
+const READER_THEME_ICONS: Record<ReaderTheme, React.ReactNode> = {
+  light: <Sun className="h-4 w-4" />,
+  sepia: <Palette className="h-4 w-4" />,
+  dark: <Moon className="h-4 w-4" />,
+};
+
+// `_isDark` só entra para recalcular quando o tema do app muda (os tokens
+// `--reader-*` são redefinidos em `.dark`).
+function buildThemes(_isDark: boolean): Record<ReaderTheme, ThemeConfig> {
+  const make = (mode: ReaderTheme): ThemeConfig => {
+    const background = readerToken(mode, 'bg');
+    const color = readerToken(mode, 'fg');
     return {
-      light: {
-        backgroundColor: '#ECEEF8', // very light cool blue-grey (Dracula-tinted)
-        color: '#21222C', // Dracula near-black
-        borderColor: '#B0BAD4',
-        icon: <Sun className="h-4 w-4" />,
-        epubBody: { background: '#ECEEF8', color: '#21222C', linkColor: '#1D4ED8' },
-      },
-      sepia: {
-        backgroundColor: '#E8E2F5', // cool lavender parchment (Dracula purple-tinted)
-        color: '#3D2852', // deep purple-brown
-        borderColor: '#9478C2',
-        icon: <Palette className="h-4 w-4" />,
-        epubBody: { background: '#E8E2F5', color: '#3D2852', linkColor: '#6D28D9' },
-      },
-      dark: {
-        backgroundColor: '#282A36', // Dracula background
-        color: '#F8F8F2', // Dracula foreground
-        borderColor: '#44475A', // Dracula current-line
-        icon: <Moon className="h-4 w-4" />,
-        epubBody: { background: '#282A36', color: '#F8F8F2', linkColor: '#8BE9FD' },
-      },
+      backgroundColor: background,
+      color,
+      borderColor: readerToken(mode, 'border'),
+      icon: READER_THEME_ICONS[mode],
+      epubBody: { background, color, linkColor: readerToken(mode, 'link') },
     };
-  }
-  // ── Alucard palette variants ───────────────────────────────────────────────
-  return {
-    light: {
-      backgroundColor: '#FFFBEB', // Alucard warm cream (hsl 48 100% 96%)
-      color: '#1F1F1F',
-      borderColor: '#C8C4D8',
-      icon: <Sun className="h-4 w-4" />,
-      epubBody: { background: '#FFFBEB', color: '#1F1F1F', linkColor: '#2563EB' },
-    },
-    sepia: {
-      backgroundColor: '#F5E6C8', // warm golden parchment (Alucard amber tones)
-      color: '#5C3D2E', // warm dark brown
-      borderColor: '#C8A870',
-      icon: <Palette className="h-4 w-4" />,
-      epubBody: { background: '#F5E6C8', color: '#5C3D2E', linkColor: '#2563EB' },
-    },
-    dark: {
-      backgroundColor: '#1A0E08', // very dark warm brown (Alucard inverted)
-      color: '#F5EDD6', // warm cream
-      borderColor: '#4A3020',
-      icon: <Moon className="h-4 w-4" />,
-      epubBody: { background: '#1A0E08', color: '#F5EDD6', linkColor: '#F5A623' },
-    },
   };
+  return { light: make('light'), sepia: make('sepia'), dark: make('dark') };
 }
 
 // Applies all reader-mode themes to an epubjs rendition and selects the
@@ -178,20 +163,12 @@ function applyEpubThemes(
 // ============================================================================
 
 const HIGHLIGHT_COLOR_VALUES = [
-  { value: 'yellow', key: 'colorYellow', dot: 'bg-yellow-400' },
-  { value: 'green', key: 'colorGreen', dot: 'bg-green-400' },
-  { value: 'blue', key: 'colorBlue', dot: 'bg-blue-400' },
-  { value: 'pink', key: 'colorPink', dot: 'bg-pink-400' },
-  { value: 'orange', key: 'colorOrange', dot: 'bg-orange-400' },
+  { value: 'yellow', key: 'colorYellow', dot: HIGHLIGHT_DOT.yellow },
+  { value: 'green', key: 'colorGreen', dot: HIGHLIGHT_DOT.green },
+  { value: 'blue', key: 'colorBlue', dot: HIGHLIGHT_DOT.blue },
+  { value: 'pink', key: 'colorPink', dot: HIGHLIGHT_DOT.pink },
+  { value: 'orange', key: 'colorOrange', dot: HIGHLIGHT_DOT.orange },
 ];
-
-const COLOR_BG: Record<string, string> = {
-  yellow: 'border-l-yellow-400 bg-yellow-50',
-  green: 'border-l-green-400 bg-green-50',
-  blue: 'border-l-blue-400 bg-blue-50',
-  pink: 'border-l-pink-400 bg-pink-50',
-  orange: 'border-l-orange-400 bg-orange-50',
-};
 
 // ============================================================================
 // HELPERS
@@ -228,7 +205,15 @@ function AnnotationForm({
   const { toast } = useToast();
 
   const handleSave = async () => {
-    if (!text.trim()) return;
+    if (!text.trim()) {
+      toast({
+        title: t('common.fieldRequired', {
+          field: t('pages.highlights.form.textLabel'),
+        }),
+        variant: 'destructive',
+      });
+      return;
+    }
     try {
       setIsSaving(true);
       const data: BookHighlightFormData = {
@@ -260,11 +245,16 @@ function AnnotationForm({
         </span>
         {currentPage && (
           <Badge variant="secondary" className="text-xs">
-            p. {currentPage}
+            {t('pages.highlights.pageShort', { page: currentPage })}
           </Badge>
         )}
       </div>
+      <Label className="gap-xs flex items-center text-xs" htmlFor="annotation-text">
+        <FileText className="text-muted-foreground h-3.5 w-3.5" />
+        {t('pages.highlights.form.textLabel')}
+      </Label>
       <Textarea
+        id="annotation-text"
         placeholder={t('pages.bookReader.annotationPlaceholder')}
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -315,16 +305,8 @@ function AnnotationForm({
           <X aria-hidden="true" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          size="sm"
-          disabled={!text.trim() || isSaving}
-          onClick={() => void handleSave()}
-        >
-          {isSaving ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Save className="h-3 w-3" />
-          )}
+        <Button size="sm" loading={isSaving} onClick={() => void handleSave()}>
+          {!isSaving && <Save className="h-3 w-3" />}
           {t('common.actions.save')}
         </Button>
       </div>
@@ -354,14 +336,6 @@ function EpubReader({
   onLocationChange,
 }: EpubReaderProps) {
   const { t } = useTranslation();
-  const themeLabels = useMemo(
-    () => ({
-      light: t('pages.bookReader.themeLight'),
-      sepia: t('pages.bookReader.themeSepia'),
-      dark: t('pages.bookReader.themeDark'),
-    }),
-    [t]
-  );
   const containerRef = useRef<HTMLDivElement>(null);
   const bookRef = useRef<EpubBook | null>(null);
   const renditionRef = useRef<Rendition | null>(null);
@@ -390,7 +364,7 @@ function EpubReader({
       });
       renditionRef.current = rendition;
 
-      applyEpubThemes(rendition, buildThemes(isDark, themeLabels), theme);
+      applyEpubThemes(rendition, buildThemes(isDark), theme);
 
       await rendition.display(initialCfi ?? undefined);
       if (!cancelled) setIsLoading(false);
@@ -420,8 +394,8 @@ function EpubReader({
   useEffect(() => {
     const rendition = renditionRef.current;
     if (!rendition) return;
-    applyEpubThemes(rendition, buildThemes(isDark, themeLabels), theme);
-  }, [isDark, theme, themeLabels]);
+    applyEpubThemes(rendition, buildThemes(isDark), theme);
+  }, [isDark, theme]);
 
   // Apply width change
   useEffect(() => {
@@ -431,7 +405,7 @@ function EpubReader({
   const prev = () => renditionRef.current?.prev();
   const next = () => renditionRef.current?.next();
 
-  const themes = buildThemes(isDark, themeLabels);
+  const themes = buildThemes(isDark);
   const cfg = themes[theme];
 
   return (
@@ -449,30 +423,34 @@ function EpubReader({
         className="mx-auto flex-1 overflow-hidden"
         style={{ width: `${width}px`, maxWidth: '100%' }}
       />
-      <PlainButton
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={prev}
         className="p-sm absolute top-1/2 left-2 -translate-y-1/2 rounded-full border shadow backdrop-blur-sm"
         style={{
-          backgroundColor: `${cfg.backgroundColor}cc`,
+          backgroundColor: withAlpha(cfg.backgroundColor, 0.8),
           borderColor: cfg.borderColor,
           color: cfg.color,
         }}
         aria-label={t('pages.bookReader.prevPage')}
       >
         <ChevronLeft className="h-5 w-5" />
-      </PlainButton>
-      <PlainButton
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={next}
         className="p-sm absolute top-1/2 right-2 -translate-y-1/2 rounded-full border shadow backdrop-blur-sm"
         style={{
-          backgroundColor: `${cfg.backgroundColor}cc`,
+          backgroundColor: withAlpha(cfg.backgroundColor, 0.8),
           borderColor: cfg.borderColor,
           color: cfg.color,
         }}
         aria-label={t('pages.bookReader.nextPage')}
       >
         <ChevronRight className="h-5 w-5" />
-      </PlainButton>
+      </Button>
     </div>
   );
 }
@@ -510,15 +488,7 @@ function PdfReader({
   onNumPagesChange,
 }: PdfReaderProps) {
   const { t } = useTranslation();
-  const themeLabels = useMemo(
-    () => ({
-      light: t('pages.bookReader.themeLight'),
-      sepia: t('pages.bookReader.themeSepia'),
-      dark: t('pages.bookReader.themeDark'),
-    }),
-    [t]
-  );
-  const themes = buildThemes(isDark, themeLabels);
+  const themes = buildThemes(isDark);
   const cfg = themes[theme];
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
 
@@ -584,19 +554,16 @@ function PdfReader({
 // MAIN READER PAGE
 // ============================================================================
 
-export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}) {
+export default function BookReader({ bookIdProp, onClose }: BookReaderProps) {
   const { t } = useTranslation();
-  const { bookId: bookIdParam } = useParams<{ bookId: string }>();
-  const bookId = bookIdProp !== undefined ? String(bookIdProp) : bookIdParam;
+  const bookId = String(bookIdProp);
   const { toast } = useToast();
   const { isDark } = useTheme();
 
-  // Close via callback (modal) or window.close() (standalone tab)
-  const handleClose = onClose ?? (() => window.close());
+  const handleClose = onClose;
 
-  // Escape key closes modal
+  // Escape key closes the overlay
   useEffect(() => {
-    if (!onClose) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -608,17 +575,9 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
     () => (localStorage.getItem('reader-theme') as ReaderTheme) ?? 'light'
   );
 
-  const themeLabels = useMemo(
-    () => ({
-      light: t('pages.bookReader.themeLight'),
-      sepia: t('pages.bookReader.themeSepia'),
-      dark: t('pages.bookReader.themeDark'),
-    }),
-    [t]
-  );
   // Re-computed on every render; cheap since it only builds a plain object.
   // Depends on both isDark (app palette) and theme (reader mode).
-  const themes = buildThemes(isDark, themeLabels);
+  const themes = buildThemes(isDark);
   const cfg = themes[theme];
 
   const [contentWidth, setContentWidth] = useState<WidthPreset>(
@@ -837,7 +796,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
             <Badge
               variant="secondary"
               className="shrink-0 text-xs"
-              style={{ backgroundColor: `${cfg.color}18`, color: cfg.color }}
+              style={{ backgroundColor: withAlpha(cfg.color, 0.1), color: cfg.color }}
             >
               p. {currentPage}
             </Badge>
@@ -938,7 +897,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
               style={
                 theme === themeKey
                   ? {
-                      backgroundColor: `${themes[themeKey].color}20`,
+                      backgroundColor: withAlpha(themes[themeKey].color, 0.12),
                       color: themes[themeKey].color,
                     }
                   : { color: cfg.color }
@@ -962,7 +921,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
             title={t('pages.bookReader.annotations')}
             style={
               sidebarOpen
-                ? { backgroundColor: `${cfg.color}20`, color: cfg.color }
+                ? { backgroundColor: withAlpha(cfg.color, 0.12), color: cfg.color }
                 : { color: cfg.color }
             }
           >
@@ -1048,7 +1007,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
             </div>
 
             {/* Sidebar content */}
-            <div className="flex-1 space-y-3 overflow-y-auto p-3">
+            <div className="flex-1 space-y-3 p-3">
               {showAnnotationForm && ownerId > 0 && (
                 <AnnotationForm
                   bookId={book.id}
@@ -1066,34 +1025,49 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
                 />
               )}
 
-              {annotations.map((a) => (
-                <div
-                  key={a.id}
-                  className={`rounded-lg border-l-4 p-3 text-sm ${COLOR_BG[a.color] ?? 'border-l-gray-300 bg-gray-50'}`}
-                >
-                  <div className="mb-xs gap-xs flex items-start justify-between">
-                    <div className="gap-xs flex flex-wrap">
-                      <Badge variant="secondary" className="text-xs">
-                        {a.highlight_type_display}
-                      </Badge>
-                      {a.page_number && (
-                        <Badge variant="outline" className="text-xs">
-                          p. {a.page_number}
-                        </Badge>
+              <PaginatedSlide
+                items={annotations}
+                pageSize={DETAIL_TEXT_PAGE_SIZE}
+                pinNav={false}
+                className="space-y-3"
+              >
+                {(pageAnnotations) =>
+                  pageAnnotations.map((a) => (
+                    <div
+                      key={a.id}
+                      className={`rounded-lg border p-3 text-sm ${highlightBg(a.color)}`}
+                    >
+                      <div className="mb-xs gap-xs flex items-start justify-between">
+                        <div className="gap-xs flex flex-wrap">
+                          <Badge variant="secondary" className="text-xs">
+                            {t(HIGHLIGHT_TYPE_KEY[a.highlight_type] ?? '', {
+                              defaultValue: a.highlight_type_display,
+                            })}
+                          </Badge>
+                          {a.page_number && (
+                            <Badge variant="outline" className="text-xs">
+                              {t('pages.highlights.pageShort', { page: a.page_number })}
+                            </Badge>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 shrink-0"
+                          onClick={() => void handleDeleteAnnotation(a.id)}
+                          aria-label={t('pages.bookReader.removeAnnotation')}
+                        >
+                          <Trash2 className={cn('h-3.5 w-3.5', ACTION_COLOR.delete)} />
+                        </Button>
+                      </div>
+                      <p className="leading-snug">{a.text}</p>
+                      {a.chapter && (
+                        <p className="mt-xs text-xs opacity-60">{a.chapter}</p>
                       )}
                     </div>
-                    <PlainButton
-                      onClick={() => void handleDeleteAnnotation(a.id)}
-                      className="text-destructive hover:text-destructive shrink-0 rounded p-0.5"
-                      aria-label={t('pages.bookReader.removeAnnotation')}
-                    >
-                      <X className="h-3 w-3" />
-                    </PlainButton>
-                  </div>
-                  <p className="leading-snug">{a.text}</p>
-                  {a.chapter && <p className="mt-xs text-xs opacity-60">{a.chapter}</p>}
-                </div>
-              ))}
+                  ))
+                }
+              </PaginatedSlide>
             </div>
           </aside>
         )}

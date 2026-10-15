@@ -19,7 +19,10 @@ class SkillHistoryService {
   getHistory(
     skillId: number
   ): Promise<{ results: SkillHistoryEntry[]; count: number }> {
-    return apiClient.get(`${API_CONFIG.ENDPOINTS.SKILL_HISTORY}${skillId}/history/`);
+    // Histórico inteiro (o modal pagina no cliente).
+    return apiClient.get(
+      `${API_CONFIG.ENDPOINTS.SKILL_HISTORY}${skillId}/history/?page_size=500`
+    );
   }
 }
 

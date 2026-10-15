@@ -1,16 +1,7 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
-import {
-  BookOpen,
-  CalendarDays,
-  Clock,
-  FileText,
-  Hash,
-  Loader2,
-  Save,
-  X,
-} from 'lucide-react';
+import { BookOpen, CalendarDays, Clock, FileText, Hash, Save, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TIME_OF_DAY_ICONS } from '@/config/icons';
+import { toast } from '@/hooks/use-toast';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { formatDate } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
@@ -130,9 +122,9 @@ export function ReadingForm({
 
   const submit = (data: ReadingFormData) => {
     if (data.pages_read > maxPages) {
-      setError('pages_read', {
-        message: t('pages.readings.form.pagesReadMax', { count: maxPages }),
-      });
+      const message = t('pages.readings.form.pagesReadMax', { count: maxPages });
+      setError('pages_read', { message });
+      toast({ title: message, variant: 'destructive' });
       return;
     }
     onSubmit(data);
@@ -198,13 +190,6 @@ export function ReadingForm({
                   />
                 )}
               />
-              {selectedBook > 0 && (
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.readings.form.pagesReadMax', {
-                    count: maxPages,
-                  })}
-                </p>
-              )}
             </div>
 
             <div className="space-y-sm">
@@ -342,13 +327,9 @@ export function ReadingForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
-          {isLoading ? t('common.actions.saving') : t('common.actions.save')}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
+          {t('common.actions.save')}
         </Button>
       </div>
     </form>

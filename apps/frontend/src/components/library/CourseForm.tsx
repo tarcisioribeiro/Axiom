@@ -350,8 +350,8 @@ export function CourseForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          <Save className="h-4 w-4" />
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
           {t('common.actions.save')}
         </Button>
       </div>

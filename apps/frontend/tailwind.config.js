@@ -92,6 +92,14 @@ export default {
           simulator: 'hsl(var(--action-simulator))',
           'manage-vaults': 'hsl(var(--action-manage-vaults))',
           'check-completion': 'hsl(var(--action-check-completion))',
+          chat: 'hsl(var(--action-chat))',
+        },
+        highlight: {
+          yellow: 'hsl(var(--highlight-yellow))',
+          green: 'hsl(var(--highlight-green))',
+          blue: 'hsl(var(--highlight-blue))',
+          pink: 'hsl(var(--highlight-pink))',
+          orange: 'hsl(var(--highlight-orange))',
         },
         success: {
           DEFAULT: 'hsl(var(--success))',

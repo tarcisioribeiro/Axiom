@@ -26,6 +26,7 @@ import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate } from '@/lib/formatters';
+import { MEDAL_CLASSES, badgeLabel } from '@/lib/intellect-badges';
 import { STALE_TIMES } from '@/lib/query-client';
 import { formatLocalDate } from '@/lib/utils';
 import { goalsService } from '@/services/goals-service';
@@ -33,12 +34,6 @@ import type { IntellectBadge } from '@/services/intellect-badges-service';
 import { intellectBadgesService } from '@/services/intellect-badges-service';
 import { libraryDashboardService } from '@/services/library-dashboard-service';
 import type { Goal } from '@/types';
-
-const BADGE_LEVEL_COLORS: Record<string, string> = {
-  bronze: 'bg-medal-bronze/15 text-medal-bronze border-medal-bronze/40',
-  silver: 'bg-medal-silver/15 text-medal-silver border-medal-silver/40',
-  gold: 'bg-medal-gold/15 text-medal-gold border-medal-gold/40',
-};
 
 type TimelineEvent =
   | { kind: 'badge'; date: string; badge: IntellectBadge }
@@ -156,11 +151,11 @@ export default function Journey() {
                   {(badges ?? []).map((b) => (
                     <div
                       key={b.id}
-                      className={`p-sm flex flex-col items-center rounded-lg border text-center ${BADGE_LEVEL_COLORS[b.level] ?? ''}`}
+                      className={`p-sm flex flex-col items-center rounded-lg border text-center ${MEDAL_CLASSES[b.level] ?? ''}`}
                     >
                       <Medal className="h-6 w-6" aria-hidden="true" />
                       <span className="mt-xs text-xs font-semibold">
-                        {b.code_display}
+                        {badgeLabel(t, b)}
                       </span>
                       <span className="text-2xs opacity-70">{b.level_display}</span>
                     </div>
@@ -259,10 +254,10 @@ export default function Journey() {
                               {ev.kind === 'badge' ? (
                                 <p className="mt-xs text-sm font-medium">
                                   {t('pages.journey.badgeEarned', {
-                                    name: ev.badge.code_display,
+                                    name: badgeLabel(t, ev.badge),
                                   })}
                                   <Badge
-                                    className={`ml-xs text-2xs ${BADGE_LEVEL_COLORS[ev.badge.level] ?? ''}`}
+                                    className={`ml-xs text-2xs ${MEDAL_CLASSES[ev.badge.level] ?? ''}`}
                                   >
                                     {ev.badge.level_display}
                                   </Badge>

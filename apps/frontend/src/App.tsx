@@ -53,7 +53,6 @@ const LibraryDashboard = lazy(() => import('./pages/LibraryDashboard'));
 const Books = lazy(() => import('./pages/Books'));
 const Authors = lazy(() => import('./pages/Authors'));
 const Publishers = lazy(() => import('./pages/Publishers'));
-const BookReader = lazy(() => import('./pages/BookReader'));
 const Courses = lazy(() => import('./pages/Courses'));
 const Skills = lazy(() => import('./pages/Skills'));
 const KnowledgeGraphPage = lazy(() => import('./pages/KnowledgeGraph'));
@@ -760,20 +759,6 @@ function AnimatedRoutes() {
           }
         />
       </Route>
-
-      {/* Book Reader — protected but without Layout (fullscreen) */}
-      <Route
-        path="/library/reader/:bookId"
-        element={
-          <ProtectedRoute>
-            <ErrorBoundary>
-              <PageWrapper>
-                <BookReader />
-              </PageWrapper>
-            </ErrorBoundary>
-          </ProtectedRoute>
-        }
-      />
 
       {/* Admin Panel routes — exclusivo para superusuários */}
       <Route

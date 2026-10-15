@@ -1,71 +1,52 @@
 import { useMutation } from '@tanstack/react-query';
-import {
-  AlertTriangle,
-  CheckCircle2,
-  RefreshCw,
-  RotateCcw,
-  Send,
-  XCircle,
-} from 'lucide-react';
+import { Mail, RefreshCw, Send, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
 
+import { Badge, type BadgeProps } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogCloseFooter,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
-import { useAuthStore } from '@/stores/auth-store';
 import type { ServiceCheck, ServiceStatus } from '@/types';
 
-const statusConfig: Record<
-  ServiceStatus,
-  { icon: React.ElementType; color: string; bg: string; statusKey: string }
-> = {
-  healthy: {
-    icon: CheckCircle2,
-    color: 'text-green-600 dark:text-green-400',
-    bg: 'bg-green-500/10 border-green-500/30',
-    statusKey: 'healthy',
-  },
-  unhealthy: {
-    icon: XCircle,
-    color: 'text-destructive',
-    bg: 'bg-destructive/10 border-destructive/30',
-    statusKey: 'unhealthy',
-  },
-  warning: {
-    icon: AlertTriangle,
-    color: 'text-yellow-600 dark:text-yellow-400',
-    bg: 'bg-yellow-500/10 border-yellow-500/30',
-    statusKey: 'warning',
-  },
-  not_configured: {
-    icon: AlertTriangle,
-    color: 'text-muted-foreground',
-    bg: 'bg-secondary border-border',
-    statusKey: 'not_configured',
-  },
-  unknown: {
-    icon: AlertTriangle,
-    color: 'text-muted-foreground',
-    bg: 'bg-secondary border-border',
-    statusKey: 'unknown',
-  },
-  not_active: {
-    icon: AlertTriangle,
-    color: 'text-muted-foreground',
-    bg: 'bg-secondary border-border',
-    statusKey: 'not_active',
-  },
+const STATUS_VARIANT: Record<ServiceStatus, BadgeProps['variant']> = {
+  healthy: 'success',
+  unhealthy: 'destructive',
+  warning: 'warning',
+  not_configured: 'secondary',
+  unknown: 'secondary',
+  not_active: 'secondary',
 };
+
+function StatusBadge({ check }: { check: ServiceCheck | undefined }) {
+  const { t } = useTranslation();
+  const s = check?.status ?? 'unknown';
+  return (
+    <Badge variant={STATUS_VARIANT[s] ?? 'secondary'}>
+      {t(`pages.adminIntegrations.status.${s}`)}
+    </Badge>
+  );
+}
 
 interface IntegrationCardProps {
   name: string;
   icon: React.ElementType;
   check: ServiceCheck | undefined;
   loading: boolean;
-  details?: React.ReactNode;
+  onOpen: () => void;
+  /** Botões só de ícone do rodapé do card (§4). */
+  actions?: React.ReactNode;
 }
 
 export function IntegrationCard({
@@ -73,134 +54,124 @@ export function IntegrationCard({
   icon: Icon,
   check,
   loading,
-  details,
+  onOpen,
+  actions,
 }: IntegrationCardProps) {
   const { t } = useTranslation();
-  const s = check?.status ?? 'unknown';
-  const cfg = statusConfig[s] ?? statusConfig.unknown;
-  const StatusIcon = cfg.icon;
+  const models = check?.models?.length ?? 0;
 
   return (
-    <div className={cn('bg-card rounded-lg border p-5', cfg.bg)}>
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="bg-card flex h-10 w-10 items-center justify-center rounded-lg shadow-sm">
-            <Icon className="text-foreground h-5 w-5" />
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) =>
+        e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ') && onOpen()
+      }
+      className="border-border bg-card flex cursor-pointer flex-col rounded-lg border"
+    >
+      <div className="px-md py-sm space-y-sm flex-1">
+        <div className="gap-sm flex items-center justify-between">
+          <div className="gap-sm flex min-w-0 items-center">
+            <div className="bg-primary/10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+              <Icon className="text-primary h-4 w-4" />
+            </div>
+            <span className="text-foreground truncate font-medium">{name}</span>
           </div>
-          <div>
-            <p className="text-foreground font-semibold">{name}</p>
-            {loading ? (
-              <p className="text-muted-foreground text-xs">
-                {t('pages.adminIntegrations.checking')}
-              </p>
-            ) : (
-              <p
-                className={cn(
-                  'gap-xs flex items-center text-xs font-medium',
-                  cfg.color
-                )}
-              >
-                <StatusIcon className="h-3.5 w-3.5" />
-                {t(`pages.adminIntegrations.status.${cfg.statusKey}`)}
-              </p>
-            )}
-          </div>
+          {loading ? (
+            <RefreshCw className="text-muted-foreground h-4 w-4 animate-spin" />
+          ) : (
+            <StatusBadge check={check} />
+          )}
         </div>
-        {loading && (
-          <RefreshCw className="text-muted-foreground h-4 w-4 animate-spin" />
+        <p className="text-muted-foreground truncate text-sm" title={check?.message}>
+          {loading ? t('pages.adminIntegrations.checking') : (check?.message ?? '—')}
+        </p>
+        {models > 0 && (
+          <p className="text-foreground text-sm font-medium">
+            {t('pages.adminIntegrations.modelsCount', { count: models })}
+          </p>
         )}
       </div>
-      {check?.message && (
-        <p className="mb-sm text-muted-foreground text-sm">{check.message}</p>
-      )}
-      {check?.models && check.models.length > 0 && (
-        <div className="gap-xs flex flex-wrap">
-          {check.models.map((m) => (
-            <span
-              key={m}
-              className="bg-card px-sm text-foreground rounded-full py-0.5 text-xs shadow-sm"
-            >
-              {m}
-            </span>
-          ))}
+      {actions && (
+        <div className="border-border gap-xs px-sm py-xs flex justify-end border-t">
+          {actions}
         </div>
       )}
-      {details}
     </div>
   );
 }
 
-export function OllamaRestartPanel() {
+/** Detalhe somente leitura da integração (§2.3). */
+export function IntegrationDetailDialog({
+  item,
+  onClose,
+}: {
+  item:
+    | { name: string; icon: React.ElementType; check: ServiceCheck | undefined }
+    | undefined;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const logout = useAuthStore((s) => s.logout);
-  const { toast } = useToast();
-  const [redirecting, setRedirecting] = useState(false);
-
-  const mutation = useMutation({
-    mutationFn: () => adminService.restartAll(),
-    onSuccess: (data) => {
-      if (!data.success) {
-        const details = Object.entries(data.results)
-          .map(([pod, result]) => `${pod}: ${result}`)
-          .join('\n');
-        toast({
-          title: t('pages.adminIntegrations.restartError', {
-            reason: details || data.message,
-          }),
-          variant: 'destructive',
-        });
-        return;
-      }
-      setRedirecting(true);
-      toast({
-        title: t('pages.adminIntegrations.restartingDesc'),
-      });
-      setTimeout(() => {
-        logout();
-        void navigate('/login');
-      }, 2500);
-    },
-    onError: (err: Error) => {
-      toast({
-        title: t('pages.adminIntegrations.restartError', { reason: err.message }),
-        variant: 'destructive',
-      });
-    },
-  });
+  const models = item?.check?.models ?? [];
 
   return (
-    <div className="border-border mt-3 border-t pt-3">
-      <button
-        onClick={() => mutation.mutate()}
-        disabled={mutation.isPending || redirecting}
-        className="gap-xs border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium disabled:opacity-50"
-      >
-        {mutation.isPending || redirecting ? (
-          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <RotateCcw className="h-3.5 w-3.5" />
-        )}
-        {redirecting
-          ? t('pages.adminIntegrations.disconnecting')
-          : t('pages.adminIntegrations.restartAllBtn')}
-      </button>
-    </div>
+    <Dialog open={!!item} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent size="sm">
+        <DialogHeader>
+          <DialogTitle icon={item?.icon}>{item?.name}</DialogTitle>
+          <DialogDescription>{item?.check?.message}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-md py-sm">
+          <StatusBadge check={item?.check} />
+          {item?.check?.message && (
+            <p className="text-foreground text-sm break-words">{item.check.message}</p>
+          )}
+          {models.length > 0 && (
+            <div className="space-y-xs">
+              <p className="text-muted-foreground text-xs font-medium">
+                {t('pages.adminIntegrations.models')}
+              </p>
+              <div className="gap-xs flex flex-wrap">
+                {models.map((m) => (
+                  <Badge key={m} variant="outline">
+                    {m}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <DialogCloseFooter />
+      </DialogContent>
+    </Dialog>
   );
 }
 
-export function EmailTestPanel() {
+/** Modal de ação "Enviar email de teste" (§2.4). */
+export function EmailTestDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
+  const [invalid, setInvalid] = useState(false);
   const { toast } = useToast();
+
+  const close = () => {
+    setEmail('');
+    setInvalid(false);
+    onClose();
+  };
 
   const mutation = useMutation({
     mutationFn: (to: string) => adminService.sendTestEmail(to),
     onSuccess: (data) => {
-      toast({
-        title: data.message,
-      });
-      setEmail('');
+      toast({ title: data.message });
+      close();
     },
     onError: (err: Error) => {
       toast({
@@ -210,33 +181,66 @@ export function EmailTestPanel() {
     },
   });
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setInvalid(true);
+      toast({
+        title: t('common.fieldRequired', {
+          field: t('pages.adminIntegrations.recipient'),
+        }),
+        variant: 'destructive',
+      });
+      return;
+    }
+    mutation.mutate(email);
+  };
+
   return (
-    <div className="border-border mt-3 border-t pt-3">
-      <p className="mb-sm text-foreground text-sm font-medium">
-        {t('pages.adminIntegrations.sendTestEmail')}
-      </p>
-      <div className="gap-sm flex">
-        <Input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder={t('pages.adminIntegrations.emailPlaceholder')}
-          className="flex-1"
-          onKeyDown={(e) => e.key === 'Enter' && email && mutation.mutate(email)}
-        />
-        <button
-          onClick={() => email && mutation.mutate(email)}
-          disabled={!email || mutation.isPending}
-          className="gap-xs bg-primary py-sm text-primary-foreground hover:bg-primary/90 flex items-center rounded-lg px-3 text-sm font-medium disabled:opacity-50"
-        >
-          {mutation.isPending ? (
-            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Send className="h-3.5 w-3.5" />
-          )}
-          {t('pages.adminIntegrations.sendBtn')}
-        </button>
-      </div>
-    </div>
+    <Dialog open={open} onOpenChange={(o) => !o && close()}>
+      <DialogContent size="sm">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle icon={Send}>
+              {t('pages.adminIntegrations.sendTestEmail')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('pages.adminIntegrations.sendTestEmail')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-md">
+            <FormField
+              id="test-email"
+              label={t('pages.adminIntegrations.recipient')}
+              icon={Mail}
+              error={invalid ? t('pages.adminIntegrations.recipient') : undefined}
+              hideValidationIcon
+            >
+              <Input
+                id="test-email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setInvalid(false);
+                }}
+                placeholder={t('common.placeholders.email')}
+                aria-invalid={invalid}
+              />
+            </FormField>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={close}>
+              <X className="h-4 w-4" />
+              {t('common.actions.cancel')}
+            </Button>
+            <Button type="submit" loading={mutation.isPending}>
+              {!mutation.isPending && <Send className="h-4 w-4" />}
+              {t('pages.adminIntegrations.sendBtn')}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

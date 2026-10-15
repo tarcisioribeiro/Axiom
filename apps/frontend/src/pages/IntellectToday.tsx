@@ -3,11 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Award,
   BookOpen,
-  Brain,
   Clock,
   Eye,
   Flame,
   PlayCircle,
+  Sunrise,
   Zap,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -23,19 +23,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { API_CONFIG } from '@/config/constants';
+import { MEDAL_CLASSES, badgeLabel } from '@/lib/intellect-badges';
 import { STALE_TIMES } from '@/lib/query-client';
 import { apiClient } from '@/services/api-client';
 import { intellectBadgesService } from '@/services/intellect-badges-service';
 import { libraryDashboardService } from '@/services/library-dashboard-service';
 import type { Book, Course } from '@/types';
-
-const BADGE_LEVEL_COLORS: Record<string, string> = {
-  bronze:
-    'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-300',
-  silver:
-    'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300',
-  gold: 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300',
-};
 
 export default function IntellectToday() {
   const { t } = useTranslation();
@@ -66,10 +59,10 @@ export default function IntellectToday() {
   });
 
   const { data: flashcardsData, isLoading: isLoadingFlashcards } = useQuery({
-    queryKey: ['flashcards', 'due'],
+    queryKey: ['flashcards', 'due', 'count'],
     queryFn: () =>
       apiClient.get<{ results: unknown[]; count: number }>(
-        `${API_CONFIG.ENDPOINTS.FLASHCARDS}?due=true`
+        `${API_CONFIG.ENDPOINTS.FLASHCARDS}?due=true&page_size=1`
       ),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
@@ -90,7 +83,8 @@ export default function IntellectToday() {
   const activeBook = booksData?.results[0] ?? null;
   const activeCourse = coursesData?.results[0] ?? null;
   const dueFlashcardsCount = flashcardsData?.count ?? 0;
-  const recentBadges = badges?.slice(0, 4) ?? [];
+  const recentBadges = badges?.slice(0, 6) ?? [];
+  const streak = stats?.reading_streak;
 
   if (isLoading) {
     return (
@@ -107,18 +101,18 @@ export default function IntellectToday() {
       <PageContainer>
         <PageHeader
           title={t('pages.intellectToday.title')}
-          icon={<Brain className="text-primary h-6 w-6" />}
+          icon={<Sunrise className="text-primary h-6 w-6" />}
         />
 
         <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
           <StatCard
-            title={t('pages.intellectToday.weekProgress')}
+            title={t('pages.libraryDashboard.totalSessions')}
             value={stats?.total_sessions ?? 0}
             icon={<Clock />}
             accentColor="blue"
           />
           <StatCard
-            title={t('pages.intellectToday.activeCourse')}
+            title={t('pages.intellectToday.coursesInProgress')}
             value={coursesData?.count ?? 0}
             icon={<PlayCircle />}
             accentColor="purple"
@@ -141,39 +135,36 @@ export default function IntellectToday() {
             </CardHeader>
             <CardContent>
               {activeBook ? (
-                <div className="space-y-md">
-                  <div className="gap-md flex">
-                    {activeBook.cover ? (
-                      <img
-                        src={activeBook.cover}
-                        alt={activeBook.title}
-                        className="h-20 w-14 shrink-0 rounded object-cover shadow"
+                <div className="gap-md flex items-center">
+                  {activeBook.cover ? (
+                    <img
+                      src={activeBook.cover}
+                      alt={activeBook.title}
+                      className="h-20 w-14 shrink-0 rounded border object-cover"
+                    />
+                  ) : (
+                    <div className="bg-muted flex h-20 w-14 shrink-0 items-center justify-center rounded border">
+                      <BookOpen className="text-muted-foreground h-6 w-6" />
+                    </div>
+                  )}
+                  <div className="space-y-xs min-w-0 flex-1">
+                    <p className="truncate font-semibold">{activeBook.title}</p>
+                    <p className="text-muted-foreground truncate text-xs">
+                      {activeBook.authors_names.join(', ')}
+                    </p>
+                    <div className="gap-sm flex items-center">
+                      <Progress
+                        value={activeBook.reading_progress}
+                        className="h-1.5 flex-1"
                       />
-                    ) : (
-                      <div className="bg-muted flex h-20 w-14 shrink-0 items-center justify-center rounded border">
-                        <BookOpen className="text-muted-foreground h-6 w-6" />
-                      </div>
-                    )}
-                    <div className="space-y-xs min-w-0 flex-1">
-                      <p className="truncate font-semibold">{activeBook.title}</p>
-                      <p className="text-muted-foreground truncate text-xs">
-                        {activeBook.authors_names.join(', ')}
-                      </p>
-                      {activeBook.reading_progress > 0 && (
-                        <div className="space-y-xs">
-                          <Progress
-                            value={activeBook.reading_progress}
-                            className="h-1.5"
-                          />
-                          <p className="text-muted-foreground text-xs">
-                            {activeBook.reading_progress}%
-                          </p>
-                        </div>
-                      )}
+                      <span className="text-muted-foreground text-xs">
+                        {activeBook.reading_progress}%
+                      </span>
                     </div>
                   </div>
                   <Button
-                    className="gap-sm w-full"
+                    variant="outline"
+                    className="shrink-0"
                     onClick={() => void navigate('/library/books')}
                   >
                     <BookOpen className="h-4 w-4" />
@@ -198,30 +189,31 @@ export default function IntellectToday() {
             </CardHeader>
             <CardContent>
               {activeCourse ? (
-                <div className="space-y-md">
-                  <div className="space-y-xs">
-                    <p className="font-semibold">{activeCourse.title}</p>
+                <div className="gap-md flex items-center">
+                  <div className="space-y-xs min-w-0 flex-1">
+                    <p className="truncate font-semibold">{activeCourse.title}</p>
                     <p className="text-muted-foreground text-xs">
-                      {activeCourse.platform_display}
+                      {t(`pages.courses.platform.${activeCourse.platform}`, {
+                        defaultValue: activeCourse.platform_display,
+                      })}
                     </p>
-                    <div className="space-y-xs">
+                    <div className="gap-sm flex items-center">
                       <Progress
                         value={activeCourse.progress_percentage}
-                        className="h-1.5"
+                        className="h-1.5 flex-1"
                       />
-                      <p className="text-muted-foreground text-xs">
-                        {activeCourse.progress_percentage}% —{' '}
+                      <span className="text-muted-foreground text-xs">
                         {activeCourse.completed_lessons}/{activeCourse.total_lessons}
-                      </p>
+                      </span>
                     </div>
                   </div>
                   <Button
-                    className="gap-sm w-full"
                     variant="outline"
-                    onClick={() => void navigate('/intellect/courses')}
+                    className="shrink-0"
+                    onClick={() => void navigate('/library/courses')}
                   >
                     <PlayCircle className="h-4 w-4" />
-                    {t('pages.intellectToday.startCourse')}
+                    {t('pages.intellectToday.openCourses')}
                   </Button>
                 </div>
               ) : (
@@ -232,90 +224,39 @@ export default function IntellectToday() {
               )}
             </CardContent>
           </Card>
-        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="gap-sm flex items-center text-sm font-semibold">
-              <Zap className="text-primary h-4 w-4" />
-              {t('pages.intellectToday.quickActions')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
-              <Button
-                variant="outline"
-                className="gap-xs py-md flex flex-col"
-                onClick={() => void navigate('/library/books')}
-              >
-                <BookOpen className="h-5 w-5" />
-                <span className="text-xs">{t('pages.intellectToday.logReading')}</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-xs py-md flex flex-col"
-                onClick={() => void navigate('/library/flashcards')}
-              >
-                <Brain className="h-5 w-5" />
-                <span className="text-xs">{t('pages.intellectToday.reviewCards')}</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-xs py-md flex flex-col"
-                onClick={() => void navigate('/library/books')}
-              >
-                <PlayCircle className="h-5 w-5" />
-                <span className="text-xs">
-                  {t('pages.intellectToday.startReading')}
-                </span>
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-xs py-md flex flex-col"
-                onClick={() => void navigate('/intellect/courses')}
-              >
-                <Zap className="h-5 w-5" />
-                <span className="text-xs">{t('pages.intellectToday.startCourse')}</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
+          <Card>
+            <CardHeader>
               <CardTitle className="gap-sm flex items-center text-sm font-semibold">
                 <Flame className="text-warning h-4 w-4" />
                 {t('pages.intellectToday.streak')}
               </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {stats?.reading_streak.current_streak ? (
-              <div className="gap-md flex items-center">
-                <div className="bg-warning/10 text-warning flex h-14 w-14 items-center justify-center rounded-full">
-                  <Flame className="h-7 w-7" />
+            </CardHeader>
+            <CardContent>
+              {streak?.current_streak ? (
+                <div className="gap-md flex items-center">
+                  <div className="bg-warning/10 text-warning flex h-14 w-14 items-center justify-center rounded-full">
+                    <Flame className="h-7 w-7" />
+                  </div>
+                  <div>
+                    <p className="text-warning text-2xl font-bold">
+                      {t('pages.intellectToday.days', { count: streak.current_streak })}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {t('pages.libraryDashboard.bestStreak')}:{' '}
+                      {t('pages.intellectToday.days', { count: streak.longest_streak })}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-warning text-2xl font-bold">
-                    {t('pages.intellectToday.days', {
-                      count: stats.reading_streak.current_streak,
-                    })}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.intellectToday.weekProgress')}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                {t('pages.intellectToday.noStreak')}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <EmptyState
+                  title={t('pages.intellectToday.noStreak')}
+                  icon={<Flame className="text-muted-foreground h-8 w-8" />}
+                />
+              )}
+            </CardContent>
+          </Card>
 
-        {recentBadges.length > 0 && (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -323,32 +264,40 @@ export default function IntellectToday() {
                   <Award className="text-primary h-4 w-4" />
                   {t('pages.intellectToday.badges')}
                 </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs"
-                  onClick={() => void navigate('/intellect/library-dashboard')}
-                >
-                  <Eye aria-hidden="true" />
-                  {t('pages.intellectToday.viewAll')}
-                </Button>
+                {recentBadges.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void navigate('/planning/journey')}
+                  >
+                    <Eye aria-hidden="true" />
+                    {t('pages.intellectToday.viewAll')}
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
-              <div className="gap-sm flex flex-wrap">
-                {recentBadges.map((badge) => (
-                  <span
-                    key={badge.id}
-                    className={`gap-xs px-sm py-xs inline-flex items-center rounded-full border text-xs font-medium ${BADGE_LEVEL_COLORS[badge.level] ?? ''}`}
-                  >
-                    <Award className="h-3 w-3 shrink-0" />
-                    {badge.code_display}
-                  </span>
-                ))}
-              </div>
+              {recentBadges.length > 0 ? (
+                <div className="gap-sm flex flex-wrap">
+                  {recentBadges.map((badge) => (
+                    <span
+                      key={badge.id}
+                      className={`gap-xs px-sm py-xs inline-flex items-center rounded-full border text-xs font-medium ${MEDAL_CLASSES[badge.level] ?? ''}`}
+                    >
+                      <Award className="h-3 w-3 shrink-0" />
+                      {badgeLabel(t, badge)}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title={t('pages.intellectToday.noBadges')}
+                  icon={<Award className="text-muted-foreground h-8 w-8" />}
+                />
+              )}
             </CardContent>
           </Card>
-        )}
+        </div>
       </PageContainer>
     </AnimatedPage>
   );

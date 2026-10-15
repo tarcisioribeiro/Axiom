@@ -636,3 +636,17 @@ class CourseLessonToggleModelTest(BaseIntellectTestCase):
 
         self.assertFalse(lesson.is_completed)
         self.assertIsNone(lesson.completed_at)
+
+
+class PageSizeQueryParamTest(BaseIntellectTestCase):
+    """`?page_size=` deve ser respeitado (antes o DRF cortava em 50)."""
+
+    def test_page_size_param_returns_more_than_default(self):
+        for i in range(55):
+            self._make_course(title=f"Curso {i}")
+        url = reverse("course-list-create")
+        default = self.client.get(url)
+        self.assertEqual(len(default.data["results"]), 50)
+        big = self.client.get(url, {"page_size": 200})
+        self.assertEqual(len(big.data["results"]), 55)
+        self.assertIsNone(big.data["next"])

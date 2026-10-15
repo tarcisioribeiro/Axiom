@@ -26,6 +26,8 @@ interface PaginatedSlideProps<T> {
 /** Tamanhos padrão: grades de cards (divisível por 2, 3 e 4 colunas) e listas. */
 export const GRID_PAGE_SIZE = 12;
 export const LIST_PAGE_SIZE = 5;
+/** Itens de texto longo (resumos, destaques, anotações): 3 por página (§2.5). */
+export const DETAIL_TEXT_PAGE_SIZE = 3;
 
 /**
  * Lista paginada no cliente com navegação ‹ › centralizada e transição de

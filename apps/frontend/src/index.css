@@ -154,6 +154,29 @@
     --action-simulator: var(--muted-foreground);
     --action-manage-vaults: var(--muted-foreground);
     --action-check-completion: var(--muted-foreground);
+    --action-chat: var(--primary);
+
+    /* Cores de destaque de leitura (marca-texto): apontam para o tema. */
+    --highlight-yellow: var(--star);
+    --highlight-green: var(--success);
+    --highlight-blue: var(--info);
+    --highlight-pink: var(--accent);
+    --highlight-orange: var(--warning);
+
+    /* Leitor de livros: 3 modos de página (claro, sépia, escuro). HSL sem hsl(),
+       resolvidos em runtime para injetar no iframe do EPUB. */
+    --reader-light-bg: 48 100% 96%;
+    --reader-light-fg: 0 0% 12%;
+    --reader-light-border: 249 20% 81%;
+    --reader-light-link: 221 83% 53%;
+    --reader-sepia-bg: 40 67% 87%;
+    --reader-sepia-fg: 19 33% 27%;
+    --reader-sepia-border: 39 43% 61%;
+    --reader-sepia-link: 221 83% 53%;
+    --reader-dark-bg: 21 53% 7%;
+    --reader-dark-fg: 44 66% 90%;
+    --reader-dark-border: 23 40% 21%;
+    --reader-dark-link: 37 91% 55%;
 
     /* Success - Green Alucard (#14710A) */
     --success: 114 84% 24%;
@@ -284,6 +307,18 @@
 
   /* Tema Escuro - Dracula Classic (Dracula Dark Theme Oficial) */
   .dark {
+    --reader-light-bg: 230 41% 95%;
+    --reader-light-fg: 232 14% 15%;
+    --reader-light-border: 223 30% 76%;
+    --reader-light-link: 224 76% 48%;
+    --reader-sepia-bg: 260 50% 92%;
+    --reader-sepia-fg: 271 34% 24%;
+    --reader-sepia-border: 263 38% 62%;
+    --reader-sepia-link: 263 70% 50%;
+    --reader-dark-bg: 231 15% 18%;
+    --reader-dark-fg: 60 30% 96%;
+    --reader-dark-border: 232 14% 31%;
+    --reader-dark-link: 191 97% 77%;
     color-scheme: dark;
 
     /* Backgrounds - Background (#282A36) */

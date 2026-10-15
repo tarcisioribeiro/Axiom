@@ -2,25 +2,29 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  AlertCircle,
   BookOpen,
-  Brain,
   CalendarClock,
   CheckCircle2,
   ChevronLeft,
   CircleDot,
   FileText,
   Layers,
-  Loader2,
   Plus,
+  RotateCcw,
   Save,
   Search,
+  Sparkles,
   Star,
+  ThumbsUp,
   X,
+  XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { CardActions } from '@/components/common/CardActions';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -30,10 +34,12 @@ import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSli
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -45,11 +51,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { FLASHCARD_STATUS_ICONS } from '@/config/icons';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
+import { formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import {
@@ -71,14 +79,35 @@ const STATUS_BADGE_VARIANT: Record<
   mastered: 'outline',
 };
 
-const RATING_COLORS = [
-  'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-  'bg-destructive/80 text-destructive-foreground hover:bg-destructive/70',
-  'bg-warning text-warning-foreground hover:bg-warning/90',
-  'bg-warning/80 text-warning-foreground hover:bg-warning/70',
-  'bg-success/80 text-success-foreground hover:bg-success/70',
-  'bg-success text-success-foreground hover:bg-success/90',
-];
+/** Notas SM-2 (0–5): cor por resultado e ícone à esquerda do texto (§4). */
+const RATINGS = [
+  {
+    className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+    icon: RotateCcw,
+  },
+  {
+    className: 'bg-destructive/80 text-destructive-foreground hover:bg-destructive/70',
+    icon: XCircle,
+  },
+  {
+    className: 'bg-warning text-warning-foreground hover:bg-warning/90',
+    icon: AlertCircle,
+  },
+  {
+    className: 'bg-warning/80 text-warning-foreground hover:bg-warning/70',
+    icon: CircleDot,
+  },
+  {
+    className: 'bg-success/80 text-success-foreground hover:bg-success/70',
+    icon: ThumbsUp,
+  },
+  {
+    className: 'bg-success text-success-foreground hover:bg-success/90',
+    icon: Sparkles,
+  },
+] as const;
+
+type ViewFilter = 'all' | 'due';
 
 function FlipCard({
   card,
@@ -126,15 +155,22 @@ function FlipCard({
 export default function Flashcards() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
 
   const [mode, setMode] = useState<Mode>('list');
   const [reviewIndex, setReviewIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [newFront, setNewFront] = useState('');
-  const [newBack, setNewBack] = useState('');
+  // Incluir (header) e editar (card) usam o mesmo modal (§2.2).
+  const [form, setForm] = useState<{ open: boolean; card?: FlashCard }>({
+    open: false,
+  });
+  const [front, setFront] = useState('');
+  const [back, setBack] = useState('');
+  const [invalid, setInvalid] = useState<{ front?: boolean; back?: boolean }>({});
+  const [detailCard, setDetailCard] = useState<FlashCard | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewFilter, setViewFilter] = useState<ViewFilter>('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [bookFilter, setBookFilter] = useState('all');
 
@@ -150,25 +186,39 @@ export default function Flashcards() {
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+  const errorToast = (err: unknown) =>
+    toast({ title: getErrorMessage(err), variant: 'destructive' });
+
   const reviewMutation = useMutation({
     mutationFn: ({ id, rating }: { id: number; rating: number }) =>
       flashCardService.review(id, rating),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['flashcards'] });
-    },
-    onError: (err) => toast({ title: getErrorMessage(err), variant: 'destructive' }),
+    onSuccess: () => void invalidate(),
+    onError: errorToast,
   });
 
-  const createMutation = useMutation({
-    mutationFn: (data: FlashCardFormData) => flashCardService.create(data),
-    onSuccess: () => {
-      toast({ title: t('pages.flashcards.generatedSuccess', { count: 1 }) });
-      setCreateOpen(false);
-      setNewFront('');
-      setNewBack('');
-      void queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+  const saveMutation = useMutation({
+    mutationFn: ({ data, card }: { data: FlashCardFormData; card?: FlashCard }) =>
+      card ? flashCardService.update(card.id, data) : flashCardService.create(data),
+    onSuccess: (_saved, { card }) => {
+      toast({
+        title: card
+          ? t('pages.flashcards.updated')
+          : t('pages.flashcards.generatedSuccess', { count: 1 }),
+      });
+      setForm({ open: false });
+      void invalidate();
     },
-    onError: (err) => toast({ title: getErrorMessage(err), variant: 'destructive' }),
+    onError: errorToast,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => flashCardService.delete(id),
+    onSuccess: () => {
+      toast({ title: t('pages.flashcards.deleted') });
+      void invalidate();
+    },
+    onError: errorToast,
   });
 
   const cards = allCards?.results ?? [];
@@ -192,14 +242,17 @@ export default function Flashcards() {
     return true;
   };
 
-  const filteredCards = cards.filter(matchesFilters);
-  const filteredDue = due.filter(matchesFilters);
+  const filteredCards = (viewFilter === 'due' ? due : cards).filter(matchesFilters);
 
   const hasActiveFilters =
-    searchTerm !== '' || statusFilter !== 'all' || bookFilter !== 'all';
+    searchTerm !== '' ||
+    viewFilter !== 'all' ||
+    statusFilter !== 'all' ||
+    bookFilter !== 'all';
 
   const clearFilters = () => {
     setSearchTerm('');
+    setViewFilter('all');
     setStatusFilter('all');
     setBookFilter('all');
   };
@@ -223,10 +276,46 @@ export default function Flashcards() {
     setMode('review');
   };
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
+  const openForm = (card?: FlashCard) => {
+    setFront(card?.front ?? '');
+    setBack(card?.back ?? '');
+    setInvalid({});
+    setForm({ open: true, card });
+  };
+
+  const handleDelete = (card: FlashCard) => {
+    void showConfirm({
+      title: t('common.messages.confirmDeleteTitle'),
+      description: card.front,
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
+      variant: 'destructive',
+    }).then((ok) => {
+      if (ok) deleteMutation.mutate(card.id);
+    });
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newFront.trim() || !newBack.trim()) return;
-    createMutation.mutate({ front: newFront.trim(), back: newBack.trim() });
+    const missing = { front: !front.trim(), back: !back.trim() };
+    setInvalid(missing);
+    if (missing.front) {
+      toast({
+        title: t('common.fieldRequired', { field: t('pages.flashcards.front') }),
+        variant: 'destructive',
+      });
+    }
+    if (missing.back) {
+      toast({
+        title: t('common.fieldRequired', { field: t('pages.flashcards.back') }),
+        variant: 'destructive',
+      });
+    }
+    if (missing.front || missing.back) return;
+    saveMutation.mutate({
+      data: { front: front.trim(), back: back.trim() },
+      card: form.card,
+    });
   };
 
   if (isLoading) {
@@ -244,11 +333,11 @@ export default function Flashcards() {
       <PageContainer>
         <PageHeader
           title={t('pages.flashcards.title')}
-          icon={<Brain className="text-primary h-6 w-6" />}
+          icon={<Layers className="text-primary h-6 w-6" />}
           actions={
             mode === 'list' ? (
               <div className="gap-sm flex">
-                <Button variant="outline" onClick={() => setCreateOpen(true)}>
+                <Button onClick={() => openForm()}>
                   <Plus className="h-4 w-4" />
                   {t('pages.flashcards.newCard')}
                 </Button>
@@ -314,19 +403,17 @@ export default function Flashcards() {
                         {t('pages.flashcards.rating.label')}
                       </p>
                       <div className="gap-sm grid grid-cols-3 sm:grid-cols-6">
-                        {([0, 1, 2, 3, 4, 5] as const).map((r) => (
-                          <button
+                        {RATINGS.map(({ className, icon: Icon }, r) => (
+                          <Button
                             key={r}
                             type="button"
                             onClick={() => handleRating(r)}
                             disabled={reviewMutation.isPending}
-                            className={cn(
-                              'px-sm py-sm rounded-md text-xs font-semibold transition-opacity disabled:opacity-50',
-                              RATING_COLORS[r]
-                            )}
+                            className={cn('text-xs', className)}
                           >
+                            <Icon className="h-4 w-4" />
                             {t(`pages.flashcards.rating.${r}`)}
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -341,31 +428,8 @@ export default function Flashcards() {
             </motion.div>
           </AnimatePresence>
         ) : (
-          <Tabs defaultValue="all">
-            <FilterBar
-              hasActiveFilters={hasActiveFilters}
-              onClear={clearFilters}
-              activeFilters={[
-                ...(statusFilter !== 'all'
-                  ? [
-                      {
-                        key: 'status',
-                        label: `${t('common.fields.status')}: ${t(`pages.flashcards.status.${statusFilter}`)}`,
-                        onRemove: () => setStatusFilter('all'),
-                      },
-                    ]
-                  : []),
-                ...(bookFilter !== 'all'
-                  ? [
-                      {
-                        key: 'book',
-                        label: `${t('pages.flashcards.allBooks')}: ${bookFilter}`,
-                        onRemove: () => setBookFilter('all'),
-                      },
-                    ]
-                  : []),
-              ]}
-            >
+          <>
+            <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
               <FilterField label={t('common.filterLabels.search')} icon={Search}>
                 <SearchInput
                   placeholder={t('pages.flashcards.searchPlaceholder')}
@@ -373,6 +437,29 @@ export default function Flashcards() {
                   onValueChange={setSearchTerm}
                   className="w-44"
                 />
+              </FilterField>
+              {/* "Todos / Vencem hoje" filtra a mesma lista: é filtro, não aba (§13). */}
+              <FilterField label={t('pages.flashcards.viewFilter')} icon={Layers}>
+                <Select
+                  value={viewFilter}
+                  onValueChange={(v) => setViewFilter(v as ViewFilter)}
+                >
+                  <SelectTrigger
+                    className="w-40"
+                    aria-label={t('pages.flashcards.viewFilter')}
+                    startIcon={<CalendarClock className="h-3.5 w-3.5" />}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      {t('pages.flashcards.allCards')}
+                    </SelectItem>
+                    <SelectItem value="due">
+                      {t('pages.flashcards.dueToday')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </FilterField>
               <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -387,30 +474,18 @@ export default function Flashcards() {
                     <SelectItem value="all">
                       {t('pages.flashcards.allStatus')}
                     </SelectItem>
-                    <SelectItem
-                      value="new"
-                      icon={<FLASHCARD_STATUS_ICONS.new className="h-4 w-4" />}
-                    >
-                      {t('pages.flashcards.status.new')}
-                    </SelectItem>
-                    <SelectItem
-                      value="learning"
-                      icon={<FLASHCARD_STATUS_ICONS.learning className="h-4 w-4" />}
-                    >
-                      {t('pages.flashcards.status.learning')}
-                    </SelectItem>
-                    <SelectItem
-                      value="review"
-                      icon={<FLASHCARD_STATUS_ICONS.review className="h-4 w-4" />}
-                    >
-                      {t('pages.flashcards.status.review')}
-                    </SelectItem>
-                    <SelectItem
-                      value="mastered"
-                      icon={<FLASHCARD_STATUS_ICONS.mastered className="h-4 w-4" />}
-                    >
-                      {t('pages.flashcards.status.mastered')}
-                    </SelectItem>
+                    {(['new', 'learning', 'review', 'mastered'] as const).map((st) => {
+                      const Icon = FLASHCARD_STATUS_ICONS[st];
+                      return (
+                        <SelectItem
+                          key={st}
+                          value={st}
+                          icon={<Icon className="h-4 w-4" />}
+                        >
+                          {t(`pages.flashcards.status.${st}`)}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </FilterField>
@@ -438,163 +513,193 @@ export default function Flashcards() {
                 </FilterField>
               )}
             </FilterBar>
-            <TabsList className="w-full">
-              <TabsTrigger value="all" className="gap-xs flex-1">
-                <Layers className="h-4 w-4" />
-                {t('pages.flashcards.stats.total')}
-              </TabsTrigger>
-              <TabsTrigger value="due" className="gap-xs flex-1">
-                <CalendarClock className="h-4 w-4" />
-                {t('pages.flashcards.dueToday')}
-              </TabsTrigger>
-            </TabsList>
 
-            <TabsContent value="all" className="mt-md">
-              {filteredCards.length === 0 ? (
-                <EmptyState
-                  title={t('pages.flashcards.empty.title')}
-                  icon={<Brain className="text-muted-foreground h-10 w-10" />}
-                />
-              ) : (
-                <PaginatedSlide
-                  items={filteredCards}
-                  pageSize={GRID_PAGE_SIZE}
-                  className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3"
-                >
-                  {(pageItems) =>
-                    pageItems.map((card) => (
-                      <Card key={card.id}>
-                        <CardHeader className="pb-xs">
+            {filteredCards.length === 0 ? (
+              <EmptyState
+                title={
+                  viewFilter === 'due'
+                    ? t('pages.flashcards.emptyReview.title')
+                    : t('pages.flashcards.empty.title')
+                }
+                icon={<Layers className="text-muted-foreground h-10 w-10" />}
+              />
+            ) : (
+              <PaginatedSlide
+                key={`${viewFilter}-${statusFilter}-${bookFilter}-${searchTerm}`}
+                items={filteredCards}
+                pageSize={GRID_PAGE_SIZE}
+                className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+              >
+                {(pageItems) =>
+                  pageItems.map((card) => {
+                    const StatusIcon = FLASHCARD_STATUS_ICONS[card.status];
+                    return (
+                      <div
+                        key={card.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setDetailCard(card)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') setDetailCard(card);
+                        }}
+                        className="bg-card border-border flex cursor-pointer flex-col rounded-lg border"
+                      >
+                        <div className="px-md py-sm space-y-xs flex-1">
                           <div className="gap-sm flex items-start justify-between">
+                            <p
+                              className="truncate text-sm font-semibold"
+                              title={card.front}
+                            >
+                              {card.front}
+                            </p>
                             <Badge
                               variant={STATUS_BADGE_VARIANT[card.status]}
-                              className="gap-xs text-xs"
+                              className="gap-xs shrink-0 text-xs"
                             >
-                              {(() => {
-                                const StatusIcon = FLASHCARD_STATUS_ICONS[card.status];
-                                return StatusIcon ? (
-                                  <StatusIcon
-                                    className="h-3.5 w-3.5"
-                                    aria-hidden="true"
-                                  />
-                                ) : null;
-                              })()}
+                              {StatusIcon && (
+                                <StatusIcon
+                                  className="h-3.5 w-3.5"
+                                  aria-hidden="true"
+                                />
+                              )}
                               {t(`pages.flashcards.status.${card.status}`)}
                             </Badge>
-                            {card.book_title && (
-                              <span className="text-muted-foreground max-w-[120px] truncate text-xs">
-                                {card.book_title}
-                              </span>
-                            )}
                           </div>
-                        </CardHeader>
-                        <CardContent className="space-y-sm">
-                          <div>
-                            <p className="mb-xs text-muted-foreground text-xs font-medium">
-                              {t('pages.flashcards.front')}
-                            </p>
-                            <p className="text-sm">{card.front}</p>
-                          </div>
-                          <div className="pt-sm border-t">
-                            <p className="mb-xs text-muted-foreground text-xs font-medium">
-                              {t('pages.flashcards.back')}
-                            </p>
-                            <p className="text-muted-foreground text-sm">{card.back}</p>
-                          </div>
-                          {card.next_review && (
-                            <p className="text-muted-foreground text-xs">
-                              {t('pages.flashcards.nextReview')}:{' '}
-                              {new Date(card.next_review).toLocaleDateString('pt-BR')}
-                            </p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))
-                  }
-                </PaginatedSlide>
-              )}
-            </TabsContent>
-
-            <TabsContent value="due" className="mt-md">
-              {filteredDue.length === 0 ? (
-                <EmptyState
-                  title={t('pages.flashcards.emptyReview.title')}
-                  icon={<Star className="text-muted-foreground h-10 w-10" />}
-                />
-              ) : (
-                <PaginatedSlide
-                  items={filteredDue}
-                  pageSize={GRID_PAGE_SIZE}
-                  className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3"
-                >
-                  {(pageItems) =>
-                    pageItems.map((card) => (
-                      <Card key={card.id}>
-                        <CardContent className="space-y-sm pt-md">
-                          <p className="text-sm font-medium">{card.front}</p>
-                          <p className="text-muted-foreground text-xs">{card.back}</p>
-                        </CardContent>
-                      </Card>
-                    ))
-                  }
-                </PaginatedSlide>
-              )}
-            </TabsContent>
-          </Tabs>
+                          <p className="text-muted-foreground truncate text-xs">
+                            {card.book_title ?? '—'}
+                          </p>
+                          <p className="gap-xs text-muted-foreground flex items-center text-xs">
+                            <CalendarClock className="h-3.5 w-3.5" />
+                            {formatDate(card.next_review, 'dd/MM/yyyy')}
+                          </p>
+                        </div>
+                        <div
+                          role="presentation"
+                          className="gap-xs px-sm py-xs flex items-center justify-end border-t"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
+                          <CardActions
+                            onEdit={() => openForm(card)}
+                            onDelete={() => handleDelete(card)}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
+                }
+              </PaginatedSlide>
+            )}
+          </>
         )}
 
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        {/* Detalhe do card (somente leitura) */}
+        <Dialog open={!!detailCard} onOpenChange={(v) => !v && setDetailCard(null)}>
+          <DialogContent className="max-w-lg">
+            {detailCard && (
+              <>
+                <DialogHeader>
+                  <DialogTitle icon={Layers}>
+                    {t('pages.flashcards.detailTitle')}
+                  </DialogTitle>
+                  <VisuallyHidden>
+                    <DialogDescription>{detailCard.front}</DialogDescription>
+                  </VisuallyHidden>
+                </DialogHeader>
+                <div className="space-y-md text-sm">
+                  <div>
+                    <p className="mb-xs text-muted-foreground text-xs font-medium">
+                      {t('pages.flashcards.front')}
+                    </p>
+                    <p className="line-clamp-6">{detailCard.front}</p>
+                  </div>
+                  <div className="pt-sm border-t">
+                    <p className="mb-xs text-muted-foreground text-xs font-medium">
+                      {t('pages.flashcards.back')}
+                    </p>
+                    <p className="line-clamp-6">{detailCard.back}</p>
+                  </div>
+                  <div className="gap-sm text-muted-foreground flex flex-wrap items-center text-xs">
+                    <Badge variant={STATUS_BADGE_VARIANT[detailCard.status]}>
+                      {t(`pages.flashcards.status.${detailCard.status}`)}
+                    </Badge>
+                    {detailCard.book_title && (
+                      <span className="gap-xs flex items-center">
+                        <BookOpen className="h-3.5 w-3.5" />
+                        {detailCard.book_title}
+                      </span>
+                    )}
+                    <span className="gap-xs flex items-center">
+                      <CalendarClock className="h-3.5 w-3.5" />
+                      {t('pages.flashcards.nextReview')}:{' '}
+                      {formatDate(detailCard.next_review, 'dd/MM/yyyy')}
+                    </span>
+                  </div>
+                </div>
+                <DialogCloseFooter />
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Incluir / editar */}
+        <Dialog open={form.open} onOpenChange={(v) => !v && setForm({ open: false })}>
           <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle mode="create">{t('pages.flashcards.newCard')}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={(e) => void handleCreateSubmit(e)} className="space-y-md">
-              <div className="space-y-xs">
-                <Label className="gap-xs flex items-center">
-                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.flashcards.front')}
-                </Label>
-                <Textarea
-                  value={newFront}
-                  placeholder={t('common.placeholders.flashcardFront')}
-                  onChange={(e) => setNewFront(e.target.value)}
-                  rows={3}
-                  required
-                />
+            <form onSubmit={handleFormSubmit}>
+              <DialogHeader>
+                <DialogTitle mode={form.card ? 'edit' : 'create'}>
+                  {form.card
+                    ? t('pages.flashcards.editCard')
+                    : t('pages.flashcards.newCard')}
+                </DialogTitle>
+                <VisuallyHidden>
+                  <DialogDescription>{t('pages.flashcards.title')}</DialogDescription>
+                </VisuallyHidden>
+              </DialogHeader>
+              <div className="space-y-md py-md">
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center" htmlFor="fc-front">
+                    <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.flashcards.front')}
+                  </Label>
+                  <Textarea
+                    id="fc-front"
+                    value={front}
+                    placeholder={t('common.placeholders.flashcardFront')}
+                    onChange={(e) => setFront(e.target.value)}
+                    aria-invalid={invalid.front}
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center" htmlFor="fc-back">
+                    <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.flashcards.back')}
+                  </Label>
+                  <Textarea
+                    id="fc-back"
+                    value={back}
+                    placeholder={t('common.placeholders.flashcardBack')}
+                    onChange={(e) => setBack(e.target.value)}
+                    aria-invalid={invalid.back}
+                    rows={3}
+                  />
+                </div>
               </div>
-              <div className="space-y-xs">
-                <Label className="gap-xs flex items-center">
-                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.flashcards.back')}
-                </Label>
-                <Textarea
-                  value={newBack}
-                  placeholder={t('common.placeholders.flashcardBack')}
-                  onChange={(e) => setNewBack(e.target.value)}
-                  rows={3}
-                  required
-                />
-              </div>
-              <div className="dialog-footer gap-sm flex justify-end">
+              <DialogFooter>
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setCreateOpen(false)}
+                  onClick={() => setForm({ open: false })}
                 >
                   <X className="h-4 w-4" />
                   {t('common.actions.cancel')}
                 </Button>
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-                  {createMutation.isPending
-                    ? t('common.actions.saving')
-                    : t('common.actions.save')}
+                <Button type="submit" loading={saveMutation.isPending}>
+                  {!saveMutation.isPending && <Save className="h-4 w-4" />}
+                  {t('common.actions.save')}
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
