@@ -65,8 +65,7 @@ export function RestartModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent size="sm">
         <DialogHeader>
-          <DialogTitle className="gap-sm flex items-center">
-            <RotateCcw className="text-primary h-5 w-5" />
+          <DialogTitle icon={RotateCcw}>
             {t('pages.adminConfig.restartModal.title')}
           </DialogTitle>
           <DialogDescription>
@@ -89,14 +88,11 @@ export function RestartModal({
               className={`gap-sm p-md flex flex-col items-center rounded-lg border-2 text-sm font-medium transition-colors ${
                 mode === 'docker'
                   ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                  : 'border-border text-muted-foreground hover:text-foreground'
               }`}
             >
               <Container className="h-6 w-6" />
               {t('pages.adminConfig.restartModal.docker')}
-              <span className="text-xs font-normal opacity-70">
-                {t('pages.adminConfig.restartModal.dockerDesc')}
-              </span>
             </button>
             <button
               type="button"
@@ -104,14 +100,11 @@ export function RestartModal({
               className={`gap-sm p-md flex flex-col items-center rounded-lg border-2 text-sm font-medium transition-colors ${
                 mode === 'kubernetes'
                   ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                  : 'border-border text-muted-foreground hover:text-foreground'
               }`}
             >
               <Server className="h-6 w-6" />
               {t('pages.adminConfig.restartModal.kubernetes')}
-              <span className="text-xs font-normal opacity-70">
-                {t('pages.adminConfig.restartModal.kubernetesDesc')}
-              </span>
             </button>
           </div>
         )}
@@ -127,20 +120,11 @@ export function RestartModal({
           </Button>
           <Button
             onClick={() => mutation.mutate()}
-            disabled={mutation.isPending || countdown !== null}
-            variant="destructive"
+            disabled={countdown !== null}
+            loading={mutation.isPending}
           >
-            {mutation.isPending ? (
-              <>
-                <RefreshCw className="h-4 w-4 animate-spin" />
-                {t('pages.adminConfig.restartModal.sending')}
-              </>
-            ) : (
-              <>
-                <RotateCcw className="h-4 w-4" />
-                {t('pages.adminConfig.restartModal.confirm')}
-              </>
-            )}
+            {!mutation.isPending && <RotateCcw className="h-4 w-4" />}
+            {t('pages.adminConfig.restartModal.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

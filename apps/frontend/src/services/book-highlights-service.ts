@@ -9,7 +9,7 @@ class BookHighlightsService extends BaseService<BookHighlight, BookHighlightForm
   }
 
   async getByBook(bookId: number): Promise<BookHighlight[]> {
-    return this.getAll({ book: bookId });
+    return this.getAllPages({ book: bookId });
   }
 
   async exportAs(

@@ -3,11 +3,11 @@ import {
   CalendarClock,
   CalendarDays,
   FileText,
+  Hash,
   Loader2,
   Pencil,
   Plus,
   Power,
-  Repeat,
   Save,
   Trash2,
   Wallet,
@@ -70,7 +70,9 @@ export function VaultContributionsDialog({
   const { showConfirm } = useAlertDialog();
 
   const [contributions, setContributions] = useState<VaultRecurringContribution[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  // Cofre cujos dados já chegaram: o modal só abre depois disso, senão abre
+  // vazio e cresce até a lista (efeito de "modal fantasma").
+  const [loadedFor, setLoadedFor] = useState<number>();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editing, setEditing] = useState<VaultRecurringContribution | null>(null);
   const [formData, setFormData] =
@@ -79,7 +81,6 @@ export function VaultContributionsDialog({
 
   const loadContributions = async () => {
     if (!vault) return;
-    setIsLoading(true);
     try {
       setContributions(await vaultsService.getContributions(vault.id));
     } catch (error: unknown) {
@@ -88,7 +89,7 @@ export function VaultContributionsDialog({
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setLoadedFor(vault.id);
     }
   };
 
@@ -113,6 +114,8 @@ export function VaultContributionsDialog({
     if (openKey !== undefined) {
       setIsFormOpen(false);
       setEditing(null);
+    } else {
+      setLoadedFor(undefined);
     }
   }
 
@@ -183,7 +186,7 @@ export function VaultContributionsDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && loadedFor === vault?.id} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
@@ -249,7 +252,7 @@ export function VaultContributionsDialog({
                 </div>
                 <div>
                   <Label className="gap-xs flex items-center" htmlFor="contrib_day">
-                    <Repeat className="text-muted-foreground h-3.5 w-3.5" />
+                    <Hash className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.dayOfMonth')}
                   </Label>
                   <NumberStepper
@@ -336,11 +339,7 @@ export function VaultContributionsDialog({
               </div>
             </div>
           )}
-          {isLoading ? (
-            <div className="py-xl text-muted-foreground text-center text-sm">
-              {t('common.messages.loading')}
-            </div>
-          ) : !isFormOpen && contributions.length === 0 ? (
+          {!isFormOpen && contributions.length === 0 ? (
             <EmptyState title={t('pages.vaults.recurringContributions.emptyState')} />
           ) : (
             <div className="space-y-sm">

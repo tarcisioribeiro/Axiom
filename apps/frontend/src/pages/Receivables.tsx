@@ -4,11 +4,9 @@ import {
   CalendarDays,
   CheckCircle2,
   CircleDot,
-  Pencil,
   Plus,
   Search,
   Tag,
-  Trash2,
   TrendingUp,
   Wallet,
 } from 'lucide-react';
@@ -16,6 +14,7 @@ import { useState, useMemo, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
+import { CardActions } from '@/components/common/CardActions';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
@@ -378,7 +377,7 @@ export default function Receivables({
           key={`${searchTerm}-${statusFilter}-${categoryFilter}-${String(startDate)}-${String(endDate)}`}
           items={filteredReceivables}
           pageSize={GRID_PAGE_SIZE}
-          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
         >
           {(pageItems) =>
             pageItems.map((receivable) => {
@@ -420,7 +419,8 @@ export default function Receivables({
                   role="button"
                   tabIndex={0}
                   onClick={(e) => {
-                    if (!(e.target as HTMLElement).closest('button'))
+                    const target = e.target as HTMLElement;
+                    if (e.currentTarget.contains(target) && !target.closest('button'))
                       setDetailReceivable(receivable);
                   }}
                   onKeyDown={(e) => {
@@ -432,7 +432,7 @@ export default function Receivables({
                       setDetailReceivable(receivable);
                     }
                   }}
-                  className="bg-card p-md cursor-pointer space-y-3 rounded-lg border"
+                  className="bg-card px-md py-sm space-y-sm cursor-pointer rounded-lg border"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -469,56 +469,42 @@ export default function Receivables({
                     </Badge>
                   </div>
 
-                  <div className="space-y-xs">
-                    <div className="bg-muted h-2 overflow-hidden rounded-full">
+                  <div className="gap-sm text-muted-foreground flex items-center text-xs">
+                    <span className="shrink-0">
+                      {t('pages.receivables.receivedAmount', {
+                        value: formatCurrency(received),
+                      })}
+                    </span>
+                    <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                       <div
                         className={cn(
-                          'h-full rounded-full transition-[width]',
+                          'h-full w-full origin-left rounded-full transition-transform',
                           barColor
                         )}
-                        style={{ width: `${pct}%` }}
+                        style={{ transform: `scaleX(${pct / 100})` }}
                       />
                     </div>
-                    <div className="text-muted-foreground flex justify-between text-xs">
-                      <span>
-                        {t('pages.receivables.receivedAmount', {
-                          value: formatCurrency(received),
-                        })}
-                      </span>
-                      <span>{pct.toFixed(0)}%</span>
-                    </div>
+                    <span className="shrink-0">{pct.toFixed(0)}%</span>
                   </div>
 
                   <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
-                    {receivable.status !== 'received' &&
-                      receivable.status !== 'cancelled' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setReceiptReceivable(receivable)}
-                          title={t('pages.receivables.receipt.title')}
-                          className="gap-xs text-success text-xs"
-                        >
-                          <Wallet className="h-3 w-3" />
-                          {t('pages.receivables.receiveBtn')}
-                        </Button>
-                      )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(receivable)}
-                      title={t('common.actions.edit')}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => void handleDelete(receivable)}
-                      title={t('common.actions.delete')}
-                    >
-                      <Trash2 className="text-destructive h-4 w-4" />
-                    </Button>
+                    <CardActions
+                      onEdit={() => handleEdit(receivable)}
+                      onDelete={() => void handleDelete(receivable)}
+                      menuActions={
+                        receivable.status !== 'received' &&
+                        receivable.status !== 'cancelled'
+                          ? [
+                              {
+                                icon: Wallet,
+                                label: t('pages.receivables.receiveBtn'),
+                                onClick: () => setReceiptReceivable(receivable),
+                                color: 'receive' as const,
+                              },
+                            ]
+                          : []
+                      }
+                    />
                   </div>
                 </div>
               );

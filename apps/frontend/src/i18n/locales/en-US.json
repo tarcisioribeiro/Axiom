@@ -20,6 +20,7 @@
       "reveal": "Reveal",
       "hide": "Hide",
       "copy": "Copy",
+      "copyDetails": "Copy details",
       "download": "Download",
       "moreOptions": "More options",
       "filter": "Filters",
@@ -57,6 +58,7 @@
       "fitView": "Fit to screen"
     },
     "required": "Required field",
+    "fieldRequired": "{{field}}: required field",
     "messages": {
       "loadError": "Could not load the data. {{reason}}",
       "saveError": "Could not save. {{reason}}",
@@ -375,7 +377,9 @@
       "financeAgenda": "Financial Agenda",
       "financeAnalytics": "Analytics",
       "financialHealth": "Financial Health",
-      "emotionalWellness": "Emotional Wellness"
+      "emotionalWellness": "Emotional Wellness",
+      "intellectToday": "Intellect Today",
+      "flashcards": "Flash Cards"
     },
     "agents": "AI Agents"
   },
@@ -694,6 +698,11 @@
       "available": "Available: {{value}}",
       "reservedInVaults": "Reserved in vaults: {{value}}",
       "availableForSpending": "Available to spend: {{value}}",
+      "detailLabels": {
+        "available": "Available",
+        "reservedInVaults": "Reserved in vaults",
+        "availableForSpending": "Available to spend"
+      },
       "bankReconciliation": "Bank Reconciliation",
       "bankReconciliationTitle": "Bank Reconciliation — {{account}}",
       "bankReconciliationDesc": "Import bank statements to reconcile with your transactions.",
@@ -971,7 +980,6 @@
         "principal": "Principal",
         "interest": "Interest",
         "balance": "Balance",
-        "loading": "Calculating...",
         "noData": "No amortization data available."
       },
       "stats": {
@@ -1157,6 +1165,15 @@
         "income": "Income:"
       },
       "noRole": "No role defined",
+      "you": "You",
+      "detailLabels": {
+        "phone": "Phone",
+        "email": "Email",
+        "document": "Document",
+        "income": "Monthly income",
+        "createdAt": "Registered on",
+        "roles": "Roles"
+      },
       "emptySearch": "No members found.",
       "searchPlaceholder": "Search member",
       "allStatus": "All statuses",
@@ -1722,7 +1739,7 @@
         "progressLabel": "{{paid}} of {{total}} paid",
         "paymentProgress": "Payment progress",
         "paymentFrequencyLabel": "Payment Frequency",
-        "isCumulativeLabel": "Cumulative debt (allows increasing the value later)",
+        "isCumulativeLabel": "Cumulative debt",
         "installmentsLabel": "Installments",
         "createPaymentPlanBtn": "Create payment plan",
         "increaseValueBtn": "Increase value",
@@ -2377,6 +2394,7 @@
     },
     "vaultSimulator": {
       "title": "Vault Simulator",
+      "bestReturn": "Best return",
       "scenarioLabel": "Scenario {{index}}",
       "addScenario": "Add Scenario",
       "calculate": "Simulate",
@@ -2449,12 +2467,16 @@
       },
       "alertConfig": "Alert Settings",
       "alertConfigSaved": "Settings saved",
+      "alerts": "Alerts",
       "alertOnNewIp": "Alert on new IP",
       "alertOnNewIpDesc": "Notify when the vault is accessed from a new IP address.",
       "alertOnFailedUnlock": "Alert on failed unlock attempts",
       "alertOnFailedUnlockDesc": "Notify after multiple incorrect unlock attempts.",
       "alertOnReveal": "Alert on password reveal",
       "alertOnRevealDesc": "Notify each time a password is revealed.",
+      "alertOnExcessiveReveals": "Excessive reveals alert",
+      "alertOnCardReveal": "Stored card reveal alert",
+      "notifyEmail": "Send alerts by email",
       "noRecentActivity": "No activity recorded yet."
     },
     "passwords": {
@@ -3010,7 +3032,8 @@
           "essay": "Essay"
         },
         "sectionGoal": "Annual Goal",
-        "sectionQuantities": "Quantities"
+        "sectionQuantities": "Quantities",
+        "saved": "Goal of {{count}} books for {{year}}."
       },
       "exportCSV": "Export CSV",
       "exportCSVTitle": "Export statistics as CSV",
@@ -3092,13 +3115,50 @@
       "studyTimerPagesRead": "Pages read",
       "readingTimerTitle": "Reading Timer",
       "studyTimerNoLessons": "Add modules and lessons to the course before starting the timer.",
-      "studyTimerCourseNotFound": "Course not found."
+      "studyTimerCourseNotFound": "Course not found.",
+      "csv": {
+        "fileName": "library_stats",
+        "metric": "Metric",
+        "value": "Value",
+        "totalBooks": "Total Books",
+        "totalAuthors": "Total Authors",
+        "totalPublishers": "Total Publishers",
+        "booksReading": "Books Reading",
+        "booksToRead": "Books To Read",
+        "booksRead": "Books Read",
+        "averageRating": "Average Rating",
+        "totalPagesRead": "Total Pages Read",
+        "readingHours": "Reading Hours",
+        "speed": "Speed (pages/hour)",
+        "totalSessions": "Total Sessions",
+        "avgPagesPerSession": "Average Pages per Session",
+        "longestSession": "Longest Session (pages)",
+        "currentStreak": "Current Streak (days)",
+        "longestStreak": "Longest Streak (days)",
+        "timeOfDay": "Time of Day",
+        "sessions": "Sessions",
+        "pages": "Pages",
+        "genre": "Genre",
+        "bookCount": "Number of Books"
+      },
+      "weekdays": {
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday",
+        "7": "Sunday"
+      },
+      "sectionReading": "Reading",
+      "sectionCollection": "Collection",
+      "sectionLearning": "Learning"
     },
     "books": {
       "title": "Works",
-      "newBtn": "New Book",
-      "editTitle": "Edit Book",
-      "newTitle": "New Book",
+      "newBtn": "New Work",
+      "editTitle": "Edit Work",
+      "newTitle": "New Work",
       "editDesc": "Update the book information",
       "newDesc": "Add a new book to your library",
       "deleteTitle": "Delete book",
@@ -3201,7 +3261,8 @@
         "sectionAuthorPublisher": "Authorship & Publishing",
         "sectionReading": "Reading",
         "sectionSynopsis": "Synopsis",
-        "readStatusLabel": "Reading Status"
+        "readStatusLabel": "Reading Status",
+        "titleDuplicate": "You already have a book with this title."
       },
       "detail": {
         "tabInfo": "Information",
@@ -3305,7 +3366,9 @@
         "paused": "Paused"
       },
       "chatTab": "Chat",
-      "chatTabDesc": "Chat with the agent about this book"
+      "chatTabDesc": "Chat with the agent about this book",
+      "agentContext": "Book: {{title}}",
+      "readingGoalBtn": "Reading Goal"
     },
     "authors": {
       "title": "Authors",
@@ -3397,7 +3460,9 @@
       },
       "booksCount_one": "{{count}} book",
       "booksCount_other": "{{count}} books",
-      "booksCountZero": "0 books"
+      "booksCountZero": "0 books",
+      "detailDesc": "Author details",
+      "viewBooks": "View books"
     },
     "publishers": {
       "title": "Publishers",
@@ -3437,7 +3502,8 @@
       },
       "booksCount_one": "{{count}} book",
       "booksCount_other": "{{count}} books",
-      "booksCountZero": "0 books"
+      "booksCountZero": "0 books",
+      "detailDesc": "Publisher details"
     },
     "summaries": {
       "title": "Summaries",
@@ -3553,7 +3619,10 @@
       "errorSave": "Could not save the order. {{reason}}",
       "priorityHigh": "High",
       "priorityMedium": "Medium",
-      "priorityLow": "Low"
+      "priorityLow": "Low",
+      "dragToReorder": "Drag to reorder",
+      "estimatedDays_one": "~{{count}} day",
+      "estimatedDays_other": "~{{count}} days"
     },
     "highlights": {
       "title": "Highlights",
@@ -3597,7 +3666,9 @@
         "allColors": "All colors"
       },
       "paginationInfo_one": "{{count}} highlight — page {{page}} of {{totalPages}}",
-      "paginationInfo_other": "{{count}} highlights — page {{page}} of {{totalPages}}"
+      "paginationInfo_other": "{{count}} highlights — page {{page}} of {{totalPages}}",
+      "pageShort": "p. {{page}}",
+      "exportFileName": "highlights"
     },
     "courses": {
       "title": "Courses",
@@ -3753,8 +3824,15 @@
         "removed": "Certificate removed",
         "uploadError": "Error uploading certificate",
         "replace": "Click to replace the certificate",
-        "needsCompletion": "Complete all lessons and log enough study hours to reach the estimated course hours before attaching the certificate."
-      }
+        "needsCompletion": "Complete all lessons and log enough study hours to reach the estimated course hours before attaching the certificate.",
+        "view": "View",
+        "uploadBtn": "Upload certificate",
+        "replaceBtn": "Replace certificate"
+      },
+      "modulesAndLessons": "Modules and lessons",
+      "detailDesc": "Course details",
+      "hoursValue": "{{hours}}h",
+      "agentContext": "Course: {{title}}"
     },
     "skills": {
       "title": "Skills",
@@ -3809,7 +3887,8 @@
         "notesPlaceholder": "e.g. Practice daily",
         "coursesLabel": "Courses that developed this skill",
         "coursesPlaceholder": "Select",
-        "removeCourse": "Remove {{name}}"
+        "removeCourse": "Remove {{name}}",
+        "nameDuplicate": "A skill with this name already exists."
       },
       "radarChart": {
         "title": "Skills Radar",
@@ -3820,7 +3899,8 @@
         "noHistory": "No history available",
         "timeline": "Evolution timeline",
         "viewHistory": "View history"
-      }
+      },
+      "detailDesc": "Skill details"
     },
     "planningOnboarding": {
       "skip": "Skip",
@@ -4835,7 +4915,6 @@
       "clearFilters": "Clear",
       "userPlaceholder": "Search user",
       "allActions": "All actions",
-      "applyFilters": "Apply filters",
       "columns": {
         "datetime": "Date/Time",
         "user": "User",
@@ -4844,7 +4923,6 @@
         "description": "Description",
         "ip": "IP"
       },
-      "loadingLogs": "Loading logs...",
       "noLogs": "No logs found",
       "actions": {
         "view": "View",
@@ -4859,12 +4937,12 @@
         "failed_vault_unlock": "Failed Vault Unlock",
         "other": "Other",
         "purge": "Purge (LGPD)",
-        "shared_reveal": "Shared Access"
+        "shared_reveal": "Shared Access",
+        "copy": "Copy"
       }
     },
     "adminOverview": {
       "title": "System Overview",
-      "updatedAt": "Updated at {{time}}",
       "refresh": "Refresh",
       "statusHealthy": "All services operational",
       "statusWarning": "System operational with warnings",
@@ -4916,12 +4994,7 @@
       "model": "Model:",
       "checking": "Checking...",
       "restartAllBtn": "Restart all pods",
-      "restartingToast": "Restarting all pods",
-      "restartingDesc": "You will be logged out. Wait for the services to come back up and log in again.",
-      "restartError": "Could not restart. {{reason}}",
-      "disconnecting": "Disconnecting...",
       "sendTestEmail": "Send test email",
-      "emailPlaceholder": "recipient@example.com",
       "sendBtn": "Send",
       "emailSent": "Email sent",
       "emailError": "Could not send the email. {{reason}}",
@@ -4940,7 +5013,11 @@
         "not_configured": "Not configured",
         "unknown": "Unknown",
         "not_active": "Inactive"
-      }
+      },
+      "modelsCount_one": "{{count}} model",
+      "modelsCount_other": "{{count}} models",
+      "models": "Models",
+      "recipient": "Recipient"
     },
     "adminConfig": {
       "title": "System Settings",
@@ -4953,7 +5030,6 @@
       "save": "Save",
       "newValuePlaceholder": "New value",
       "newSecretPlaceholder": "New value",
-      "restartRequired": "This setting requires a container restart to take effect.",
       "helpAriaLabel": "View help",
       "popover": {
         "acceptedValues": "Accepted values",
@@ -4966,17 +5042,13 @@
       "emptyValue": "Empty value",
       "emptyValueDesc": "Please provide a value to save.",
       "restartError": "Could not restart. {{reason}}",
-      "restartWarning": "Settings marked with \"Requires restart\" will only take effect after restarting the API container. Use the \"Restart & Apply\" button to apply the changes and update the .env.",
       "restartModal": {
         "title": "Restart & Apply Settings",
         "desc": "Choose the execution environment. Settings saved in the database will be applied on restart. You will be logged out automatically.",
         "countdown": "Restarting... logging out in {{seconds}}s",
         "docker": "Docker",
-        "dockerDesc": "Restarts the container via socket",
         "kubernetes": "Kubernetes",
-        "kubernetesDesc": "Rollout restart of pods",
         "cancel": "Cancel",
-        "sending": "Sending...",
         "confirm": "Confirm Restart"
       },
       "categories": {
@@ -5128,7 +5200,8 @@
           "hint": "MinIO root password. Stored encrypted in the database. Must match the password configured in the MinIO service. The MinIO Console is available at http://localhost:39106.",
           "warning": "This password must match the one configured in the MinIO service. A mismatch causes authentication failure and makes file storage inaccessible."
         }
-      }
+      },
+      "valueLabel": "Value"
     },
     "receivables": {
       "title": "Receivables",
@@ -5782,7 +5855,13 @@
       "selectBook": "Select book (optional)",
       "searchPlaceholder": "Search flashcard",
       "allStatus": "All Status",
-      "allBooks": "All Books"
+      "allBooks": "All Books",
+      "viewFilter": "Show",
+      "updated": "Card updated",
+      "deleted": "Card deleted",
+      "editCard": "Edit card",
+      "detailTitle": "Flash card",
+      "allCards": "All cards"
     },
     "intellectToday": {
       "title": "Intellect Today",
@@ -5805,7 +5884,10 @@
       "weekProgress": "Weekly progress",
       "badges": "Recent achievements",
       "viewAll": "View all",
-      "noStreak": "Start your streak today!"
+      "noStreak": "Start your streak today!",
+      "coursesInProgress": "Courses in progress",
+      "openCourses": "View courses",
+      "noBadges": "No badges yet"
     },
     "tags": {
       "title": "Tags",
@@ -6190,6 +6272,26 @@
         "completedToast": "Intervention completed!",
         "registerError": "Error logging"
       }
+    },
+    "intellectBadges": {
+      "codes": {
+        "first_book": "First Book Read",
+        "reader_5": "Dedicated Reader (5 books)",
+        "reader_10": "Marathoner (10 books)",
+        "reader_25": "Bookworm (25 books)",
+        "first_course": "First Course Completed",
+        "learner_3": "Active Learner (3 courses)",
+        "learner_10": "Specialist (10 courses)",
+        "streak_7": "Steady Reader (7 days)",
+        "streak_30": "Consistent Reader (30 days)",
+        "first_highlight": "First Highlight",
+        "annotator_10": "Annotator (10 highlights)",
+        "annotator_50": "Curator (50 highlights)",
+        "knowledge_builder": "Knowledge Builder (10 graph nodes)",
+        "knowledge_master": "Knowledge Master (50 graph nodes)",
+        "first_skill": "First Skill",
+        "skill_collector": "Skill Collector (5 skills)"
+      }
     }
   },
   "userProfile": {
@@ -6552,6 +6654,7 @@
       "transferred": "Transferred",
       "failed": "Failed"
     },
+    "selectDay": "Select a day to see its transactions",
     "dayDetail": "Due dates on {{date}}",
     "loading": "Loading calendar...",
     "weekDays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -7120,6 +7223,24 @@
     "selectBoth": "Select both periods to see the comparison"
   },
   "monthlyPlanner": {
+    "sections": {
+      "revenues": "Revenues",
+      "expenses": "Expenses"
+    },
+    "preview": {
+      "title": "Plan preview — {{month}}",
+      "revenues": "Revenues to post",
+      "expenses": "Expenses to post",
+      "budgets": "Budgets",
+      "empty": "Nothing to post",
+      "actions": {
+        "create": "Will be posted",
+        "update": "Value updated",
+        "existing": "Already posted",
+        "settled": "Already settled",
+        "blocked": "No card limit"
+      }
+    },
     "title": "Monthly Financial Planner",
     "projectedRevenues": "Expected Revenues",
     "projectedExpenses": "Expected Expenses",
@@ -7206,6 +7327,7 @@
   },
   "weeklyPlanning": {
     "title": "Weekly Planning",
+    "today": "Today",
     "tasks": "Tasks",
     "completed": "Completed",
     "estimatedLoad": "Estimated Load",

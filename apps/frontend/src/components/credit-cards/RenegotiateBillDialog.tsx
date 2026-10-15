@@ -149,9 +149,6 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
                   />
                 )}
               />
-              <p className="text-muted-foreground text-xs">
-                {t('pages.creditCardBills.renegotiateForm.totalWithInterestHint')}
-              </p>
             </div>
 
             <div className="space-y-sm">

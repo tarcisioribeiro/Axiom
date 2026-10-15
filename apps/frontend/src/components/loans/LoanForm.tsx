@@ -11,7 +11,9 @@ import {
   CheckCircle2,
   Clock,
   FileText,
+  Hash,
   Loader2,
+  Percent,
   Save,
   Shield,
   Tag,
@@ -47,7 +49,7 @@ import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { formatCurrency } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
-import { formatLocalDate } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import type { Account, Loan, LoanFormData, Member } from '@/types';
 
 const PAYMENT_FREQUENCIES = [
@@ -141,6 +143,8 @@ export function LoanForm({
     setFormData((prev) => ({ ...prev, ...patch }));
 
   const isEditing = !!loan;
+  // Na edição as 3 etapas aparecem juntas: 3 colunas para caber sem rolagem.
+  const cols = isEditing ? 'grid-cols-3' : 'grid-cols-2';
 
   const eligibleCreditors = useMemo(
     () =>
@@ -243,7 +247,7 @@ export function LoanForm({
           }
           icon={FileText}
         >
-          <div className="gap-md grid grid-cols-2">
+          <div className={cn('gap-md grid', cols)}>
             {!isEditing && (
               <div className="col-span-2">
                 <Label className="gap-xs flex items-center">
@@ -371,7 +375,7 @@ export function LoanForm({
           }
           icon={Users}
         >
-          <div className="gap-md grid grid-cols-2">
+          <div className={cn('gap-md grid', cols)}>
             <div>
               <Label htmlFor="category" className="gap-xs flex items-center">
                 <Tag className="text-muted-foreground h-3.5 w-3.5" />
@@ -493,7 +497,7 @@ export function LoanForm({
 
             <div>
               <Label htmlFor="status" className="gap-xs flex items-center">
-                <Shield className="text-muted-foreground h-3.5 w-3.5" />
+                <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.statusLabel')}
               </Label>
               <Select
@@ -526,10 +530,10 @@ export function LoanForm({
           }
           icon={BadgePercent}
         >
-          <div className="gap-md grid grid-cols-2">
+          <div className={cn('gap-md grid', cols)}>
             <div>
               <Label htmlFor="installments" className="gap-xs flex items-center">
-                <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
+                <Hash className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.installmentsLabel')}
               </Label>
               <NumberStepper
@@ -542,7 +546,7 @@ export function LoanForm({
 
             <div>
               <Label htmlFor="interest_rate" className="gap-xs flex items-center">
-                <BadgePercent className="text-muted-foreground h-3.5 w-3.5" />
+                <Percent className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.interestRateLabel')}
               </Label>
               <DecimalInput
@@ -591,7 +595,7 @@ export function LoanForm({
 
             <div>
               <Label htmlFor="late_fee" className="gap-xs flex items-center">
-                <BadgePercent className="text-muted-foreground h-3.5 w-3.5" />
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.lateFeeLabel')}
               </Label>
               <CurrencyInput
@@ -628,7 +632,7 @@ export function LoanForm({
               </Select>
             </div>
 
-            <div className="col-span-2">
+            <div className={isEditing ? 'col-span-3' : 'col-span-2'}>
               <Label htmlFor="notes" className="gap-xs flex items-center">
                 <FileText className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.notesLabel')}
@@ -653,7 +657,12 @@ export function LoanForm({
               />
             </div>
 
-            <div className="gap-sm col-span-2 flex items-center">
+            <div
+              className={cn(
+                'gap-sm flex items-center',
+                isEditing ? 'pb-sm col-span-1 self-end' : 'col-span-2'
+              )}
+            >
               <Checkbox
                 id="payed"
                 checked={formData.payed}

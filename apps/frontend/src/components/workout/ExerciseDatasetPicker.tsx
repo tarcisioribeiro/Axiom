@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, Dumbbell, ImageIcon, Loader2 } from 'lucide-react';
+import { ChevronDown, Dumbbell, ImageIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -157,14 +157,10 @@ export function ExerciseDatasetPicker({
             type="button"
             variant="outline"
             onClick={() => void handleLoadMore()}
-            disabled={isLoadingMore}
+            loading={isLoadingMore}
             className="mx-auto"
           >
-            {isLoadingMore ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
+            {!isLoadingMore && <ChevronDown className="h-4 w-4" />}
             {t('pages.exercises.picker.loadMore')}
           </Button>
         )}

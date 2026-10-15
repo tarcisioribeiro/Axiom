@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { CreditCard as CreditCardIcon, CalendarDays } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { BRAND_COLORS, BRAND_ICONS } from '@/components/credit-cards/card-brands';
@@ -59,8 +60,11 @@ interface Props {
   onClose: () => void;
 }
 
-export function CreditCardDetailModal({ card, onClose }: Props) {
+export function CreditCardDetailModal({ card: selected, onClose }: Props) {
   const { t } = useTranslation();
+  // Mantém o último cartão para o modal sair inteiro na animação de fechamento.
+  const [card, setCard] = useState(selected);
+  if (selected && selected !== card) setCard(selected);
   const cardId = card?.id;
 
   const billsQuery = useQuery({
@@ -79,7 +83,11 @@ export function CreditCardDetailModal({ card, onClose }: Props) {
   const openBill = getCurrentCreditCardBill(billsQuery.data ?? []);
 
   return (
-    <Dialog open={!!card} onOpenChange={(open) => !open && onClose()}>
+    // Abre só com a fatura atual carregada, senão o bloco dela surge depois e o modal cresce.
+    <Dialog
+      open={!!selected && !billsQuery.isPending}
+      onOpenChange={(open) => !open && onClose()}
+    >
       <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center text-lg">

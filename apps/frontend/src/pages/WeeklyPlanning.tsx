@@ -15,6 +15,7 @@ import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { getIconByName } from '@/components/ui/icon-picker';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -196,14 +197,7 @@ export default function WeeklyPlanning() {
               dayTotal > 0 ? Math.round((dayCompleted / dayTotal) * 100) : 0;
 
             return (
-              <Card
-                key={key}
-                className={cn(
-                  'flex min-h-0 flex-col',
-                  isToday && 'ring-primary/60 ring-2',
-                  isOverloaded && 'border-warning/40'
-                )}
-              >
+              <Card key={key} className="flex min-h-0 flex-col">
                 <CardHeader className="pb-xs pt-sm">
                   <div className="flex items-center justify-between">
                     <div>
@@ -215,11 +209,21 @@ export default function WeeklyPlanning() {
                       >
                         {day.toLocaleDateString(i18n.language, { weekday: 'short' })}
                       </p>
-                      <p
-                        className={cn('text-base font-bold', isToday && 'text-primary')}
-                      >
-                        {day.getDate()}
-                      </p>
+                      <div className="gap-xs flex items-center">
+                        <p
+                          className={cn(
+                            'text-base font-bold',
+                            isToday && 'text-primary'
+                          )}
+                        >
+                          {day.getDate()}
+                        </p>
+                        {isToday && (
+                          <Badge variant="default" className="text-2xs px-xs py-0">
+                            {t('weeklyPlanning.today')}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <div className="text-right">
                       {isOverloaded && (

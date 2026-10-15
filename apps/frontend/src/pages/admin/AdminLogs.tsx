@@ -1,14 +1,14 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { CalendarDays, Filter, RefreshCw, ScrollText, User, Zap } from 'lucide-react';
-import { useState } from 'react';
+import { CalendarDays, RefreshCw, ScrollText, User, Zap } from 'lucide-react';
+import { useDeferredValue, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { DataTable, type Column } from '@/components/common/DataTable';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
-import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PageSlide } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,59 +18,97 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn, formatLocalDate } from '@/lib/utils';
+import { formatDate } from '@/lib/formatters';
+import { formatLocalDate } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
+import type { AdminLog } from '@/types';
 
-import { LogRow } from './AdminLogsComponents';
+import { ActionBadge } from './AdminLogsComponents';
 import { ACTION_KEYS } from './AdminLogsConstants';
 
 export default function AdminLogs() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(50);
   const [username, setUsername] = useState('');
   const [action, setAction] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [appliedFilters, setAppliedFilters] = useState<{
-    username: string;
-    action: string;
-    dateFrom: string;
-    dateTo: string;
-  }>({ username: '', action: '', dateFrom: '', dateTo: '' });
+  const deferredUsername = useDeferredValue(username);
+  const filters = { username: deferredUsername, action, dateFrom, dateTo };
+  const hasFilters = Object.values(filters).some(Boolean);
 
-  const hasFilters = Object.values(appliedFilters).some(Boolean);
-
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ['admin', 'logs', page, pageSize, appliedFilters],
+  const { data, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ['admin', 'logs', page, filters],
     queryFn: () =>
       adminService.getLogs({
         page,
-        page_size: pageSize,
-        username: appliedFilters.username || undefined,
-        action: appliedFilters.action || undefined,
-        date_from: appliedFilters.dateFrom || undefined,
-        date_to: appliedFilters.dateTo || undefined,
+        page_size: LIST_PAGE_SIZE,
+        username: filters.username || undefined,
+        action: filters.action || undefined,
+        date_from: filters.dateFrom || undefined,
+        date_to: filters.dateTo || undefined,
       }),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
 
-  const applyFilters = () => {
-    setPage(1);
-    setAppliedFilters({ username, action, dateFrom, dateTo });
-  };
+  // Filtro novo volta para a 1ª página.
+  const withReset =
+    <T,>(set: (v: T) => void) =>
+    (v: T) => {
+      set(v);
+      setPage(1);
+    };
 
   const clearFilters = () => {
     setUsername('');
     setAction('');
     setDateFrom('');
     setDateTo('');
-    setAppliedFilters({ username: '', action: '', dateFrom: '', dateTo: '' });
     setPage(1);
   };
 
-  const totalPages = data ? Math.ceil(data.count / pageSize) : 0;
+  const columns: Column<AdminLog>[] = [
+    {
+      key: 'created_at',
+      label: t('pages.adminLogs.columns.datetime'),
+      className: 'whitespace-nowrap',
+      render: (log) => {
+        const date = new Date(log.created_at);
+        return `${formatDate(date)} ${formatDate(date, 'HH:mm')}`;
+      },
+    },
+    {
+      key: 'username',
+      label: t('pages.adminLogs.columns.user'),
+      render: (log) => <span className="font-medium">{log.username ?? '—'}</span>,
+    },
+    {
+      key: 'action',
+      label: t('pages.adminLogs.columns.action'),
+      render: (log) => <ActionBadge action={log.action} display={log.action_display} />,
+    },
+    {
+      key: 'model_name',
+      label: t('pages.adminLogs.columns.model'),
+      render: (log) => log.model_name ?? '—',
+    },
+    {
+      key: 'description',
+      label: t('pages.adminLogs.columns.description'),
+      render: (log) => (
+        <span className="block max-w-96 truncate" title={log.description}>
+          {log.description}
+        </span>
+      ),
+    },
+    {
+      key: 'ip_address',
+      label: t('pages.adminLogs.columns.ip'),
+      className: 'whitespace-nowrap',
+      render: (log) => log.ip_address ?? '—',
+    },
+  ];
 
   return (
     <PageContainer>
@@ -78,14 +116,10 @@ export default function AdminLogs() {
         title={t('pages.adminLogs.title')}
         icon={<ScrollText />}
         actions={
-          <button
-            onClick={() => void refetch()}
-            disabled={isLoading}
-            className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium disabled:opacity-50"
-          >
-            <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+          <Button variant="outline" onClick={() => void refetch()} loading={isFetching}>
+            {!isFetching && <RefreshCw />}
             {t('pages.adminLogs.refresh')}
-          </button>
+          </Button>
         }
       />
 
@@ -94,13 +128,13 @@ export default function AdminLogs() {
           <SearchInput
             placeholder={t('pages.adminLogs.userPlaceholder')}
             value={username}
-            onValueChange={setUsername}
+            onValueChange={withReset(setUsername)}
           />
         </FilterField>
         <FilterField label={t('common.filterLabels.action')} icon={Zap}>
           <Select
             value={action || 'all'}
-            onValueChange={(v) => setAction(v === 'all' ? '' : v)}
+            onValueChange={(v) => withReset(setAction)(v === 'all' ? '' : v)}
           >
             <SelectTrigger aria-label={t('pages.adminLogs.allActions')}>
               <SelectValue />
@@ -119,67 +153,32 @@ export default function AdminLogs() {
           <DateRangeFilter
             startDate={dateFrom}
             endDate={dateTo}
-            onStartChange={(date) => setDateFrom(date ? formatLocalDate(date) : '')}
-            onEndChange={(date) => setDateTo(date ? formatLocalDate(date) : '')}
+            onStartChange={(date) =>
+              withReset(setDateFrom)(date ? formatLocalDate(date) : '')
+            }
+            onEndChange={(date) =>
+              withReset(setDateTo)(date ? formatLocalDate(date) : '')
+            }
           />
         </FilterField>
-        <Button size="sm" onClick={applyFilters}>
-          <Filter aria-hidden="true" />
-          {t('pages.adminLogs.applyFilters')}
-        </Button>
       </FilterBar>
 
-      <PageSlide page={page} totalPages={totalPages} onPageChange={setPage}>
-        <div className="border-border bg-card overflow-hidden rounded-lg border">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-border bg-secondary/50 border-b">
-                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                    {t('pages.adminLogs.columns.datetime')}
-                  </th>
-                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                    {t('pages.adminLogs.columns.user')}
-                  </th>
-                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                    {t('pages.adminLogs.columns.action')}
-                  </th>
-                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                    {t('pages.adminLogs.columns.model')}
-                  </th>
-                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                    {t('pages.adminLogs.columns.description')}
-                  </th>
-                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                    {t('pages.adminLogs.columns.ip')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={6} className="text-muted-foreground py-12 text-center">
-                      <RefreshCw className="mb-sm mx-auto h-6 w-6 animate-spin" />
-                      {t('pages.adminLogs.loadingLogs')}
-                    </td>
-                  </tr>
-                ) : data?.results.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="text-muted-foreground py-12 text-center">
-                      <EmptyState
-                        icon={<ScrollText className="h-6 w-6" />}
-                        title={t('pages.adminLogs.noLogs')}
-                      />
-                    </td>
-                  </tr>
-                ) : (
-                  data?.results.map((log) => <LogRow key={log.id} log={log} />)
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </PageSlide>
+      <DataTable
+        data={data?.results ?? []}
+        columns={columns}
+        keyExtractor={(log) => log.id}
+        isLoading={isLoading}
+        emptyState={{
+          icon: <ScrollText className="text-muted-foreground h-12 w-12" />,
+          title: t('pages.adminLogs.noLogs'),
+        }}
+        pagination={{
+          page,
+          pageSize: LIST_PAGE_SIZE,
+          total: data?.count ?? 0,
+          onPageChange: setPage,
+        }}
+      />
     </PageContainer>
   );
 }

@@ -271,7 +271,7 @@ export default function PersonalPlanningDashboard() {
         <div className="space-y-lg">
           {/* Nível/Gamificação (+ objetivos e sequências) | Progresso Semanal (+ tarefas) */}
           <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
-            <Card className="gap-sm flex flex-col p-5">
+            <Card className="gap-sm p-lg flex flex-col">
               {gamification && (
                 <>
                   <div className="flex items-center justify-between">
@@ -381,7 +381,7 @@ export default function PersonalPlanningDashboard() {
                   {
                     label: t('pages.planningDashboard.bestStreak'),
                     value: `${stats.best_streak} ${t('pages.planningDashboard.days')}`,
-                    icon: <Flame className="h-4 w-4 text-orange-500" />,
+                    icon: <Flame className="text-warning h-4 w-4" />,
                   },
                 ].map((item) => (
                   <div key={item.label} className="gap-xs flex flex-col">
@@ -651,7 +651,7 @@ export default function PersonalPlanningDashboard() {
                       const max = nutritionStats.byMealTypeData[0]?.count ?? 1;
                       const pct = Math.round((item.count / max) * 100);
                       return (
-                        <div key={i} className="flex items-center gap-3">
+                        <div key={i} className="gap-sm flex items-center">
                           <span className="text-muted-foreground w-28 shrink-0 truncate text-xs">
                             {item.name}
                           </span>
@@ -749,7 +749,7 @@ export default function PersonalPlanningDashboard() {
                     </h3>
                     <div className="space-y-sm flex flex-1 flex-col justify-center">
                       {analytics.completion_by_weekday.map((day) => (
-                        <div key={day.weekday} className="flex items-center gap-3">
+                        <div key={day.weekday} className="gap-sm flex items-center">
                           <span className="text-muted-foreground w-28 shrink-0 text-sm">
                             {t(`pages.planningDashboard.weekdayShort.${day.weekday}`)}
                           </span>
@@ -767,7 +767,7 @@ export default function PersonalPlanningDashboard() {
                         </div>
                       ))}
                     </div>
-                    <p className="text-muted-foreground mt-3 text-xs">
+                    <p className="text-muted-foreground mt-sm text-xs">
                       {t('pages.planningDashboard.analyticsPeriod', {
                         days: analytics.period_days,
                       })}
@@ -799,7 +799,7 @@ export default function PersonalPlanningDashboard() {
                       <PaginatedSlide
                         items={stats.active_goals_progress}
                         pageSize={LIST_PAGE_SIZE}
-                        className="space-y-3"
+                        className="space-y-sm"
                         pinNav={false}
                       >
                         {(pageGoals) =>
@@ -812,7 +812,7 @@ export default function PersonalPlanningDashboard() {
                                   ? 'hsl(var(--warning))'
                                   : 'hsl(var(--primary))';
                             return (
-                              <div key={index} className="flex items-center gap-3">
+                              <div key={index} className="gap-sm flex items-center">
                                 <CircularProgress
                                   value={pct}
                                   size={48}

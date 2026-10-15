@@ -6,7 +6,6 @@ import {
   EyeOff,
   Key,
   Keyboard,
-  Loader2,
   Lock,
   LockOpen,
   RefreshCw,
@@ -116,11 +115,11 @@ function getStrength(
   if (!password) return { score: 0, label: '', color: '' };
   const colors = [
     '',
-    'bg-red-500',
-    'bg-orange-500',
-    'bg-yellow-500',
-    'bg-blue-500',
-    'bg-green-500',
+    'bg-destructive',
+    'bg-destructive/70',
+    'bg-warning',
+    'bg-info',
+    'bg-success',
   ];
   return { score, label: getStrengthLabel(score, t), color: colors[score] ?? '' };
 }
@@ -148,11 +147,7 @@ function PasswordStrengthIndicator({
       <p
         className={cn(
           'text-xs',
-          score >= 4
-            ? 'text-green-600'
-            : score >= 3
-              ? 'text-yellow-600'
-              : 'text-red-600'
+          score >= 4 ? 'text-success' : score >= 3 ? 'text-warning' : 'text-destructive'
         )}
       >
         {label}
@@ -250,9 +245,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
       <div
         className={cn(
           'gap-sm px-sm py-xs flex items-center rounded-md text-xs',
-          isWarning
-            ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
-            : 'bg-muted text-muted-foreground'
+          isWarning ? 'bg-warning/10 text-warning' : 'bg-muted text-muted-foreground'
         )}
       >
         {isWarning ? (
@@ -276,18 +269,19 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
 
       <Dialog open={isRenewOpen} onOpenChange={setIsRenewOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader className="sm:text-center">
-            <div className="mb-md bg-muted mx-auto flex h-16 w-16 items-center justify-center rounded-full">
-              <Lock className="text-muted-foreground h-8 w-8" />
-            </div>
-            <DialogTitle icon={Lock} className="text-2xl">
+          <DialogHeader>
+            <DialogTitle icon={RefreshCw}>
               {t('pages.vaultGuard.expiry.renewTitle')}
             </DialogTitle>
-            <DialogDescription className="sr-only">
+            <DialogDescription>
               {t('pages.vaultGuard.expiry.renewDesc')}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={(e) => void handleRenew(e)} className="space-y-md">
+          <form
+            id="vault-renew-form"
+            onSubmit={(e) => void handleRenew(e)}
+            className="space-y-md"
+          >
             <div className="space-y-xs">
               <Label className="gap-xs flex items-center" htmlFor="renew-password">
                 <Lock className="text-muted-foreground h-3.5 w-3.5" />
@@ -320,32 +314,27 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
               </div>
               <CapsLockWarning />
             </div>
-            <div className="gap-sm flex">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => setIsRenewOpen(false)}
-                disabled={isSubmitting}
-              >
-                <X className="h-4 w-4" />
-                {t('common.actions.cancel')}
-              </Button>
-              <Button
-                type="submit"
-                className="flex-1"
-                disabled={isSubmitting || !masterPassword}
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-
-                {t('pages.vaultGuard.expiry.renewConfirm')}
-              </Button>
-            </div>
           </form>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsRenewOpen(false)}
+              disabled={isSubmitting}
+            >
+              <X aria-hidden="true" />
+              {t('common.actions.cancel')}
+            </Button>
+            <Button
+              type="submit"
+              form="vault-renew-form"
+              disabled={!masterPassword}
+              loading={isSubmitting}
+            >
+              {!isSubmitting && <RefreshCw aria-hidden="true" />}
+              {t('pages.vaultGuard.expiry.renewConfirm')}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
@@ -749,13 +738,10 @@ function VaultKeyboardShortcutsPanel({
     >
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="gap-sm flex items-center">
-            <Keyboard className="h-4 w-4" />
+          <DialogTitle icon={Keyboard}>
             {t('pages.vaultGuard.shortcuts.title')}
           </DialogTitle>
-          <DialogDescription className="sr-only">
-            {t('pages.vaultGuard.shortcuts.title')}
-          </DialogDescription>
+          <DialogDescription>{t('pages.vaultGuard.shortcuts.title')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-sm">
           <div className="px-sm py-xs flex items-center justify-between rounded-md border">

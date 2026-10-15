@@ -39,11 +39,11 @@ interface HealthScoreData {
 }
 
 const GRADE_COLORS: Record<string, { color: string; hex: string }> = {
-  A: { color: 'text-emerald-500', hex: '#10b981' },
-  B: { color: 'text-green-500', hex: '#22c55e' },
-  C: { color: 'text-yellow-500', hex: '#eab308' },
-  D: { color: 'text-orange-500', hex: '#f97316' },
-  F: { color: 'text-red-500', hex: '#ef4444' },
+  A: { color: 'text-success', hex: 'hsl(var(--success))' },
+  B: { color: 'text-success', hex: 'hsl(var(--success))' },
+  C: { color: 'text-warning', hex: 'hsl(var(--warning))' },
+  D: { color: 'text-warning', hex: 'hsl(var(--warning))' },
+  F: { color: 'text-destructive', hex: 'hsl(var(--destructive))' },
 };
 
 const DIMENSION_ICONS = {
@@ -65,7 +65,7 @@ function DimensionBar({
   const pct = Math.round((value.score / value.max) * 100);
 
   const barColor =
-    pct >= 80 ? 'bg-emerald-500' : pct >= 60 ? 'bg-yellow-500' : 'bg-red-500';
+    pct >= 80 ? 'bg-success' : pct >= 60 ? 'bg-warning' : 'bg-destructive';
 
   let detail = '';
   if (dimension === 'liquidity' && value.ratio != null) {

@@ -67,7 +67,7 @@ export function LoanProgressDialog({
   const p = (key: string, lentKey: string) =>
     t(`pages.loans.progress.${isCreditor ? lentKey : key}`);
 
-  const { data: installments = [], isLoading } = useQuery({
+  const { data: installments = [], isPending } = useQuery({
     queryKey: ['loanInstallments', loan?.id],
     queryFn: () => loanInstallmentsService.getByLoan(loan!.id),
     enabled: !!loan,
@@ -132,18 +132,15 @@ export function LoanProgressDialog({
   }, [loan, installments]);
 
   return (
-    <Dialog open={!!loan} onOpenChange={(open) => !open && onClose()}>
+    // Abre só com os dados prontos (sem "Carregando…" que faz o modal saltar de tamanho).
+    <Dialog open={!!loan && !isPending} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle icon={BarChart3}>{p('title', 'lentTitle')}</DialogTitle>
           <DialogDescription>{loan?.description}</DialogDescription>
         </DialogHeader>
 
-        {isLoading ? (
-          <div className="py-xl text-muted-foreground text-center text-sm">
-            {t('common.actions.loading')}
-          </div>
-        ) : !stats ? null : (
+        {!stats ? null : (
           <div className="space-y-md">
             {/* Progress bar */}
             <div className="space-y-xs">

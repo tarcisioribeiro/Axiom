@@ -5,6 +5,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { cn } from '@/lib/utils';
 import type { TaskCard, KanbanStatus } from '@/types';
 
 import { KanbanCard } from './KanbanCard';
@@ -25,52 +26,33 @@ export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnP
     totalCards > 0 &&
     cards.length >= totalCards;
 
-  const getColorClasses = () => {
-    const colors = {
-      todo: 'bg-muted/30 border-border',
-      doing: 'bg-info/10 border-info/30',
-      done: 'bg-success/10 border-success/30',
-    };
-    return colors[status] || colors.todo;
-  };
-
-  const getHeaderColor = () => {
-    const colors = {
-      todo: 'bg-muted-foreground',
-      doing: 'bg-info',
-      done: 'bg-success',
-    };
-    return colors[status] || colors.todo;
-  };
-
-  const getHeaderTextColor = () => {
-    const colors = {
-      todo: 'text-muted',
-      doing: 'text-info-foreground',
-      done: 'text-success-foreground',
-    };
-    return colors[status] || colors.todo;
-  };
+  // Cor do status só na bolinha do header; coluna sempre neutra
+  const dotColor = {
+    todo: 'bg-muted-foreground',
+    doing: 'bg-info',
+    done: 'bg-success',
+  }[status];
 
   return (
     <div className="flex max-h-[var(--kanban-max-h,calc(100vh-14rem))] flex-col">
-      <div
-        className={`${getHeaderColor()} ${getHeaderTextColor()} px-md flex-shrink-0 rounded-t-lg py-3`}
-      >
+      <div className="bg-muted border-border px-md py-sm flex-shrink-0 rounded-t-lg border border-b-0">
         <div className="flex items-center justify-between">
           <div className="gap-sm flex items-center">
-            <h3 className="text-lg font-semibold">{title}</h3>
+            <span
+              className={cn('h-2.5 w-2.5 rounded-full', dotColor)}
+              aria-hidden="true"
+            />
+            <h3 className="text-foreground text-lg font-semibold">{title}</h3>
             {isComplete && (
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 18 }}
               >
-                <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+                <CheckCircle2 className="text-success h-5 w-5" aria-hidden="true" />
               </motion.div>
             )}
           </div>
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-sm font-bold">
+          <span className="bg-background text-foreground flex h-6 w-6 items-center justify-center rounded-full text-sm font-bold">
             {cards.length}
           </span>
         </div>
@@ -78,15 +60,18 @@ export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnP
 
       <div
         ref={setNodeRef}
-        className={`flex-1 ${getColorClasses()} kanban-scrollbar p-md min-h-[200px] overflow-y-auto rounded-b-lg border-2 transition-colors ${
-          isOver ? 'border-info bg-info/20 border-4 border-dashed' : ''
-        }`}
+        className={cn(
+          'kanban-scrollbar p-md min-h-[200px] flex-1 overflow-y-auto rounded-b-lg border transition-colors',
+          isOver
+            ? 'border-primary bg-primary/5 border-dashed'
+            : 'border-border bg-muted/30'
+        )}
       >
         <SortableContext
           items={cards.map((card) => card.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="space-y-3">
+          <div className="space-y-sm">
             <AnimatePresence>
               {cards.length === 0 ? (
                 <motion.div

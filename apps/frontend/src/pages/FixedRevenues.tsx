@@ -4,6 +4,7 @@ import {
   CalendarDays,
   CheckCircle2,
   CircleDot,
+  FileText,
   History,
   Loader2,
   Pencil,
@@ -20,6 +21,7 @@ import { useEffect, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
@@ -95,7 +97,6 @@ export default function FixedRevenues({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [historyItem, setHistoryItem] = useState<FixedRevenue | null>(null);
   const [historyRevenues, setHistoryRevenues] = useState<Revenue[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [accountFilter, setAccountFilter] = useState('all');
@@ -169,18 +170,15 @@ export default function FixedRevenues({
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['fixed-revenues'] });
 
+  // Abre só com os dados prontos (sem "Carregando…" que faz o modal saltar de tamanho).
   const openHistory = async (item: FixedRevenue) => {
-    setHistoryItem(item);
-    setHistoryRevenues([]);
-    setHistoryLoading(true);
     try {
       const results = await revenuesService.getAll({ fixed_revenue_template: item.id });
       setHistoryRevenues(Array.isArray(results) ? results : []);
     } catch {
       setHistoryRevenues([]);
-    } finally {
-      setHistoryLoading(false);
     }
+    setHistoryItem(item);
   };
 
   const openEdit = (item: FixedRevenue) => {
@@ -522,7 +520,7 @@ export default function FixedRevenues({
             <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
               <div className="space-y-sm">
                 <Label htmlFor="description" className="gap-xs flex items-center">
-                  <Store className="text-muted-foreground h-3.5 w-3.5" />
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.fixedRevenues.form.descriptionLabel')}
                 </Label>
                 <Input
@@ -644,7 +642,7 @@ export default function FixedRevenues({
               <div className="gap-md grid grid-cols-1 items-start md:grid-cols-2">
                 <div className="space-y-sm md:order-last md:col-span-2">
                   <Label htmlFor="notes" className="gap-xs flex items-center">
-                    <Tag className="text-muted-foreground h-3.5 w-3.5" />
+                    <FileText className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.fixedRevenues.form.notesLabel')}
                   </Label>
                   <Textarea
@@ -753,14 +751,8 @@ export default function FixedRevenues({
               </DialogDescription>
             </VisuallyHidden>
           </DialogHeader>
-          {historyLoading ? (
-            <p className="py-md text-muted-foreground text-center text-sm">
-              {t('common.actions.loading')}
-            </p>
-          ) : historyRevenues.length === 0 ? (
-            <p className="py-md text-muted-foreground text-center text-sm">
-              {t('pages.fixedRevenues.historyEmpty')}
-            </p>
+          {historyRevenues.length === 0 ? (
+            <EmptyState title={t('pages.fixedRevenues.historyEmpty')} />
           ) : (
             <PaginatedSlide items={historyRevenues} pageSize={5} pinNav={false}>
               {(pageItems) => (
@@ -778,7 +770,9 @@ export default function FixedRevenues({
                         <td className="py-xs pr-md text-muted-foreground">
                           {formatDate(rev.date)}
                         </td>
-                        <td className="py-xs pr-md">{rev.description}</td>
+                        <td className="py-xs pr-md" title={rev.description}>
+                          <div className="max-w-48 truncate">{rev.description}</div>
+                        </td>
                         <td
                           className={cn(
                             'py-xs text-right font-medium',

@@ -6,9 +6,9 @@ import {
   Clock,
   FileText,
   Loader2,
+  Save,
   Tag,
   Wallet,
-  Save,
   X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -152,7 +152,7 @@ export function ReceivableForm({
 
           <div className="space-y-sm">
             <Label className="gap-xs flex items-center">
-              <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.receivables.form.receivedValue')}
             </Label>
             <CurrencyInput
@@ -210,7 +210,7 @@ export function ReceivableForm({
 
           <div className="space-y-sm">
             <Label className="gap-xs flex items-center">
-              <Clock className="text-muted-foreground h-3.5 w-3.5" />
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.receivables.form.dueDate')}
             </Label>
             <DatePicker
@@ -297,7 +297,7 @@ export function ReceivableForm({
             </div>
           )}
 
-          <div className={`space-y-sm ${receivable ? '' : 'md:col-span-2'}`}>
+          <div className="space-y-sm md:col-span-2">
             <Label className="gap-xs flex items-center">
               <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.receivables.form.notes')}
@@ -306,7 +306,7 @@ export function ReceivableForm({
               value={form.notes ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
               placeholder={t('common.placeholders.notes')}
-              rows={3}
+              rows={1}
               disabled={isLoading}
             />
           </div>

@@ -14,7 +14,7 @@ import { StudyTimer } from './StudyTimer';
 // "Intelecto" in the UI): reading timer on the reading pages, study timer on
 // the course/skill pages.
 const READING_TIMER_PATTERN = /^\/library\/(books|authors|publishers)(\/|$)/;
-const STUDY_TIMER_PATTERN = /^\/library\/(courses|skills|knowledge-graph)(\/|$)/;
+const STUDY_TIMER_PATTERN = /^\/library\/(courses|skills)(\/|$)/;
 
 export const Layout = () => {
   const { t } = useTranslation();

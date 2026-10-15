@@ -20,8 +20,9 @@ import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
-import { PlainButton } from '@/components/ui/plain-button';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { booksService } from '@/services/books-service';
 import type { Book } from '@/types';
@@ -60,16 +61,18 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="gap-md bg-card p-md flex items-center rounded-lg border"
+      className="gap-md bg-card px-md py-sm flex items-center rounded-lg border"
     >
-      <PlainButton
+      <Button
+        variant="ghost"
+        size="icon"
         {...attributes}
         {...listeners}
-        className="text-muted-foreground hover:text-foreground cursor-grab touch-none active:cursor-grabbing"
-        aria-label="Arrastar para reordenar"
+        className="text-muted-foreground h-8 w-8 cursor-grab touch-none active:cursor-grabbing"
+        aria-label={t('pages.readingQueue.dragToReorder')}
       >
         <GripVertical className="h-5 w-5" />
-      </PlainButton>
+      </Button>
 
       <span className="text-muted-foreground w-6 text-center text-sm font-semibold">
         {rank}
@@ -84,14 +87,17 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
 
       <div className="gap-sm flex shrink-0 items-center">
         <Badge variant="outline" className="hidden text-xs sm:inline-flex">
-          {book.genre_display}
+          {t(`pages.books.genres.${book.genre}`, { defaultValue: book.genre_display })}
         </Badge>
         {book.estimated_days_to_finish != null && (
           <Badge
             variant="outline"
             className="gap-xs hidden items-center text-xs lg:inline-flex"
           >
-            <Clock className="h-3 w-3" />~{book.estimated_days_to_finish}d
+            <Clock className="h-3 w-3" />
+            {t('pages.readingQueue.estimatedDays', {
+              count: book.estimated_days_to_finish,
+            })}
           </Badge>
         )}
         <Badge variant={badge.variant} className="text-xs">
@@ -174,21 +180,31 @@ export function ReadingQueueTab() {
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext
-        items={books.map((b) => b.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        <div className="gap-sm flex flex-col">
-          {books.map((book, index) => (
-            <SortableBookItem key={book.id} book={book} rank={index + 1} />
-          ))}
-        </div>
-      </SortableContext>
-    </DndContext>
+    // 5 por página (§6); o arraste reordena dentro da página e a prioridade
+    // continua global (índice na fila inteira).
+    <PaginatedSlide items={books} pageSize={LIST_PAGE_SIZE}>
+      {(pageBooks) => (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={pageBooks.map((b) => b.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="gap-sm flex flex-col">
+              {pageBooks.map((book) => (
+                <SortableBookItem
+                  key={book.id}
+                  book={book}
+                  rank={books.indexOf(book) + 1}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      )}
+    </PaginatedSlide>
   );
 }

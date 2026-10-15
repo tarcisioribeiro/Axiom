@@ -15,6 +15,7 @@ import { useEffect, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
@@ -87,7 +88,6 @@ export default function FixedExpenses({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [historyItem, setHistoryItem] = useState<FixedExpense | null>(null);
   const [historyExpenses, setHistoryExpenses] = useState<Expense[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [accountFilter, setAccountFilter] = useState('all');
@@ -140,18 +140,15 @@ export default function FixedExpenses({
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['fixed-expenses'] });
 
+  // Abre só com os dados prontos (sem "Carregando…" que faz o modal saltar de tamanho).
   const openHistory = async (item: FixedExpense) => {
-    setHistoryItem(item);
-    setHistoryExpenses([]);
-    setHistoryLoading(true);
     try {
       const results = await expensesService.getAll({ fixed_expense_template: item.id });
       setHistoryExpenses(Array.isArray(results) ? results : []);
     } catch {
       setHistoryExpenses([]);
-    } finally {
-      setHistoryLoading(false);
     }
+    setHistoryItem(item);
   };
 
   const handleSubmit = async (data: FixedExpenseFormData) => {
@@ -512,14 +509,8 @@ export default function FixedExpenses({
               </DialogDescription>
             </VisuallyHidden>
           </DialogHeader>
-          {historyLoading ? (
-            <p className="py-md text-muted-foreground text-center text-sm">
-              {t('common.actions.loading')}
-            </p>
-          ) : historyExpenses.length === 0 ? (
-            <p className="py-md text-muted-foreground text-center text-sm">
-              {t('pages.fixedExpenses.historyEmpty')}
-            </p>
+          {historyExpenses.length === 0 ? (
+            <EmptyState title={t('pages.fixedExpenses.historyEmpty')} />
           ) : (
             <PaginatedSlide items={historyExpenses} pageSize={5} pinNav={false}>
               {(pageItems) => (
@@ -537,7 +528,9 @@ export default function FixedExpenses({
                         <td className="py-xs pr-md text-muted-foreground">
                           {formatDate(exp.date)}
                         </td>
-                        <td className="py-xs pr-md">{exp.description}</td>
+                        <td className="py-xs pr-md" title={exp.description}>
+                          <div className="max-w-48 truncate">{exp.description}</div>
+                        </td>
                         <td
                           className={cn(
                             'py-xs text-right font-medium',

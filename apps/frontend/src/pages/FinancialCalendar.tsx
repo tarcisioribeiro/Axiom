@@ -1,20 +1,19 @@
 /* eslint-disable max-lines */
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   format,
   startOfMonth,
   endOfMonth,
   eachDayOfInterval,
   getDay,
-  isSameMonth,
   addMonths,
-  subMonths,
   isSameDay,
   addDays,
   startOfWeek,
 } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
@@ -25,6 +24,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,24 +85,14 @@ const STATUS_VARIANTS: Record<
 const fromActive = (status: string): EventStatus =>
   status === 'active' ? 'pending' : (status as EventStatus);
 
-const EVENT_COLORS: Record<EventType, string> = {
-  payable: 'bg-destructive/15 text-destructive border-destructive/30',
-  receivable: 'bg-success/15 text-success border-success/30',
-  creditCard: 'bg-orange-500/15 text-orange-600 border-orange-500/30',
-  loan: 'bg-purple-500/15 text-purple-600 border-purple-500/30',
-  revenue: 'bg-teal-500/15 text-teal-600 border-teal-500/30',
-  expense: 'bg-rose-500/15 text-rose-600 border-rose-500/30',
-  transfer: 'bg-sky-500/15 text-sky-600 border-sky-500/30',
-};
-
 const EVENT_DOT_COLORS: Record<EventType, string> = {
   payable: 'bg-destructive',
   receivable: 'bg-success',
-  creditCard: 'bg-orange-500',
-  loan: 'bg-purple-500',
-  revenue: 'bg-teal-500',
-  expense: 'bg-rose-500',
-  transfer: 'bg-sky-500',
+  creditCard: 'bg-category-exercise',
+  loan: 'bg-category-intellect',
+  revenue: 'bg-info',
+  expense: 'bg-category-spiritual',
+  transfer: 'bg-category-studies',
 };
 
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
@@ -124,6 +114,13 @@ export default function FinancialCalendar({
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  // 1 = avançou, -1 = voltou: define o lado de onde o novo mês entra
+  const [direction, setDirection] = useState(1);
+  const goToMonth = (delta: number) => {
+    setDirection(delta);
+    setSelectedDay(null);
+    setCurrentDate((d) => addMonths(d, delta));
+  };
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -155,15 +152,19 @@ export default function FinancialCalendar({
   });
 
   const revenuesQuery = useQuery({
-    queryKey: ['revenues', 'calendar'],
-    queryFn: () => revenuesService.getAllPages(),
+    queryKey: ['revenues', 'calendar', startStr, endStr],
+    queryFn: () =>
+      revenuesService.getAllPages({ date_from: startStr, date_to: endStr }),
     staleTime: STALE_TIMES.DEFAULT_LIST,
+    placeholderData: keepPreviousData,
   });
 
   const expensesQuery = useQuery({
-    queryKey: ['expenses', 'calendar'],
-    queryFn: () => expensesService.getAllPages(),
+    queryKey: ['expenses', 'calendar', startStr, endStr],
+    queryFn: () =>
+      expensesService.getAllPages({ date_from: startStr, date_to: endStr }),
     staleTime: STALE_TIMES.DEFAULT_LIST,
+    placeholderData: keepPreviousData,
   });
 
   const transfersQuery = useQuery({
@@ -349,177 +350,194 @@ export default function FinancialCalendar({
     <Wrapper>
       {headerTarget ? createPortal(header, headerTarget) : header}
 
-      <div className="mt-md bg-muted/30 px-md py-sm text-muted-foreground rounded-lg border text-sm font-medium">
-        {t('financialCalendar.summaryDue', { count: totalEventsThisMonth })}
-      </div>
-
-      <Card className="mt-md">
-        <CardHeader className="pb-sm">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setCurrentDate((d) => subMonths(d, 1))}
-              aria-label={t('financialCalendar.prevMonth')}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <CardTitle as="h2" className="capitalize">
-              {format(currentDate, 'MMMM yyyy', { locale: dateFnsLocale })}
-            </CardTitle>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setCurrentDate((d) => addMonths(d, 1))}
-              aria-label={t('financialCalendar.nextMonth')}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-7 gap-px">
-            {weekdayLabels.map((d) => (
-              <div
-                key={d}
-                className="py-sm text-muted-foreground text-center text-xs font-semibold uppercase"
-              >
-                {d}
-              </div>
-            ))}
-
-            {calendarDays.leadingBlanks.map((i) => (
-              <div key={`blank-${i}`} className="min-h-[80px]" />
-            ))}
-
-            {calendarDays.days.map((day) => {
-              const key = format(day, 'yyyy-MM-dd');
-              const dayEvents = eventsByDate[key] ?? [];
-              const isSelected = selectedDay ? isSameDay(day, selectedDay) : false;
-              const isCurrentMonth = isSameMonth(day, currentDate);
-              const isToday = isSameDay(day, new Date());
-
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setSelectedDay(isSelected ? null : day)}
-                  className={cn(
-                    'p-xs min-h-[80px] rounded-lg border text-left transition-colors',
-                    isCurrentMonth
-                      ? 'bg-card hover:bg-accent/50'
-                      : 'bg-muted/20 text-muted-foreground',
-                    isSelected && 'border-primary bg-primary/5',
-                    isToday && !isSelected && 'border-primary/50'
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium',
-                      isToday && 'bg-primary text-primary-foreground'
-                    )}
-                  >
-                    {format(day, 'd')}
-                  </span>
-                  {dayEvents.length > 0 && (
-                    <div className="mt-xs flex flex-wrap gap-0.5">
-                      {dayEvents.slice(0, 3).map((ev) => (
-                        <span
-                          key={ev.id}
-                          className={cn(
-                            'inline-block h-1.5 w-1.5 rounded-full',
-                            EVENT_DOT_COLORS[ev.type]
-                          )}
-                        />
-                      ))}
-                      {dayEvents.length > 3 && (
-                        <span className="text-muted-foreground text-2xs">
-                          +{dayEvents.length - 3}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-md gap-md flex flex-wrap">
-            {(Object.keys(EVENT_COLORS) as EventType[]).map((type) => (
-              <div
-                key={type}
-                className="gap-xs text-muted-foreground flex items-center text-xs"
-              >
-                <span
-                  className={cn('h-2.5 w-2.5 rounded-full', EVENT_DOT_COLORS[type])}
-                />
-                {t(`financialCalendar.eventTypes.${type}`)}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {selectedDay && (
-        <Card className="mt-md">
+      {/* Mesmo layout do Calendário de Treinos: calendário à esquerda, dia à direita. */}
+      <div className="gap-md grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+        <Card>
           <CardHeader className="pb-sm">
             <div className="flex items-center justify-between">
-              <CardTitle as="h3">
-                {t('financialCalendar.dayDetail', {
-                  date: format(selectedDay, "dd 'de' MMMM", {
-                    locale: dateFnsLocale,
-                  }),
-                })}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => goToMonth(-1)}
+                aria-label={t('financialCalendar.prevMonth')}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <CardTitle as="h2" className="gap-sm flex items-center capitalize">
+                {format(currentDate, 'MMMM yyyy', { locale: dateFnsLocale })}
+                <Badge variant="secondary" className="normal-case">
+                  {t('financialCalendar.summaryDue', { count: totalEventsThisMonth })}
+                </Badge>
               </CardTitle>
               <Button
-                aria-label={t('common.actions.close')}
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                onClick={() => setSelectedDay(null)}
+                onClick={() => goToMonth(1)}
+                aria-label={t('financialCalendar.nextMonth')}
               >
-                <X className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            {selectedDayEvents.length === 0 ? (
-              <EmptyState title={t('financialCalendar.noEvents')} />
-            ) : (
-              <div className="space-y-sm">
-                {selectedDayEvents.map((ev) => (
-                  <div
-                    key={ev.id}
+            <div className="grid grid-cols-7 gap-px">
+              {weekdayLabels.map((d) => (
+                <div
+                  key={d}
+                  className="py-sm text-muted-foreground text-center text-xs font-semibold uppercase"
+                >
+                  {d}
+                </div>
+              ))}
+            </div>
+            <motion.div
+              key={startStr}
+              initial={{ opacity: 0, x: direction * 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="grid grid-cols-7 gap-px"
+            >
+              {calendarDays.leadingBlanks.map((i) => (
+                <div key={`blank-${i}`} className="min-h-[72px]" />
+              ))}
+              {calendarDays.days.map((day) => {
+                const key = format(day, 'yyyy-MM-dd');
+                const dayEvents = eventsByDate[key] ?? [];
+                const isSelected = selectedDay ? isSameDay(day, selectedDay) : false;
+                const isToday = isSameDay(day, new Date());
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelectedDay(isSelected ? null : day)}
                     className={cn(
-                      'p-sm flex items-center justify-between rounded-lg border',
-                      EVENT_COLORS[ev.type]
+                      'p-xs bg-card hover:bg-accent/50 min-h-[72px] rounded-lg border text-left transition-colors',
+                      isSelected && 'border-primary bg-primary/5',
+                      isToday && !isSelected && 'border-primary/50'
                     )}
                   >
-                    <div className="gap-sm flex items-center">
-                      <Badge
-                        variant="outline"
-                        className={cn('border text-xs', EVENT_COLORS[ev.type])}
-                      >
-                        {t(`financialCalendar.eventTypes.${ev.type}`)}
-                      </Badge>
-                      <span className="text-foreground text-sm font-medium">
-                        {ev.description}
-                      </span>
-                    </div>
-                    <div className="gap-sm flex items-center">
-                      <Badge variant={STATUS_VARIANTS[ev.status]} className="text-xs">
-                        {t(`financialCalendar.status.${ev.status}`)}
-                      </Badge>
-                      <span className="text-foreground text-sm font-bold">
-                        {formatCurrency(ev.value)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                    <span
+                      className={cn(
+                        'flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium',
+                        isToday && 'bg-primary text-primary-foreground'
+                      )}
+                    >
+                      {format(day, 'd')}
+                    </span>
+                    {dayEvents.length > 0 && (
+                      <div className="mt-xs flex flex-wrap items-center gap-0.5">
+                        {dayEvents.slice(0, 3).map((ev) => (
+                          <span
+                            key={ev.id}
+                            className={cn(
+                              'inline-block h-1.5 w-1.5 rounded-full',
+                              EVENT_DOT_COLORS[ev.type]
+                            )}
+                          />
+                        ))}
+                        {dayEvents.length > 3 && (
+                          <span className="text-muted-foreground text-2xs">
+                            +{dayEvents.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </motion.div>
+
+            <div className="mt-md gap-md flex flex-wrap">
+              {(Object.keys(EVENT_DOT_COLORS) as EventType[]).map((type) => (
+                <div
+                  key={type}
+                  className="gap-xs text-muted-foreground flex items-center text-xs"
+                >
+                  <span
+                    className={cn('h-2.5 w-2.5 rounded-full', EVENT_DOT_COLORS[type])}
+                  />
+                  {t(`financialCalendar.eventTypes.${type}`)}
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
-      )}
+
+        {selectedDay ? (
+          // key troca a cada dia clicado → remonta e repete o pop-in
+          <Card key={format(selectedDay, 'yyyy-MM-dd')} className="animate-pop-in">
+            <CardHeader className="pb-sm">
+              <div className="flex items-center justify-between">
+                <CardTitle as="h3">
+                  {t('financialCalendar.dayDetail', {
+                    date: format(selectedDay, "dd 'de' MMMM", {
+                      locale: dateFnsLocale,
+                    }),
+                  })}
+                </CardTitle>
+                <Button
+                  aria-label={t('common.actions.close')}
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedDay(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {selectedDayEvents.length === 0 ? (
+                <EmptyState title={t('financialCalendar.noEvents')} />
+              ) : (
+                <PaginatedSlide
+                  items={selectedDayEvents}
+                  pageSize={LIST_PAGE_SIZE}
+                  pinNav={false}
+                  className="space-y-sm"
+                >
+                  {(pageItems) =>
+                    pageItems.map((ev) => (
+                      <div key={ev.id} className="p-sm space-y-xs rounded-lg border">
+                        <div className="gap-sm flex items-center justify-between">
+                          <span
+                            className="text-foreground truncate text-sm font-medium"
+                            title={ev.description}
+                          >
+                            {ev.description}
+                          </span>
+                          <span className="text-foreground shrink-0 text-sm font-bold">
+                            {formatCurrency(ev.value)}
+                          </span>
+                        </div>
+                        <div className="gap-sm flex items-center justify-between">
+                          <span className="gap-xs text-muted-foreground flex items-center text-xs">
+                            <span
+                              className={cn(
+                                'h-2 w-2 shrink-0 rounded-full',
+                                EVENT_DOT_COLORS[ev.type]
+                              )}
+                            />
+                            {t(`financialCalendar.eventTypes.${ev.type}`)}
+                          </span>
+                          <Badge
+                            variant={STATUS_VARIANTS[ev.status]}
+                            className="text-xs"
+                          >
+                            {t(`financialCalendar.status.${ev.status}`)}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  }
+                </PaginatedSlide>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="animate-fade-in p-lg text-muted-foreground text-center text-sm">
+            {t('financialCalendar.selectDay')}
+          </Card>
+        )}
+      </div>
     </Wrapper>
   );
 }

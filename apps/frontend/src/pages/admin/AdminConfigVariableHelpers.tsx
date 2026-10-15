@@ -3,18 +3,23 @@ import { useTranslation } from 'react-i18next';
 
 import { PlainButton } from '@/components/ui/plain-button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import type { SystemConfig } from '@/types';
 
 import { VARIABLE_HELPERS } from './adminConfigVariableHelpersData';
 
-export function VariableHelperPopover({ configKey }: { configKey: string }) {
+export function VariableHelperPopover({ config }: { config: SystemConfig }) {
   const { t } = useTranslation();
+  const configKey = config.key;
   const helper = VARIABLE_HELPERS[configKey];
-  if (!helper) return null;
-
-  const hint = t(`pages.adminConfig.variables.${configKey}.hint`, {
-    defaultValue: helper.hint,
+  const description = t(`pages.adminConfig.variables.${configKey}.description`, {
+    defaultValue: config.description ?? '',
   });
-  const warning = helper.warning
+  if (!helper && !description) return null;
+
+  const hint = helper
+    ? t(`pages.adminConfig.variables.${configKey}.hint`, { defaultValue: helper.hint })
+    : '';
+  const warning = helper?.warning
     ? t(`pages.adminConfig.variables.${configKey}.warning`, {
         defaultValue: helper.warning,
       })
@@ -32,9 +37,10 @@ export function VariableHelperPopover({ configKey }: { configKey: string }) {
         </PlainButton>
       </PopoverTrigger>
       <PopoverContent align="start" side="bottom" className="space-y-sm w-80 text-sm">
-        <p className="text-foreground leading-snug">{hint}</p>
+        {description && <p className="text-foreground leading-snug">{description}</p>}
+        {hint && <p className="text-foreground leading-snug">{hint}</p>}
 
-        {helper.accepted_values && (
+        {helper?.accepted_values && (
           <div>
             <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               {t('pages.adminConfig.popover.acceptedValues')}
@@ -45,7 +51,7 @@ export function VariableHelperPopover({ configKey }: { configKey: string }) {
           </div>
         )}
 
-        {helper.default_value && (
+        {helper?.default_value && (
           <div>
             <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               {t('pages.adminConfig.popover.default')}
@@ -54,7 +60,7 @@ export function VariableHelperPopover({ configKey }: { configKey: string }) {
           </div>
         )}
 
-        {helper.example && (
+        {helper?.example && (
           <div>
             <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               {t('pages.adminConfig.popover.example')}
@@ -64,11 +70,9 @@ export function VariableHelperPopover({ configKey }: { configKey: string }) {
         )}
 
         {warning && (
-          <div className="gap-sm px-sm py-sm flex rounded-lg border border-amber-500/30 bg-amber-500/10">
-            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
-            <p className="text-xs leading-snug text-amber-700 dark:text-amber-400">
-              {warning}
-            </p>
+          <div className="gap-sm px-sm py-sm border-warning/30 bg-warning/10 flex rounded-lg border">
+            <AlertTriangle className="text-warning mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+            <p className="text-warning text-xs leading-snug">{warning}</p>
           </div>
         )}
       </PopoverContent>

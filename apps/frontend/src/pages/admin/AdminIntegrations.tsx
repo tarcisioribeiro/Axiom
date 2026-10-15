@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
   Bot,
@@ -7,28 +7,47 @@ import {
   Link2,
   Mail,
   RefreshCw,
+  RotateCcw,
+  Send,
   Server,
   Zap,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { adminService } from '@/services/admin-service';
 
-import { EmailTestPanel, IntegrationCard, OllamaRestartPanel } from './IntegrationCard';
+import { RestartModal } from './AdminConfigRestartModal';
+import {
+  EmailTestDialog,
+  IntegrationCard,
+  IntegrationDetailDialog,
+} from './IntegrationCard';
 
 export default function AdminIntegrations() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
+  const [detailKey, setDetailKey] = useState<string>();
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [restartOpen, setRestartOpen] = useState(false);
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['admin', 'integrations'],
     queryFn: () => adminService.getIntegrations(),
     refetchInterval: 60_000,
     staleTime: 30_000,
   });
+
+  const services = [
+    { key: 'database', icon: Database, check: data?.database },
+    { key: 'cache', icon: Zap, check: data?.cache },
+    { key: 'storage', icon: HardDrive, check: data?.storage },
+    { key: 'ollama', icon: Server, check: data?.ollama },
+    { key: 'anthropic', icon: Bot, check: data?.anthropic },
+    { key: 'email', icon: Mail, check: data?.email },
+  ].map((svc) => ({ ...svc, name: t(`pages.adminIntegrations.services.${svc.key}`) }));
 
   return (
     <PageContainer>
@@ -36,19 +55,10 @@ export default function AdminIntegrations() {
         title={t('pages.adminIntegrations.title')}
         icon={<Link2 />}
         actions={
-          <button
-            onClick={() => {
-              void refetch();
-              void queryClient.invalidateQueries({
-                queryKey: ['admin', 'integrations'],
-              });
-            }}
-            disabled={isLoading}
-            className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium disabled:opacity-50"
-          >
-            <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+          <Button variant="outline" onClick={() => void refetch()} loading={isFetching}>
+            {!isFetching && <RefreshCw />}
             {t('pages.adminIntegrations.testAll')}
-          </button>
+          </Button>
         }
       />
 
@@ -97,46 +107,57 @@ export default function AdminIntegrations() {
         </div>
       )}
 
-      <div className="gap-md grid md:grid-cols-2">
-        <IntegrationCard
-          name={t('pages.adminIntegrations.services.database')}
-          icon={Database}
-          check={data?.database}
-          loading={isLoading}
-        />
-        <IntegrationCard
-          name={t('pages.adminIntegrations.services.cache')}
-          icon={Zap}
-          check={data?.cache}
-          loading={isLoading}
-        />
-        <IntegrationCard
-          name={t('pages.adminIntegrations.services.storage')}
-          icon={HardDrive}
-          check={data?.storage}
-          loading={isLoading}
-        />
-        <IntegrationCard
-          name={t('pages.adminIntegrations.services.ollama')}
-          icon={Server}
-          check={data?.ollama}
-          loading={isLoading}
-          details={<OllamaRestartPanel />}
-        />
-        <IntegrationCard
-          name={t('pages.adminIntegrations.services.anthropic')}
-          icon={Bot}
-          check={data?.anthropic}
-          loading={isLoading}
-        />
-        <IntegrationCard
-          name={t('pages.adminIntegrations.services.email')}
-          icon={Mail}
-          check={data?.email}
-          loading={isLoading}
-          details={<EmailTestPanel />}
-        />
+      <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
+        {services.map((svc) => (
+          <IntegrationCard
+            key={svc.key}
+            name={svc.name}
+            icon={svc.icon}
+            check={svc.check}
+            loading={isLoading}
+            onOpen={() => setDetailKey(svc.key)}
+            actions={
+              svc.key === 'ollama' ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setRestartOpen(true);
+                  }}
+                  aria-label={t('pages.adminIntegrations.restartAllBtn')}
+                >
+                  <RotateCcw
+                    className="text-muted-foreground h-4 w-4"
+                    aria-hidden="true"
+                  />
+                </Button>
+              ) : svc.key === 'email' ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEmailOpen(true);
+                  }}
+                  aria-label={t('pages.adminIntegrations.sendTestEmail')}
+                >
+                  <Send className="text-primary h-4 w-4" aria-hidden="true" />
+                </Button>
+              ) : undefined
+            }
+          />
+        ))}
       </div>
+
+      <IntegrationDetailDialog
+        item={services.find((svc) => svc.key === detailKey)}
+        onClose={() => setDetailKey(undefined)}
+      />
+      <EmailTestDialog open={emailOpen} onClose={() => setEmailOpen(false)} />
+      <RestartModal open={restartOpen} onClose={() => setRestartOpen(false)} />
     </PageContainer>
   );
 }

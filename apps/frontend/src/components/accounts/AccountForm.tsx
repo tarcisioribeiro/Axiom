@@ -6,9 +6,9 @@ import {
   CreditCard,
   Hash,
   Landmark,
-  ShieldAlert,
   Loader2,
   Save,
+  Wallet,
   X,
 } from 'lucide-react';
 import { useEffect } from 'react';
@@ -254,7 +254,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
             <Label htmlFor="balance" className="gap-xs flex items-center">
-              <BadgeDollarSign className="text-muted-foreground h-3.5 w-3.5" />
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.accounts.form.balanceLabel')}
             </Label>
             <CurrencyInput
@@ -275,7 +275,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
 
           <div className="space-y-sm">
             <Label htmlFor="overdraft_limit" className="gap-xs flex items-center">
-              <ShieldAlert className="text-muted-foreground h-3.5 w-3.5" />
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.accounts.form.overdraftLabel')}
               <span className="text-muted-foreground/70 ml-1 text-xs">
                 ({t('common.actions.none').toLowerCase()})

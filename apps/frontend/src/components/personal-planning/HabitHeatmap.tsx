@@ -176,7 +176,7 @@ export function HabitHeatmap({ taskId, taskName, recentDays }: HabitHeatmapProps
   const GAP = 2; // px gap
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-sm">
       {/* Header: year selector + filters */}
       <div className="gap-sm flex flex-wrap items-center justify-between">
         {recentDays ? (
@@ -247,7 +247,7 @@ export function HabitHeatmap({ taskId, taskName, recentDays }: HabitHeatmapProps
         {taskName && <span className="text-muted-foreground text-xs">{taskName}</span>}
 
         <div className="gap-sm flex items-center">
-          <div className="text-muted-foreground flex items-center gap-3 text-xs">
+          <div className="text-muted-foreground gap-sm flex items-center text-xs">
             <span>
               {t('pages.planningDashboard.heatmapTotalCompletions', {
                 count: totalCompleted,

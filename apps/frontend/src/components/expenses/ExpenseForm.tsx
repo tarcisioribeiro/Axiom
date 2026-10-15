@@ -4,15 +4,17 @@ import { useQuery } from '@tanstack/react-query';
 import {
   AlertCircle,
   CalendarDays,
+  CheckCircle2,
   Clock,
+  FileText,
   Link2,
   Loader2,
+  Save,
   Sparkles,
   Store,
   Tag,
   Wallet,
   X,
-  Save,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -454,7 +456,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
             <Label htmlFor="description" className="gap-xs flex items-center">
-              <Store className="text-muted-foreground h-3.5 w-3.5" />
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.descriptionLabel')}
             </Label>
             <Input
@@ -502,7 +504,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
           <div className="space-y-sm">
             <Label className="gap-xs flex items-center">
-              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.paymentStatusLabel')}
             </Label>
             <StatusToggle

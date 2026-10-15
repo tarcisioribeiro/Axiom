@@ -4,8 +4,9 @@ import {
   CalendarDays,
   CreditCard as CreditCardIcon,
   FileText,
+  Hash,
   Link2,
-  Loader2,
+  Lock,
   Shield,
   Tag,
   Save,
@@ -28,7 +29,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { CARD_FLAG_ICON } from '@/config/icons';
 import { notifyFormErrors } from '@/lib/form-errors';
-import { storedCardSchema, type StoredCreditCardFormData } from '@/lib/validations';
+import {
+  storedCardEditSchema,
+  storedCardSchema,
+  type StoredCreditCardFormData,
+} from '@/lib/validations';
 import { CARD_FLAGS } from '@/types';
 import type { StoredCreditCard, CreditCard, Member } from '@/types';
 
@@ -68,7 +73,7 @@ export function StoredCardForm({
     watch,
     formState: { errors },
   } = useForm<StoredCreditCardFormData>({
-    resolver: zodResolver(storedCardSchema),
+    resolver: zodResolver(card ? storedCardEditSchema : storedCardSchema),
     defaultValues: card
       ? {
           name: card.name,
@@ -101,207 +106,218 @@ export function StoredCardForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
-      <FormSection
-        title={t('pages.storedCards.form.sectionIdentification')}
-        icon={CreditCardIcon}
-      >
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="name" className="gap-xs flex items-center">
-              <CreditCardIcon className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedCards.form.nameLabel')}
-            </Label>
-            <Input
-              id="name"
-              {...register('name')}
-              aria-invalid={!!errors.name}
-              placeholder={t('pages.storedCards.form.namePlaceholder')}
-              disabled={isLoading}
-            />
-          </div>
+      <div className="gap-lg grid lg:grid-cols-2">
+        <div className="space-y-lg">
+          <FormSection
+            title={t('pages.storedCards.form.sectionIdentification')}
+            icon={CreditCardIcon}
+          >
+            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+              <div className="space-y-sm md:col-span-2">
+                <Label htmlFor="name" className="gap-xs flex items-center">
+                  <CreditCardIcon className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedCards.form.nameLabel')}
+                </Label>
+                <Input
+                  id="name"
+                  {...register('name')}
+                  aria-invalid={!!errors.name}
+                  placeholder={t('pages.storedCards.form.namePlaceholder')}
+                  disabled={isLoading}
+                />
+              </div>
 
-          <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="cardholder_name" className="gap-xs flex items-center">
-              <CreditCardIcon className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedCards.form.holderLabel')}
-            </Label>
-            <Input
-              id="cardholder_name"
-              {...register('cardholder_name')}
-              aria-invalid={!!errors.cardholder_name}
-              placeholder={t('pages.storedCards.form.holderPlaceholder')}
-              disabled={isLoading}
-            />
-          </div>
+              <div className="space-y-sm md:col-span-2">
+                <Label htmlFor="cardholder_name" className="gap-xs flex items-center">
+                  <CreditCardIcon className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedCards.form.holderLabel')}
+                </Label>
+                <Input
+                  id="cardholder_name"
+                  {...register('cardholder_name')}
+                  aria-invalid={!!errors.cardholder_name}
+                  placeholder={t('pages.storedCards.form.holderPlaceholder')}
+                  disabled={isLoading}
+                />
+              </div>
 
-          <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="flag" className="gap-xs flex items-center">
-              <Tag className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedCards.form.brandLabel')}
-            </Label>
-            <Select
-              value={watch('flag')}
-              onValueChange={(value) =>
-                setValue('flag', value as StoredCreditCardFormData['flag'])
-              }
-              disabled={isLoading}
-            >
-              <SelectTrigger aria-invalid={!!errors.flag}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CARD_FLAGS.map((flag) => (
-                  <SelectItem key={flag.value} value={flag.value}>
-                    <span className="flex items-center gap-2">
-                      <CARD_FLAG_ICON className="h-4 w-4" />
-                      {flag.value === 'OTHER'
-                        ? t('pages.storedCards.otherBrand')
-                        : flag.label}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="space-y-sm md:col-span-2">
+                <Label htmlFor="flag" className="gap-xs flex items-center">
+                  <Tag className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedCards.form.brandLabel')}
+                </Label>
+                <Select
+                  value={watch('flag')}
+                  onValueChange={(value) =>
+                    setValue('flag', value as StoredCreditCardFormData['flag'])
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger aria-invalid={!!errors.flag}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CARD_FLAGS.map((flag) => (
+                      <SelectItem key={flag.value} value={flag.value}>
+                        <span className="flex items-center gap-2">
+                          <CARD_FLAG_ICON className="h-4 w-4" />
+                          {flag.value === 'OTHER'
+                            ? t('pages.storedCards.otherBrand')
+                            : flag.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </FormSection>
+
+          <FormSection
+            title={t('pages.storedCards.form.sectionExpiry')}
+            icon={CalendarDays}
+          >
+            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedCards.form.expiryMonthLabel')}
+                </Label>
+                <Select
+                  value={watch('expiration_month')?.toString()}
+                  onValueChange={(value) =>
+                    setValue('expiration_month', parseInt(value))
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger aria-invalid={!!errors.expiration_month}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTHS.map((month) => (
+                      <SelectItem key={month.value} value={month.value.toString()}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedCards.form.expiryYearLabel')}
+                </Label>
+                <Select
+                  value={watch('expiration_year')?.toString()}
+                  onValueChange={(value) =>
+                    setValue('expiration_year', parseInt(value))
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger aria-invalid={!!errors.expiration_year}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEARS.map((year) => (
+                      <SelectItem key={year.value} value={year.value.toString()}>
+                        {year.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </FormSection>
         </div>
-      </FormSection>
+        <div className="space-y-lg">
+          <FormSection
+            title={t('pages.storedCards.form.sectionSensitive')}
+            icon={Shield}
+          >
+            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+              <div className="space-y-sm md:col-span-2">
+                <Label htmlFor="card_number" className="gap-xs flex items-center">
+                  <Hash className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedCards.form.numberLabel')}
+                </Label>
+                <Input
+                  id="card_number"
+                  {...register('card_number')}
+                  aria-invalid={!!errors.card_number}
+                  placeholder={
+                    card
+                      ? t('pages.passwords.keepCurrentPassword')
+                      : t('pages.storedCards.form.numberPlaceholder')
+                  }
+                  maxLength={16}
+                  onChange={(e) => {
+                    const formatted = formatCardNumber(e.target.value);
+                    setValue('card_number', formatted);
+                  }}
+                  disabled={isLoading}
+                />
+              </div>
 
-      <FormSection title={t('pages.storedCards.form.sectionSensitive')} icon={Shield}>
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="card_number" className="gap-xs flex items-center">
-              <Shield className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedCards.form.numberLabel')}
-            </Label>
-            <Input
-              id="card_number"
-              {...register('card_number')}
-              aria-invalid={!!errors.card_number}
-              placeholder={t('pages.storedCards.form.numberPlaceholder')}
-              maxLength={16}
-              onChange={(e) => {
-                const formatted = formatCardNumber(e.target.value);
-                setValue('card_number', formatted);
-              }}
-              disabled={isLoading}
-            />
+              <div className="space-y-sm">
+                <Label htmlFor="security_code" className="gap-xs flex items-center">
+                  <Lock className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedCards.form.cvvLabel')}
+                </Label>
+                <Input
+                  id="security_code"
+                  {...register('security_code')}
+                  aria-invalid={!!errors.security_code}
+                  placeholder={
+                    card
+                      ? t('pages.passwords.keepCurrentPassword')
+                      : t('pages.storedCards.form.cvvPlaceholder')
+                  }
+                  maxLength={4}
+                  onChange={(e) => {
+                    const formatted = formatCVV(e.target.value);
+                    setValue('security_code', formatted);
+                  }}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+          </FormSection>
 
-            {card && (
-              <p className="mt-xs text-warning text-xs">
-                {t('pages.storedCards.form.keepCurrentNumber')}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-sm">
-            <Label htmlFor="security_code" className="gap-xs flex items-center">
-              <Shield className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedCards.form.cvvLabel')}
-            </Label>
-            <Input
-              id="security_code"
-              {...register('security_code')}
-              aria-invalid={!!errors.security_code}
-              placeholder={t('pages.storedCards.form.cvvPlaceholder')}
-              maxLength={4}
-              onChange={(e) => {
-                const formatted = formatCVV(e.target.value);
-                setValue('security_code', formatted);
-              }}
-              disabled={isLoading}
-            />
-            {card && (
-              <p className="mt-xs text-warning text-xs">
-                {t('pages.storedCards.form.keepCurrentCvv')}
-              </p>
-            )}
-          </div>
+          {creditCards.length > 0 && (
+            <FormSection title={t('pages.storedCards.form.sectionLink')} icon={Link2}>
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedCards.form.financeCardLabel')}
+                </Label>
+                <Select
+                  value={watch('finance_card')?.toString() || 'none'}
+                  onValueChange={(value) =>
+                    setValue(
+                      'finance_card',
+                      value === 'none' ? undefined : parseInt(value)
+                    )
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.actions.none')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {creditCards.map((cc) => (
+                      <SelectItem key={cc.id} value={cc.id.toString()}>
+                        {cc.name} - {cc.on_card_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </FormSection>
+          )}
         </div>
-      </FormSection>
-
-      <FormSection
-        title={t('pages.storedCards.form.sectionExpiry')}
-        icon={CalendarDays}
-      >
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm">
-            <Label className="gap-xs flex items-center">
-              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedCards.form.expiryMonthLabel')}
-            </Label>
-            <Select
-              value={watch('expiration_month')?.toString()}
-              onValueChange={(value) => setValue('expiration_month', parseInt(value))}
-              disabled={isLoading}
-            >
-              <SelectTrigger aria-invalid={!!errors.expiration_month}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MONTHS.map((month) => (
-                  <SelectItem key={month.value} value={month.value.toString()}>
-                    {month.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-sm">
-            <Label className="gap-xs flex items-center">
-              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedCards.form.expiryYearLabel')}
-            </Label>
-            <Select
-              value={watch('expiration_year')?.toString()}
-              onValueChange={(value) => setValue('expiration_year', parseInt(value))}
-              disabled={isLoading}
-            >
-              <SelectTrigger aria-invalid={!!errors.expiration_year}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {YEARS.map((year) => (
-                  <SelectItem key={year.value} value={year.value.toString()}>
-                    {year.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </FormSection>
-
-      {creditCards.length > 0 && (
-        <FormSection title={t('pages.storedCards.form.sectionLink')} icon={Link2}>
-          <div className="space-y-sm">
-            <Label className="gap-xs flex items-center">
-              <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedCards.form.financeCardLabel')}
-            </Label>
-            <Select
-              value={watch('finance_card')?.toString() || 'none'}
-              onValueChange={(value) =>
-                setValue('finance_card', value === 'none' ? undefined : parseInt(value))
-              }
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t('common.actions.none')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">{t('common.actions.none')}</SelectItem>
-                {creditCards.map((cc) => (
-                  <SelectItem key={cc.id} value={cc.id.toString()}>
-                    {cc.name} - {cc.on_card_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </FormSection>
-      )}
-
+      </div>
       <FormSection title={t('pages.storedCards.form.sectionNotes')} icon={FileText}>
         <div className="space-y-sm">
           <Label htmlFor="notes" className="gap-xs flex items-center">
@@ -324,12 +340,8 @@ export function StoredCardForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
           {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>

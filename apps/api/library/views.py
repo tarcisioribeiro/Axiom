@@ -832,9 +832,12 @@ class SummaryListCreateView(BaseListCreateView):
     queryset = Summary.objects.all()
 
     def get_queryset(self):
-        return Summary.objects.filter(
+        qs = Summary.objects.filter(
             owner__user=self.request.user, deleted_at__isnull=True
         ).select_related("owner", "book")
+        if book_id := self.request.query_params.get("book"):
+            qs = qs.filter(book_id=book_id)
+        return qs
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -2860,6 +2863,7 @@ class KnowledgeGraphView(APIView):
                     "type": "author",
                     "label": a.name,
                     "metadata": {
+                        "nationality": a.nationality,
                         "nationality_display": a.get_nationality_display(),
                     },
                 }

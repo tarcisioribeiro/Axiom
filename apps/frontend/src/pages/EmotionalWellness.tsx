@@ -228,7 +228,7 @@ function WellnessStatCard({
 
   return (
     <Card className="relative overflow-hidden">
-      <CardContent className="p-5 pt-5">
+      <CardContent className="p-lg pt-lg">
         <div className="flex items-start justify-between">
           <div className="space-y-xs">
             <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
@@ -283,7 +283,7 @@ function DashboardTab() {
   return (
     <div className="page-fill space-y-lg flex flex-1 flex-col justify-center">
       {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
         <WellnessStatCard
           title={t('pages.emotionalWellness.dashboard.selfEsteemStat')}
           value={
@@ -316,7 +316,7 @@ function DashboardTab() {
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="gap-sm grid sm:grid-cols-3">
         <WellnessStatCard
           title={t('pages.emotionalWellness.dashboard.motivationAvgStat')}
           value={
@@ -342,7 +342,7 @@ function DashboardTab() {
       {/* History chart placeholder */}
       {history.length > 0 && (
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-sm">
             <CardTitle className="text-sm font-medium">
               {t('pages.emotionalWellness.dashboard.historyTitle')}
             </CardTitle>
@@ -350,7 +350,7 @@ function DashboardTab() {
           <CardContent>
             <div className="space-y-sm">
               {history.slice(0, 5).map((a) => (
-                <div key={a.id} className="flex items-center gap-3">
+                <div key={a.id} className="gap-sm flex items-center">
                   <span className="text-muted-foreground w-24 shrink-0 text-xs">
                     {format(new Date(a.assessed_at), 'dd/MM/yyyy')}
                   </span>
@@ -486,7 +486,7 @@ function SelfEsteemTab({
   if (isLoading) return <LoadingState />;
 
   return (
-    <div className="flex flex-1 flex-col space-y-5">
+    <div className="space-y-lg flex flex-1 flex-col">
       <Dialog open={showForm} onOpenChange={setShowForm}>
         {/* altura mínima fixa: o modal não varia com o tamanho do texto da pergunta */}
         <DialogContent size="sm">
@@ -532,7 +532,7 @@ function SelfEsteemTab({
                         setAnswers((prev) => ({ ...prev, [stepKey]: opt.value }))
                       }
                       className={cn(
-                        'py-sm rounded-lg border px-3 text-center text-xs font-medium transition',
+                        'py-sm px-sm rounded-lg border text-center text-xs font-medium transition',
                         answers[stepKey] === opt.value
                           ? 'border-primary bg-primary text-primary-foreground'
                           : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
@@ -661,7 +661,7 @@ function SelfEsteemTab({
             </div>
 
             <Card>
-              <CardContent className="px-md py-md pt-md space-y-3">
+              <CardContent className="px-md py-md pt-md space-y-sm">
                 <p className="text-foreground text-sm leading-relaxed">
                   {aiParsed.analysis}
                 </p>
@@ -753,7 +753,7 @@ function SelfEsteemTab({
                 items={history?.results ?? []}
                 pageSize={5}
                 centerList
-                className="space-y-3"
+                className="space-y-sm"
               >
                 {(pageItems) =>
                   pageItems.map((a) => {
@@ -901,7 +901,7 @@ function CheckinTab({
   if (isLoading) return <LoadingState />;
 
   return (
-    <div className="flex flex-1 flex-col space-y-5">
+    <div className="space-y-lg flex flex-1 flex-col">
       <Dialog open={showForm} onOpenChange={setShowForm}>
         {/* altura fixa: o modal não varia entre os passos de escala e de texto */}
         <DialogContent size="sm">
@@ -1077,7 +1077,7 @@ function CheckinTab({
               items={filteredHistory}
               pageSize={LIST_PAGE_SIZE}
               centerList
-              className="space-y-3"
+              className="space-y-sm"
             >
               {(pageItems) =>
                 pageItems.map((c) => (
@@ -1099,7 +1099,7 @@ function CheckinTab({
                         <p className="text-muted-foreground text-xs">
                           {format(new Date(c.checked_at), 'dd/MM/yyyy')}
                         </p>
-                        <div className="text-muted-foreground flex flex-1 gap-3 text-xs">
+                        <div className="text-muted-foreground gap-sm flex flex-1 text-xs">
                           <span className="gap-xs flex items-center">
                             <Heart className="text-info h-3 w-3" />
                             {c.loneliness}
@@ -1155,7 +1155,7 @@ function ChoiceGrid<T extends string>({
           aria-pressed={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            'py-sm rounded-lg border px-3 text-left text-sm font-medium transition',
+            'py-sm px-sm rounded-lg border text-left text-sm font-medium transition',
             value === o.value
               ? 'border-primary bg-primary text-primary-foreground'
               : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
@@ -1267,7 +1267,7 @@ function CrisisTab({
   if (isLoading) return <LoadingState />;
 
   return (
-    <div className="flex flex-1 flex-col space-y-5">
+    <div className="space-y-lg flex flex-1 flex-col">
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent size="md">
           <DialogHeader>
@@ -1362,12 +1362,12 @@ function CrisisTab({
                     </p>
                     {(['5min', '10min', '20min'] as const).map((duration) => (
                       <Card key={duration}>
-                        <CardHeader className="px-md pb-sm pt-3">
+                        <CardHeader className="px-md pb-sm pt-sm">
                           <CardTitle className="gap-xs text-muted-foreground flex items-center text-xs">
                             <Clock className="h-3.5 w-3.5" /> {duration}
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-xs px-md pb-3">
+                        <CardContent className="space-y-xs px-md pb-sm">
                           {aiParsed.action_plan[duration]?.map((action, i) => (
                             <div key={i} className="gap-sm flex items-start">
                               <ChevronRight className="text-primary mt-0.5 h-3.5 w-3.5 shrink-0" />
@@ -1485,12 +1485,12 @@ function CrisisTab({
               items={filteredLogs}
               pageSize={LIST_PAGE_SIZE}
               centerList
-              className="space-y-3"
+              className="space-y-sm"
             >
               {(pageItems) =>
                 pageItems.map((log) => (
                   <Card key={log.id}>
-                    <CardContent className="flex items-center justify-between p-3 pt-3">
+                    <CardContent className="p-sm pt-sm flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium">
                           {log.impulse_type_display}
@@ -1658,7 +1658,7 @@ function LibraryTab() {
           items={data?.results ?? []}
           pageSize={LIST_PAGE_SIZE}
           centerList
-          className="space-y-3"
+          className="space-y-sm"
         >
           {(pageItems) =>
             pageItems.map((item: WellnessIntervention) => {

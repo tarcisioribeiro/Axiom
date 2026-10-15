@@ -1,14 +1,14 @@
 /* eslint-disable react-hooks/incompatible-library */
 import { format, parseISO } from 'date-fns';
 import {
-  Cake,
+  CalendarDays,
   FileText,
+  Loader2,
   Mail,
   Phone,
+  Save,
   Shield,
   User,
-  Loader2,
-  Save,
   X,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -150,7 +150,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
 
           <div className="space-y-sm">
             <Label className="gap-xs flex items-center">
-              <Cake className="text-muted-foreground h-3.5 w-3.5" />
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.members.form.birthDateLabel')}
             </Label>
             <DatePicker
@@ -177,7 +177,6 @@ export const MemberForm: React.FC<MemberFormProps> = ({
             tone="primary"
             icon={Shield}
             title={t('pages.members.form.isCreditor')}
-            subtitle={t('pages.members.stats.creditorsSubtitle')}
           />
           <RoleToggle
             checked={!!watchedIsBenefited}
@@ -186,7 +185,6 @@ export const MemberForm: React.FC<MemberFormProps> = ({
             tone="success"
             icon={User}
             title={t('pages.members.form.isBenefited')}
-            subtitle={t('pages.members.stats.beneficiariesSubtitle')}
           />
         </div>
 

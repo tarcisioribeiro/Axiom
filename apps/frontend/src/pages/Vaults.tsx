@@ -235,11 +235,10 @@ export default function Vaults() {
               className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
             >
               {(pageItems) =>
-                pageItems.map((vault, index) => (
+                pageItems.map((vault) => (
                   <VaultCard
                     key={vault.id}
                     vault={vault}
-                    index={index}
                     onOpenDetail={(v) => setDetailVault(v)}
                     onDeposit={(v) => {
                       setSelectedVault(v);

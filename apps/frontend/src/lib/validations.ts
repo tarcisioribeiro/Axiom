@@ -1016,3 +1016,13 @@ export const markAsReadSchema = z
   );
 
 export type MarkAsReadFormData = z.infer<typeof markAsReadSchema>;
+
+/** Na edição, campos sensíveis em branco mantêm o valor atual. */
+export const storedCardEditSchema = storedCardSchema.extend({
+  card_number: storedCardSchema.shape.card_number.or(z.literal('')),
+  security_code: storedCardSchema.shape.security_code.or(z.literal('')),
+});
+
+export const storedAccountEditSchema = storedAccountSchema.extend({
+  account_number: storedAccountSchema.shape.account_number.or(z.literal('')),
+});

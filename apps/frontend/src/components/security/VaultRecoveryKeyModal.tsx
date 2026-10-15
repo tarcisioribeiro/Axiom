@@ -5,8 +5,6 @@ import {
   Copy,
   Key,
   KeyRound,
-  Loader2,
-  Unlock,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -25,28 +23,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { API_CONFIG } from '@/config/api-config';
 import { useToast } from '@/hooks/use-toast';
+import { copyToClipboard } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
 import { getErrorMessage } from '@/utils/error-utils';
 
 interface VaultRecoveryKeyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mode: 'generate' | 'use';
-  onUnlocked?: () => void;
 }
 
+/** Gera a chave de recuperação do cofre (modal de ação, §2.4). */
 export function VaultRecoveryKeyModal({
   open,
   onOpenChange,
-  mode,
-  onUnlocked,
 }: VaultRecoveryKeyModalProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
-
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [recoveryInput, setRecoveryInput] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleGenerate = async () => {
@@ -71,154 +65,93 @@ export function VaultRecoveryKeyModal({
 
   const handleCopy = () => {
     if (!generatedKey) return;
-    void navigator.clipboard.writeText(generatedKey).then(() => {
+    void copyToClipboard(generatedKey).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
   };
 
-  const handleUnlock = async () => {
-    if (!recoveryInput.trim()) return;
-    setLoading(true);
-    try {
-      await apiClient.post(API_CONFIG.ENDPOINTS.SECURITY_VAULT_RECOVERY_UNLOCK, {
-        recovery_key: recoveryInput.trim(),
-      });
-      toast({ title: t('userProfile.security.recoveryKey.unlockSuccess') });
-      onOpenChange(false);
-      onUnlocked?.();
-    } catch (e) {
-      toast({
-        title: t('userProfile.security.recoveryKey.unlockError', {
-          reason: getErrorMessage(e),
-        }),
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleClose = () => {
+    onOpenChange(false);
     setGeneratedKey(null);
     setCopied(false);
-    setRecoveryInput('');
-    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+      <DialogContent size="sm">
         <DialogHeader>
-          <DialogTitle className="gap-sm flex items-center">
-            <Key className="h-4 w-4" />
-            {mode === 'generate'
-              ? t('userProfile.security.recoveryKey.generateTitle')
-              : t('userProfile.security.recoveryKey.useTitle')}
+          <DialogTitle icon={Key}>
+            {t('userProfile.security.recoveryKey.generateTitle')}
           </DialogTitle>
           <DialogDescription>
-            {mode === 'generate'
-              ? t('userProfile.security.recoveryKey.generateDesc')
-              : t('userProfile.security.recoveryKey.useDesc')}
+            {t('userProfile.security.recoveryKey.generateDesc')}
           </DialogDescription>
         </DialogHeader>
 
-        {mode === 'generate' ? (
-          <div className="space-y-md">
-            {!generatedKey ? (
-              <>
-                <div className="gap-sm border-warning/40 bg-warning/10 p-sm text-warning flex items-start rounded-lg border text-sm">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{t('userProfile.security.recoveryKey.generateWarning')}</span>
-                </div>
-                <Button
-                  onClick={() => void handleGenerate()}
-                  disabled={loading}
-                  className="gap-sm w-full"
-                >
-                  <Key className="h-4 w-4" />
-                  {loading
-                    ? t('common.actions.loading')
-                    : t('userProfile.security.recoveryKey.generateBtn')}
-                </Button>
-              </>
-            ) : (
-              <>
-                <div className="gap-sm border-destructive/40 bg-destructive/10 p-sm text-destructive flex items-start rounded-lg border text-sm">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{t('userProfile.security.recoveryKey.oneTimeWarning')}</span>
-                </div>
-                <div className="space-y-xs">
-                  <Label className="gap-xs flex items-center">
-                    <KeyRound className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('userProfile.security.recoveryKey.yourKey')}
-                  </Label>
-                  <div className="gap-sm flex">
-                    <Input value={generatedKey} readOnly className="text-sm" />
-                    <Button
-                      aria-label={t('common.actions.copy')}
-                      variant="outline"
-                      size="icon"
-                      onClick={handleCopy}
-                    >
-                      {copied ? (
-                        <CheckCircle2 className="text-success h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    {t('userProfile.security.recoveryKey.saveHint')}
-                  </p>
-                </div>
-                <DialogFooter>
-                  <Button onClick={handleClose}>
-                    <Check className="h-4 w-4" />
-                    {t('userProfile.security.recoveryKey.savedConfirm')}
-                  </Button>
-                </DialogFooter>
-              </>
-            )}
+        {!generatedKey ? (
+          <div className="gap-sm border-warning/40 bg-warning/10 p-sm text-warning flex items-start rounded-lg border text-sm">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{t('userProfile.security.recoveryKey.generateWarning')}</span>
           </div>
         ) : (
           <div className="space-y-md">
-            <div className="space-y-xs">
-              <Label className="gap-xs flex items-center" htmlFor="recovery-input">
-                <KeyRound className="text-muted-foreground h-3.5 w-3.5" />
-                {t('userProfile.security.recoveryKey.inputLabel')}
-              </Label>
-              <Input
-                id="recovery-input"
-                value={recoveryInput}
-                onChange={(e) => setRecoveryInput(e.target.value)}
-                placeholder="XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') void handleUnlock();
-                }}
-              />
+            <div className="gap-sm border-destructive/40 bg-destructive/10 p-sm text-destructive flex items-start rounded-lg border text-sm">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{t('userProfile.security.recoveryKey.oneTimeWarning')}</span>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={handleClose}>
-                <X className="h-4 w-4" />
-                {t('common.actions.cancel')}
-              </Button>
-              <Button
-                onClick={() => void handleUnlock()}
-                disabled={loading || !recoveryInput.trim()}
+            <div className="space-y-xs">
+              <Label
+                className="gap-xs flex items-center"
+                htmlFor="generated-recovery-key"
               >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Unlock className="h-4 w-4" />
-                )}
-                {loading
-                  ? t('common.actions.loading')
-                  : t('userProfile.security.recoveryKey.unlockBtn')}
-              </Button>
-            </DialogFooter>
+                <KeyRound className="text-muted-foreground h-3.5 w-3.5" />
+                {t('userProfile.security.recoveryKey.yourKey')}
+              </Label>
+              <div className="gap-sm flex">
+                <Input
+                  id="generated-recovery-key"
+                  value={generatedKey}
+                  readOnly
+                  className="text-sm"
+                />
+                <Button
+                  aria-label={t('common.actions.copy')}
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={handleCopy}
+                >
+                  {copied ? (
+                    <CheckCircle2 className="text-success h-4 w-4" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
         )}
+
+        <DialogFooter>
+          {generatedKey ? (
+            <Button onClick={handleClose}>
+              <Check aria-hidden="true" />
+              {t('userProfile.security.recoveryKey.savedConfirm')}
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={handleClose}>
+                <X aria-hidden="true" />
+                {t('common.actions.cancel')}
+              </Button>
+              <Button onClick={() => void handleGenerate()} loading={loading}>
+                {!loading && <Key aria-hidden="true" />}
+                {t('userProfile.security.recoveryKey.generateBtn')}
+              </Button>
+            </>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

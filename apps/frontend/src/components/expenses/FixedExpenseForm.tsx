@@ -2,11 +2,12 @@
 import {
   CalendarDays,
   CreditCard,
+  FileText,
+  Loader2,
+  Save,
   Store,
   Tag,
   Wallet,
-  Loader2,
-  Save,
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -121,7 +122,7 @@ export const FixedExpenseForm = ({
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
             <Label htmlFor="description" className="gap-xs flex items-center">
-              <Store className="text-muted-foreground h-3.5 w-3.5" />
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.fixedExpenses.form.descriptionLabel')}
             </Label>
             <Input
@@ -316,7 +317,7 @@ export const FixedExpenseForm = ({
         <div className="gap-md grid grid-cols-1 items-start md:grid-cols-3">
           <div className="space-y-sm">
             <Label className="gap-xs flex items-center">
-              <Tag className="text-muted-foreground h-3.5 w-3.5" />
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.fixedExpenses.form.notesLabel')}
             </Label>
             <Textarea

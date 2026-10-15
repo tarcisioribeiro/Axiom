@@ -22,7 +22,9 @@ import {
   CircleDot,
   Coffee,
   Flame,
+  LayoutGrid,
   LayoutList,
+  List,
   Moon,
   Pause,
   Play,
@@ -52,6 +54,7 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { ViewModeToggle } from '@/components/common/ViewModeToggle';
 import { DailyFocusBlocks } from '@/components/personal-planning/DailyFocusBlocks';
 import { KanbanCard } from '@/components/personal-planning/KanbanCard';
 import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
@@ -627,54 +630,19 @@ export default function DailyChecklist({
   };
 
   const viewToggle = (
-    <div className="flex items-center rounded-md border p-0.5">
-      {(['list', 'kanban', 'focusBlocks'] as ViewMode[]).map((mode) => (
-        <PlainButton
-          key={mode}
-          type="button"
-          onClick={() => changeViewMode(mode)}
-          title={t(`pages.todayTasks.${mode}Mode`)}
-          className={cn(
-            'px-sm py-xs rounded transition-colors',
-            viewMode === mode
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground'
-          )}
-        >
-          {mode === 'list' ? (
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <line x1="8" y1="6" x2="21" y2="6" />
-              <line x1="8" y1="12" x2="21" y2="12" />
-              <line x1="8" y1="18" x2="21" y2="18" />
-              <line x1="3" y1="6" x2="3.01" y2="6" />
-              <line x1="3" y1="12" x2="3.01" y2="12" />
-              <line x1="3" y1="18" x2="3.01" y2="18" />
-            </svg>
-          ) : mode === 'kanban' ? (
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <rect x="3" y="3" width="7" height="7" />
-              <rect x="14" y="3" width="7" height="7" />
-              <rect x="14" y="14" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" />
-            </svg>
-          ) : (
-            <LayoutList className="h-4 w-4" />
-          )}
-        </PlainButton>
-      ))}
-    </div>
+    <ViewModeToggle
+      value={viewMode}
+      onChange={changeViewMode}
+      options={[
+        { value: 'list', label: t('pages.todayTasks.listMode'), icon: List },
+        { value: 'kanban', label: t('pages.todayTasks.kanbanMode'), icon: LayoutGrid },
+        {
+          value: 'focusBlocks',
+          label: t('pages.todayTasks.focusBlocksMode'),
+          icon: LayoutList,
+        },
+      ]}
+    />
   );
 
   // Limita a altura das colunas do kanban ao espaço que sobra na viewport,
@@ -768,9 +736,9 @@ export default function DailyChecklist({
             </div>
           </div>
           {gamification.current_streak > 0 && (
-            <div className="gap-xs px-sm py-xs flex items-center rounded-full bg-orange-500/10">
-              <Flame className="h-3.5 w-3.5 text-orange-500" />
-              <span className="text-sm font-bold text-orange-500">
+            <div className="gap-xs px-sm py-xs bg-warning/10 flex items-center rounded-full">
+              <Flame className="text-warning h-3.5 w-3.5" />
+              <span className="text-warning text-sm font-bold">
                 {gamification.current_streak}
               </span>
             </div>

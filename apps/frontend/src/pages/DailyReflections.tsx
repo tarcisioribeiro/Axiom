@@ -6,8 +6,6 @@ import {
   Angry,
   BookOpen,
   CalendarDays,
-  ChevronDown,
-  ChevronUp,
   Edit,
   Frown,
   Meh,
@@ -35,7 +33,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -86,28 +86,57 @@ function getMoodIcon(mood: string) {
   }
 }
 
+function ReflectionMeta({ reflection }: { reflection: DailyReflection }) {
+  const date = parseISO(reflection.date + 'T00:00:00');
+  return (
+    <div className="gap-sm flex items-center">
+      {reflection.mood && (
+        <Badge
+          variant={MOOD_VARIANT[reflection.mood] ?? 'secondary'}
+          className="gap-sm"
+        >
+          {getMoodIcon(reflection.mood)}
+          {reflection.mood_display ?? reflection.mood}
+        </Badge>
+      )}
+      <span className="text-muted-foreground text-xs">
+        {format(date, 'EEEE', { locale: ptBR })}
+      </span>
+    </div>
+  );
+}
+
 function ReflectionCard({
   reflection,
+  onOpen,
   onEdit,
   onDelete,
 }: {
   reflection: DailyReflection;
+  onOpen: (r: DailyReflection) => void;
   onEdit: (r: DailyReflection) => void;
   onDelete: (id: number) => void;
 }) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
-  const isLong = reflection.reflection.length > 240;
-  const text =
-    isLong && !expanded
-      ? reflection.reflection.slice(0, 240) + '…'
-      : reflection.reflection;
-
   const date = parseISO(reflection.date + 'T00:00:00');
 
   return (
-    <Card className="group">
-      <CardContent className="p-5 pt-5">
+    <Card
+      role="button"
+      tabIndex={0}
+      className="focus-visible:ring-ring cursor-pointer focus-visible:ring-2 focus-visible:outline-none"
+      // Cliques nos botões de ação não abrem o detalhe.
+      onClick={(e) => {
+        if (!(e.target as HTMLElement).closest('button')) onOpen(reflection);
+      }}
+      onKeyDown={(e) => {
+        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onOpen(reflection);
+        }
+      }}
+    >
+      <CardContent className="p-md pt-md">
         <div className="gap-md flex items-start">
           {/* Data (dd/mm/aaaa) */}
           <span className="bg-muted/40 px-sm py-xs shrink-0 rounded-lg border text-sm font-bold tabular-nums">
@@ -116,38 +145,12 @@ function ReflectionCard({
 
           {/* Conteúdo */}
           <div className="min-w-0 flex-1">
-            <div className="mb-sm gap-sm flex items-center">
-              {reflection.mood && (
-                <Badge
-                  variant={MOOD_VARIANT[reflection.mood] ?? 'secondary'}
-                  className="gap-sm"
-                >
-                  {getMoodIcon(reflection.mood)}
-                  {reflection.mood_display ?? reflection.mood}
-                </Badge>
-              )}
-              <span className="text-muted-foreground text-xs">
-                {format(date, 'EEEE', { locale: ptBR })}
-              </span>
+            <div className="mb-sm">
+              <ReflectionMeta reflection={reflection} />
             </div>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{text}</p>
-            {isLong && (
-              <button
-                type="button"
-                onClick={() => setExpanded(!expanded)}
-                className="mt-xs gap-xs text-primary flex items-center text-xs hover:underline"
-              >
-                {expanded ? (
-                  <>
-                    <ChevronUp className="h-3 w-3" /> {t('common.actions.seeLess')}
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-3 w-3" /> {t('common.actions.seeMore')}
-                  </>
-                )}
-              </button>
-            )}
+            <p className="line-clamp-3 text-sm leading-relaxed whitespace-pre-wrap">
+              {reflection.reflection}
+            </p>
           </div>
 
           {/* Ações */}
@@ -184,6 +187,7 @@ export default function DailyReflections() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selected, setSelected] = useState<DailyReflection | undefined>();
+  const [viewing, setViewing] = useState<DailyReflection | undefined>();
   const [moodFilter, setMoodFilter] = useState<string>('all');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -397,13 +401,14 @@ export default function DailyReflections() {
           items={filtered}
           pageSize={REFLECTIONS_PAGE_SIZE}
           centerList
-          className="space-y-3"
+          className="space-y-sm"
         >
           {(pageReflections) =>
             pageReflections.map((r) => (
               <ReflectionCard
                 key={r.id}
                 reflection={r}
+                onOpen={setViewing}
                 onEdit={handleEdit}
                 onDelete={(id) => void handleDelete(id)}
               />
@@ -411,6 +416,54 @@ export default function DailyReflections() {
           }
         </PaginatedSlide>
       )}
+
+      {/* Detalhe da reflexão (texto completo) */}
+      <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(undefined)}>
+        <DialogContent className="max-w-2xl">
+          {viewing && (
+            <>
+              <DialogHeader>
+                <DialogTitle icon={BookOpen}>
+                  {format(parseISO(viewing.date + 'T00:00:00'), 'dd/MM/yyyy')}
+                </DialogTitle>
+                <DialogDescription>
+                  {t('pages.dailyReflections.title')}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-md">
+                <ReflectionMeta reflection={viewing} />
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {viewing.reflection}
+                </p>
+              </div>
+              <DialogCloseFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const r = viewing;
+                    setViewing(undefined);
+                    handleEdit(r);
+                  }}
+                >
+                  <Edit className="h-4 w-4" />
+                  {t('common.actions.edit')}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    const id = viewing.id;
+                    setViewing(undefined);
+                    void handleDelete(id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {t('common.actions.delete')}
+                </Button>
+              </DialogCloseFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">

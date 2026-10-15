@@ -2,7 +2,6 @@
 import {
   CheckCircle2,
   Clock,
-  Loader2,
   Moon,
   Star,
   Sun,
@@ -29,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { TimePicker } from '@/components/ui/time-picker';
 import { useToast } from '@/hooks/use-toast';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { cn } from '@/lib/utils';
 import type { MealType, MealTypeFormData } from '@/types/nutrition';
 
@@ -54,32 +54,32 @@ function getPeriodInfo(time: string): {
   const h = parseInt(time.slice(0, 2));
   if (h >= 4 && h < 9)
     return {
-      icon: <Sunrise className="h-5 w-5 text-amber-500" />,
+      icon: <Sunrise className="text-warning h-5 w-5" />,
       labelKey: 'pages.nutritionMealTypes.suggestedTimeEarlyMorning',
-      color: 'text-amber-500',
+      color: 'text-warning',
     };
   if (h >= 9 && h < 12)
     return {
-      icon: <Sun className="h-5 w-5 text-yellow-500" />,
+      icon: <Sun className="text-warning h-5 w-5" />,
       labelKey: 'pages.nutritionMealTypes.suggestedTimeMorning',
-      color: 'text-yellow-500',
+      color: 'text-warning',
     };
   if (h >= 12 && h < 15)
     return {
-      icon: <Sun className="h-5 w-5 text-orange-500" />,
+      icon: <Sun className="text-category-nutrition h-5 w-5" />,
       labelKey: 'pages.nutritionMealTypes.suggestedTimeLunch',
-      color: 'text-orange-500',
+      color: 'text-category-nutrition',
     };
   if (h >= 15 && h < 19)
     return {
-      icon: <Sun className="h-5 w-5 text-amber-600" />,
+      icon: <Sun className="text-category-nutrition h-5 w-5" />,
       labelKey: 'pages.nutritionMealTypes.suggestedTimeAfternoon',
-      color: 'text-amber-600',
+      color: 'text-category-nutrition',
     };
   return {
-    icon: <Moon className="h-5 w-5 text-violet-500" />,
+    icon: <Moon className="text-info h-5 w-5" />,
     labelKey: 'pages.nutritionMealTypes.suggestedTimeNight',
-    color: 'text-violet-500',
+    color: 'text-info',
   };
 }
 
@@ -139,7 +139,10 @@ export function MealTypeForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+    <form
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       {/* Nome */}
       <FormSection
         title={t('pages.nutritionMealTypes.mealTypeName')}
@@ -147,12 +150,13 @@ export function MealTypeForm({
       >
         <Input
           placeholder={t('pages.nutritionMealTypes.mealTypeNamePlaceholder')}
-          {...register('name', { required: true })}
-          className={cn(errors.name && 'border-destructive')}
+          aria-invalid={!!errors.name}
+          {...register('name', {
+            required: t('common.fieldRequired', {
+              field: t('pages.nutritionMealTypes.mealTypeName'),
+            }),
+          })}
         />
-        {errors.name && (
-          <p className="mt-xs text-destructive text-xs">{t('common.required')}</p>
-        )}
       </FormSection>
 
       {/* Horário */}
@@ -263,12 +267,8 @@ export function MealTypeForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
 
           {t('common.actions.save')}
         </Button>

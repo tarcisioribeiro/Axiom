@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { zodResolver } from '@hookform/resolvers/zod';
-import { BookOpen, Loader2, Plus, Tag, Target, Trash2, Save, X } from 'lucide-react';
+import { BookOpen, Plus, Tag, Target, Trash2, Save, X } from 'lucide-react';
 import { startTransition, useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -353,13 +353,9 @@ export function ReadingGoalModal({
               <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              {isLoading ? t('common.actions.saving') : t('common.actions.save')}
+            <Button type="submit" loading={isLoading}>
+              {!isLoading && <Save className="h-4 w-4" />}
+              {t('common.actions.save')}
             </Button>
           </div>
         </form>

@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Droplets, Link2, Loader2, Plus, Save, Sparkles, Trash2 } from 'lucide-react';
+import { Droplets, Link2, Plus, Save, Sparkles, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -42,7 +42,7 @@ export function WaterTotal({ date }: { date: string }) {
   const { goalMl, totalMl } = useHydrationDay(date);
   return (
     <div className="text-right">
-      <span className="inline-flex items-center gap-0.5 text-2xl font-bold text-sky-500 tabular-nums">
+      <span className="text-info inline-flex items-center gap-0.5 text-2xl font-bold tabular-nums">
         <Droplets className="h-5 w-5" />
         {formatLiters(totalMl)}
       </span>
@@ -101,19 +101,19 @@ export function WaterLogPanel({ date }: { date: string }) {
     <div className="border-border bg-card p-md space-y-md rounded-lg border">
       <div className="gap-sm flex items-center justify-between">
         <div className="gap-xs flex items-center">
-          <Droplets className="h-5 w-5 text-sky-500" />
+          <Droplets className="text-info h-5 w-5" />
           <span className="text-sm font-medium">
             {t('pages.nutritionHydration.dayWater')}
           </span>
         </div>
-        <span className="text-sm text-sky-500 tabular-nums">
+        <span className="text-info text-sm tabular-nums">
           {formatLiters(totalMl)} L
           {goalMl ? ` / ${formatLiters(goalMl)} L (${pct}%)` : ''}
         </span>
       </div>
 
       {goalMl ? (
-        <Progress value={pct} className="h-2" indicatorClassName="bg-sky-500" />
+        <Progress value={pct} className="h-2" indicatorClassName="bg-info" />
       ) : (
         <p className="text-muted-foreground text-xs">
           {t('pages.nutritionHydration.setGoalHint')}
@@ -138,6 +138,13 @@ export function WaterLogPanel({ date }: { date: string }) {
           onSubmit={(e) => {
             e.preventDefault();
             if (custom > 0) addMutation.mutate(custom);
+            else
+              toast({
+                title: t('common.fieldRequired', {
+                  field: t('pages.nutritionHydration.customAmount'),
+                }),
+                variant: 'destructive',
+              });
           }}
         >
           <NumberStepper
@@ -150,16 +157,8 @@ export function WaterLogPanel({ date }: { date: string }) {
             className="h-8"
             aria-label={t('pages.nutritionHydration.customAmount')}
           />
-          <Button
-            size="sm"
-            type="submit"
-            disabled={!(custom > 0) || addMutation.isPending}
-          >
-            {addMutation.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Plus className="h-3.5 w-3.5" />
-            )}
+          <Button size="sm" type="submit" loading={addMutation.isPending}>
+            {!addMutation.isPending && <Plus className="h-3.5 w-3.5" />}
             {t('pages.nutritionHydration.add')}
           </Button>
         </form>
@@ -242,7 +241,7 @@ export function HydrationGoalCard() {
     <div className="border-border bg-card p-lg space-y-md rounded-lg border">
       <div className="space-y-md">
         <div className="gap-sm flex items-center">
-          <Droplets className="h-6 w-6 text-sky-500" />
+          <Droplets className="text-info h-6 w-6" />
           <div>
             <p className="font-semibold">{t('pages.nutritionHydration.goalTitle')}</p>
             <p className="text-muted-foreground text-sm">
@@ -260,6 +259,13 @@ export function HydrationGoalCard() {
           onSubmit={(e) => {
             e.preventDefault();
             if (ml > 0) saveMutation.mutate(ml);
+            else
+              toast({
+                title: t('common.fieldRequired', {
+                  field: t('pages.nutritionHydration.litersLabel'),
+                }),
+                variant: 'destructive',
+              });
           }}
         >
           <div className="space-y-xs flex-1">
@@ -277,12 +283,8 @@ export function HydrationGoalCard() {
               onChange={(v) => setLiters(v === null ? '' : String(v))}
             />
           </div>
-          <Button type="submit" disabled={!(ml > 0) || saveMutation.isPending}>
-            {saveMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
+          <Button type="submit" loading={saveMutation.isPending}>
+            {!saveMutation.isPending && <Save className="h-4 w-4" />}
             {t('pages.nutritionHydration.saveGoal')}
           </Button>
         </form>
@@ -295,7 +297,7 @@ export function HydrationGoalCard() {
         </p>
         {suggestion?.suggested_ml ? (
           <>
-            <p className="text-3xl font-bold text-sky-500 tabular-nums">
+            <p className="text-info text-3xl font-bold tabular-nums">
               {formatLiters(suggestion.suggested_ml)} L
             </p>
             <ul className="text-muted-foreground space-y-xs text-sm">
