@@ -9,6 +9,7 @@ from admin_panel.views import (
     AdminRestartAllView,
     SystemConfigDetailView,
     SystemConfigListView,
+    SystemConfigRevealView,
 )
 
 urlpatterns = [
@@ -17,6 +18,11 @@ urlpatterns = [
         "config/<str:key>/",
         SystemConfigDetailView.as_view(),
         name="admin-config-detail",
+    ),
+    path(
+        "config/<str:key>/reveal/",
+        SystemConfigRevealView.as_view(),
+        name="admin-config-reveal",
     ),
     path("health/", AdminHealthView.as_view(), name="admin-health"),
     path(

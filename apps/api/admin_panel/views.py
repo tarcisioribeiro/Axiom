@@ -152,6 +152,19 @@ class SystemConfigDetailView(AdminBaseView):
         return Response(SystemConfigSerializer(config).data)
 
 
+class SystemConfigRevealView(AdminBaseView):
+    """GET /api/v1/admin/config/<key>/reveal/ — valor real (decifrado)."""
+
+    def get(self, request: Request, key: str) -> Response:
+        config = SystemConfig.objects.filter(key=key).first()  # type: ignore[attr-defined]  # noqa: E501
+        if config is None:
+            return Response(
+                {"error": "Configuração não encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response({"value": config.get_value()})
+
+
 # ─── Health
 # ────────────────────────────────────────────────────────────────────
 

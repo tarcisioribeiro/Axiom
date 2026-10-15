@@ -301,6 +301,7 @@ export const API_CONFIG = {
     // Admin Panel
     ADMIN_CONFIG: '/api/v1/admin/config/',
     ADMIN_CONFIG_DETAIL: (key: string) => `/api/v1/admin/config/${key}/`,
+    ADMIN_CONFIG_REVEAL: (key: string) => `/api/v1/admin/config/${key}/reveal/`,
     ADMIN_HEALTH: '/api/v1/admin/health/',
     ADMIN_INTEGRATIONS: '/api/v1/admin/integrations/',
     ADMIN_LOGS: '/api/v1/admin/logs/',

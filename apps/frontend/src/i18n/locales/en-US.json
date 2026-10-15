@@ -5100,6 +5100,7 @@
       "requiresRestartBadge": "Requires restart",
       "updatedBy": "· updated by {{username}}",
       "editTitle": "Edit",
+      "revealTitle": "View",
       "save": "Save",
       "newValuePlaceholder": "New value",
       "newSecretPlaceholder": "New value",

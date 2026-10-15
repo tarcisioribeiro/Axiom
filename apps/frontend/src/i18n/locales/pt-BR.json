@@ -5168,6 +5168,7 @@
       "requiresRestartBadge": "Requer reinicialização",
       "updatedBy": "· atualizado por {{username}}",
       "editTitle": "Editar",
+      "revealTitle": "Visualizar",
       "save": "Salvar",
       "newValuePlaceholder": "Novo valor",
       "newSecretPlaceholder": "Novo valor",

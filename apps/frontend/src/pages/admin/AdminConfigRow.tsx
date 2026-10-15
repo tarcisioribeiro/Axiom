@@ -1,12 +1,22 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Lock, Pencil, Save, SlidersHorizontal, X } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  AlertTriangle,
+  Eye,
+  Lock,
+  Pencil,
+  Save,
+  SlidersHorizontal,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { LoadingState } from '@/components/common/LoadingState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -27,9 +37,11 @@ import { VariableHelperPopover } from './AdminConfigVariableHelpers';
 export function ConfigRow({
   config,
   onEdit,
+  onReveal,
 }: {
   config: SystemConfig;
   onEdit: (config: SystemConfig) => void;
+  onReveal: (config: SystemConfig) => void;
 }) {
   const { t } = useTranslation();
 
@@ -75,6 +87,18 @@ export function ConfigRow({
           )}
         </div>
       </div>
+
+      {config.is_secret && config.is_configured && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 shrink-0"
+          onClick={() => onReveal(config)}
+          aria-label={t('pages.adminConfig.revealTitle')}
+        >
+          <Eye className={cn('h-4 w-4', ACTION_COLOR.reveal)} aria-hidden="true" />
+        </Button>
+      )}
 
       {config.is_editable && (
         <Button
@@ -200,6 +224,47 @@ export function ConfigEditDialog({
             </Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Modal de detalhe (§2.3) com o valor real de uma configuração secreta. */
+export function ConfigRevealDialog({
+  config,
+  onClose,
+}: {
+  config: SystemConfig | undefined;
+  onClose: () => void;
+}) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin', 'config', 'reveal', config?.key],
+    queryFn: () => adminService.revealConfig(config!.key),
+    enabled: !!config,
+    // Segredo: não fica em cache depois de fechar o modal.
+    gcTime: 0,
+    staleTime: 0,
+  });
+
+  return (
+    <Dialog open={!!config} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent size="sm">
+        <DialogHeader>
+          <DialogTitle icon={Eye}>{config?.label}</DialogTitle>
+          <DialogDescription>{config?.key}</DialogDescription>
+        </DialogHeader>
+
+        <div className="py-md">
+          {isLoading ? (
+            <LoadingState />
+          ) : (
+            <p className="border-border bg-muted/40 p-sm text-foreground rounded-md border font-mono text-sm break-all select-all">
+              {data?.value}
+            </p>
+          )}
+        </div>
+
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

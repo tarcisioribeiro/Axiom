@@ -22,6 +22,12 @@ class AdminService {
     );
   }
 
+  async revealConfig(key: string): Promise<{ value: string | null }> {
+    return apiClient.get<{ value: string | null }>(
+      API_CONFIG.ENDPOINTS.ADMIN_CONFIG_REVEAL(key)
+    );
+  }
+
   async getHealth(): Promise<HealthResponse> {
     return apiClient.get<HealthResponse>(API_CONFIG.ENDPOINTS.ADMIN_HEALTH);
   }

@@ -22,7 +22,7 @@ import { adminService } from '@/services/admin-service';
 import type { ConfigCategory, SystemConfig } from '@/types';
 
 import { RestartModal } from './AdminConfigRestartModal';
-import { ConfigEditDialog, ConfigRow } from './AdminConfigRow';
+import { ConfigEditDialog, ConfigRevealDialog, ConfigRow } from './AdminConfigRow';
 
 const CATEGORIES: { key: ConfigCategory; icon: React.ElementType }[] = [
   { key: 'llm', icon: Bot },
@@ -37,6 +37,7 @@ export default function AdminConfig() {
   const { t } = useTranslation();
   const [restartOpen, setRestartOpen] = useState(false);
   const [editing, setEditing] = useState<SystemConfig>();
+  const [revealing, setRevealing] = useState<SystemConfig>();
   // Accordion (§5): a primeira categoria aberta, uma por vez.
   const [openCat, setOpenCat] = useState<ConfigCategory | null>('llm');
 
@@ -79,7 +80,12 @@ export default function AdminConfig() {
               <PaginatedSlide items={items} pageSize={LIST_PAGE_SIZE} pinNav={false}>
                 {(pageItems) =>
                   pageItems.map((cfg) => (
-                    <ConfigRow key={cfg.key} config={cfg} onEdit={setEditing} />
+                    <ConfigRow
+                      key={cfg.key}
+                      config={cfg}
+                      onEdit={setEditing}
+                      onReveal={setRevealing}
+                    />
                   ))
                 }
               </PaginatedSlide>
@@ -89,6 +95,7 @@ export default function AdminConfig() {
       )}
 
       <ConfigEditDialog config={editing} onClose={() => setEditing(undefined)} />
+      <ConfigRevealDialog config={revealing} onClose={() => setRevealing(undefined)} />
       <RestartModal open={restartOpen} onClose={() => setRestartOpen(false)} />
     </PageContainer>
   );
