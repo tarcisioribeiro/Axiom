@@ -19,7 +19,6 @@ interface LoanAmortizationDialogProps {
   loan: Loan | null;
   amortization: AmortizationSchedule | null;
   method: 'price' | 'sac';
-  isLoading: boolean;
   onClose: () => void;
   onChangeMethod: (loan: Loan, method: 'price' | 'sac') => void;
 }
@@ -28,7 +27,6 @@ export function LoanAmortizationDialog({
   loan,
   amortization,
   method,
-  isLoading,
   onClose,
   onChangeMethod,
 }: LoanAmortizationDialogProps) {
@@ -66,11 +64,7 @@ export function LoanAmortizationDialog({
             ))}
           </div>
         </div>
-        {isLoading ? (
-          <div className="py-xl text-muted-foreground text-center text-sm">
-            {t('pages.loans.amortization.loading')}
-          </div>
-        ) : !amortization ? (
+        {!amortization ? (
           <EmptyState title={t('pages.loans.amortization.noData')} />
         ) : (
           <div className="overflow-x-auto">

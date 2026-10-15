@@ -60,12 +60,12 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
       <Card>
         <CardHeader className="pb-sm">
           <CardTitle className="gap-sm flex items-center text-sm">
-            <Flame className="h-4 w-4 text-orange-500" />
+            <Flame className="text-warning h-4 w-4" />
             {t('pages.planningDashboard.caloricSummary.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-sm">
             {[1, 2, 3].map((i) => (
               <div key={i} className="bg-muted h-4 animate-pulse rounded" />
             ))}
@@ -80,7 +80,7 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
       <Card>
         <CardHeader className="pb-sm">
           <CardTitle className="gap-sm flex items-center text-sm">
-            <Flame className="h-4 w-4 text-orange-500" />
+            <Flame className="text-warning h-4 w-4" />
             {t('pages.planningDashboard.caloricSummary.title')}
           </CardTitle>
         </CardHeader>
@@ -111,7 +111,7 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
       <CardHeader className="pb-sm">
         <div className="flex items-center justify-between">
           <CardTitle className="gap-sm flex items-center text-sm">
-            <Flame className="h-4 w-4 text-orange-500" />
+            <Flame className="text-warning h-4 w-4" />
             {t('pages.planningDashboard.caloricSummary.title')}
           </CardTitle>
           <span className="text-muted-foreground text-xs">
@@ -125,7 +125,7 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
           <div>
             <p className="text-3xl leading-none font-bold">
               {consumed.toLocaleString('pt-BR')}
-              <span className="text-muted-foreground ml-1 text-base font-normal">
+              <span className="text-muted-foreground ml-xs text-base font-normal">
                 kcal
               </span>
             </p>
@@ -136,7 +136,7 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
           <div className="text-right">
             <p className="text-lg leading-none font-semibold">
               {tdee.toLocaleString('pt-BR')}
-              <span className="text-muted-foreground ml-1 text-xs font-normal">
+              <span className="text-muted-foreground ml-xs text-xs font-normal">
                 kcal
               </span>
             </p>
@@ -154,7 +154,7 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
           </div>
         </div>
 
-        <KcalBar value={consumed} max={tdee} color="bg-orange-500" />
+        <KcalBar value={consumed} max={tdee} color="bg-warning" />
 
         {/* Linha: gasto treino + saldo */}
         <div className="gap-md pt-md grid grid-cols-2 border-t">
@@ -168,7 +168,7 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
             <span className="text-info text-xl font-bold">
               {exerciseBurned > 0 ? `-${exerciseBurned.toLocaleString('pt-BR')}` : '—'}
               {exerciseBurned > 0 && (
-                <span className="text-muted-foreground ml-1 text-xs font-normal">
+                <span className="text-muted-foreground ml-xs text-xs font-normal">
                   kcal
                 </span>
               )}
@@ -199,7 +199,7 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
               >
                 {net > 0 ? '+' : ''}
                 {net.toLocaleString('pt-BR')}
-                <span className="text-muted-foreground ml-1 text-xs font-normal">
+                <span className="text-muted-foreground ml-xs text-xs font-normal">
                   kcal
                 </span>
               </span>
@@ -244,7 +244,7 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
                     ? `${s.calories_burned.toLocaleString('pt-BR')} kcal`
                     : t('pages.planningDashboard.caloricSummary.noDuration')}
                   {s.duration_minutes != null && (
-                    <span className="text-muted-foreground ml-1">
+                    <span className="text-muted-foreground ml-xs">
                       ({s.duration_minutes}min)
                     </span>
                   )}

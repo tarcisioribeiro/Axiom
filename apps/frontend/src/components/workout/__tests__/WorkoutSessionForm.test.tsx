@@ -7,6 +7,12 @@ import { WorkoutSessionForm } from '@/components/workout/WorkoutSessionForm';
 import ptBR from '@/i18n/locales/pt-BR.json';
 import { formatLocalDate } from '@/lib/utils';
 
+const { mockToast } = vi.hoisted(() => ({ mockToast: vi.fn() }));
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({ toast: mockToast }),
+  toast: mockToast,
+}));
+
 vi.mock('@/hooks/use-alert-dialog', () => ({
   useAlertDialog: () => ({ showConfirm: () => Promise.resolve(true) }),
 }));
@@ -180,17 +186,26 @@ describe('WorkoutSessionForm sequence', () => {
     expect(data.exercises.map((e) => e.exercise_name)).toEqual(['Agachamento']);
   });
 
-  it('blocks saving a new session without a split', () => {
+  it('blocks saving a new session without a split', async () => {
+    const onSubmit = vi.fn();
     render(
       <WorkoutSessionForm
         workoutDays={[]}
         ownerId={1}
-        onSubmit={vi.fn()}
+        onSubmit={onSubmit}
         onCancel={() => {}}
       />
     );
-    expect(
-      (screen.getByRole('button', { name: /salvar/i }) as HTMLButtonElement).disabled
-    ).toBe(true);
+    // Salvar fica clicável; a validação vai para toast + borda vermelha
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /salvar/i }));
+    });
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Divisão: campo obrigatório' })
+    );
+    expect(document.getElementById('session-day')?.getAttribute('aria-invalid')).toBe(
+      'true'
+    );
   });
 });

@@ -109,9 +109,6 @@ export function LoanPaymentPlanDialog({
               value={firstDueDate}
               onChange={(date) => setFirstDueDate(date ? formatLocalDate(date) : '')}
             />
-            <p className="text-muted-foreground text-xs">
-              {t('pages.loans.paymentPlan.firstInstallmentHint')}
-            </p>
           </div>
           {count >= 2 && (
             <p className="text-muted-foreground text-sm">

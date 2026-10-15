@@ -7,7 +7,6 @@ import {
   Clock,
   HelpCircle,
   Link2,
-  Loader2,
   Repeat,
   Settings2,
   Tag,
@@ -343,7 +342,7 @@ export function RoutineTaskForm({
                   const CatIcon = TASK_CATEGORY_ICONS[cat.value];
                   return (
                     <SelectItem key={cat.value} value={cat.value}>
-                      <span className="flex items-center gap-2">
+                      <span className="gap-sm flex items-center">
                         {CatIcon && (
                           <CatIcon className="text-muted-foreground h-4 w-4 shrink-0" />
                         )}
@@ -633,7 +632,7 @@ export function RoutineTaskForm({
                     const PriorIcon = PRIORITY_ICONS[p.value];
                     return (
                       <SelectItem key={p.value} value={p.value}>
-                        <span className="flex items-center gap-2">
+                        <span className="gap-sm flex items-center">
                           {PriorIcon && <PriorIcon className="h-4 w-4" />}
                           {t(`pages.routineTasks.form.priorityOptions.${p.value}`)}
                         </span>
@@ -1002,12 +1001,8 @@ export function RoutineTaskForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
           {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>

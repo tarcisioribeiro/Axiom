@@ -7,7 +7,6 @@ import {
   Dumbbell,
   Flame,
   Layers,
-  Loader2,
   Save,
   Target,
   Timer,
@@ -24,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NumberStepper } from '@/components/ui/number-stepper';
 import { TimePicker } from '@/components/ui/time-picker';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { cn } from '@/lib/utils';
 import type { WorkoutDay } from '@/types/workout';
 
@@ -178,7 +178,7 @@ export function WorkoutDayForm({
 
   return (
     <form
-      onSubmit={handleSubmit(handleFormSubmit)}
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
       className="gap-md flex min-h-0 flex-1 flex-col"
     >
       {/* Só os campos rolam; título (DialogHeader) e rodapé ficam fixos */}
@@ -190,12 +190,13 @@ export function WorkoutDayForm({
             <div>
               <Input
                 placeholder={t('pages.workoutPlans.dayNamePlaceholder')}
-                {...register('name', { required: true })}
-                className={cn(errors.name && 'border-destructive')}
+                aria-invalid={!!errors.name}
+                {...register('name', {
+                  required: t('common.fieldRequired', {
+                    field: t('pages.workoutPlans.dayName'),
+                  }),
+                })}
               />
-              {errors.name && (
-                <p className="mt-xs text-destructive text-xs">{t('common.required')}</p>
-              )}
             </div>
             <NumberStepper
               value={watch('order')}
@@ -223,7 +224,7 @@ export function WorkoutDayForm({
                     )
                   }
                   className={cn(
-                    'px-sm rounded-full border py-1 text-xs font-medium transition',
+                    'px-sm py-xs rounded-full border text-xs font-medium transition',
                     selected
                       ? 'border-primary bg-primary/15 text-primary'
                       : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary'
@@ -248,7 +249,7 @@ export function WorkoutDayForm({
                     type="button"
                     onClick={() => toggleChip(label)}
                     className={cn(
-                      'px-sm rounded-full border py-1 text-xs font-medium transition',
+                      'px-sm py-xs rounded-full border text-xs font-medium transition',
                       selectedChips.includes(label)
                         ? 'border-primary bg-primary/15 text-primary'
                         : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary'
@@ -316,12 +317,8 @@ export function WorkoutDayForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
 
           {t('common.actions.save')}
         </Button>

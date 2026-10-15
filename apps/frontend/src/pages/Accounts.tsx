@@ -7,7 +7,6 @@ import {
   Loader2,
   Pencil,
   Plus,
-  RefreshCw,
   Search,
   Shapes,
   Trash2,
@@ -19,18 +18,20 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
+import { AccountDetailModal } from '@/components/accounts/AccountDetailModal';
 import { AccountForm } from '@/components/accounts/AccountForm';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -100,8 +101,8 @@ export default function Accounts() {
     Account | undefined
   >();
   const [isReconciliationOpen, setIsReconciliationOpen] = useState(false);
+  const [detailAccount, setDetailAccount] = useState<Account | null>(null);
   const [imports, setImports] = useState<BankStatementImport[]>([]);
-  const [importsLoading, setImportsLoading] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadLoading, setUploadLoading] = useState(false);
@@ -224,10 +225,8 @@ export default function Accounts() {
     }
   };
 
+  // Abre só com os dados prontos (sem "Carregando…" que faz o modal saltar de tamanho).
   const openReconciliation = async (account: Account) => {
-    setReconciliationAccount(account);
-    setImportsLoading(true);
-    setIsReconciliationOpen(true);
     try {
       const all = await bankReconciliationService.getAll();
       setImports(all.filter((imp) => imp.account === account.id));
@@ -236,9 +235,9 @@ export default function Accounts() {
         title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
-    } finally {
-      setImportsLoading(false);
     }
+    setReconciliationAccount(account);
+    setIsReconciliationOpen(true);
   };
 
   function detectFormat(filename: string): 'ofx' | 'csv' | '' {
@@ -366,12 +365,6 @@ export default function Accounts() {
           {(pageItems) =>
             pageItems.map((account) => {
               const balance = parseFloat(account.balance);
-              const overdraft = parseFloat(account.overdraft_limit ?? '0');
-              const available = balance + overdraft;
-              const reservedInVaults = parseFloat(account.deposited_in_vaults ?? '0');
-              const availableForSpending = parseFloat(
-                account.available_balance ?? account.balance
-              );
               const typeColors = ACCOUNT_TYPE_COLORS[account.account_type];
               const initials = account.account_name
                 .split(' ')
@@ -382,7 +375,22 @@ export default function Accounts() {
               return (
                 <Card
                   key={account.id}
-                  className="flex flex-col overflow-hidden transition-colors"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    if (!(e.target as HTMLElement).closest('button'))
+                      setDetailAccount(account);
+                  }}
+                  onKeyDown={(e) => {
+                    if (
+                      (e.key === 'Enter' || e.key === ' ') &&
+                      !(e.target as HTMLElement).closest('button')
+                    ) {
+                      e.preventDefault();
+                      setDetailAccount(account);
+                    }
+                  }}
+                  className="flex cursor-pointer flex-col overflow-hidden"
                 >
                   <CardHeader className="pb-sm">
                     <div className="gap-sm flex items-start justify-between">
@@ -406,13 +414,9 @@ export default function Accounts() {
                       </Badge>
                     </div>
                   </CardHeader>
+                  {/* Card enxuto (§5): só o saldo; o resto fica no modal de detalhe. */}
                   <CardContent className="gap-md flex flex-1 flex-col">
-                    {account.account_number_masked && (
-                      <p className="text-muted-foreground text-xs">
-                        {account.account_number_masked}
-                      </p>
-                    )}
-                    <div className="bg-muted/30 my-auto rounded-lg p-3 text-center">
+                    <div>
                       <p className="text-muted-foreground text-xs">
                         {t('pages.accounts.columns.balance')}
                       </p>
@@ -421,57 +425,8 @@ export default function Accounts() {
                       >
                         {formatCurrency(account.balance)}
                       </p>
-                      {/* Sempre 2 linhas (reserva ou cheque especial, ou espaço
-                          invisível), para todos os cards terem a altura do maior. */}
-                      <div
-                        className={`mt-xs pt-xs space-y-0.5 border-t ${reservedInVaults > 0 ? 'border-border/60' : 'border-transparent'}`}
-                      >
-                        {overdraft > 0 && (
-                          <p
-                            className={`text-xs ${available >= 0 ? 'text-muted-foreground' : 'text-destructive'}`}
-                          >
-                            {t('pages.accounts.available', {
-                              value: formatCurrency(String(available)),
-                            })}
-                          </p>
-                        )}
-                        {reservedInVaults > 0 && (
-                          <>
-                            <p className="text-muted-foreground text-xs">
-                              {t('pages.accounts.reservedInVaults', {
-                                value: formatCurrency(String(reservedInVaults)),
-                              })}
-                            </p>
-                            <p
-                              className={`text-xs font-medium ${availableForSpending >= 0 ? 'text-info' : 'text-destructive'}`}
-                            >
-                              {t('pages.accounts.availableForSpending', {
-                                value: formatCurrency(String(availableForSpending)),
-                              })}
-                            </p>
-                          </>
-                        )}
-                        {Array.from(
-                          {
-                            length: Math.max(
-                              0,
-                              2 -
-                                (overdraft > 0 ? 1 : 0) -
-                                (reservedInVaults > 0 ? 2 : 0)
-                            ),
-                          },
-                          (_, i) => (
-                            <p key={i} aria-hidden="true" className="invisible text-xs">
-                              &nbsp;
-                            </p>
-                          )
-                        )}
-                      </div>
                     </div>
-                    <div className="pt-sm mt-auto flex items-center justify-between border-t">
-                      <span className="text-muted-foreground text-xs">
-                        {formatDate(account.created_at)}
-                      </span>
+                    <div className="pt-sm mt-auto flex items-center justify-end border-t">
                       <div className="gap-xs flex">
                         <Button
                           variant="ghost"
@@ -566,86 +521,100 @@ export default function Accounts() {
             </Button>
           </div>
 
-          {importsLoading ? (
-            <div className="py-xl flex items-center justify-center">
-              <RefreshCw className="text-muted-foreground h-6 w-6 animate-spin" />
-            </div>
-          ) : imports.length === 0 ? (
+          {imports.length === 0 ? (
             <EmptyState
               icon={<ArrowLeftRight className="text-muted-foreground h-12 w-12" />}
               title={t('pages.accounts.noImports')}
             />
           ) : (
-            <div className="rounded-md border">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50 border-b">
-                  <tr>
-                    <th className="p-3 text-left font-medium">
-                      {t('pages.accounts.imports.file')}
-                    </th>
-                    <th className="p-3 text-left font-medium">
-                      {t('pages.accounts.imports.format')}
-                    </th>
-                    <th className="p-3 text-left font-medium">
-                      {t('pages.accounts.imports.status')}
-                    </th>
-                    <th className="p-3 text-right font-medium">
-                      {t('pages.accounts.imports.entries')}
-                    </th>
-                    <th className="p-3 text-right font-medium">
-                      {t('pages.accounts.imports.matched')}
-                    </th>
-                    <th className="p-3 text-left font-medium">
-                      {t('pages.accounts.imports.importedAt')}
-                    </th>
-                    <th className="p-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {imports.map((imp) => (
-                    <tr key={imp.id} className="border-b last:border-0">
-                      <td className="p-3 font-medium">{imp.original_filename}</td>
-                      <td className="p-3">
-                        <Badge variant="outline">{imp.file_format.toUpperCase()}</Badge>
-                      </td>
-                      <td className="p-3">
-                        <ImportStatusBadge status={imp.status} />
-                      </td>
-                      <td className="p-3 text-right">{imp.total_entries}</td>
-                      <td className="text-success p-3 text-right font-medium">
-                        {imp.matched_count}
-                      </td>
-                      <td className="text-muted-foreground p-3">
-                        {formatDate(imp.created_at)}
-                      </td>
-                      <td className="p-3">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setIsReconciliationOpen(false);
-                            void navigate(`/bank-reconciliation/${imp.id}`);
-                          }}
-                        >
-                          <Eye aria-hidden="true" />
-                          {t('pages.bankReconciliation.viewBtn')}
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <PaginatedSlide items={imports} pageSize={LIST_PAGE_SIZE} pinNav={false}>
+              {(pageItems) => (
+                <div className="rounded-md border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50 border-b">
+                      <tr>
+                        <th className="p-3 text-left font-medium">
+                          {t('pages.accounts.imports.file')}
+                        </th>
+                        <th className="p-3 text-left font-medium">
+                          {t('pages.accounts.imports.format')}
+                        </th>
+                        <th className="p-3 text-left font-medium">
+                          {t('pages.accounts.imports.status')}
+                        </th>
+                        <th className="p-3 text-right font-medium">
+                          {t('pages.accounts.imports.entries')}
+                        </th>
+                        <th className="p-3 text-right font-medium">
+                          {t('pages.accounts.imports.matched')}
+                        </th>
+                        <th className="p-3 text-left font-medium">
+                          {t('pages.accounts.imports.importedAt')}
+                        </th>
+                        <th className="p-3" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pageItems.map((imp) => (
+                        <tr key={imp.id} className="border-b last:border-0">
+                          <td className="p-3 font-medium" title={imp.original_filename}>
+                            <div className="max-w-48 truncate">
+                              {imp.original_filename}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <Badge variant="outline">
+                              {imp.file_format.toUpperCase()}
+                            </Badge>
+                          </td>
+                          <td className="p-3">
+                            <ImportStatusBadge status={imp.status} />
+                          </td>
+                          <td className="p-3 text-right">{imp.total_entries}</td>
+                          <td className="text-success p-3 text-right font-medium">
+                            {imp.matched_count}
+                          </td>
+                          <td className="text-muted-foreground p-3">
+                            {formatDate(imp.created_at)}
+                          </td>
+                          <td className="p-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setIsReconciliationOpen(false);
+                                void navigate(`/bank-reconciliation/${imp.id}`);
+                              }}
+                            >
+                              <Eye aria-hidden="true" />
+                              {t('pages.bankReconciliation.viewBtn')}
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </PaginatedSlide>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsReconciliationOpen(false)}>
-              <X className="h-4 w-4" />
-              {t('common.actions.cancel')}
-            </Button>
-          </DialogFooter>
+          <DialogCloseFooter />
         </DialogContent>
       </Dialog>
+
+      <AccountDetailModal
+        account={detailAccount}
+        onClose={() => setDetailAccount(null)}
+        onEdit={(account) => {
+          setDetailAccount(null);
+          handleEdit(account);
+        }}
+        onDelete={(id) => {
+          setDetailAccount(null);
+          void handleDelete(id);
+        }}
+      />
 
       {/* Upload dialog */}
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>

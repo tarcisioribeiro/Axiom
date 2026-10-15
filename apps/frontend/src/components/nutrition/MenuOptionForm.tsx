@@ -8,7 +8,6 @@ import {
   GripVertical,
   Hash,
   ListChecks,
-  Loader2,
   Plus,
   Ruler,
   Salad,
@@ -17,10 +16,11 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useFieldArray, useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { PageSlide } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DecimalInput } from '@/components/ui/decimal-input';
@@ -37,8 +37,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { notifyFormErrors } from '@/lib/form-errors';
 import type { Food, MenuOption } from '@/types/nutrition';
+
+/** Ingredientes por página no modal (cada linha tem vários campos). */
+const INGREDIENTS_PAGE_SIZE = 3;
 
 const UNIT_KEYS = [
   'g',
@@ -196,7 +199,19 @@ export function MenuOptionForm({
   }, [option, reset]);
 
   const allIngredients = watch('ingredients');
-  const visualGroups = buildVisualGroups(allIngredients);
+  // Um item por ingrediente simples ou por grupo de alternativas, paginado
+  // para o modal não rolar.
+  const visualGroups = buildVisualGroups(allIngredients).flatMap((g) =>
+    g.groupId === null ? g.indices.map((idx) => ({ ...g, indices: [idx] })) : [g]
+  );
+  const [ingredientPage, setIngredientPage] = useState(1);
+  const ingredientPages = Math.max(
+    1,
+    Math.ceil(visualGroups.length / INGREDIENTS_PAGE_SIZE)
+  );
+  const currentIngredientPage = Math.min(ingredientPage, ingredientPages);
+  // Página "infinita" é clampada para a última: mostra o item recém-adicionado.
+  const showLastIngredientPage = () => setIngredientPage(Infinity);
 
   const nextGroupId = (): string => {
     const max = Math.max(
@@ -208,7 +223,8 @@ export function MenuOptionForm({
     return String(max + 1);
   };
 
-  const addStandalone = () =>
+  const addStandalone = () => {
+    showLastIngredientPage();
     append({
       food: '',
       quantity: '',
@@ -218,8 +234,10 @@ export function MenuOptionForm({
       order: fields.length,
       alternative_group: '',
     });
+  };
 
   const addNewGroup = () => {
+    showLastIngredientPage();
     const gid = nextGroupId();
     append({
       food: '',
@@ -256,19 +274,23 @@ export function MenuOptionForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+    <form
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       {/* Nome e ordem */}
       <FormSection title={t('pages.nutritionMealTypes.optionName')} icon={ListChecks}>
         <div className="gap-sm grid grid-cols-[minmax(0,1fr)_auto]">
           <div>
             <Input
               placeholder={t('pages.nutritionMealTypes.optionNamePlaceholder')}
-              {...register('name', { required: true })}
-              className={cn(errors.name && 'border-destructive')}
+              aria-invalid={!!errors.name}
+              {...register('name', {
+                required: t('common.fieldRequired', {
+                  field: t('pages.nutritionMealTypes.optionName'),
+                }),
+              })}
             />
-            {errors.name && (
-              <p className="mt-xs text-destructive text-xs">{t('common.required')}</p>
-            )}
           </div>
           <Controller
             control={control}
@@ -299,72 +321,83 @@ export function MenuOptionForm({
               </p>
             </div>
           ) : (
-            <div className="space-y-sm max-h-96 overflow-y-auto pr-1">
-              {visualGroups.map((group) =>
-                group.groupId === null ? (
-                  // ── Ingrediente simples ──────────────────────────────────────
-                  group.indices.map((idx) => (
-                    <IngredientRow
-                      key={fields[idx]?.id}
-                      idx={idx}
-                      label={t('pages.nutritionMealTypes.ingredientsSection')}
-                      foods={foods}
-                      register={register}
-                      watch={watch}
-                      setValue={setValue}
-                      onRemove={() => remove(idx)}
-                      t={t}
-                    />
-                  ))
-                ) : (
-                  // ── Grupo de alternativas ────────────────────────────────────
-                  <motion.div
-                    key={`group-${group.groupId}`}
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="border-border bg-card rounded-lg border"
-                  >
-                    <div className="border-border px-sm py-xs flex items-center justify-between border-b">
-                      <span className="text-category-nutrition text-xs font-semibold tracking-wider uppercase">
-                        {t(
-                          'pages.nutritionMealTypes.altGroupLabel',
-                          'Grupo de alternativas'
-                        )}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => addVariantToGroup(group.groupId!)}
-                        className="gap-xs px-xs text-category-nutrition hover:bg-category-nutrition/10 flex items-center rounded py-0.5 text-xs font-medium"
-                      >
-                        <Plus className="h-3 w-3" />
-                        {t('pages.nutritionMealTypes.addVariant', 'Variante')}
-                      </button>
-                    </div>
-                    <div className="p-sm space-y-0">
-                      {group.indices.map((idx, position) => (
-                        <div key={fields[idx]?.id}>
-                          <IngredientRow
-                            idx={idx}
-                            label={`${t('pages.nutritionMealTypes.variantLabel', 'Opção')} ${position + 1}`}
-                            foods={foods}
-                            register={register}
-                            watch={watch}
-                            setValue={setValue}
-                            onRemove={() => remove(idx)}
-                            t={t}
-                          />
-                          {position < group.indices.length - 1 && (
-                            <p className="my-xs text-category-nutrition/60 text-2xs text-center font-bold tracking-widest uppercase">
-                              {t('pages.nutritionMealTypes.ingredientOr')}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
+            <PageSlide
+              page={currentIngredientPage}
+              totalPages={ingredientPages}
+              onPageChange={setIngredientPage}
+              pinNav={false}
+              className="space-y-sm"
+            >
+              {visualGroups
+                .slice(
+                  (currentIngredientPage - 1) * INGREDIENTS_PAGE_SIZE,
+                  currentIngredientPage * INGREDIENTS_PAGE_SIZE
                 )
-              )}
-            </div>
+                .map((group) =>
+                  group.groupId === null ? (
+                    // ── Ingrediente simples ──────────────────────────────────────
+                    group.indices.map((idx) => (
+                      <IngredientRow
+                        key={fields[idx]?.id}
+                        idx={idx}
+                        label={t('pages.nutritionMealTypes.ingredientsSection')}
+                        foods={foods}
+                        register={register}
+                        watch={watch}
+                        setValue={setValue}
+                        onRemove={() => remove(idx)}
+                        t={t}
+                      />
+                    ))
+                  ) : (
+                    // ── Grupo de alternativas ────────────────────────────────────
+                    <motion.div
+                      key={`group-${group.groupId}`}
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="border-border bg-card rounded-lg border"
+                    >
+                      <div className="border-border px-sm py-xs flex items-center justify-between border-b">
+                        <span className="text-category-nutrition text-xs font-semibold tracking-wider uppercase">
+                          {t(
+                            'pages.nutritionMealTypes.altGroupLabel',
+                            'Grupo de alternativas'
+                          )}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => addVariantToGroup(group.groupId!)}
+                          className="gap-xs px-xs text-category-nutrition hover:bg-category-nutrition/10 flex items-center rounded py-0.5 text-xs font-medium"
+                        >
+                          <Plus className="h-3 w-3" />
+                          {t('pages.nutritionMealTypes.addVariant', 'Variante')}
+                        </button>
+                      </div>
+                      <div className="p-sm space-y-0">
+                        {group.indices.map((idx, position) => (
+                          <div key={fields[idx]?.id}>
+                            <IngredientRow
+                              idx={idx}
+                              label={`${t('pages.nutritionMealTypes.variantLabel', 'Opção')} ${position + 1}`}
+                              foods={foods}
+                              register={register}
+                              watch={watch}
+                              setValue={setValue}
+                              onRemove={() => remove(idx)}
+                              t={t}
+                            />
+                            {position < group.indices.length - 1 && (
+                              <p className="my-xs text-category-nutrition/60 text-2xs text-center font-bold tracking-widest uppercase">
+                                {t('pages.nutritionMealTypes.ingredientOr')}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )
+                )}
+            </PageSlide>
           )}
 
           {/* Botões de adição */}
@@ -394,12 +427,8 @@ export function MenuOptionForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
 
           {t('common.actions.save')}
         </Button>
@@ -558,7 +587,7 @@ function IngredientRow({
             <Input
               placeholder={t('pages.nutritionMealTypes.ingredientNotesPlaceholder')}
               {...register(`ingredients.${idx}.notes`)}
-              className="h-8 pl-6 text-xs"
+              className="pl-lg h-8 text-xs"
             />
           </div>
         </div>

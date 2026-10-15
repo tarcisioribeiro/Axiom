@@ -20,7 +20,7 @@ import {
   Type,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -30,7 +30,6 @@ import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -39,6 +38,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/hooks/use-toast';
+import { notifyFormErrors, serverFieldError } from '@/lib/form-errors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { coursesService } from '@/services/courses-service';
@@ -51,16 +52,17 @@ import type {
 } from '@/types';
 import type { IconComponent } from '@/types/icon';
 
-const skillSchema = z.object({
-  name: z.string().min(1),
-  category: z.string().min(1),
-  proficiency: z.string().min(1),
-  status: z.string().min(1),
-  notes: z.string().optional().nullable(),
-  owner: z.number(),
-});
+const makeSkillSchema = (nameRequired: string) =>
+  z.object({
+    name: z.string().trim().min(1, nameRequired),
+    category: z.string().min(1),
+    proficiency: z.string().min(1),
+    status: z.string().min(1),
+    notes: z.string().optional().nullable(),
+    owner: z.number(),
+  });
 
-type SkillFormValues = z.infer<typeof skillSchema>;
+type SkillFormValues = z.infer<ReturnType<typeof makeSkillSchema>>;
 
 interface SkillFormProps {
   skill?: Skill;
@@ -101,12 +103,9 @@ const CATEGORY_ICONS: Record<IntellectCategory, IconComponent> = {
 const STATUSES: SkillStatus[] = ['learning', 'evolving', 'mastered'];
 
 const STATUS_COLORS: Record<SkillStatus, string> = {
-  learning:
-    'border-blue-400 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400',
-  evolving:
-    'border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400',
-  mastered:
-    'border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400',
+  learning: 'border-info bg-info/10 text-info',
+  evolving: 'border-warning bg-warning/10 text-warning',
+  mastered: 'border-success bg-success/10 text-success',
 };
 
 function ProficiencySelector({
@@ -128,8 +127,8 @@ function ProficiencySelector({
           className={cn(
             'gap-xs p-sm flex flex-col items-center rounded-lg border-2 transition',
             value === lvl
-              ? 'border-category-intellect bg-category-intellect/10 shadow-sm'
-              : 'border-border bg-background hover:border-category-intellect/40 hover:bg-category-intellect/5'
+              ? 'border-category-intellect bg-category-intellect/10'
+              : 'border-border bg-background hover:border-category-intellect/40'
           )}
         >
           <div className="flex gap-0.5">
@@ -176,11 +175,27 @@ export function SkillForm({
 
   const { data: courses = [] } = useQuery({
     queryKey: ['courses'],
-    queryFn: () => coursesService.getAll(),
+    queryFn: () => coursesService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
-  const { register, handleSubmit, setValue, watch, reset } = useForm<SkillFormValues>({
+  const skillSchema = useMemo(
+    () =>
+      makeSkillSchema(
+        t('common.fieldRequired', { field: t('pages.skills.form.nameLabel') })
+      ),
+    [t]
+  );
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    setError,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<SkillFormValues>({
     resolver: zodResolver(skillSchema),
     defaultValues: {
       name: '',
@@ -229,21 +244,34 @@ export function SkillForm({
   };
 
   const handleFormSubmit = async (values: SkillFormValues) => {
-    await onSubmit({
-      name: values.name,
-      category: values.category as IntellectCategory,
-      proficiency: values.proficiency as SkillProficiency,
-      course_ids: selectedCourses,
-      status: values.status as SkillStatus,
-      notes: values.notes || null,
-      owner: values.owner,
-    });
+    try {
+      await onSubmit({
+        name: values.name,
+        category: values.category as IntellectCategory,
+        proficiency: values.proficiency as SkillProficiency,
+        course_ids: selectedCourses,
+        status: values.status as SkillStatus,
+        notes: values.notes || null,
+        owner: values.owner,
+      });
+    } catch (err: unknown) {
+      // Nome duplicado → borda no campo + toast (§3); demais erros já
+      // foram notificados pela mutation da página.
+      if (serverFieldError(err, 'name')) {
+        const message = t('pages.skills.form.nameDuplicate');
+        setError('name', { type: 'server', message });
+        toast({ title: message, variant: 'destructive' });
+      }
+    }
   };
 
   const currentStatus = watch('status') as SkillStatus;
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+    <form
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       <FormSection title={t('pages.skills.form.sectionInfo')} icon={Brain}>
         <div className="space-y-sm">
           <Label className="gap-xs flex items-center" htmlFor="name">
@@ -253,6 +281,7 @@ export function SkillForm({
           <Input
             id="name"
             placeholder={t('pages.skills.form.namePlaceholder')}
+            aria-invalid={!!errors.name}
             {...register('name')}
           />
         </div>
@@ -361,16 +390,18 @@ export function SkillForm({
                 return course ? (
                   <Badge key={courseId} variant="secondary">
                     {course.title}
-                    <PlainButton
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handleRemoveCourse(courseId)}
                       aria-label={t('pages.skills.form.removeCourse', {
                         name: course.title,
                       })}
-                      className="ml-xs hover:text-destructive"
+                      className="ml-xs h-4 w-4"
                     >
                       <X className="h-3 w-3" aria-hidden="true" />
-                    </PlainButton>
+                    </Button>
                   </Badge>
                 ) : null;
               })}
@@ -384,8 +415,8 @@ export function SkillForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          <Save className="h-4 w-4" />
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
           {t('common.actions.save')}
         </Button>
       </div>

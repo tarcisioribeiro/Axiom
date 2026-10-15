@@ -31,7 +31,6 @@ import {
   ImagePlus,
   Layers,
   ListChecks,
-  Loader2,
   NotebookPen,
   Plus,
   Save,
@@ -1402,7 +1401,12 @@ export default function WorkoutPage() {
                     {viewedPlan.exercise_count} {t('pages.workoutPlans.exercises')}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="px-xs py-xs">
+                <div className="px-xs py-xs space-y-md">
+                  {viewedPlan.description && (
+                    <p className="text-muted-foreground text-sm">
+                      {viewedPlan.description}
+                    </p>
+                  )}
                   <PlanDaysList
                     plan={viewedPlan}
                     onOpenDay={(day) => setViewDayId(day.id)}
@@ -1920,7 +1924,7 @@ function ExerciseCatalogForm({
         <FormSection title={t('pages.exercises.fieldDescription')} icon={FileText}>
           <Textarea
             placeholder={t('pages.exercises.fieldDescriptionPlaceholder')}
-            rows={3}
+            rows={1}
             value={values.description}
             onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
             className="resize-none"
@@ -1933,12 +1937,8 @@ function ExerciseCatalogForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
           {t('common.actions.save')}
         </Button>
       </div>
@@ -2160,21 +2160,14 @@ function PlanCard({ plan, onOpen, onEdit, onDelete, t }: PlanCardProps) {
           <p className="text-muted-foreground text-xs">
             {t(`pages.workoutPlans.categories.${plan.category}`)}
           </p>
-          {plan.description && (
-            <p className="mt-xs text-muted-foreground line-clamp-2 text-xs">
-              {plan.description}
-            </p>
-          )}
-          <p className="mt-sm text-muted-foreground text-xs">
+          <p className="mt-sm text-foreground text-sm font-medium">
             {plan.day_count} {t('pages.workoutPlans.days')} · {plan.exercise_count}{' '}
             {t('pages.workoutPlans.exercises')}
           </p>
         </div>
-      </button>
-      <div className="border-border px-md py-xs flex items-center justify-between border-t">
         <Badge
           variant={plan.is_active ? 'success' : 'secondary'}
-          className="gap-xs text-xs"
+          className="gap-xs shrink-0 text-xs"
         >
           {(() => {
             const StatusIcon =
@@ -2185,6 +2178,8 @@ function PlanCard({ plan, onOpen, onEdit, onDelete, t }: PlanCardProps) {
             ? t('pages.workoutPlans.active')
             : t('pages.workoutPlans.inactive')}
         </Badge>
+      </button>
+      <div className="border-border px-md py-xs flex items-center justify-end border-t">
         <div className="gap-xs flex">
           <Button
             aria-label={t('common.actions.edit')}
@@ -2277,7 +2272,7 @@ function SessionCard({ session, onView, onEdit, onDelete, t }: SessionCardProps)
           onView();
         }
       }}
-      className="group gap-md border-border bg-card p-md focus-visible:ring-ring flex cursor-pointer rounded-lg border focus-visible:ring-2 focus-visible:outline-none"
+      className="group gap-md border-border bg-card p-sm focus-visible:ring-ring flex cursor-pointer rounded-lg border focus-visible:ring-2 focus-visible:outline-none"
     >
       {/* Date block */}
       <div className="bg-primary/10 px-sm flex shrink-0 items-center justify-center rounded-lg">
@@ -2325,7 +2320,7 @@ function SessionCard({ session, onView, onEdit, onDelete, t }: SessionCardProps)
           </div>
         </div>
 
-        <div className="mt-sm gap-xs flex flex-wrap items-center justify-center">
+        <div className="mt-xs gap-xs flex flex-wrap items-center justify-center">
           {session.session_exercises && session.session_exercises.length > 0 && (
             <div className="-space-x-sm flex">
               {session.session_exercises.slice(0, 4).map((se) => (

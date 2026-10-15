@@ -1,7 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { differenceInDays, parseISO } from 'date-fns';
-import { motion } from 'framer-motion';
 import {
   AlertTriangle,
   Award,
@@ -15,7 +14,7 @@ import {
   Flame,
   History,
   Layers,
-  Loader2,
+  MoreHorizontal,
   Plus,
   RefreshCw,
   RotateCcw,
@@ -24,6 +23,7 @@ import {
   Shapes,
   Star,
   Trash2,
+  Target,
   TrendingDown,
   TrendingUp,
   Trophy,
@@ -56,6 +56,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -68,7 +74,6 @@ import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { GOAL_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { DURATION } from '@/lib/animations';
 import { formatDate } from '@/lib/formatters';
 import { cn, formatLocalDate } from '@/lib/utils';
 import { type goalSchema } from '@/lib/validations';
@@ -94,7 +99,7 @@ const GOAL_TYPE_META: Record<
   consecutive_days: {
     icon: Flame,
     label: 'Dias Consecutivos',
-    color: 'text-orange-500 bg-orange-500/15',
+    color: 'text-warning bg-warning/15',
   },
   total_days: {
     icon: Calendar,
@@ -169,6 +174,21 @@ function GoalDetails({
 
   return (
     <div className="gap-xs flex flex-col items-start">
+      <span className={cn(BADGE_CLASS, 'bg-primary/10 text-primary')}>
+        {pct >= 80 ? (
+          <TrendingUp className="h-3 w-3" />
+        ) : pct < 30 ? (
+          <TrendingDown className="h-3 w-3" />
+        ) : (
+          <Target className="h-3 w-3" />
+        )}
+        {t('pages.goals.columns.progress')}: {getDisplayValue(goal)} /{' '}
+        {goal.target_value} ({pct.toFixed(0)}%)
+      </span>
+      <span className={cn(BADGE_CLASS, 'text-muted-foreground bg-muted/60')}>
+        <CalendarDays className="h-3 w-3" />
+        {t('pages.goals.columns.activeDays')}: {goal.days_active}
+      </span>
       {paceStatus && (
         <span className={cn(BADGE_CLASS, paceConfig[paceStatus].className)}>
           {paceStatus === 'on_track' ? (
@@ -198,7 +218,7 @@ function GoalDetails({
       )}
       {isAutoType && (
         <>
-          <span className={cn(BADGE_CLASS, 'bg-orange-500/10 text-orange-500')}>
+          <span className={cn(BADGE_CLASS, 'bg-warning/10 text-warning')}>
             <Flame className="h-3 w-3" />
             {t('pages.goals.currentStreakLabel')}: {getDisplayValue(goal)}
           </span>
@@ -266,15 +286,16 @@ function GoalCard({
       ? 'hsl(var(--chart-2))'
       : 'hsl(var(--primary))';
 
-  const displayValue = getDisplayValue(goal);
-
   return (
     <Card
       role="button"
       tabIndex={0}
       // Cliques/teclas vindos dos botões de ação não abrem os detalhes.
+      // Itens do menu "..." ficam num portal: fora do card no DOM.
       onClick={(e) => {
-        if (!(e.target as HTMLElement).closest('button')) onOpenDetails(goal);
+        const target = e.target as HTMLElement;
+        if (e.currentTarget.contains(target) && !target.closest('button'))
+          onOpenDetails(goal);
       }}
       onKeyDown={(e) => {
         if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
@@ -284,8 +305,8 @@ function GoalCard({
       }}
       className="focus-visible:ring-ring relative cursor-pointer overflow-hidden focus-visible:ring-2 focus-visible:outline-none"
     >
-      <CardContent className="p-5 pt-5">
-        <div className="mb-md flex items-start gap-3">
+      <CardContent className="p-lg pt-lg">
+        <div className="mb-md gap-sm flex items-start">
           <div
             className={cn(
               'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
@@ -302,109 +323,69 @@ function GoalCard({
               })}
             </p>
           </div>
-        </div>
-
-        <div className="mb-md gap-md flex items-center">
-          <CircularProgress value={pct} size={72} strokeWidth={6} color={ringColor}>
-            <span className="text-sm font-bold">{pct.toFixed(0)}%</span>
-          </CircularProgress>
-          <div className="space-y-xs flex-1">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                {t('pages.goals.columns.progress')}
-              </span>
-              <div className="gap-xs flex items-center font-medium">
-                {pct >= 80 ? (
-                  <TrendingUp className="text-success h-3.5 w-3.5" />
-                ) : pct < 30 ? (
-                  <TrendingDown className="text-destructive h-3.5 w-3.5" />
-                ) : null}
-                <span>
-                  {displayValue} / {goal.target_value}
-                </span>
-              </div>
-            </div>
-            <div className="bg-muted h-2 overflow-hidden rounded-full">
-              <motion.div
-                className={cn(
-                  'h-full rounded-full',
-                  pct >= 80 ? 'bg-success' : pct < 30 ? 'bg-destructive' : 'bg-primary'
-                )}
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(pct, 100)}%` }}
-                transition={{ duration: DURATION.slow, ease: 'easeOut' }}
-              />
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                {t('pages.goals.columns.activeDays')}
-              </span>
-              <span className="font-medium">{goal.days_active}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between border-t pt-3">
           <Badge
             variant={GOAL_STATUS_BADGE[goal.status] ?? 'secondary'}
-            className="gap-xs"
+            className="gap-xs shrink-0"
           >
             {StatusIcon && <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />}
             {t(`pages.goals.form.statusOptions.${goal.status}`)}
           </Badge>
-          <div className="gap-xs flex">
-            {isAutoType && goal.status === 'active' && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onRecalculate(goal)}
-                title={t('pages.goals.recalculateBtn')}
-                aria-label={t('pages.goals.recalculateBtn')}
-              >
-                <RefreshCw className="text-primary h-4 w-4" />
-              </Button>
-            )}
-            {isAutoType && goal.status === 'active' && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onRegisterFailure(goal)}
-                title={t('pages.goals.registerFailureBtn')}
-                aria-label={t('pages.goals.registerFailureBtn')}
-              >
-                <AlertTriangle className="text-warning h-4 w-4" />
-              </Button>
-            )}
-            {goal.status === 'active' && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onRestart(goal)}
-                title={t('pages.goals.restartBtn')}
-                aria-label={t('pages.goals.restartBtn')}
-              >
-                <RotateCcw className="text-muted-foreground h-4 w-4" />
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit(goal)}
-              title={t('common.actions.edit')}
-              aria-label={t('common.actions.edit')}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(goal.id)}
-              title={t('common.actions.delete')}
-              aria-label={t('common.actions.delete')}
-            >
-              <Trash2 className="text-destructive h-4 w-4" />
-            </Button>
-          </div>
+        </div>
+
+        <div className="mb-md flex justify-center">
+          <CircularProgress value={pct} size={72} strokeWidth={6} color={ringColor}>
+            <span className="text-sm font-bold">{pct.toFixed(0)}%</span>
+          </CircularProgress>
+        </div>
+
+        <div className="gap-xs pt-sm flex justify-end border-t">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(goal)}
+            aria-label={t('common.actions.edit')}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDelete(goal.id)}
+            aria-label={t('common.actions.delete')}
+          >
+            <Trash2 className="text-destructive h-4 w-4" />
+          </Button>
+          {goal.status === 'active' && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t('common.actions.moreOptions')}
+                >
+                  <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {isAutoType && (
+                  <DropdownMenuItem onClick={() => onRecalculate(goal)}>
+                    <RefreshCw className="mr-sm h-4 w-4" aria-hidden="true" />
+                    {t('pages.goals.recalculateBtn')}
+                  </DropdownMenuItem>
+                )}
+                {isAutoType && (
+                  <DropdownMenuItem onClick={() => onRegisterFailure(goal)}>
+                    <AlertTriangle className="mr-sm h-4 w-4" aria-hidden="true" />
+                    {t('pages.goals.registerFailureBtn')}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => onRestart(goal)}>
+                  <RotateCcw className="mr-sm h-4 w-4" aria-hidden="true" />
+                  {t('pages.goals.restartBtn')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -533,7 +514,14 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
   };
 
   const handleConfirmFailure = async () => {
-    if (!failureGoal || !failureDate) return;
+    if (!failureGoal) return;
+    if (!failureDate) {
+      toast({
+        title: t('common.fieldRequired', { field: t('pages.goals.failureDateLabel') }),
+        variant: 'destructive',
+      });
+      return;
+    }
     try {
       setIsRegisteringFailure(true);
       await goalsService.registerFailure(failureGoal.id, failureDate);
@@ -846,13 +834,9 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
             <Button
               variant="destructive"
               onClick={() => void handleConfirmFailure()}
-              disabled={!failureDate || isRegisteringFailure}
+              loading={isRegisteringFailure}
             >
-              {isRegisteringFailure ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
+              {!isRegisteringFailure && <Save className="h-4 w-4" />}
               {isRegisteringFailure
                 ? t('common.actions.saving')
                 : t('pages.goals.registerFailureConfirmBtn')}

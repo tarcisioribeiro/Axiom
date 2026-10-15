@@ -1,17 +1,17 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import { useReducedMotion } from 'framer-motion';
 import {
-  BadgePercent,
   CalendarDays,
   CreditCard,
   DollarSign,
   Hash,
-  Lock,
   Loader2,
+  Lock,
+  Percent,
+  Save,
   Settings,
   User,
   Wallet,
-  Save,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -326,7 +326,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             <div className="gap-md grid grid-cols-1 md:grid-cols-2">
               <div className="space-y-sm">
                 <Label className="gap-xs flex items-center">
-                  <DollarSign className="text-muted-foreground h-3.5 w-3.5" />
+                  <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.creditCards.form.creditLimitLabel')}
                 </Label>
                 <CurrencyInput
@@ -339,7 +339,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
               </div>
               <div className="space-y-sm">
                 <Label className="gap-xs flex items-center">
-                  <DollarSign className="text-muted-foreground h-3.5 w-3.5" />
+                  <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.creditCards.form.maxLimitLabel')}
                 </Label>
                 <CurrencyInput
@@ -373,7 +373,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
               </div>
               <div className="space-y-sm">
                 <Label className="gap-xs flex items-center">
-                  <BadgePercent className="text-muted-foreground h-3.5 w-3.5" />
+                  <Percent className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.creditCards.form.interestRateLabel')}
                 </Label>
                 <Controller

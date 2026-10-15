@@ -2,16 +2,17 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft,
   ArrowRight,
   CalendarDays,
   Check,
+  ChevronLeft,
   Copy,
   Hash,
-  Loader2,
+  Link2,
   Share2,
   Trash2,
   User,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -23,8 +24,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -38,6 +41,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { slideVariants } from '@/lib/animations';
 import { formatDate } from '@/lib/formatters';
 import { cn, copyToClipboard } from '@/lib/utils';
 import { credentialShareService } from '@/services/credential-share-service';
@@ -64,18 +68,6 @@ const TTL_OPTIONS = [
 const MAX_USES_OPTIONS = [1, 2, 3, 4, 5];
 
 const STEPS = ['step1Title', 'step2Title', 'step3Title'] as const;
-
-const slideVariants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 60 : -60,
-    opacity: 0,
-  }),
-  center: { x: 0, opacity: 1 },
-  exit: (direction: number) => ({
-    x: direction < 0 ? 60 : -60,
-    opacity: 0,
-  }),
-};
 
 export function SharePasswordModal({
   password,
@@ -233,11 +225,7 @@ export function SharePasswordModal({
       return (
         <Badge variant="secondary">{t('pages.sharePassword.statusExhausted')}</Badge>
       );
-    return (
-      <Badge variant="default" className="bg-green-600">
-        {t('pages.sharePassword.statusActive')}
-      </Badge>
-    );
+    return <Badge variant="success">{t('pages.sharePassword.statusActive')}</Badge>;
   };
 
   const selectedTtlLabel =
@@ -246,326 +234,304 @@ export function SharePasswordModal({
   const progressValue = ((step + 1) / STEPS.length) * 100;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px]">
+    // Abre só com membros e links carregados (§7), sem "Carregando…" dentro do modal.
+    <Dialog
+      open={open && !isLoadingTokens && !isLoadingMembers}
+      onOpenChange={onOpenChange}
+    >
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle className="gap-sm flex items-center">
-            <Share2 className="h-5 w-5" />
+          <DialogTitle icon={Share2}>
             {t('pages.sharePassword.title')}
+            {password && ` · ${password.title}`}
           </DialogTitle>
-          <DialogDescription>
-            {password?.title} — {t('pages.sharePassword.description')}
-          </DialogDescription>
+          <DialogDescription>{t('pages.sharePassword.description')}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-md">
-          <div className="space-y-xs">
-            <div className="text-muted-foreground flex justify-between text-xs">
-              {STEPS.map((key, i) => (
-                <span
-                  key={key}
-                  className={cn(
-                    'transition-colors',
-                    i === step ? 'text-foreground font-semibold' : ''
-                  )}
-                >
-                  {i + 1}. {t(`pages.sharePassword.${key}`)}
-                </span>
-              ))}
+        <div className="gap-lg grid md:grid-cols-2">
+          <div className="space-y-md">
+            <div className="space-y-xs">
+              <div className="text-muted-foreground flex justify-between text-xs">
+                {STEPS.map((key, i) => (
+                  <span
+                    key={key}
+                    className={cn(
+                      'transition-colors',
+                      i === step ? 'text-foreground font-semibold' : ''
+                    )}
+                  >
+                    {i + 1}. {t(`pages.sharePassword.${key}`)}
+                  </span>
+                ))}
+              </div>
+              <Progress value={progressValue} className="h-1.5" />
             </div>
-            <Progress value={progressValue} className="h-1.5" />
-          </div>
 
-          <div className="relative min-h-[280px] overflow-hidden">
-            <AnimatePresence initial={false} custom={direction} mode="wait">
-              <motion.div
-                key={step}
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-              >
-                {step === 0 && (
-                  <div className="space-y-sm">
-                    <p className="text-muted-foreground text-sm">
-                      {t('pages.sharePassword.step1Desc')}
-                    </p>
-                    <SearchInput
-                      value={memberSearch}
-                      onValueChange={setMemberSearch}
-                      placeholder={t('pages.sharePassword.searchMembers')}
-                    />
-                    <div className="rounded-lg border">
-                      {isLoadingMembers ? (
-                        <div className="py-md flex justify-center">
-                          <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-                        </div>
-                      ) : filteredMembers.length === 0 ? (
-                        <p className="py-md text-muted-foreground text-center text-sm">
-                          {t('pages.sharePassword.noMembers')}
-                        </p>
-                      ) : (
-                        <PaginatedSlide
-                          key={memberSearch}
-                          items={filteredMembers}
-                          pageSize={LIST_PAGE_SIZE}
-                          pinNav={false}
-                        >
-                          {(pageMembers) =>
-                            pageMembers.map((member) => (
-                              <button
-                                key={member.id}
-                                type="button"
-                                className={cn(
-                                  'gap-sm px-md py-sm hover:bg-accent/50 flex w-full items-center text-left transition-colors',
-                                  selectedMember?.id === member.id && 'bg-primary/10'
-                                )}
-                                onClick={() => setSelectedMember(member)}
-                              >
-                                <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-                                  <User className="text-muted-foreground h-4 w-4" />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="truncate text-sm font-medium">
-                                    {member.name}
-                                  </p>
-                                  {member.email && (
-                                    <p className="text-muted-foreground truncate text-xs">
-                                      {member.email}
-                                    </p>
+            <div className="overflow-hidden">
+              <AnimatePresence initial={false} custom={direction} mode="wait">
+                <motion.div
+                  key={step}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                >
+                  {step === 0 && (
+                    <div className="space-y-sm">
+                      <SearchInput
+                        value={memberSearch}
+                        onValueChange={setMemberSearch}
+                        placeholder={t('pages.sharePassword.searchMembers')}
+                      />
+                      <div className="rounded-lg border">
+                        {filteredMembers.length === 0 ? (
+                          <EmptyState title={t('pages.sharePassword.noMembers')} />
+                        ) : (
+                          <PaginatedSlide
+                            key={memberSearch}
+                            items={filteredMembers}
+                            pageSize={LIST_PAGE_SIZE}
+                            pinNav={false}
+                          >
+                            {(pageMembers) =>
+                              pageMembers.map((member) => (
+                                <button
+                                  key={member.id}
+                                  type="button"
+                                  className={cn(
+                                    'gap-sm px-md py-sm hover:bg-accent/50 flex w-full items-center text-left transition-colors',
+                                    selectedMember?.id === member.id && 'bg-primary/10'
                                   )}
-                                </div>
-                                {selectedMember?.id === member.id && (
-                                  <Check className="text-primary h-4 w-4 shrink-0" />
-                                )}
-                              </button>
-                            ))
-                          }
-                        </PaginatedSlide>
+                                  onClick={() => setSelectedMember(member)}
+                                >
+                                  <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+                                    <User className="text-muted-foreground h-4 w-4" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium">
+                                      {member.name}
+                                    </p>
+                                    {member.email && (
+                                      <p className="text-muted-foreground truncate text-xs">
+                                        {member.email}
+                                      </p>
+                                    )}
+                                  </div>
+                                  {selectedMember?.id === member.id && (
+                                    <Check className="text-primary h-4 w-4 shrink-0" />
+                                  )}
+                                </button>
+                              ))
+                            }
+                          </PaginatedSlide>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 1 && (
+                    <div className="space-y-md">
+                      <div className="space-y-sm">
+                        <Label className="gap-xs flex items-center">
+                          <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                          {t('pages.sharePassword.expiryLabel')}
+                        </Label>
+                        <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
+                          {TTL_OPTIONS.map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              className={cn(
+                                'px-sm py-xs hover:bg-accent/50 rounded-lg border text-sm transition-colors',
+                                ttlHours === opt.value &&
+                                  'border-primary bg-primary/10 text-primary font-medium'
+                              )}
+                              onClick={() => setTtlHours(opt.value)}
+                            >
+                              {t(`pages.sharePassword.${opt.labelKey}`)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-sm">
+                        <Label className="gap-xs flex items-center" htmlFor="max-uses">
+                          <Hash className="text-muted-foreground h-3.5 w-3.5" />
+                          {t('pages.sharePassword.maxUsesLabel')}
+                        </Label>
+                        <Select value={maxUses} onValueChange={setMaxUses}>
+                          <SelectTrigger id="max-uses">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MAX_USES_OPTIONS.map((n) => (
+                              <SelectItem key={n} value={String(n)}>
+                                {n}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="bg-muted/30 p-md rounded-lg border">
+                        <p className="mb-xs text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                          {t('pages.sharePassword.previewLabel')}
+                        </p>
+                        <p className="text-sm font-medium">{password?.title}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {password?.username}
+                        </p>
+                        <p className="mt-xs text-muted-foreground text-sm">••••••••</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 2 && (
+                    <div className="space-y-md">
+                      <div className="p-md rounded-lg border">
+                        <p className="mb-sm text-sm font-medium">
+                          {t('pages.sharePassword.confirmTitle')}
+                        </p>
+                        <dl className="space-y-sm text-sm">
+                          <div className="flex items-center justify-between">
+                            <dt className="text-muted-foreground">
+                              {t('pages.sharePassword.confirmPassword')}
+                            </dt>
+                            <dd className="font-medium">{password?.title}</dd>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <dt className="text-muted-foreground">
+                              {t('pages.sharePassword.confirmRecipient')}
+                            </dt>
+                            <dd className="font-medium">{selectedMember?.name}</dd>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <dt className="text-muted-foreground">
+                              {t('pages.sharePassword.confirmExpiry')}
+                            </dt>
+                            <dd className="font-medium">
+                              {t(`pages.sharePassword.${selectedTtlLabel}`)}
+                            </dd>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <dt className="text-muted-foreground">
+                              {t('pages.sharePassword.confirmMaxUses')}
+                            </dt>
+                            <dd className="font-medium">{maxUses}</dd>
+                          </div>
+                        </dl>
+                      </div>
+
+                      {newShareUrl && (
+                        <div className="border-warning/40 bg-warning/10 p-sm rounded-md border text-sm">
+                          <p className="mb-sm text-warning font-medium">
+                            {t('pages.sharePassword.copyNowWarning')}
+                          </p>
+                          <div className="gap-sm flex items-center">
+                            <code className="bg-muted px-sm py-xs min-w-0 flex-1 rounded text-xs break-all">
+                              {newShareUrl}
+                            </code>
+                            <Button
+                              aria-label={t('common.actions.copy')}
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCopyNewLink}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
                       )}
                     </div>
-                  </div>
-                )}
-
-                {step === 1 && (
-                  <div className="space-y-md">
-                    <p className="text-muted-foreground text-sm">
-                      {t('pages.sharePassword.step2Desc')}
-                    </p>
-
-                    <div className="space-y-sm">
-                      <Label className="gap-xs flex items-center">
-                        <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
-                        {t('pages.sharePassword.expiryLabel')}
-                      </Label>
-                      <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
-                        {TTL_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            className={cn(
-                              'px-sm py-xs hover:bg-accent/50 rounded-lg border text-sm transition-colors',
-                              ttlHours === opt.value &&
-                                'border-primary bg-primary/10 text-primary font-medium'
-                            )}
-                            onClick={() => setTtlHours(opt.value)}
-                          >
-                            {t(`pages.sharePassword.${opt.labelKey}`)}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-sm">
-                      <Label className="gap-xs flex items-center" htmlFor="max-uses">
-                        <Hash className="text-muted-foreground h-3.5 w-3.5" />
-                        {t('pages.sharePassword.maxUsesLabel')}
-                      </Label>
-                      <Select value={maxUses} onValueChange={setMaxUses}>
-                        <SelectTrigger id="max-uses">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {MAX_USES_OPTIONS.map((n) => (
-                            <SelectItem key={n} value={String(n)}>
-                              {n}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="bg-muted/30 p-md rounded-lg border">
-                      <p className="mb-xs text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                        {t('pages.sharePassword.previewLabel')}
-                      </p>
-                      <p className="text-sm font-medium">{password?.title}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {password?.username}
-                      </p>
-                      <p className="mt-xs text-muted-foreground text-sm">••••••••</p>
-                    </div>
-                  </div>
-                )}
-
-                {step === 2 && (
-                  <div className="space-y-md">
-                    <p className="text-muted-foreground text-sm">
-                      {t('pages.sharePassword.step3Desc')}
-                    </p>
-
-                    <div className="p-md rounded-lg border">
-                      <p className="mb-sm text-sm font-medium">
-                        {t('pages.sharePassword.confirmTitle')}
-                      </p>
-                      <dl className="space-y-sm text-sm">
-                        <div className="flex items-center justify-between">
-                          <dt className="text-muted-foreground">
-                            {t('pages.sharePassword.confirmPassword')}
-                          </dt>
-                          <dd className="font-medium">{password?.title}</dd>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <dt className="text-muted-foreground">
-                            {t('pages.sharePassword.confirmRecipient')}
-                          </dt>
-                          <dd className="font-medium">{selectedMember?.name}</dd>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <dt className="text-muted-foreground">
-                            {t('pages.sharePassword.confirmExpiry')}
-                          </dt>
-                          <dd className="font-medium">
-                            {t(`pages.sharePassword.${selectedTtlLabel}`)}
-                          </dd>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <dt className="text-muted-foreground">
-                            {t('pages.sharePassword.confirmMaxUses')}
-                          </dt>
-                          <dd className="font-medium">{maxUses}</dd>
-                        </div>
-                      </dl>
-                    </div>
-
-                    {newShareUrl && (
-                      <div className="rounded-md border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm">
-                        <p className="mb-sm font-medium text-yellow-600 dark:text-yellow-400">
-                          {t('pages.sharePassword.copyNowWarning')}
-                        </p>
-                        <div className="gap-sm flex items-center">
-                          <code className="bg-muted px-sm py-xs min-w-0 flex-1 rounded text-xs break-all">
-                            {newShareUrl}
-                          </code>
-                          <Button
-                            aria-label={t('common.actions.copy')}
-                            size="sm"
-                            variant="outline"
-                            onClick={handleCopyNewLink}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
 
-          <div className="dialog-footer gap-sm pt-md flex justify-between border-t">
-            {step > 0 ? (
+          <div className="space-y-sm">
+            <p className="gap-xs flex items-center text-sm font-medium">
+              <Link2 className="text-muted-foreground h-4 w-4" />
+              {t('pages.sharePassword.existingLinks')}
+            </p>
+
+            {tokens.length === 0 ? (
+              <EmptyState title={t('pages.sharePassword.noLinks')} />
+            ) : (
+              <PaginatedSlide
+                items={tokens}
+                pageSize={LIST_PAGE_SIZE}
+                pinNav={false}
+                className="space-y-sm"
+              >
+                {(pageTokens) =>
+                  pageTokens.map((token) => (
+                    <div
+                      key={token.id}
+                      className="flex items-center justify-between rounded-lg border p-3 text-sm"
+                    >
+                      <div className="space-y-xs min-w-0 flex-1">
+                        <div className="gap-sm flex items-center">
+                          {getTokenBadge(token)}
+                          <span className="text-muted-foreground text-xs">
+                            {token.use_count}/{token.max_uses}{' '}
+                            {t('pages.sharePassword.uses')}
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground text-xs">
+                          {t('pages.sharePassword.expiresAt')}{' '}
+                          {formatDate(token.expires_at, 'dd/MM/yyyy HH:mm')}
+                        </p>
+                      </div>
+                      <div className="ml-sm gap-xs flex shrink-0">
+                        {!token.is_revoked && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => void handleRevoke(token.id)}
+                            aria-label={t('pages.sharePassword.revokeBtn')}
+                            className="text-destructive hover:text-destructive h-7 w-7"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                }
+              </PaginatedSlide>
+            )}
+          </div>
+        </div>
+
+        {newShareUrl ? (
+          <DialogCloseFooter />
+        ) : (
+          <DialogFooter className="gap-sm">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              <X />
+              {t('common.actions.cancel')}
+            </Button>
+            {step > 0 && (
               <Button variant="outline" onClick={goBack} disabled={isCreating}>
-                <ArrowLeft className="h-4 w-4" />
+                <ChevronLeft />
                 {t('pages.sharePassword.backBtn')}
               </Button>
-            ) : (
-              <div />
             )}
             {step < 2 ? (
               <Button onClick={goNext}>
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight />
                 {t('pages.sharePassword.nextBtn')}
               </Button>
             ) : (
-              <Button
-                onClick={() => void handleCreate()}
-                disabled={isCreating || !!newShareUrl}
-              >
-                {isCreating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    {t('common.actions.saving')}
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="h-4 w-4" />
-                    {t('pages.sharePassword.confirmBtn')}
-                  </>
-                )}
+              <Button onClick={() => void handleCreate()} loading={isCreating}>
+                {!isCreating && <Share2 />}
+                {t('pages.sharePassword.confirmBtn')}
               </Button>
             )}
-          </div>
-        </div>
-
-        <div className="space-y-sm pt-md pb-lg border-t">
-          <p className="text-sm font-medium">
-            {t('pages.sharePassword.existingLinks')}
-          </p>
-
-          {isLoadingTokens ? (
-            <div className="py-md flex justify-center">
-              <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-            </div>
-          ) : tokens.length === 0 ? (
-            <EmptyState title={t('pages.sharePassword.noLinks')} />
-          ) : (
-            <PaginatedSlide
-              items={tokens}
-              pageSize={LIST_PAGE_SIZE}
-              pinNav={false}
-              className="space-y-sm"
-            >
-              {(pageTokens) =>
-                pageTokens.map((token) => (
-                  <div
-                    key={token.id}
-                    className="flex items-center justify-between rounded-lg border p-3 text-sm"
-                  >
-                    <div className="space-y-xs min-w-0 flex-1">
-                      <div className="gap-sm flex items-center">
-                        {getTokenBadge(token)}
-                        <span className="text-muted-foreground text-xs">
-                          {token.use_count}/{token.max_uses}{' '}
-                          {t('pages.sharePassword.uses')}
-                        </span>
-                      </div>
-                      <p className="text-muted-foreground text-xs">
-                        {t('pages.sharePassword.expiresAt')}{' '}
-                        {formatDate(token.expires_at, 'dd/MM/yyyy HH:mm')}
-                      </p>
-                    </div>
-                    <div className="ml-sm gap-xs flex shrink-0">
-                      {!token.is_revoked && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => void handleRevoke(token.id)}
-                          title={t('pages.sharePassword.revokeBtn')}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              }
-            </PaginatedSlide>
-          )}
-        </div>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

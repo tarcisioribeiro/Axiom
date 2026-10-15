@@ -273,7 +273,7 @@ export default function NetWorthTracker({
         />
       </div>
 
-      <div className="mt-md gap-md grid grid-cols-1 lg:grid-cols-2">
+      <div className="mt-md gap-md grid grid-cols-1 lg:grid-cols-3">
         <Card>
           <CardHeader className="pb-sm">
             <CardTitle as="h2">
@@ -296,146 +296,144 @@ export default function NetWorthTracker({
           </CardContent>
         </Card>
 
-        <div className="space-y-md">
-          <Card>
-            <CardHeader className="pb-sm">
+        <Card>
+          <CardHeader className="pb-sm">
+            <div className="gap-sm flex items-center">
+              <TrendingUp className="text-success h-4 w-4" />
+              <CardTitle as="h3" className="text-base">
+                {t('netWorth.assetsSection')}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-sm">
+            <div className="bg-success/5 p-sm flex items-center justify-between rounded-lg">
               <div className="gap-sm flex items-center">
-                <TrendingUp className="text-success h-4 w-4" />
-                <CardTitle as="h3" className="text-base">
-                  {t('netWorth.assetsSection')}
-                </CardTitle>
+                <Wallet className="text-success h-4 w-4" />
+                <span className="text-sm">{t('netWorth.bankAccounts')}</span>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-sm">
-              <div className="bg-success/5 p-sm flex items-center justify-between rounded-lg">
-                <div className="gap-sm flex items-center">
-                  <Wallet className="text-success h-4 w-4" />
-                  <span className="text-sm">{t('netWorth.bankAccounts')}</span>
-                </div>
-                <span className="text-success font-semibold">
-                  {formatCurrency(totalBankAssets)}
+              <span className="text-success font-semibold">
+                {formatCurrency(totalBankAssets)}
+              </span>
+            </div>
+            {positiveAccounts.map((a) => (
+              <div
+                key={a.id}
+                className="px-sm text-muted-foreground flex items-center justify-between text-xs"
+              >
+                <span>{a.account_name}</span>
+                <span className="text-success font-medium">
+                  {formatCurrency(parseFloat(a.available_balance ?? a.balance))}
                 </span>
               </div>
-              {positiveAccounts.map((a) => (
+            ))}
+            {totalVaultAssets > 0 && (
+              <div className="p-sm bg-info/5 flex items-center justify-between rounded-lg">
+                <div className="gap-sm flex items-center">
+                  <VaultIcon className="text-info h-4 w-4" />
+                  <span className="text-sm">{t('netWorth.vaults')}</span>
+                </div>
+                <span className="text-info font-semibold">
+                  {formatCurrency(totalVaultAssets)}
+                </span>
+              </div>
+            )}
+            {totalLentLoanAssets > 0 && (
+              <div className="p-sm bg-category-studies/5 flex items-center justify-between rounded-lg">
+                <div className="gap-sm flex items-center">
+                  <HandCoins className="text-category-studies h-4 w-4" />
+                  <span className="text-sm">{t('netWorth.lentLoans')}</span>
+                </div>
+                <span className="text-category-studies font-semibold">
+                  {formatCurrency(totalLentLoanAssets)}
+                </span>
+              </div>
+            )}
+            {totalReceivableAssets > 0 && (
+              <div className="p-sm bg-success/5 flex items-center justify-between rounded-lg">
+                <div className="gap-sm flex items-center">
+                  <ReceivableIcon className="text-success h-4 w-4" />
+                  <span className="text-sm">{t('netWorth.receivables')}</span>
+                </div>
+                <span className="text-success font-semibold">
+                  {formatCurrency(totalReceivableAssets)}
+                </span>
+              </div>
+            )}
+            {totalAssets === 0 && <EmptyState title={t('netWorth.noAssets')} />}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-sm">
+            <div className="gap-sm flex items-center">
+              <TrendingDown className="text-destructive h-4 w-4" />
+              <CardTitle as="h3" className="text-base">
+                {t('netWorth.liabilitiesSection')}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-sm">
+            {totalLoanLiabilities > 0 && (
+              <div className="bg-destructive/5 p-sm flex items-center justify-between rounded-lg">
+                <div className="gap-sm flex items-center">
+                  <HandCoins className="text-destructive h-4 w-4" />
+                  <span className="text-sm">{t('netWorth.loans')}</span>
+                </div>
+                <span className="text-destructive font-semibold">
+                  {formatCurrency(totalLoanLiabilities)}
+                </span>
+              </div>
+            )}
+            {totalPayableLiabilities > 0 && (
+              <div className="bg-destructive/5 p-sm flex items-center justify-between rounded-lg">
+                <div className="gap-sm flex items-center">
+                  <PayableIcon className="text-destructive h-4 w-4" />
+                  <span className="text-sm">{t('netWorth.payables')}</span>
+                </div>
+                <span className="text-destructive font-semibold">
+                  {formatCurrency(totalPayableLiabilities)}
+                </span>
+              </div>
+            )}
+            {totalCreditCardLiabilities > 0 && (
+              <div className="p-sm bg-warning/5 flex items-center justify-between rounded-lg">
+                <div className="gap-sm flex items-center">
+                  <CreditCard className="text-warning h-4 w-4" />
+                  <span className="text-sm">{t('netWorth.creditCards')}</span>
+                </div>
+                <span className="text-warning font-semibold">
+                  {formatCurrency(totalCreditCardLiabilities)}
+                </span>
+              </div>
+            )}
+            {totalOverdraftLiabilities > 0 && (
+              <div className="bg-destructive/5 p-sm flex items-center justify-between rounded-lg">
+                <div className="gap-sm flex items-center">
+                  <AlertTriangle className="text-destructive h-4 w-4" />
+                  <span className="text-sm">{t('netWorth.overdraft')}</span>
+                </div>
+                <span className="text-destructive font-semibold">
+                  {formatCurrency(totalOverdraftLiabilities)}
+                </span>
+              </div>
+            )}
+            {totalOverdraftLiabilities > 0 &&
+              overdraftAccounts.map((a) => (
                 <div
                   key={a.id}
                   className="px-sm text-muted-foreground flex items-center justify-between text-xs"
                 >
                   <span>{a.account_name}</span>
-                  <span className="text-success font-medium">
+                  <span className="text-destructive font-medium">
                     {formatCurrency(parseFloat(a.available_balance ?? a.balance))}
                   </span>
                 </div>
               ))}
-              {totalVaultAssets > 0 && (
-                <div className="p-sm flex items-center justify-between rounded-lg bg-blue-500/5">
-                  <div className="gap-sm flex items-center">
-                    <VaultIcon className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm">{t('netWorth.vaults')}</span>
-                  </div>
-                  <span className="font-semibold text-blue-500">
-                    {formatCurrency(totalVaultAssets)}
-                  </span>
-                </div>
-              )}
-              {totalLentLoanAssets > 0 && (
-                <div className="p-sm flex items-center justify-between rounded-lg bg-teal-500/5">
-                  <div className="gap-sm flex items-center">
-                    <HandCoins className="h-4 w-4 text-teal-500" />
-                    <span className="text-sm">{t('netWorth.lentLoans')}</span>
-                  </div>
-                  <span className="font-semibold text-teal-500">
-                    {formatCurrency(totalLentLoanAssets)}
-                  </span>
-                </div>
-              )}
-              {totalReceivableAssets > 0 && (
-                <div className="p-sm flex items-center justify-between rounded-lg bg-emerald-500/5">
-                  <div className="gap-sm flex items-center">
-                    <ReceivableIcon className="h-4 w-4 text-emerald-500" />
-                    <span className="text-sm">{t('netWorth.receivables')}</span>
-                  </div>
-                  <span className="font-semibold text-emerald-500">
-                    {formatCurrency(totalReceivableAssets)}
-                  </span>
-                </div>
-              )}
-              {totalAssets === 0 && <EmptyState title={t('netWorth.noAssets')} />}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-sm">
-              <div className="gap-sm flex items-center">
-                <TrendingDown className="text-destructive h-4 w-4" />
-                <CardTitle as="h3" className="text-base">
-                  {t('netWorth.liabilitiesSection')}
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-sm">
-              {totalLoanLiabilities > 0 && (
-                <div className="bg-destructive/5 p-sm flex items-center justify-between rounded-lg">
-                  <div className="gap-sm flex items-center">
-                    <HandCoins className="text-destructive h-4 w-4" />
-                    <span className="text-sm">{t('netWorth.loans')}</span>
-                  </div>
-                  <span className="text-destructive font-semibold">
-                    {formatCurrency(totalLoanLiabilities)}
-                  </span>
-                </div>
-              )}
-              {totalPayableLiabilities > 0 && (
-                <div className="bg-destructive/5 p-sm flex items-center justify-between rounded-lg">
-                  <div className="gap-sm flex items-center">
-                    <PayableIcon className="text-destructive h-4 w-4" />
-                    <span className="text-sm">{t('netWorth.payables')}</span>
-                  </div>
-                  <span className="text-destructive font-semibold">
-                    {formatCurrency(totalPayableLiabilities)}
-                  </span>
-                </div>
-              )}
-              {totalCreditCardLiabilities > 0 && (
-                <div className="p-sm flex items-center justify-between rounded-lg bg-orange-500/5">
-                  <div className="gap-sm flex items-center">
-                    <CreditCard className="h-4 w-4 text-orange-500" />
-                    <span className="text-sm">{t('netWorth.creditCards')}</span>
-                  </div>
-                  <span className="font-semibold text-orange-500">
-                    {formatCurrency(totalCreditCardLiabilities)}
-                  </span>
-                </div>
-              )}
-              {totalOverdraftLiabilities > 0 && (
-                <div className="bg-destructive/5 p-sm flex items-center justify-between rounded-lg">
-                  <div className="gap-sm flex items-center">
-                    <AlertTriangle className="text-destructive h-4 w-4" />
-                    <span className="text-sm">{t('netWorth.overdraft')}</span>
-                  </div>
-                  <span className="text-destructive font-semibold">
-                    {formatCurrency(totalOverdraftLiabilities)}
-                  </span>
-                </div>
-              )}
-              {totalOverdraftLiabilities > 0 &&
-                overdraftAccounts.map((a) => (
-                  <div
-                    key={a.id}
-                    className="px-sm text-muted-foreground flex items-center justify-between text-xs"
-                  >
-                    <span>{a.account_name}</span>
-                    <span className="text-destructive font-medium">
-                      {formatCurrency(parseFloat(a.available_balance ?? a.balance))}
-                    </span>
-                  </div>
-                ))}
-              {totalLiabilities === 0 && (
-                <EmptyState title={t('netWorth.noLiabilities')} />
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            {totalLiabilities === 0 && (
+              <EmptyState title={t('netWorth.noLiabilities')} />
+            )}
+          </CardContent>
+        </Card>
       </div>
     </Wrapper>
   );

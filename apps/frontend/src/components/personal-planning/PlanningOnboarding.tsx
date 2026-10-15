@@ -5,9 +5,8 @@ import {
   BookOpen,
   Calendar,
   CheckCircle2,
+  ChevronLeft,
   Dumbbell,
-  Loader2,
-  SkipForward,
   Sparkles,
   Target,
   X,
@@ -15,9 +14,20 @@ import {
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { LoadingState } from '@/components/common/LoadingState';
 import { Button } from '@/components/ui/button';
-import { PlainButton } from '@/components/ui/plain-button';
+import {
+  Dialog,
+  DialogCloseFooter,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ONBOARDING_KEY } from '@/hooks/use-planning-onboarding';
+import { slideVariants } from '@/lib/animations';
+import { cn } from '@/lib/utils';
 import { routineTemplatesService } from '@/services/routine-templates-service';
 import type { RoutineTemplate } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -84,235 +94,190 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
   };
 
   const TOTAL_STEPS = 3;
+  const isLastStep = step === TOTAL_STEPS - 1;
+
+  // Direção da troca de etapa: avança para a esquerda, volta para a direita
+  const [direction, setDirection] = useState(1);
+  const goToStep = (next: number) => {
+    setDirection(next > step ? 1 : -1);
+    setStep(next);
+  };
+
+  const header = importSuccess
+    ? { icon: CheckCircle2, title: t('pages.planningOnboarding.step2.success') }
+    : [
+        { icon: Sparkles, title: t('pages.planningOnboarding.step0.title') },
+        { icon: Target, title: t('pages.planningOnboarding.step1.title') },
+        { icon: CheckCircle2, title: t('pages.planningOnboarding.step2.title') },
+      ][step];
 
   return (
-    <motion.div
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-    >
-      <motion.div
-        key={step}
-        initial={{ scale: 0.92, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.92, opacity: 0 }}
-        className="mx-md border-border bg-card p-xl relative w-full max-w-lg rounded-2xl border shadow-2xl"
-      >
-        <PlainButton
-          onClick={handleSkip}
-          className="right-md top-md text-muted-foreground hover:text-foreground absolute"
-          aria-label={t('common.actions.close')}
-        >
-          <X className="h-4 w-4" />
-        </PlainButton>
+    <Dialog open onOpenChange={(open) => !open && handleSkip()}>
+      <DialogContent size="md">
+        <DialogHeader>
+          <DialogTitle icon={header.icon}>{header.title}</DialogTitle>
+          <DialogDescription>{header.title}</DialogDescription>
+        </DialogHeader>
 
-        {/* Step 0: Welcome */}
-        {step === 0 && (
-          <div className="text-center">
-            <div className="mb-md bg-primary/10 text-primary mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
-              <Sparkles className="h-8 w-8" />
-            </div>
-            <h2 className="heading-2 text-foreground">
-              {t('pages.planningOnboarding.step0.title')}
-            </h2>
-            <p className="mt-sm text-muted-foreground text-sm">
-              {t('pages.planningOnboarding.step0.desc')}
-            </p>
-          </div>
-        )}
+        <div className="overflow-hidden">
+          <AnimatePresence mode="wait" initial={false} custom={direction}>
+            <motion.div
+              key={importSuccess ? 'success' : step}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="space-y-md"
+            >
+              {/* Step 0: Welcome */}
+              {step === 0 && (
+                <p className="text-muted-foreground text-sm">
+                  {t('pages.planningOnboarding.step0.desc')}
+                </p>
+              )}
 
-        {/* Step 1: Choose template */}
-        {step === 1 && (
-          <div>
-            <div className="mb-md text-center">
-              <div className="mb-md bg-info/10 text-info mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
-                <Target className="h-8 w-8" />
-              </div>
-              <h2 className="heading-2 text-foreground">
-                {t('pages.planningOnboarding.step1.title', {
-                  defaultValue: 'Escolha uma rotina inicial',
-                })}
-              </h2>
-              <p className="mt-sm text-muted-foreground text-sm">
-                {t('pages.planningOnboarding.step1.desc', {
-                  defaultValue:
-                    'Selecione um template para começar. Você pode personalizar depois.',
-                })}
-              </p>
-            </div>
-            {isLoadingTemplates ? (
-              <div className="py-lg flex items-center justify-center">
-                <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-              </div>
-            ) : (
-              <div className="space-y-sm">
-                {templates.map((template) => {
-                  const Icon = TEMPLATE_ICONS[template.id] ?? CheckCircle2;
-                  const isSelected = selectedTemplateId === template.id;
-                  return (
-                    <button
-                      key={template.id}
-                      onClick={() =>
-                        setSelectedTemplateId(isSelected ? null : template.id)
-                      }
-                      className={`p-md w-full rounded-xl border-2 text-left transition-colors ${
-                        isSelected
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border bg-card hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="gap-sm flex items-start">
-                        <div
-                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+              {/* Step 1: Choose template */}
+              {step === 1 &&
+                (isLoadingTemplates ? (
+                  <LoadingState />
+                ) : (
+                  <div className="space-y-sm">
+                    {templates.map((template) => {
+                      const Icon = TEMPLATE_ICONS[template.id] ?? CheckCircle2;
+                      const isSelected = selectedTemplateId === template.id;
+                      return (
+                        <button
+                          key={template.id}
+                          type="button"
+                          aria-pressed={isSelected}
+                          onClick={() =>
+                            setSelectedTemplateId(isSelected ? null : template.id)
+                          }
+                          className={cn(
+                            'p-md w-full rounded-lg border text-left transition-colors',
                             isSelected
-                              ? 'bg-primary/10 text-primary'
-                              : 'bg-muted text-muted-foreground'
-                          }`}
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border bg-card hover:border-primary/50'
+                          )}
                         >
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-semibold">{template.name}</p>
-                          <p className="mt-xs text-muted-foreground line-clamp-2 text-xs">
-                            {template.description}
-                          </p>
-                          <p className="mt-xs text-primary text-xs">
-                            {t('pages.routineTemplates.taskCount', {
-                              count: template.task_count,
-                              defaultValue: `${template.task_count} tarefas`,
-                            })}
-                          </p>
-                        </div>
-                        {isSelected && (
-                          <CheckCircle2 className="text-primary h-5 w-5 shrink-0" />
-                        )}
-                      </div>
+                          <div className="gap-sm flex items-start">
+                            <div
+                              className={cn(
+                                'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+                                isSelected
+                                  ? 'bg-primary/10 text-primary'
+                                  : 'bg-muted text-muted-foreground'
+                              )}
+                            >
+                              <Icon className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold">{template.name}</p>
+                              <p className="mt-xs text-muted-foreground line-clamp-2 text-xs">
+                                {template.description}
+                              </p>
+                              <p className="mt-xs text-primary text-xs">
+                                {t('pages.routineTemplates.taskCount', {
+                                  count: template.task_count,
+                                  defaultValue: `${template.task_count} tarefas`,
+                                })}
+                              </p>
+                            </div>
+                            {isSelected && (
+                              <CheckCircle2 className="text-primary h-5 w-5 shrink-0" />
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      aria-pressed={selectedTemplateId === null}
+                      onClick={() => setSelectedTemplateId(null)}
+                      className={cn(
+                        'p-md text-muted-foreground w-full rounded-lg border text-left text-sm transition-colors',
+                        selectedTemplateId === null
+                          ? 'border-muted-foreground bg-muted/30'
+                          : 'border-border hover:border-muted-foreground/50'
+                      )}
+                    >
+                      {t('pages.planningOnboarding.skipTemplate')}
                     </button>
-                  );
-                })}
-                <button
-                  onClick={() => setSelectedTemplateId(null)}
-                  className={`p-md text-muted-foreground w-full rounded-xl border-2 text-left text-sm transition-colors ${
-                    selectedTemplateId === null
-                      ? 'border-muted-foreground bg-muted/30'
-                      : 'border-border hover:border-muted-foreground/50'
-                  }`}
-                >
-                  {t('pages.planningOnboarding.skipTemplate', {
-                    defaultValue: 'Começar sem template — criar manualmente',
-                  })}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+                  </div>
+                ))}
 
-        {/* Step 2: Confirm */}
-        {step === 2 && (
-          <div className="text-center">
-            <AnimatePresence mode="wait">
-              {importSuccess ? (
-                <motion.div
-                  key="success"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="py-md"
-                >
-                  <div className="mb-md bg-success/10 text-success mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
-                    <CheckCircle2 className="h-8 w-8" />
-                  </div>
-                  <h2 className="heading-2 text-foreground">
-                    {t('pages.planningOnboarding.step2.success', {
-                      defaultValue: 'Rotina criada com sucesso!',
-                    })}
-                  </h2>
-                  <p className="mt-sm text-muted-foreground text-sm">
-                    {t('pages.planningOnboarding.step2.successDesc', {
-                      defaultValue: 'Suas tarefas estão prontas. Bom planejamento!',
-                    })}
-                  </p>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="confirm"
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: 1 }}
-                >
-                  <div className="mb-md bg-success/10 text-success mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
-                    <CheckCircle2 className="h-8 w-8" />
-                  </div>
-                  <h2 className="heading-2 text-foreground">
-                    {t('pages.planningOnboarding.step2.title', {
-                      defaultValue: 'Tudo pronto!',
-                    })}
-                  </h2>
-                  <p className="mt-sm text-muted-foreground text-sm">
-                    {selectedTemplateId
-                      ? t('pages.planningOnboarding.step2.descWithTemplate', {
-                          defaultValue:
-                            'Clique em Começar para importar o template e iniciar sua jornada.',
-                        })
-                      : t('pages.planningOnboarding.step2.descWithout', {
-                          defaultValue:
-                            'Você pode criar suas primeiras tarefas manualmente quando quiser.',
-                        })}
+              {/* Step 2: Confirm / result */}
+              {isLastStep && (
+                <>
+                  <p className="text-muted-foreground text-sm">
+                    {importSuccess
+                      ? t('pages.planningOnboarding.step2.successDesc')
+                      : selectedTemplateId
+                        ? t('pages.planningOnboarding.step2.descWithTemplate')
+                        : t('pages.planningOnboarding.step2.descWithout')}
                   </p>
                   {importError && (
-                    <p className="mt-sm text-destructive text-sm">{importError}</p>
+                    <p className="text-destructive text-sm">{importError}</p>
                   )}
-                </motion.div>
+                </>
               )}
-            </AnimatePresence>
-          </div>
+
+              {/* Step dots */}
+              {!importSuccess && (
+                <div className="gap-xs flex justify-center">
+                  {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+                    <span
+                      key={i}
+                      className={cn(
+                        'h-1.5 rounded-full transition-[width,background-color]',
+                        i === step ? 'bg-primary w-6' : 'bg-muted w-1.5'
+                      )}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {importSuccess ? (
+          <DialogCloseFooter />
+        ) : (
+          <DialogFooter className="gap-sm">
+            <Button variant="outline" onClick={handleSkip}>
+              <X className="h-4 w-4" />
+              {t('common.actions.cancel')}
+            </Button>
+            {step > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => goToStep(step - 1)}
+                disabled={isImporting}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                {t('common.actions.back')}
+              </Button>
+            )}
+            {isLastStep ? (
+              <Button
+                onClick={() => void handleImportAndFinish()}
+                loading={isImporting}
+              >
+                {!isImporting && <ArrowRight className="h-4 w-4" />}
+                {isImporting
+                  ? t('pages.planningOnboarding.importing')
+                  : t('pages.planningOnboarding.start')}
+              </Button>
+            ) : (
+              <Button onClick={() => goToStep(step + 1)}>
+                <ArrowRight className="h-4 w-4" />
+                {t('pages.planningOnboarding.next')}
+              </Button>
+            )}
+          </DialogFooter>
         )}
-
-        {/* Step dots */}
-        <div className="my-lg gap-xs flex justify-center">
-          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-            <span
-              key={i}
-              className={`h-1.5 rounded-full transition-[width,background-color] ${
-                i === step ? 'bg-primary w-6' : 'bg-muted w-1.5'
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* Actions */}
-        <div className="gap-sm flex">
-          {step < TOTAL_STEPS - 1 && (
-            <Button variant="ghost" size="sm" onClick={handleSkip} className="flex-1">
-              <SkipForward aria-hidden="true" />
-              {t('pages.planningOnboarding.skip')}
-            </Button>
-          )}
-          {step < TOTAL_STEPS - 1 ? (
-            <Button onClick={() => setStep((s) => s + 1)} className="gap-sm flex-1">
-              <ArrowRight className="h-4 w-4" />
-              {t('pages.planningOnboarding.next')}
-            </Button>
-          ) : (
-            <Button
-              onClick={() => void handleImportAndFinish()}
-              className="gap-sm flex-1"
-              disabled={isImporting || importSuccess}
-            >
-              {isImporting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {t('pages.planningOnboarding.importing', {
-                    defaultValue: 'Importando...',
-                  })}
-                </>
-              ) : (
-                <>
-                  <ArrowRight className="h-4 w-4" />
-                  {t('pages.planningOnboarding.start')}
-                </>
-              )}
-            </Button>
-          )}
-        </div>
-      </motion.div>
-    </motion.div>
+      </DialogContent>
+    </Dialog>
   );
 }

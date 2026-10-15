@@ -5,7 +5,6 @@ import {
   FileText,
   Globe,
   ImagePlus,
-  Loader2,
   Save,
   User,
   UserCircle,
@@ -20,7 +19,6 @@ import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NumberStepper } from '@/components/ui/number-stepper';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -137,14 +135,16 @@ export function AuthorForm({
             </div>
           )}
           {photoPreview && (
-            <PlainButton
+            <Button
               type="button"
+              variant="outline"
+              size="icon"
               onClick={handleRemovePhoto}
-              className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full"
+              className="absolute -top-1 -right-1 h-6 w-6 rounded-full"
               aria-label={t('pages.authors.form.removePhoto')}
             >
               <X className="h-3 w-3" />
-            </PlainButton>
+            </Button>
           )}
         </div>
         <div>
@@ -337,13 +337,9 @@ export function AuthorForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
-          {isLoading ? t('common.actions.saving') : t('common.actions.save')}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
+          {t('common.actions.save')}
         </Button>
       </div>
     </form>

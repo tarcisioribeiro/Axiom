@@ -42,6 +42,8 @@ import {
   Zap,
   Landmark,
   Heart,
+  Layers,
+  Sunrise,
 } from 'lucide-react';
 
 import type { IconComponent } from '@/types/icon';
@@ -268,6 +270,11 @@ export const navModules: NavModule[] = [
         icon: Lightbulb,
         items: [
           {
+            titleKey: 'nav.items.intellectToday',
+            href: '/library/intellect-today',
+            icon: Sunrise,
+          },
+          {
             titleKey: 'nav.items.courses',
             href: '/library/courses',
             icon: GraduationCap,
@@ -276,6 +283,11 @@ export const navModules: NavModule[] = [
             titleKey: 'nav.items.skills',
             href: '/library/skills',
             icon: Brain,
+          },
+          {
+            titleKey: 'nav.items.flashcards',
+            href: '/library/flashcards',
+            icon: Layers,
           },
           {
             titleKey: 'nav.items.knowledgeGraph',

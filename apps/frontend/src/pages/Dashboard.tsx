@@ -489,26 +489,23 @@ export default function Dashboard() {
       <PageHeader
         title={`${greeting.text}${displayName ? `, ${displayName}` : ''}`}
         icon={<LayoutDashboard />}
+        actions={
+          financialAlerts.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAlertsModalOpen(true)}
+              className={TOOL_BUTTON_CLASS}
+            >
+              <AlertTriangle className="h-4 w-4" />
+              {t('pages.dashboard.financialAlerts.title')}
+              <Badge variant="destructive" className="ml-xs px-xs h-5 min-w-5 text-xs">
+                {financialAlerts.length}
+              </Badge>
+            </Button>
+          )
+        }
       />
-
-      {/* 2. Alertas (alinhadas à direita) */}
-      <div className="gap-sm flex flex-wrap items-center justify-end">
-        <div className="flex-1" />
-        {financialAlerts.length > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setAlertsModalOpen(true)}
-            className={TOOL_BUTTON_CLASS}
-          >
-            <AlertTriangle className="h-4 w-4" />
-            {t('pages.dashboard.financialAlerts.title')}
-            <Badge variant="destructive" className="ml-xs px-xs h-5 min-w-5 text-xs">
-              {financialAlerts.length}
-            </Badge>
-          </Button>
-        )}
-      </div>
 
       {/* 3. Saúde Financeira (toggle, aberto por padrão) com os cards de resumo à direita */}
       <CollapsibleSection

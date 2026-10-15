@@ -3,7 +3,6 @@ import { CreditCard, Landmark, ShoppingCart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { LoadingState } from '@/components/common/LoadingState';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import {
   Dialog,
@@ -70,7 +69,7 @@ export function BudgetPurchasesDialog({
   const { t } = useTranslation();
   const enabled = open && !!budget;
 
-  const { data: expenses = [], isLoading: loadingExpenses } = useQuery({
+  const { data: expenses = [], isPending: loadingExpenses } = useQuery({
     queryKey: ['expenses', 'budget', budget?.category, budget?.month, budget?.year],
     queryFn: () =>
       expensesService.getAllPages({
@@ -81,7 +80,7 @@ export function BudgetPurchasesDialog({
     enabled,
   });
 
-  const { data: installments = [], isLoading: loadingInstallments } = useQuery({
+  const { data: installments = [], isPending: loadingInstallments } = useQuery({
     queryKey: [
       'credit-card-installments',
       'budget',
@@ -124,7 +123,11 @@ export function BudgetPurchasesDialog({
   const total = rows.reduce((sum, r) => sum + r.value, 0);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    // Abre só com os dados prontos (sem "Carregando…" que faz o modal saltar de tamanho).
+    <Dialog
+      open={open && !loadingExpenses && !loadingInstallments}
+      onOpenChange={onOpenChange}
+    >
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
@@ -137,9 +140,7 @@ export function BudgetPurchasesDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {loadingExpenses || loadingInstallments ? (
-          <LoadingState />
-        ) : rows.length === 0 ? (
+        {rows.length === 0 ? (
           <EmptyState
             icon={<ShoppingCart className="text-muted-foreground h-10 w-10" />}
             title={t('pages.budgets.purchases.empty')}

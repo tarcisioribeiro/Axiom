@@ -8,14 +8,11 @@ import {
   Eye,
   File,
   FileText,
-  Pencil,
   Plus,
   Search,
   Shapes,
   Star,
   Tag,
-  Trash2,
-  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -27,13 +24,15 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
+import { ArchiveDetailModal } from '@/components/security/ArchiveDetailModal';
 import { ArchiveForm } from '@/components/security/ArchiveForm';
 import { VaultGuard } from '@/components/security/VaultGuard';
+import { VaultItemCard } from '@/components/security/VaultItemCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -47,11 +46,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { ARCHIVE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate } from '@/lib/formatters';
+import { formatDate, formatFileSize } from '@/lib/formatters';
 import { cn, copyToClipboard } from '@/lib/utils';
 import { archivesService } from '@/services/archives-service';
 import { membersService } from '@/services/members-service';
@@ -60,7 +58,10 @@ import { getErrorMessage } from '@/utils/error-utils';
 
 const TYPE_CONFIG: Record<string, { icon: string }> = {
   text: { icon: 'bg-info/10 text-info' },
-  file: { icon: 'bg-warning/10 text-warning' },
+  pdf: { icon: 'bg-destructive/10 text-destructive' },
+  image: { icon: 'bg-success/10 text-success' },
+  document: { icon: 'bg-primary/10 text-primary' },
+  other: { icon: 'bg-warning/10 text-warning' },
 };
 
 const ARCHIVE_CATEGORY_KEYS = [
@@ -75,15 +76,15 @@ const ARCHIVE_CATEGORY_KEYS = [
 
 const ARCHIVE_TYPE_KEYS = ['text', 'pdf', 'image', 'document', 'other'] as const;
 
-export default function Archives() {
+function ArchivesContent() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);
   const [selectedArchive, setSelectedArchive] = useState<Archive | undefined>();
+  const [detailArchive, setDetailArchive] = useState<Archive | null>(null);
   const [revealedContent, setRevealedContent] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRevealing, setIsRevealing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -91,7 +92,6 @@ export default function Archives() {
   // #197 — inline preview state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<'image' | 'pdf' | null>(null);
-  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -183,9 +183,14 @@ export default function Archives() {
     const { archive_type: type } = archive;
     if (type !== 'image' && type !== 'pdf') return;
     try {
-      setIsPreviewLoading(true);
       const { url } = await archivesService.getDownloadUrl(archive.id);
       const response = await fetch(url);
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as {
+          detail?: string;
+        } | null;
+        throw new Error(body?.detail ?? response.statusText);
+      }
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
       setPreviewUrl(objectUrl);
@@ -195,8 +200,6 @@ export default function Archives() {
         title: t('pages.archives.downloadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
-    } finally {
-      setIsPreviewLoading(false);
     }
   };
 
@@ -210,7 +213,6 @@ export default function Archives() {
     }
 
     try {
-      setIsRevealing(true);
       setSelectedArchive(archive);
       const data = await archivesService.reveal(archive.id);
 
@@ -242,8 +244,6 @@ export default function Archives() {
         }),
         variant: 'destructive',
       });
-    } finally {
-      setIsRevealing(false);
     }
   };
 
@@ -329,19 +329,12 @@ export default function Archives() {
     );
   });
 
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return '-';
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   if (isLoading) {
     return <LoadingState />;
   }
 
   return (
-    <VaultGuard>
+    <>
       <PageContainer>
         <PageHeader title={t('pages.archives.title')} icon={<ArchiveIcon />}>
           <Button onClick={handleCreate} className="gap-sm">
@@ -442,7 +435,6 @@ export default function Archives() {
             size="sm"
             onClick={() => setShowFavoritesOnly((v) => !v)}
             className="gap-xs"
-            title={t('common.actions.favorites')}
           >
             <Star className={cn('h-4 w-4', showFavoritesOnly && 'fill-current')} />
             {t('common.actions.favorites')}
@@ -463,181 +455,94 @@ export default function Archives() {
             key={`${searchTerm}-${categoryFilter}-${typeFilter}-${showFavoritesOnly}`}
             items={filteredArchives}
             pageSize={GRID_PAGE_SIZE}
-            className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+            className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
           >
             {(pageItems) =>
               pageItems.map((arc) => {
-                const typeConfig = TYPE_CONFIG[arc.archive_type] ?? {
-                  icon: 'bg-muted text-muted-foreground',
-                };
+                const isText = arc.archive_type === 'text';
+                const TypeIcon = isText ? FileText : File;
                 return (
-                  <Card key={arc.id} className="overflow-hidden">
-                    <CardHeader className="pb-sm">
-                      <div className="flex items-start justify-between">
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-xs gap-sm flex items-center">
-                            <div
-                              className={cn(
-                                'flex h-8 w-8 shrink-0 items-center justify-center rounded-md',
-                                typeConfig.icon
-                              )}
-                            >
-                              {arc.archive_type === 'text' ? (
-                                <FileText className="h-4 w-4" />
-                              ) : (
-                                <File className="h-4 w-4" />
-                              )}
-                            </div>
-                            <CardTitle className="truncate text-base">
-                              {arc.title}
-                            </CardTitle>
-                          </div>
-                          <div className="gap-sm flex flex-wrap items-center">
-                            <Badge>
-                              {t(`pages.archives.categories.${arc.category}`)}
-                            </Badge>
-                            <Badge variant="outline">
-                              {t(`pages.archives.types.${arc.archive_type}`)}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="gap-xs flex flex-shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() =>
-                              arc.archive_type === 'text'
-                                ? handleRevealContent(arc)
-                                : handleDownload(arc)
-                            }
-                            disabled={isRevealing}
-                            aria-label={
-                              arc.archive_type === 'text'
-                                ? t('pages.archives.viewContent')
-                                : t('pages.archives.downloadFile')
-                            }
-                            title={
-                              arc.archive_type === 'text'
-                                ? t('pages.archives.viewContent')
-                                : t('pages.archives.downloadFile')
-                            }
-                          >
-                            {arc.archive_type === 'text' ? (
-                              <Eye className="h-4 w-4" aria-hidden="true" />
-                            ) : (
-                              <Download className="h-4 w-4" aria-hidden="true" />
-                            )}
-                          </Button>
-                          {(arc.archive_type === 'image' ||
-                            arc.archive_type === 'pdf') && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => void handlePreview(arc)}
-                              disabled={isPreviewLoading}
-                              aria-label={t('pages.archives.preview', {
-                                defaultValue: 'Pré-visualizar',
-                              })}
-                              title={t('pages.archives.preview', {
-                                defaultValue: 'Pré-visualizar',
-                              })}
-                            >
-                              <Eye className="h-4 w-4" aria-hidden="true" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className={cn('h-8 w-8', arc.is_favorite && 'text-warning')}
-                            onClick={() => void handleToggleFavorite(arc.id)}
-                            aria-label={t('common.actions.favorite')}
-                            title={t('common.actions.favorite')}
-                          >
-                            <Star
-                              className={cn(
-                                'h-4 w-4',
-                                arc.is_favorite && 'fill-current'
-                              )}
-                              aria-hidden="true"
-                            />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleEdit(arc)}
-                            aria-label={t('common.actions.edit')}
-                            title={t('common.actions.edit')}
-                          >
-                            <Pencil className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleDelete(arc.id)}
-                            aria-label={t('common.actions.delete')}
-                            title={t('common.actions.delete')}
-                          >
-                            <Trash2
-                              className="text-destructive h-4 w-4"
-                              aria-hidden="true"
-                            />
-                          </Button>
-                        </div>
+                  <VaultItemCard
+                    key={arc.id}
+                    avatar={
+                      <div
+                        className={cn(
+                          'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+                          (TYPE_CONFIG[arc.archive_type] ?? TYPE_CONFIG.other).icon
+                        )}
+                      >
+                        <TypeIcon className="h-5 w-5" />
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-sm">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="gap-sm flex items-center">
-                          <Calendar className="h-4 w-4" />
-                          <span>{formatDate(arc.created_at, 'dd/MM/yyyy')}</span>
-                        </div>
-                        <span>{formatFileSize(arc.file_size)}</span>
-                      </div>
-                      {arc.tags && arc.tags.length > 0 && (
-                        <div className="gap-sm flex items-center">
-                          <Tag className="h-4 w-4 flex-shrink-0" />
-                          <div className="gap-xs flex flex-wrap">
-                            {arc.tags.slice(0, 3).map((tag, idx) => (
-                              <Badge key={idx} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                            {arc.tags.length > 3 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{arc.tags.length - 3}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                    }
+                    title={arc.title}
+                    subtitle={t(`pages.archives.categories.${arc.category}`)}
+                    badge={
+                      <Badge variant="outline" className="shrink-0 text-xs">
+                        {t(`pages.archives.types.${arc.archive_type}`)}
+                      </Badge>
+                    }
+                    metric={
+                      <span className="gap-xs text-muted-foreground flex items-center text-xs">
+                        <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                        {formatDate(arc.created_at)}
+                        {arc.file_size ? ` · ${formatFileSize(arc.file_size)}` : ''}
+                      </span>
+                    }
+                    isFavorite={arc.is_favorite}
+                    onOpen={() => setDetailArchive(arc)}
+                    onFavorite={() => void handleToggleFavorite(arc.id)}
+                    onEdit={() => void handleEdit(arc)}
+                    onDelete={() => void handleDelete(arc.id)}
+                    menuActions={[
+                      {
+                        icon: isText ? Eye : Download,
+                        label: isText
+                          ? t('pages.archives.viewContent')
+                          : t('pages.archives.downloadFile'),
+                        onClick: () => void handleDownload(arc),
+                        color: isText ? ('preview' as const) : ('download' as const),
+                      },
+                      ...(arc.archive_type === 'image' || arc.archive_type === 'pdf'
+                        ? [
+                            {
+                              icon: Eye,
+                              label: t('pages.archives.preview', {
+                                defaultValue: 'Pré-visualizar',
+                              }),
+                              onClick: () => void handlePreview(arc),
+                              color: 'preview' as const,
+                            },
+                          ]
+                        : []),
+                    ]}
+                  />
                 );
               })
             }
           </PaginatedSlide>
         )}
 
+        <ArchiveDetailModal
+          archive={detailArchive}
+          onOpenContent={(arc) => void handleDownload(arc)}
+          onPreview={(arc) => void handlePreview(arc)}
+          onClose={() => setDetailArchive(null)}
+        />
+
         {/* Dialog para criar/editar arquivo */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-4xl">
             <DialogHeader>
               <DialogTitle mode={selectedArchive ? 'edit' : 'create'}>
                 {selectedArchive
                   ? t('pages.archives.editTitle')
                   : t('pages.archives.newTitle')}
               </DialogTitle>
-              <VisuallyHidden>
-                <DialogDescription>
-                  {selectedArchive
-                    ? t('pages.archives.editDesc')
-                    : t('pages.archives.newDesc')}
-                </DialogDescription>
-              </VisuallyHidden>
+              <DialogDescription>
+                {selectedArchive
+                  ? t('pages.archives.editDesc')
+                  : t('pages.archives.newDesc')}
+              </DialogDescription>
             </DialogHeader>
             <ArchiveForm
               archive={selectedArchive}
@@ -655,10 +560,7 @@ export default function Archives() {
             <DialogHeader>
               <DialogTitle icon={FileText}>{selectedArchive?.title}</DialogTitle>
               <DialogDescription>
-                {t('pages.archives.decryptedContentDesc')} -{' '}
-                {selectedArchive?.category
-                  ? t(`pages.archives.categories.${selectedArchive.category}`)
-                  : ''}
+                {t('pages.archives.decryptedContentDesc')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-md">
@@ -668,29 +570,21 @@ export default function Archives() {
                 rows={20}
                 className="text-sm"
               />
-              <div className="dialog-footer gap-sm flex justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsContentDialogOpen(false)}
-                  className="sm:mr-auto"
-                >
-                  <X className="h-4 w-4" />
-                  {t('common.actions.close')}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    void copyToClipboard(revealedContent);
-                    toast({
-                      title: t('common.messages.copied'),
-                    });
-                  }}
-                >
-                  <Copy className="h-4 w-4" />
-                  {t('common.actions.copy')}
-                </Button>
-              </div>
             </div>
+            <DialogCloseFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  void copyToClipboard(revealedContent);
+                  toast({
+                    title: t('common.messages.copied'),
+                  });
+                }}
+              >
+                <Copy className="h-4 w-4" />
+                {t('common.actions.copy')}
+              </Button>
+            </DialogCloseFooter>
           </DialogContent>
         </Dialog>
 
@@ -710,14 +604,11 @@ export default function Archives() {
               <DialogTitle icon={Eye}>
                 {t('pages.archives.preview', { defaultValue: 'Pré-visualização' })}
               </DialogTitle>
+              <DialogDescription>
+                {t('pages.archives.preview', { defaultValue: 'Pré-visualização' })}
+              </DialogDescription>
             </DialogHeader>
-            {isPreviewLoading ? (
-              <div className="flex h-64 items-center justify-center">
-                <span className="text-muted-foreground text-sm">
-                  {t('common.actions.loading')}
-                </span>
-              </div>
-            ) : previewType === 'image' && previewUrl ? (
+            {previewType === 'image' && previewUrl ? (
               <img
                 src={previewUrl}
                 alt="Preview"
@@ -730,22 +621,19 @@ export default function Archives() {
                 title="PDF Preview"
               />
             ) : null}
-            <div className="dialog-footer flex justify-start">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (previewUrl) URL.revokeObjectURL(previewUrl);
-                  setPreviewUrl(null);
-                  setPreviewType(null);
-                }}
-              >
-                <X className="h-4 w-4" />
-                {t('common.actions.close')}
-              </Button>
-            </div>
+            <DialogCloseFooter />
           </DialogContent>
         </Dialog>
       </PageContainer>
+    </>
+  );
+}
+
+// Os dados do cofre só são buscados depois do desbloqueio (o conteúdo monta dentro do guard).
+export default function Archives() {
+  return (
+    <VaultGuard>
+      <ArchivesContent />
     </VaultGuard>
   );
 }

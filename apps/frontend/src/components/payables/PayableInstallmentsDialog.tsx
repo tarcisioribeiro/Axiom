@@ -9,7 +9,6 @@ import type { Payable, PayableInstallment } from '@/types';
 interface PayableInstallmentsDialogProps {
   payable: Payable | null;
   installments: PayableInstallment[];
-  isLoading: boolean;
   onClose: () => void;
   onUpdated?: () => void;
   onIncreaseValue?: () => void;
@@ -18,7 +17,6 @@ interface PayableInstallmentsDialogProps {
 export function PayableInstallmentsDialog({
   payable,
   installments,
-  isLoading,
   onClose,
   onUpdated,
   onIncreaseValue,
@@ -35,7 +33,6 @@ export function PayableInstallmentsDialog({
       title={t('pages.payables.installments.title')}
       description={payable?.description}
       installments={installments}
-      isLoading={isLoading}
       i18nBase="pages.payables.installments"
       onClose={onClose}
       onChanged={() => onUpdated?.()}

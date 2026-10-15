@@ -36,7 +36,6 @@ const EXACT: Record<string, string> = {
   '/security/stored-accounts': 'storedAccounts',
   '/security/archives': 'archives',
   '/security/activity-logs': 'activityLogs',
-  '/security/password-import': 'passwordImport',
   '/security/health': 'vaultHealth',
   '/settings/two-factor': 'twoFactor',
   '/library/dashboard': 'libraryDashboard',

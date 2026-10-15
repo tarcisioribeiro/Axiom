@@ -176,6 +176,32 @@ class StoredCreditCardViewTest(BaseSecurityTestCase):
         response = self.client.patch(url, {"name": "My Amex Gold"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_put_without_sensitive_fields_keeps_them(self):
+        from security.models import StoredCreditCard
+
+        resp = self.client.post(
+            reverse("stored-card-list-create"), self._card_data("Keep")
+        )
+        pk = resp.data["id"]  # type: ignore
+        data = {
+            **self._card_data("Keep 2"),
+            "card_number": "",
+            "security_code": "",
+        }
+        response = self.client.put(
+            reverse("stored-card-detail", args=[pk]), data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        card = StoredCreditCard.objects.get(pk=pk)
+        self.assertEqual(card.name, "Keep 2")
+        self.assertEqual(card.card_number, "4111111111111111")
+        self.assertEqual(card.security_code, "123")
+
+    def test_create_requires_card_number(self):
+        data = {**self._card_data(), "card_number": ""}
+        response = self.client.post(reverse("stored-card-list-create"), data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_delete_stored_card(self):
         create_url = reverse("stored-card-list-create")
         resp = self.client.post(create_url, self._card_data("Old Card"))
@@ -227,6 +253,22 @@ class StoredBankAccountViewTest(BaseSecurityTestCase):
         url = reverse("stored-account-detail", args=[pk])
         response = self.client.patch(url, {"name": "Bradesco Updated"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_put_without_account_number_keeps_it(self):
+        from security.models import StoredBankAccount
+
+        resp = self.client.post(
+            reverse("stored-account-list-create"), self._account_data("Keep")
+        )
+        pk = resp.data["id"]  # type: ignore
+        data = {**self._account_data("Keep 2"), "account_number": ""}
+        response = self.client.put(
+            reverse("stored-account-detail", args=[pk]), data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        account = StoredBankAccount.objects.get(pk=pk)
+        self.assertEqual(account.name, "Keep 2")
+        self.assertEqual(account.account_number, "123456789")
 
     def test_delete_stored_account(self):
         create_url = reverse("stored-account-list-create")

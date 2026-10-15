@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { Trophy } from 'lucide-react';
 import { useId, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -25,7 +26,6 @@ import {
 import { useChartColors, useChartGradientId } from '@/lib/chart-colors';
 import { axisFormatCurrency, formatCurrencyBR } from '@/lib/chart-formatters';
 import { formatCurrency } from '@/lib/formatters';
-import { cn } from '@/lib/utils';
 import type { SimulatorScenarioResult } from '@/services/vault-simulator-service';
 
 function getProjectedDate(months: number): string {
@@ -110,21 +110,16 @@ export function SimulatorResults({ results }: SimulatorResultsProps) {
 
       <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3">
         {results.map((scenario) => (
-          <Card
-            key={scenario.name}
-            className={cn(
-              'overflow-hidden',
-              scenario.name === bestScenarioName && 'border-amber-500/40'
-            )}
-          >
+          <Card key={scenario.name} className="overflow-hidden">
             <CardHeader className="pb-sm">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-muted-foreground text-sm font-medium">
                   {scenario.name}
                 </CardTitle>
                 {scenario.name === bestScenarioName && (
-                  <Badge className="border-amber-500/30 bg-amber-500/10 text-amber-600">
-                    🏆 Melhor retorno
+                  <Badge className="gap-xs border-warning/30 bg-warning/10 text-warning">
+                    <Trophy className="h-3 w-3" aria-hidden="true" />
+                    {t('pages.vaultSimulator.bestReturn')}
                   </Badge>
                 )}
               </div>
@@ -154,7 +149,7 @@ export function SimulatorResults({ results }: SimulatorResultsProps) {
                   <p className="text-muted-foreground">
                     {t('pages.vaultSimulator.yieldLabel')}
                   </p>
-                  <p className="font-semibold text-green-600 dark:text-green-400">
+                  <p className="text-success font-semibold">
                     {formatCurrency(scenario.total_yield)}
                   </p>
                 </div>
@@ -323,7 +318,7 @@ export function SimulatorResults({ results }: SimulatorResultsProps) {
                     <TableCell className="text-right">
                       {formatCurrency(scenario.total_invested)}
                     </TableCell>
-                    <TableCell className="text-right text-green-600 dark:text-green-400">
+                    <TableCell className="text-success text-right">
                       <div>{formatCurrency(scenario.total_yield)}</div>
                       <div className="text-muted-foreground text-xs">
                         +{yieldPct.toFixed(1).replace('.', ',')}%

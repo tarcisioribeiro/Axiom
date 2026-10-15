@@ -1,37 +1,27 @@
 /* eslint-disable max-lines */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AnimatePresence, motion } from 'framer-motion';
 import {
   AtSign,
-  Calendar,
   Check,
   Copy,
-  ExternalLink,
-  Eye,
-  EyeOff,
   FileText,
   Globe,
-  History,
   Key,
   KeyRound,
-  Loader2,
   Lock,
-  Pencil,
   Plus,
   Save,
   Search,
   Share2,
   Shield,
-  ShieldAlert,
   ShieldCheck,
   Star,
   Tag,
-  Trash2,
   Upload,
-  User,
   Wand2,
   X,
+  ShieldAlert,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -45,26 +35,23 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
+import {
+  PasswordDetailModal,
+  type TOTPRevealData,
+} from '@/components/security/PasswordDetailModal';
 import { PasswordGenerator } from '@/components/security/PasswordGenerator';
-import { PasswordImportContent } from '@/components/security/PasswordImportContent';
+import { PasswordImportDialog } from '@/components/security/PasswordImportDialog';
 import { SharePasswordModal } from '@/components/security/SharePasswordModal';
 import { VaultGuard } from '@/components/security/VaultGuard';
+import { VaultItemCard } from '@/components/security/VaultItemCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Collapse } from '@/components/ui/collapsible-section';
 import {
   Dialog,
-  DialogCloseFooter,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -77,20 +64,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { PASSWORD_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { notifyFormErrors } from '@/lib/form-errors';
-import { formatDate } from '@/lib/formatters';
 import { cn, copyToClipboard } from '@/lib/utils';
 import { passwordSchema } from '@/lib/validations';
 import { hibpService } from '@/services/hibp-service';
 import { membersService } from '@/services/members-service';
 import { passwordsService } from '@/services/passwords-service';
-import { securityDashboardService } from '@/services/security-dashboard-service';
 import type { Password, PasswordFormData, Member } from '@/types';
 import { PASSWORD_CATEGORIES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -134,447 +117,9 @@ const CATEGORY_CONFIG: Record<string, { badge: string; avatar: string }> = {
   },
 };
 
-const CATEGORY_CONFIG_DETAIL: Record<string, { badge: string; avatar: string }> = {
-  social: {
-    badge: 'bg-info/10 text-info border-info/25',
-    avatar: 'bg-info/10 text-info ring-1 ring-info/25',
-  },
-  email: {
-    badge: 'bg-primary/10 text-primary border-primary/25',
-    avatar: 'bg-primary/10 text-primary ring-1 ring-primary/25',
-  },
-  banking: {
-    badge: 'bg-warning/10 text-warning border-warning/25',
-    avatar: 'bg-warning/10 text-warning ring-1 ring-warning/25',
-  },
-  work: {
-    badge: 'bg-success/10 text-success border-success/25',
-    avatar: 'bg-success/10 text-success ring-1 ring-success/25',
-  },
-  entertainment: {
-    badge: 'bg-accent/10 text-accent border-accent/25',
-    avatar: 'bg-accent/10 text-accent ring-1 ring-accent/25',
-  },
-  shopping: {
-    badge: 'bg-warning/10 text-warning border-warning/25',
-    avatar: 'bg-warning/10 text-warning ring-1 ring-warning/25',
-  },
-  streaming: {
-    badge: 'bg-accent/10 text-accent border-accent/25',
-    avatar: 'bg-accent/10 text-accent ring-1 ring-accent/25',
-  },
-  gaming: {
-    badge: 'bg-info/10 text-info border-info/25',
-    avatar: 'bg-info/10 text-info ring-1 ring-info/25',
-  },
-  other: {
-    badge: '',
-    avatar: 'bg-muted text-muted-foreground ring-1 ring-border',
-  },
-};
-
-interface TOTPRevealData {
-  code: string;
-  expiresAt: number;
-}
-
-function TOTPBlock({ code, expiresAt }: TOTPRevealData) {
-  const { toast } = useToast();
-  const [secsLeft, setSecsLeft] = useState(() =>
-    Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000))
-  );
-  const [isExpired, setIsExpired] = useState(secsLeft === 0);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
-      setSecsLeft(remaining);
-      if (remaining === 0) setIsExpired(true);
-    }, 500);
-    return () => clearInterval(id);
-  }, [expiresAt]);
-
-  const handleCopy = () => {
-    void copyToClipboard(code).then(() => toast({ title: 'Código TOTP copiado!' }));
-  };
-
-  if (isExpired) {
-    return (
-      <p className="mt-xs text-warning text-xs">
-        Código expirado — revele novamente para atualizar.
-      </p>
-    );
-  }
-
-  return (
-    <div className="mt-sm gap-sm flex items-center justify-between">
-      <code className="text-xl font-bold tracking-[0.25em]">
-        {code.slice(0, 3)} {code.slice(3)}
-      </code>
-      <div className="gap-xs flex items-center">
-        <span
-          className={cn(
-            'text-sm',
-            secsLeft <= 5 ? 'text-destructive' : 'text-muted-foreground'
-          )}
-        >
-          {secsLeft}s
-        </span>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={handleCopy}
-          aria-label="Copiar código TOTP"
-        >
-          <Copy className="h-3 w-3" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-interface DetailPanelProps {
-  password: Password;
-  revealedPassword: string | undefined;
-  revealedTotpData?: TOTPRevealData | null;
-  revealingId: number | null;
-  onReveal: (id: number) => void;
-  onCopy: (id: number) => void;
-  onEdit: (password: Password) => void;
-  onDelete: (id: number) => void;
-  onShare: (password: Password) => void;
-  onClose: () => void;
-}
-
-function DetailPanel({
-  password,
-  revealedPassword,
-  revealedTotpData,
-  revealingId,
-  onReveal,
-  onCopy,
-  onEdit,
-  onDelete,
-  onShare,
-  onClose,
-}: DetailPanelProps) {
-  const { t } = useTranslation();
-  const { toast } = useToast();
-  const catConfig =
-    CATEGORY_CONFIG_DETAIL[password.category] ?? CATEGORY_CONFIG_DETAIL.other;
-  const [activeTab, setActiveTab] = useState<'details' | 'history'>('details');
-  const [hibpState, setHibpState] = useState<{
-    status: 'idle' | 'checking' | 'safe' | 'breached';
-    count: number;
-  }>({ status: 'idle', count: 0 });
-
-  const { data: historyEntries, isLoading: isHistoryLoading } = useQuery({
-    queryKey: ['password-history', password.id],
-    queryFn: () => securityDashboardService.getPasswordHistory(password.id),
-    enabled: activeTab === 'history',
-  });
-
-  const handleHibpCheck = async () => {
-    if (!revealedPassword) return;
-    setHibpState({ status: 'checking', count: 0 });
-    try {
-      const result = await hibpService.checkPassword(revealedPassword);
-      setHibpState({
-        status: result.breached ? 'breached' : 'safe',
-        count: result.count,
-      });
-    } catch {
-      toast({
-        title: t('pages.passwords.hibp.errorDesc'),
-        variant: 'destructive',
-      });
-      setHibpState({ status: 'idle', count: 0 });
-    }
-  };
-
-  return (
-    <div className="flex h-full flex-col">
-      <div className="gap-sm p-lg flex items-start justify-between border-b">
-        <div className="flex min-w-0 items-center gap-3">
-          <div
-            className={cn(
-              'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-base font-bold',
-              catConfig.avatar
-            )}
-          >
-            {password.title.charAt(0).toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold">{password.title}</h2>
-            <p className="text-muted-foreground truncate text-sm">
-              {password.username}
-            </p>
-          </div>
-        </div>
-        <div className="gap-xs flex items-center">
-          {password.totp_enabled && (
-            <Shield className="text-success h-4 w-4" aria-label="TOTP habilitado" />
-          )}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onClose}
-            className="shrink-0"
-            aria-label={t('common.actions.close')}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => setActiveTab(v as 'details' | 'history')}
-        className="flex min-h-0 flex-1 flex-col"
-      >
-        <TabsList className="w-full">
-          <TabsTrigger value="details" className="gap-xs flex-1">
-            <FileText className="h-3.5 w-3.5" />
-            {t('common.actions.details', { defaultValue: 'Detalhes' })}
-          </TabsTrigger>
-          <TabsTrigger value="history" className="gap-xs flex-1">
-            <History className="h-3.5 w-3.5" />
-            {t('pages.passwords.history', { defaultValue: 'Histórico' })}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="history" className="p-lg mt-0 flex-1 overflow-y-auto">
-          <div className="space-y-sm">
-            {isHistoryLoading ? (
-              <div className="py-lg flex justify-center">
-                <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-              </div>
-            ) : !historyEntries || historyEntries.length === 0 ? (
-              <EmptyState
-                title={t('pages.passwords.noHistory', {
-                  defaultValue: 'Nenhuma alteração de senha registrada.',
-                })}
-                icon={<History />}
-              />
-            ) : (
-              historyEntries.map((entry, idx) => (
-                <div
-                  key={entry.id}
-                  className="bg-muted/20 px-md py-sm flex items-center justify-between rounded-lg border"
-                >
-                  <div className="gap-sm flex items-center">
-                    <div className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-medium">
-                      {idx + 1}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">••••••••</p>
-                      <p className="text-muted-foreground text-xs">
-                        {formatDate(entry.created_at, 'dd/MM/yyyy HH:mm')}
-                        {entry.changed_by_username
-                          ? ` · ${entry.changed_by_username}`
-                          : ''}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="details" className="p-lg mt-0 flex-1 overflow-y-auto">
-          <div className="space-y-md">
-            <div className="gap-sm flex items-center">
-              <Tag className="text-muted-foreground h-4 w-4 shrink-0" />
-              <span className="text-muted-foreground text-sm">
-                {t('common.fields.category')}
-              </span>
-              <Badge
-                variant="outline"
-                className={cn('ml-auto shrink-0 text-xs', catConfig.badge)}
-              >
-                {t(`pages.passwords.categories.${password.category}`, {
-                  defaultValue: password.category_display,
-                })}
-              </Badge>
-            </div>
-
-            {password.site && (
-              <div className="gap-sm flex items-center">
-                <Globe className="text-muted-foreground h-4 w-4 shrink-0" />
-                <span className="text-muted-foreground text-sm">
-                  {t('common.fields.site')}
-                </span>
-                <a
-                  href={password.site}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="gap-xs ml-auto flex min-w-0 items-center truncate text-sm hover:underline"
-                >
-                  <span className="truncate">{password.site}</span>
-                  <ExternalLink className="h-3 w-3 shrink-0" />
-                </a>
-              </div>
-            )}
-
-            <div className="gap-sm flex items-center">
-              <User className="text-muted-foreground h-4 w-4 shrink-0" />
-              <span className="text-muted-foreground text-sm">
-                {t('common.fields.username')}
-              </span>
-              <span className="ml-auto truncate text-sm">{password.username}</span>
-            </div>
-
-            <div className="bg-muted/30 p-md rounded-lg border">
-              <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                {t('auth.login.password')}
-              </p>
-              {revealedPassword ? (
-                <div className="gap-sm flex items-center">
-                  <code className="flex-1 text-sm">{revealedPassword}</code>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onCopy(password.id)}
-                    aria-label={t('common.actions.copy')}
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">••••••••</p>
-              )}
-            </div>
-
-            {password.totp_enabled && (
-              <div className="border-success/30 bg-success/5 p-md rounded-lg border">
-                <div className="gap-sm flex items-center">
-                  <Shield className="text-success h-4 w-4 shrink-0" />
-                  <span className="text-success text-sm font-medium">TOTP (2FA)</span>
-                </div>
-                {revealedTotpData ? (
-                  <TOTPBlock
-                    code={revealedTotpData.code}
-                    expiresAt={revealedTotpData.expiresAt}
-                  />
-                ) : (
-                  <p className="mt-xs text-muted-foreground text-xs">
-                    Revele a senha para ver o código TOTP atual.
-                  </p>
-                )}
-              </div>
-            )}
-
-            {password.notes && (
-              <div className="space-y-xs">
-                <div className="gap-sm flex items-center">
-                  <FileText className="text-muted-foreground h-4 w-4 shrink-0" />
-                  <span className="text-muted-foreground text-sm">
-                    {t('common.fields.notes')}
-                  </span>
-                </div>
-                <p className="bg-muted/30 p-sm rounded-lg text-sm">{password.notes}</p>
-              </div>
-            )}
-
-            <div className="gap-sm pt-md text-muted-foreground flex items-center border-t text-xs">
-              <Calendar className="h-3.5 w-3.5 shrink-0" />
-              <span>
-                {t('common.fields.createdAt')}{' '}
-                {formatDate(password.created_at, 'dd/MM/yyyy HH:mm')}
-              </span>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      <div className="gap-sm p-lg flex flex-wrap border-t">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onReveal(password.id)}
-          disabled={revealingId === password.id}
-          className="flex-1"
-        >
-          {revealingId === password.id ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : revealedPassword ? (
-            <>
-              <EyeOff className="h-3 w-3" />
-              {t('common.actions.hide')}
-            </>
-          ) : (
-            <>
-              <Eye className="h-3 w-3" />
-              {t('common.actions.reveal')}
-            </>
-          )}
-        </Button>
-        {revealedPassword && (
-          <Button
-            size="sm"
-            variant={
-              hibpState.status === 'breached'
-                ? 'destructive'
-                : hibpState.status === 'safe'
-                  ? 'outline'
-                  : 'outline'
-            }
-            onClick={handleHibpCheck}
-            disabled={hibpState.status === 'checking'}
-            className={cn(
-              'flex-1',
-              hibpState.status === 'safe' &&
-                'border-[hsl(var(--success))] text-[hsl(var(--success))]'
-            )}
-          >
-            {hibpState.status === 'checking' ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : hibpState.status === 'safe' ? (
-              <ShieldCheck className="h-3 w-3" />
-            ) : (
-              <ShieldAlert className="h-3 w-3" />
-            )}
-            {hibpState.status === 'safe'
-              ? t('pages.passwords.hibp.safe')
-              : hibpState.status === 'breached'
-                ? t('pages.passwords.hibp.breached', { count: hibpState.count })
-                : t('pages.passwords.hibp.check')}
-          </Button>
-        )}
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onShare(password)}
-          aria-label={t('pages.sharePassword.title')}
-        >
-          <Share2 className="h-3 w-3" />
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onEdit(password)}
-          aria-label={t('common.actions.edit')}
-        >
-          <Pencil className="h-3 w-3" />
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onDelete(password.id)}
-          aria-label={t('common.actions.delete')}
-          className="text-destructive hover:text-destructive"
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 const EMPTY_PASSWORDS: Password[] = [];
 
-export default function Passwords() {
+function PasswordsContent() {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPassword, setSelectedPassword] = useState<Password | undefined>();
@@ -587,13 +132,13 @@ export default function Passwords() {
     Map<number, TOTPRevealData | null>
   >(new Map());
   const [revealingId, setRevealingId] = useState<number | null>(null);
-  const [copiedId, setCopiedId] = useState<number | null>(null);
   const [revealedAt, setRevealedAt] = useState<Map<number, number>>(new Map());
   const [countdown, setCountdown] = useState<Map<number, number>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [showGenerator, setShowGenerator] = useState(false);
+  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState('');
   const [sharingPassword, setSharingPassword] = useState<Password | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const autoHideInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -816,13 +361,38 @@ export default function Passwords() {
     }
   };
 
-  const handleCopyPassword = async (id: number) => {
-    const alreadyRevealed = revealedPasswords.get(id);
+  // Verifica vazamento (HIBP) sem exibir a senha; o resultado vai para o toast.
+  const handleCheckLeak = async (password: Password) => {
     try {
-      const value = alreadyRevealed ?? (await passwordsService.copy(id)).password;
-      await copyToClipboard(value);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
+      const value =
+        revealedPasswords.get(password.id) ??
+        (await passwordsService.reveal(password.id)).password;
+      const result = await hibpService.checkPassword(value);
+      toast({
+        title: result.breached
+          ? `${password.title}: ${t('pages.passwords.hibp.breached', { count: result.count })}`
+          : `${password.title}: ${t('pages.passwords.hibp.safe')}`,
+        variant: result.breached ? 'destructive' : undefined,
+      });
+    } catch {
+      toast({ title: t('pages.passwords.hibp.errorDesc'), variant: 'destructive' });
+    }
+  };
+
+  // Copia site, usuário e senha, um campo por linha com rótulo.
+  const handleCopyPasswordDetails = async (password: Password) => {
+    try {
+      const value =
+        revealedPasswords.get(password.id) ??
+        (await passwordsService.copy(password.id)).password;
+      await copyToClipboard(
+        [
+          `${t('common.fields.site')}: ${password.site || '—'}`,
+          `${t('common.fields.username')}: ${password.username}`,
+          `${t('auth.login.password')}: ${value}`,
+        ].join('\n')
+      );
+      toast({ title: t('common.messages.copied') });
     } catch (error: unknown) {
       toast({
         title: t('pages.passwords.copyError', { reason: getErrorMessage(error) }),
@@ -834,7 +404,9 @@ export default function Passwords() {
   const onFormSubmit = async (data: PasswordFormData) => {
     // Password required on create
     if (!selectedPassword && !data.password) {
-      setError('password', { message: t('pages.passwords.passwordRequired') });
+      const message = t('common.fieldRequired', { field: t('auth.login.password') });
+      setError('password', { message });
+      toast({ title: message, variant: 'destructive' });
       return;
     }
 
@@ -865,10 +437,6 @@ export default function Passwords() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleCardClick = (password: Password) => {
-    setDetailPassword((prev) => (prev?.id === password.id ? null : password));
   };
 
   const handleToggleFavorite = async (id: number) => {
@@ -905,7 +473,7 @@ export default function Passwords() {
   }
 
   return (
-    <VaultGuard>
+    <>
       <PageContainer>
         <PageHeader title={t('pages.passwords.title')} icon={<Key />}>
           <div className="gap-sm flex items-center">
@@ -988,334 +556,138 @@ export default function Passwords() {
             size="sm"
             onClick={() => setShowFavoritesOnly((v) => !v)}
             className="gap-xs"
-            title={t('pages.passwords.favoritesFilter')}
           >
             <Star className={cn('h-4 w-4', showFavoritesOnly && 'fill-current')} />
             {t('pages.passwords.favoritesFilter')}
           </Button>
         </FilterBar>
 
-        <div className={cn('gap-lg flex', detailPassword ? 'lg:flex-row' : 'flex-col')}>
-          <div className={cn('min-w-0', detailPassword ? 'lg:w-[40%]' : 'w-full')}>
-            <PaginatedSlide
-              key={`${searchTerm}-${categoryFilter}-${showFavoritesOnly}`}
-              items={filteredPasswords}
-              pageSize={GRID_PAGE_SIZE}
-              className="gap-md grid md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
-            >
-              {(pageItems) =>
-                pageItems.map((password) => {
-                  const catConfig =
-                    CATEGORY_CONFIG[password.category] ?? CATEGORY_CONFIG.other;
-                  const isSelected = detailPassword?.id === password.id;
-                  return (
-                    <Card
-                      key={password.id}
-                      className={cn(
-                        'cursor-pointer overflow-hidden',
-                        isSelected && 'ring-primary/50 ring-2'
-                      )}
-                      onClick={() => handleCardClick(password)}
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={cn(
-                              'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold',
-                              catConfig.avatar
-                            )}
-                          >
-                            {password.title.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <CardTitle className="truncate text-base">
-                              {password.title}
-                            </CardTitle>
-                            <CardDescription className="truncate text-xs">
-                              {password.username}
-                            </CardDescription>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className={cn('shrink-0 text-xs', catConfig.badge)}
-                          >
-                            {t(`pages.passwords.categories.${password.category}`, {
-                              defaultValue: password.category_display,
-                            })}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {password.site && (
-                            <div className="gap-sm flex items-center text-sm">
-                              <ExternalLink className="h-3 w-3" />
-                              <span className="text-muted-foreground truncate">
-                                {password.site}
-                              </span>
-                            </div>
-                          )}
-                          {password.strength_score !== undefined && (
-                            <div className="gap-xs flex items-center">
-                              <Shield className="text-muted-foreground h-3 w-3" />
-                              <span
-                                className={cn(
-                                  'text-xs font-medium',
-                                  password.strength_score >= 4
-                                    ? 'text-success'
-                                    : password.strength_score >= 3
-                                      ? 'text-primary'
-                                      : password.strength_score >= 2
-                                        ? 'text-warning'
-                                        : 'text-destructive'
-                                )}
-                              >
-                                {t(
-                                  `pages.passwords.passwordStrength.${
-                                    password.strength_score >= 4
-                                      ? 'strong'
-                                      : password.strength_score >= 3
-                                        ? 'good'
-                                        : password.strength_score >= 2
-                                          ? 'fair'
-                                          : password.strength_score >= 1
-                                            ? 'weak'
-                                            : 'veryWeak'
-                                  }`
-                                )}
-                              </span>
-                            </div>
-                          )}
-
-                          {!detailPassword && revealedPasswords.has(password.id) && (
-                            <div className="gap-sm bg-muted p-sm flex items-center rounded">
-                              <code className="flex-1 truncate text-sm">
-                                {revealedPasswords.get(password.id)}
-                              </code>
-                              {countdown.get(password.id) !== undefined && (
-                                <span className="text-muted-foreground shrink-0 text-xs">
-                                  {t('pages.passwords.autoHideIn', {
-                                    seconds: countdown.get(password.id),
-                                  })}
-                                </span>
-                              )}
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className={cn(
-                                  'shrink-0',
-                                  copiedId === password.id && 'text-success'
-                                )}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  void handleCopyPassword(password.id);
-                                }}
-                                title={
-                                  copiedId === password.id
-                                    ? t('pages.passwords.copied')
-                                    : t('common.actions.copy')
-                                }
-                              >
-                                {copiedId === password.id ? (
-                                  <Check className="h-3 w-3" />
-                                ) : (
-                                  <Copy className="h-3 w-3" />
-                                )}
-                              </Button>
-                            </div>
-                          )}
-
-                          {!detailPassword && (
-                            <div className="gap-sm pt-sm flex">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  void handleReveal(password.id);
-                                }}
-                                disabled={revealingId === password.id}
-                                className="flex-1"
-                              >
-                                {revealingId === password.id ? (
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : revealedPasswords.has(password.id) ? (
-                                  <>
-                                    <EyeOff className="h-3 w-3" />
-                                    {t('common.actions.hide')}
-                                  </>
-                                ) : (
-                                  <>
-                                    <Eye className="h-3 w-3" />
-                                    {t('common.actions.reveal')}
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  void handleCopyPassword(password.id);
-                                }}
-                                title={
-                                  copiedId === password.id
-                                    ? t('pages.passwords.copied')
-                                    : t('pages.passwords.copyWithoutReveal')
-                                }
-                                aria-label={t('pages.passwords.copyWithoutReveal')}
-                                className={cn(
-                                  copiedId === password.id && 'text-success'
-                                )}
-                              >
-                                {copiedId === password.id ? (
-                                  <Check className="h-3 w-3" />
-                                ) : (
-                                  <Copy className="h-3 w-3" aria-hidden="true" />
-                                )}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  void handleToggleFavorite(password.id);
-                                }}
-                                title={t('common.actions.favorite')}
-                                aria-label={t('common.actions.favorite')}
-                                className={cn(password.is_favorite && 'text-warning')}
-                              >
-                                <Star
-                                  className={cn(
-                                    'h-3 w-3',
-                                    password.is_favorite && 'fill-current'
-                                  )}
-                                  aria-hidden="true"
-                                />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSharingPassword(password);
-                                }}
-                                title={t('pages.sharePassword.title')}
-                                aria-label={t('pages.sharePassword.title')}
-                              >
-                                <Share2 className="h-3 w-3" aria-hidden="true" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEdit(password);
-                                }}
-                                title={t('common.actions.edit')}
-                                aria-label={t('common.actions.edit')}
-                              >
-                                <Pencil className="h-3 w-3" aria-hidden="true" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  void handleDelete(password.id);
-                                }}
-                                title={t('common.actions.delete')}
-                                aria-label={t('common.actions.delete')}
-                              >
-                                <Trash2
-                                  className="text-destructive h-3 w-3"
-                                  aria-hidden="true"
-                                />
-                              </Button>
-                            </div>
-                          )}
-
-                          <div className="text-muted-foreground text-xs">
-                            {t('common.fields.updatedAt')}{' '}
-                            {formatDate(password.updated_at, 'dd/MM/yyyy HH:mm')}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              }
-            </PaginatedSlide>
-
-            {filteredPasswords.length === 0 && (
-              <EmptyState
-                icon={<Key className="text-muted-foreground h-12 w-12" />}
-                title={
-                  searchTerm || categoryFilter !== 'all' || showFavoritesOnly
-                    ? t('pages.passwords.emptySearch')
-                    : t('pages.passwords.emptyState')
-                }
-              />
-            )}
-          </div>
-
-          <AnimatePresence>
-            {detailPassword && (
-              <motion.div
-                key={detailPassword.id}
-                initial={{ opacity: 0, x: 40 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 40 }}
-                className="hidden lg:block lg:w-[60%] lg:shrink-0"
-              >
-                <div className="bg-card sticky top-4 rounded-lg border">
-                  <DetailPanel
-                    password={detailPassword}
-                    revealedPassword={revealedPasswords.get(detailPassword.id)}
-                    revealedTotpData={revealedTotpData.get(detailPassword.id)}
-                    revealingId={revealingId}
-                    onReveal={(id) => void handleReveal(id)}
-                    onCopy={(id) => void handleCopyPassword(id)}
-                    onEdit={handleEdit}
-                    onDelete={(id) => void handleDelete(id)}
-                    onShare={setSharingPassword}
-                    onClose={() => setDetailPassword(null)}
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {detailPassword && (
-          <Dialog
-            open
-            onOpenChange={(open) => {
-              if (!open) setDetailPassword(null);
-            }}
+        {filteredPasswords.length === 0 ? (
+          <EmptyState
+            icon={<Key className="text-muted-foreground h-12 w-12" />}
+            title={
+              searchTerm || categoryFilter !== 'all' || showFavoritesOnly
+                ? t('pages.passwords.emptySearch')
+                : t('pages.passwords.emptyState')
+            }
+          />
+        ) : (
+          <PaginatedSlide
+            key={`${searchTerm}-${categoryFilter}-${showFavoritesOnly}`}
+            items={filteredPasswords}
+            pageSize={GRID_PAGE_SIZE}
+            className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
           >
-            <DialogContent className="sm:max-w-[500px] lg:hidden">
-              <DetailPanel
-                password={detailPassword}
-                revealedPassword={revealedPasswords.get(detailPassword.id)}
-                revealedTotpData={revealedTotpData.get(detailPassword.id)}
-                revealingId={revealingId}
-                onReveal={(id) => void handleReveal(id)}
-                onCopy={(id) => void handleCopyPassword(id)}
-                onEdit={(pwd) => {
-                  setDetailPassword(null);
-                  handleEdit(pwd);
-                }}
-                onDelete={(id) => void handleDelete(id)}
-                onShare={(pwd) => {
-                  setDetailPassword(null);
-                  setSharingPassword(pwd);
-                }}
-                onClose={() => setDetailPassword(null)}
-              />
-            </DialogContent>
-          </Dialog>
+            {(pageItems) =>
+              pageItems.map((password) => {
+                const catConfig =
+                  CATEGORY_CONFIG[password.category] ?? CATEGORY_CONFIG.other;
+                const strength = password.strength_score;
+                return (
+                  <VaultItemCard
+                    key={password.id}
+                    avatar={
+                      <div
+                        className={cn(
+                          'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold',
+                          catConfig.avatar
+                        )}
+                      >
+                        {password.title.charAt(0).toUpperCase()}
+                      </div>
+                    }
+                    title={password.title}
+                    subtitle={password.username}
+                    badge={
+                      <Badge
+                        variant="outline"
+                        className={cn('shrink-0 text-xs', catConfig.badge)}
+                      >
+                        {t(`pages.passwords.categories.${password.category}`, {
+                          defaultValue: password.category_display,
+                        })}
+                      </Badge>
+                    }
+                    metric={
+                      strength !== undefined && (
+                        <span
+                          className={cn(
+                            'gap-xs flex items-center text-xs font-medium',
+                            strength >= 4
+                              ? 'text-success'
+                              : strength >= 3
+                                ? 'text-primary'
+                                : strength >= 2
+                                  ? 'text-warning'
+                                  : 'text-destructive'
+                          )}
+                        >
+                          <Shield className="h-3.5 w-3.5" aria-hidden="true" />
+                          {t(
+                            `pages.passwords.passwordStrength.${
+                              strength >= 4
+                                ? 'strong'
+                                : strength >= 3
+                                  ? 'good'
+                                  : strength >= 2
+                                    ? 'fair'
+                                    : strength >= 1
+                                      ? 'weak'
+                                      : 'veryWeak'
+                            }`
+                          )}
+                        </span>
+                      )
+                    }
+                    isFavorite={password.is_favorite}
+                    onOpen={() => setDetailPassword(password)}
+                    onFavorite={() => void handleToggleFavorite(password.id)}
+                    onEdit={() => handleEdit(password)}
+                    onDelete={() => void handleDelete(password.id)}
+                    menuActions={[
+                      {
+                        icon: Copy,
+                        label: t('common.actions.copyDetails'),
+                        onClick: () => void handleCopyPasswordDetails(password),
+                        color: 'copy' as const,
+                      },
+                      {
+                        icon: Share2,
+                        label: t('pages.sharePassword.title'),
+                        onClick: () => setSharingPassword(password),
+                        color: 'share' as const,
+                      },
+                      {
+                        icon: ShieldAlert,
+                        label: t('pages.passwords.hibp.check'),
+                        onClick: () => void handleCheckLeak(password),
+                        color: 'check-leak' as const,
+                      },
+                    ]}
+                  />
+                );
+              })
+            }
+          </PaginatedSlide>
         )}
+
+        <PasswordDetailModal
+          password={detailPassword}
+          catConfig={
+            (detailPassword && CATEGORY_CONFIG[detailPassword.category]) ||
+            CATEGORY_CONFIG.other
+          }
+          revealedPassword={
+            detailPassword ? revealedPasswords.get(detailPassword.id) : undefined
+          }
+          revealedTotp={
+            detailPassword ? revealedTotpData.get(detailPassword.id) : undefined
+          }
+          countdown={detailPassword ? countdown.get(detailPassword.id) : undefined}
+          isRevealing={!!detailPassword && revealingId === detailPassword.id}
+          onReveal={(id) => void handleReveal(id)}
+          onClose={() => setDetailPassword(null)}
+        />
 
         <SharePasswordModal
           password={sharingPassword}
@@ -1325,25 +697,13 @@ export default function Passwords() {
           }}
         />
 
-        {/* Import dialog */}
-        <Dialog
+        <PasswordImportDialog
           open={isImportOpen}
           onOpenChange={(open) => {
             setIsImportOpen(open);
             if (!open) void refresh();
           }}
-        >
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle icon={Upload}>{t('pages.passwordImport.title')}</DialogTitle>
-              <DialogDescription>
-                {t('pages.passwordImport.description')}
-              </DialogDescription>
-            </DialogHeader>
-            <PasswordImportContent />
-            <DialogCloseFooter />
-          </DialogContent>
-        </Dialog>
+        />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
@@ -1353,13 +713,11 @@ export default function Passwords() {
                   ? t('pages.passwords.editTitle')
                   : t('pages.passwords.newTitle')}
               </DialogTitle>
-              <VisuallyHidden>
-                <DialogDescription>
-                  {selectedPassword
-                    ? t('pages.passwords.editDesc')
-                    : t('pages.passwords.newDesc')}
-                </DialogDescription>
-              </VisuallyHidden>
+              <DialogDescription>
+                {selectedPassword
+                  ? t('pages.passwords.editDesc')
+                  : t('pages.passwords.newDesc')}
+              </DialogDescription>
             </DialogHeader>
             <form
               onSubmit={rhfHandleSubmit(onFormSubmit, notifyFormErrors)}
@@ -1406,41 +764,36 @@ export default function Passwords() {
               </div>
 
               <div className="space-y-sm">
-                <div className="flex items-center justify-between">
-                  <Label className="gap-xs flex items-center" htmlFor="password">
-                    <Lock className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('auth.login.password')} {selectedPassword ? '' : '*'}
-                  </Label>
+                <Label className="gap-xs flex items-center" htmlFor="password">
+                  <Lock className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('auth.login.password')} {selectedPassword ? '' : '*'}
+                </Label>
+                <div className="gap-sm flex">
+                  <Input
+                    id="password"
+                    type="password"
+                    {...register('password')}
+                    aria-invalid={!!errors.password}
+                    placeholder={
+                      selectedPassword
+                        ? t('pages.passwords.keepCurrentPassword')
+                        : '••••••••'
+                    }
+                  />
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowGenerator(!showGenerator)}
-                    className="px-sm py-xs h-auto text-xs"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => {
+                      setGeneratedPassword('');
+                      setIsGeneratorOpen(true);
+                    }}
+                    aria-label={t('pages.passwords.generatePassword')}
                   >
-                    <Wand2 className="h-3 w-3" />
-                    {showGenerator
-                      ? t('pages.passwords.hideGenerator')
-                      : t('pages.passwords.generatePassword')}
+                    <Wand2 className="h-4 w-4" />
                   </Button>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  {...register('password')}
-                  aria-invalid={!!errors.password}
-                  placeholder={
-                    selectedPassword ? t('pages.passwords.keepCurrentPassword') : ''
-                  }
-                />
-                <Collapse open={showGenerator}>
-                  <div className="bg-muted/30 rounded-lg border p-3">
-                    <PasswordGenerator
-                      compact
-                      onPasswordGenerated={(pwd) => setValue('password', pwd)}
-                    />
-                  </div>
-                </Collapse>
               </div>
 
               <div className="space-y-sm">
@@ -1492,18 +845,13 @@ export default function Passwords() {
               {/* TOTP (#195) */}
               <div className="bg-muted/20 p-md rounded-lg border">
                 <div className="flex items-center justify-between">
-                  <div className="gap-sm flex items-center">
-                    <Shield className="text-muted-foreground h-4 w-4" />
-                    <Label
-                      className="gap-xs flex cursor-pointer items-center"
-                      htmlFor="totp_enabled"
-                    >
-                      <ShieldCheck className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.passwords.totpEnable', {
-                        defaultValue: 'Habilitar TOTP (2FA)',
-                      })}
-                    </Label>
-                  </div>
+                  <Label
+                    className="gap-xs flex cursor-pointer items-center"
+                    htmlFor="totp_enabled"
+                  >
+                    <ShieldCheck className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.passwords.totpEnable')}
+                  </Label>
                   <Controller
                     control={control}
                     name="totp_enabled"
@@ -1521,9 +869,7 @@ export default function Passwords() {
                   <div className="mt-sm space-y-xs">
                     <Label className="gap-xs flex items-center" htmlFor="totp_secret">
                       <KeyRound className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.passwords.totpSecret', {
-                        defaultValue: 'Segredo TOTP',
-                      })}
+                      {t('pages.passwords.totpSecret')}
                     </Label>
                     <Input
                       id="totp_secret"
@@ -1543,19 +889,61 @@ export default function Passwords() {
                   <X className="h-4 w-4" />
                   {t('common.actions.cancel')}
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
+                <Button type="submit" loading={isSubmitting}>
+                  {!isSubmitting && <Save className="h-4 w-4" />}
                   {isSubmitting ? t('common.actions.saving') : t('common.actions.save')}
                 </Button>
               </div>
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Gerador abre por cima do formulário (§2.2: ação que revela campos abre modal) */}
+        <Dialog open={isGeneratorOpen} onOpenChange={setIsGeneratorOpen}>
+          <DialogContent size="md">
+            <DialogHeader>
+              <DialogTitle icon={Wand2}>
+                {t('pages.passwords.generatePassword')}
+              </DialogTitle>
+              <DialogDescription>
+                {t('pages.passwords.generatePassword')}
+              </DialogDescription>
+            </DialogHeader>
+            <PasswordGenerator onPasswordGenerated={setGeneratedPassword} />
+            <DialogFooter className="gap-sm">
+              <Button variant="outline" onClick={() => setIsGeneratorOpen(false)}>
+                <X className="h-4 w-4" />
+                {t('common.actions.cancel')}
+              </Button>
+              <Button
+                onClick={() => {
+                  if (!generatedPassword) {
+                    toast({
+                      title: t('pages.passwords.generatePassword'),
+                      variant: 'destructive',
+                    });
+                    return;
+                  }
+                  setValue('password', generatedPassword);
+                  setIsGeneratorOpen(false);
+                }}
+              >
+                <Check className="h-4 w-4" />
+                {t('common.actions.confirm')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </PageContainer>
+    </>
+  );
+}
+
+// Os dados do cofre só são buscados depois do desbloqueio (o conteúdo monta dentro do guard).
+export default function Passwords() {
+  return (
+    <VaultGuard>
+      <PasswordsContent />
     </VaultGuard>
   );
 }

@@ -3,9 +3,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   BookCheck,
   BookOpen,
+  CalendarDays,
   FileText,
+  Hash,
   ImagePlus,
-  Loader2,
   Save,
   Smartphone,
   Star,
@@ -26,7 +27,6 @@ import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NumberStepper } from '@/components/ui/number-stepper';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -42,7 +42,8 @@ import {
   BOOK_LANGUAGE_ICON,
   READ_STATUS_ICONS,
 } from '@/config/icons';
-import { notifyFormErrors } from '@/lib/form-errors';
+import { toast } from '@/hooks/use-toast';
+import { notifyFormErrors, serverFieldError } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { bookSchema, type BookFormData } from '@/lib/validations';
@@ -68,7 +69,7 @@ interface BookFormProps {
     alreadyRead?: boolean,
     startDate?: string,
     endDate?: string
-  ) => void;
+  ) => void | Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -100,6 +101,7 @@ export function BookForm({
     book ? '' : formatLocalDate(new Date())
   );
   const [endDate, setEndDate] = useState('');
+  const [endDateInvalid, setEndDateInvalid] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bookFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -108,6 +110,7 @@ export function BookForm({
     register,
     handleSubmit,
     setValue,
+    setError,
     watch,
     formState: { errors },
   } = useForm<BookFormData>({
@@ -213,143 +216,164 @@ export function BookForm({
 
   const mediaType = watch('media_type');
 
+  const submit = async (data: BookFormData) => {
+    // Datas do "já li": fim antes do início vira toast + borda (§3), não texto.
+    const badRange = alreadyRead && !!startDate && !!endDate && endDate < startDate;
+    setEndDateInvalid(badRange);
+    if (badRange) {
+      toast({ title: t('pages.books.form.endDateError'), variant: 'destructive' });
+      return;
+    }
+    try {
+      await onSubmit(data, coverFile, bookFile, alreadyRead, startDate, endDate);
+    } catch (err: unknown) {
+      if (serverFieldError(err, 'title')) {
+        const message = t('pages.books.form.titleDuplicate');
+        setError('title', { type: 'server', message });
+        toast({ title: message, variant: 'destructive' });
+        return;
+      }
+      throw err;
+    }
+  };
+
   return (
-    <form
-      onSubmit={handleSubmit(
-        (data) => onSubmit(data, coverFile, bookFile, alreadyRead, startDate, endDate),
-        notifyFormErrors
-      )}
-      className="space-y-lg"
-    >
+    <form onSubmit={handleSubmit(submit, notifyFormErrors)} className="space-y-lg">
       <div className="gap-lg grid lg:grid-cols-2 lg:items-start">
         <div className="space-y-lg">
-          {/* Capa do livro */}
-          <div>
-            <Label className="gap-xs flex items-center">
-              <ImagePlus className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.books.form.coverLabel')}
-            </Label>
-            <div className="mt-sm gap-md flex items-start">
-              <div className="bg-muted relative flex h-52 w-36 shrink-0 items-center justify-center overflow-hidden rounded-md border shadow-sm">
-                {coverPreview ? (
-                  <>
-                    <img
-                      src={coverPreview}
-                      alt={t('pages.books.form.coverAlt')}
-                      className="h-full w-full object-cover"
-                    />
-                    <PlainButton
-                      type="button"
-                      onClick={handleRemoveCover}
-                      className="bg-background/80 hover:bg-background absolute top-1 right-1 rounded-full p-0.5"
-                      aria-label={t('pages.books.form.removeCover')}
-                    >
-                      <X className="h-3 w-3" />
-                    </PlainButton>
-                  </>
-                ) : (
-                  <ImagePlus className="text-muted-foreground h-8 w-8" />
-                )}
-              </div>
-              <div className="gap-sm flex flex-col">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleCoverChange}
-                  id="cover-upload"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading}
-                >
-                  <Upload aria-hidden="true" />
-                  {coverPreview
-                    ? t('pages.books.form.coverChangeBtn')
-                    : t('pages.books.form.coverSelectBtn')}
-                </Button>
+          {/* Capa + Identificação lado a lado (sem rolagem no modal, §2.5) */}
+          <div className="gap-md flex items-start">
+            {/* Capa do livro */}
+            <div className="w-36 shrink-0">
+              <Label className="gap-xs flex items-center">
+                <ImagePlus className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.books.form.coverLabel')}
+              </Label>
+              <div className="mt-sm gap-sm flex flex-col">
+                <div className="bg-muted relative flex h-52 w-36 shrink-0 items-center justify-center overflow-hidden rounded-md border shadow-sm">
+                  {coverPreview ? (
+                    <>
+                      <img
+                        src={coverPreview}
+                        alt={t('pages.books.form.coverAlt')}
+                        className="h-full w-full object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={handleRemoveCover}
+                        className="absolute top-1 right-1 h-6 w-6 rounded-full"
+                        aria-label={t('pages.books.form.removeCover')}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </>
+                  ) : (
+                    <ImagePlus className="text-muted-foreground h-8 w-8" />
+                  )}
+                </div>
+                <div className="gap-sm flex flex-col">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleCoverChange}
+                    id="cover-upload"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isLoading}
+                  >
+                    <Upload aria-hidden="true" />
+                    {coverPreview
+                      ? t('pages.books.form.coverChangeBtn')
+                      : t('pages.books.form.coverSelectBtn')}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <FormSection
-            title={t('pages.books.form.sectionIdentification')}
-            icon={BookOpen}
-          >
-            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-              <div className="space-y-sm md:col-span-2">
-                <Label htmlFor="title" className="gap-xs flex items-center">
-                  <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.books.form.titleLabel')}
-                </Label>
-                <Input
-                  id="title"
-                  {...register('title')}
-                  aria-invalid={!!errors.title}
-                  placeholder={t('pages.books.form.titlePlaceholder')}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-sm">
-                <Label htmlFor="isbn" className="gap-xs flex items-center">
-                  <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.books.form.isbnLabel')}
-                </Label>
-                <Input
-                  id="isbn"
-                  {...register('isbn')}
-                  aria-invalid={!!errors.isbn}
-                  placeholder={t('pages.books.form.isbnPlaceholder')}
-                  maxLength={13}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-sm">
-                <Label htmlFor="series_name" className="gap-xs flex items-center">
-                  <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.books.form.seriesLabel')}
-                </Label>
-                <Input
-                  id="series_name"
-                  {...register('series_name')}
-                  aria-invalid={!!errors.series_name}
-                  placeholder={t('pages.books.form.seriesPlaceholder')}
-                  disabled={isLoading}
-                />
-              </div>
-
-              {watch('series_name') && (
-                <div className="space-y-sm">
-                  <Label htmlFor="series_order" className="gap-xs flex items-center">
+            <FormSection
+              className="min-w-0 flex-1"
+              title={t('pages.books.form.sectionIdentification')}
+              icon={BookOpen}
+            >
+              <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+                <div className="space-y-sm md:col-span-2">
+                  <Label htmlFor="title" className="gap-xs flex items-center">
                     <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.books.form.seriesOrderLabel')}
+                    {t('pages.books.form.titleLabel')}
                   </Label>
-                  <Controller
-                    control={control}
-                    name="series_order"
-                    render={({ field }) => (
-                      <NumberStepper
-                        id="series_order"
-                        aria-invalid={!!errors.series_order}
-                        disabled={isLoading}
-                        placeholder={t('pages.books.form.seriesOrderPlaceholder')}
-                        min={1}
-                        optional
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    )}
+                  <Input
+                    id="title"
+                    {...register('title')}
+                    aria-invalid={!!errors.title}
+                    placeholder={t('pages.books.form.titlePlaceholder')}
+                    disabled={isLoading}
                   />
                 </div>
-              )}
-            </div>
-          </FormSection>
+
+                <div className="space-y-sm">
+                  <Label htmlFor="isbn" className="gap-xs flex items-center">
+                    <Hash className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.books.form.isbnLabel')}
+                  </Label>
+                  <Input
+                    id="isbn"
+                    {...register('isbn')}
+                    aria-invalid={!!errors.isbn}
+                    placeholder={t('pages.books.form.isbnPlaceholder')}
+                    maxLength={13}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="space-y-sm">
+                  <Label htmlFor="series_name" className="gap-xs flex items-center">
+                    <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.books.form.seriesLabel')}
+                  </Label>
+                  <Input
+                    id="series_name"
+                    {...register('series_name')}
+                    aria-invalid={!!errors.series_name}
+                    placeholder={t('pages.books.form.seriesPlaceholder')}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                {watch('series_name') && (
+                  <div className="space-y-sm">
+                    <Label htmlFor="series_order" className="gap-xs flex items-center">
+                      <Hash className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.books.form.seriesOrderLabel')}
+                    </Label>
+                    <Controller
+                      control={control}
+                      name="series_order"
+                      render={({ field }) => (
+                        <NumberStepper
+                          id="series_order"
+                          aria-invalid={!!errors.series_order}
+                          disabled={isLoading}
+                          placeholder={t('pages.books.form.seriesOrderPlaceholder')}
+                          min={1}
+                          optional
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+            </FormSection>
+          </div>
 
           <FormSection title={t('pages.books.form.sectionClassification')} icon={Tag}>
             <div className="gap-md grid grid-cols-1 md:grid-cols-2">
@@ -504,16 +528,18 @@ export function BookForm({
                       return author ? (
                         <Badge key={authorId} variant="secondary">
                           {author.name}
-                          <PlainButton
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleRemoveAuthor(authorId)}
                             aria-label={t('pages.books.form.removeAuthor', {
                               name: author.name,
                             })}
-                            className="ml-xs hover:text-destructive"
+                            className="ml-xs h-4 w-4"
                           >
                             <X className="h-3 w-3" aria-hidden="true" />
-                          </PlainButton>
+                          </Button>
                         </Badge>
                       ) : null;
                     })}
@@ -613,14 +639,16 @@ export function BookForm({
                     {bookFileName ?? t('pages.books.form.bookFileNone')}
                   </span>
                   {bookFileName && (
-                    <PlainButton
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={handleRemoveBookFile}
-                      className="hover:bg-background ml-auto shrink-0 rounded-full p-0.5"
+                      className="ml-auto h-6 w-6 shrink-0 rounded-full"
                       aria-label={t('pages.books.form.removeBookFile')}
                     >
                       <X className="h-3 w-3" />
-                    </PlainButton>
+                    </Button>
                   )}
                 </div>
                 <input
@@ -692,7 +720,7 @@ export function BookForm({
                     {...register('pause_reason')}
                     aria-invalid={!!errors.pause_reason}
                     placeholder={t('pages.books.form.pauseReasonPlaceholder')}
-                    rows={2}
+                    rows={1}
                     disabled={isLoading}
                   />
                 </div>
@@ -706,10 +734,11 @@ export function BookForm({
                       checked={alreadyRead}
                       onCheckedChange={(checked) => {
                         setAlreadyRead(checked === true);
-                        if (!checked) {
-                          setStartDate('');
-                          setEndDate('');
-                        }
+                        // Datas sem opção de limpar: hoje é o padrão (§2.2).
+                        const today = formatLocalDate(new Date());
+                        setStartDate(checked ? today : '');
+                        setEndDate(checked ? today : '');
+                        setEndDateInvalid(false);
                       }}
                       disabled={isLoading}
                     />
@@ -726,7 +755,7 @@ export function BookForm({
                     <div className="gap-md grid grid-cols-2 rounded-md border p-3">
                       <div>
                         <Label className="gap-xs flex items-center">
-                          <Star className="text-muted-foreground h-3.5 w-3.5" />
+                          <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                           {t('pages.books.form.startDateLabel')}
                         </Label>
                         <DatePicker
@@ -740,7 +769,7 @@ export function BookForm({
                       </div>
                       <div>
                         <Label className="gap-xs flex items-center">
-                          <Star className="text-muted-foreground h-3.5 w-3.5" />
+                          <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                           {t('pages.books.form.endDateLabel')}
                         </Label>
                         <DatePicker
@@ -748,14 +777,10 @@ export function BookForm({
                           onChange={(date) =>
                             setEndDate(date ? formatLocalDate(date) : '')
                           }
+                          aria-invalid={endDateInvalid}
                           placeholder={t('pages.books.form.endDatePlaceholder')}
                           disabled={isLoading}
                         />
-                        {endDate && startDate && endDate < startDate && (
-                          <p className="mt-xs text-destructive text-sm">
-                            {t('pages.books.form.endDateError')}
-                          </p>
-                        )}
                       </div>
                     </div>
                   )}
@@ -804,13 +829,9 @@ export function BookForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
-          {isLoading ? t('common.actions.saving') : t('common.actions.save')}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
+          {t('common.actions.save')}
         </Button>
       </div>
     </form>

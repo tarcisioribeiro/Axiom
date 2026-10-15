@@ -5,10 +5,6 @@ vi.mock('@/services/library-dashboard-service', () => ({
   },
 }));
 
-vi.mock('@/components/library/ReadingGoalCard', () => ({
-  ReadingGoalCard: () => <div data-testid="reading-goal-card" />,
-}));
-
 vi.mock('@/components/charts', () => ({
   ChartContainer: () => <div data-testid="chart-container" />,
 }));

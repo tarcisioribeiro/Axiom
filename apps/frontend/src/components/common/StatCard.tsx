@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { cardVariants, useCounter } from '@/lib/animations';
+import { cardVariants, DURATION, EASE_OUT, useCounter } from '@/lib/animations';
 import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 
@@ -177,7 +177,7 @@ export const StatCard: React.FC<StatCardProps> = ({
               <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
                 <motion.div
                   className={cn(
-                    'h-full rounded-full',
+                    'h-full w-full origin-left rounded-full',
                     progressBar.color === 'warning'
                       ? 'bg-warning'
                       : progressBar.color === 'danger'
@@ -186,11 +186,11 @@ export const StatCard: React.FC<StatCardProps> = ({
                           ? 'bg-primary'
                           : 'bg-success'
                   )}
-                  initial={{ width: 0 }}
+                  initial={{ scaleX: 0 }}
                   animate={{
-                    width: `${Math.min((progressBar.value / (progressBar.max || 1)) * 100, 100)}%`,
+                    scaleX: Math.min(progressBar.value / (progressBar.max || 1), 1),
                   }}
-                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                  transition={{ duration: DURATION.slow, ease: EASE_OUT }}
                 />
               </div>
             </div>

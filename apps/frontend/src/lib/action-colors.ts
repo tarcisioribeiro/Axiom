@@ -1,0 +1,31 @@
+/** Classe de cor de cada ação (variáveis `--action-*` em `index.css`). */
+export const ACTION_COLOR = {
+  edit: 'text-action-edit',
+  delete: 'text-action-delete',
+  more: 'text-action-more',
+  pay: 'text-action-pay',
+  receive: 'text-action-receive',
+  deposit: 'text-action-deposit',
+  withdraw: 'text-action-withdraw',
+  yield: 'text-action-yield',
+  receipt: 'text-action-receipt',
+  favorite: 'text-action-favorite',
+  copy: 'text-action-copy',
+  share: 'text-action-share',
+  reveal: 'text-action-reveal',
+  'check-leak': 'text-action-check-leak',
+  download: 'text-action-download',
+  preview: 'text-action-preview',
+  installments: 'text-action-installments',
+  plan: 'text-action-plan',
+  progress: 'text-action-progress',
+  amortization: 'text-action-amortization',
+  transactions: 'text-action-transactions',
+  contributions: 'text-action-contributions',
+  simulator: 'text-action-simulator',
+  'manage-vaults': 'text-action-manage-vaults',
+  'check-completion': 'text-action-check-completion',
+  chat: 'text-action-chat',
+} as const;
+
+export type ActionColor = keyof typeof ACTION_COLOR;
