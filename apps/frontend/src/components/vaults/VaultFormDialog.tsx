@@ -2,13 +2,13 @@
 import {
   FileText,
   Landmark,
+  Loader2,
   Percent,
   Power,
+  Save,
   Sparkles,
   TrendingUp,
   Wallet,
-  Loader2,
-  Save,
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -193,7 +193,7 @@ export function VaultFormDialog({
             <div className="space-y-md">
               <div className="space-y-sm">
                 <Label htmlFor="description" className="gap-xs flex items-center">
-                  <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
                   {t('common.fields.description')} *
                 </Label>
                 <Input
@@ -208,7 +208,7 @@ export function VaultFormDialog({
 
               <div className="space-y-sm">
                 <Label htmlFor="account" className="gap-xs flex items-center">
-                  <Landmark className="text-muted-foreground h-3.5 w-3.5" />
+                  <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                   {t('common.fields.account')} *
                 </Label>
                 <Select

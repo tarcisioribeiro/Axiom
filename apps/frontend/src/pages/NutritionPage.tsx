@@ -19,7 +19,6 @@ import {
   Sunrise,
   Trash2,
   UtensilsCrossed,
-  X,
 } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -30,7 +29,7 @@ import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { GRID_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { FoodForm } from '@/components/nutrition/FoodForm';
 import {
@@ -47,8 +46,8 @@ import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
+  DialogCloseFooter,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -88,7 +87,7 @@ import type {
 import { getErrorMessage } from '@/utils/error-utils';
 
 // 5 cards por linha × 5 linhas
-const FOODS_PAGE_SIZE = 25;
+const OPTIONS_PAGE_SIZE = 3;
 // Limite de tipos de refeição por usuário (validado também no backend)
 const MAX_MEAL_TYPES = 6;
 
@@ -104,81 +103,45 @@ type DialogMode =
   | null;
 
 interface MealPeriodTheme {
-  cardBg: string;
-  border: string;
   iconBg: string;
   iconColor: string;
-  dotDone: string;
-  dotLate: string;
   icon: ReactNode;
   label: string;
 }
 
+/** Ícone e cor do período da refeição (só no ícone e no rótulo; o card é neutro). */
 function getMealPeriodTheme(time?: string | null): MealPeriodTheme {
   if (!time)
     return {
-      cardBg: 'bg-card',
-      border: 'border-border',
       iconBg: 'bg-muted',
       iconColor: 'text-muted-foreground',
-      dotDone: 'border-success bg-success',
-      dotLate: 'border-warning bg-warning/30',
       icon: <UtensilsCrossed className="text-muted-foreground h-5 w-5" />,
       label: '',
     };
   const h = parseInt(time.slice(0, 2));
-  if (h >= 4 && h < 9)
+  if (h >= 4 && h < 12)
     return {
-      cardBg: 'bg-amber-500/5',
-      border: 'border-amber-500/30',
-      iconBg: 'bg-amber-500/15',
-      iconColor: 'text-amber-500',
-      dotDone: 'border-success bg-success',
-      dotLate: 'border-warning bg-warning/30',
-      icon: <Sunrise className="h-5 w-5 text-amber-500" />,
+      iconBg: 'bg-warning/15',
+      iconColor: 'text-warning',
+      icon:
+        h < 9 ? (
+          <Sunrise className="text-warning h-5 w-5" />
+        ) : (
+          <Sun className="text-warning h-5 w-5" />
+        ),
       label: 'Manhã',
     };
-  if (h >= 9 && h < 12)
+  if (h >= 12 && h < 19)
     return {
-      cardBg: 'bg-yellow-500/5',
-      border: 'border-yellow-500/25',
-      iconBg: 'bg-yellow-500/15',
-      iconColor: 'text-yellow-600',
-      dotDone: 'border-success bg-success',
-      dotLate: 'border-warning bg-warning/30',
-      icon: <Sun className="h-5 w-5 text-yellow-500" />,
-      label: 'Manhã',
-    };
-  if (h >= 12 && h < 15)
-    return {
-      cardBg: 'bg-orange-500/5',
-      border: 'border-orange-500/30',
-      iconBg: 'bg-orange-500/15',
-      iconColor: 'text-orange-500',
-      dotDone: 'border-success bg-success',
-      dotLate: 'border-warning bg-warning/30',
-      icon: <Sun className="h-5 w-5 text-orange-500" />,
-      label: 'Almoço',
-    };
-  if (h >= 15 && h < 19)
-    return {
-      cardBg: 'bg-amber-600/5',
-      border: 'border-amber-600/25',
-      iconBg: 'bg-amber-600/15',
-      iconColor: 'text-amber-600',
-      dotDone: 'border-success bg-success',
-      dotLate: 'border-warning bg-warning/30',
-      icon: <Sun className="h-5 w-5 text-amber-600" />,
-      label: 'Tarde',
+      iconBg: 'bg-category-nutrition/15',
+      iconColor: 'text-category-nutrition',
+      icon: <Sun className="text-category-nutrition h-5 w-5" />,
+      label: h < 15 ? 'Almoço' : 'Tarde',
     };
   return {
-    cardBg: 'bg-violet-500/5',
-    border: 'border-violet-500/30',
-    iconBg: 'bg-violet-500/15',
-    iconColor: 'text-violet-500',
-    dotDone: 'border-success bg-success',
-    dotLate: 'border-warning bg-warning/30',
-    icon: <Moon className="h-5 w-5 text-violet-500" />,
+    iconBg: 'bg-info/15',
+    iconColor: 'text-info',
+    icon: <Moon className="text-info h-5 w-5" />,
     label: 'Noite',
   };
 }
@@ -698,7 +661,7 @@ export default function NutritionPage() {
 
                   <div className="gap-md flex shrink-0 items-center">
                     <div className="text-right">
-                      <span className="inline-flex items-center gap-0.5 text-2xl font-bold text-orange-500 tabular-nums">
+                      <span className="text-warning inline-flex items-center gap-0.5 text-2xl font-bold tabular-nums">
                         <Flame className="h-5 w-5" />
                         {dayCalories}
                       </span>
@@ -912,9 +875,9 @@ export default function NutritionPage() {
               <PaginatedSlide
                 key={foodSearch}
                 items={filteredFoods}
-                pageSize={FOODS_PAGE_SIZE}
+                pageSize={GRID_PAGE_SIZE}
                 centerList
-                className="gap-sm grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+                className="gap-sm grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
               >
                 {(pageFoods) =>
                   pageFoods.map((food) => (
@@ -1072,26 +1035,18 @@ export default function NutritionPage() {
                 t={t}
               />
             )}
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setOptionsMealTypeId(null)}
-                className="sm:mr-auto"
-              >
-                <X className="h-3 w-3" />
-                {t('common.actions.close')}
-              </Button>
+            <DialogCloseFooter>
               {optionsMealType && (
                 <Button
                   onClick={() =>
                     setDialog({ type: 'new-option', mealTypeId: optionsMealType.id })
                   }
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-4 w-4" />
                   {t('pages.nutritionMealTypes.newOptionBtn')}
                 </Button>
               )}
-            </DialogFooter>
+            </DialogCloseFooter>
           </DialogContent>
         </Dialog>
       </PageContainer>
@@ -1119,19 +1074,9 @@ function MealTypeCard({
   const theme = getMealPeriodTheme(mealType.suggested_time);
 
   return (
-    <div
-      className={cn(
-        'overflow-hidden rounded-lg border',
-        mealType.is_active ? theme.border : 'border-border'
-      )}
-    >
+    <div className="border-border bg-card overflow-hidden rounded-lg border">
       {/* Card header */}
-      <div
-        className={cn(
-          'gap-sm px-md py-sm flex items-center',
-          mealType.is_active ? theme.cardBg : 'bg-card'
-        )}
-      >
+      <div className="gap-sm px-md py-sm flex items-center">
         <button
           type="button"
           className="gap-sm flex min-w-0 flex-1 items-center text-left"
@@ -1223,67 +1168,76 @@ function MealOptionsList({
       {mealType.options.length === 0 ? (
         <EmptyState title={t('pages.nutritionMealTypes.noIngredients')} />
       ) : (
-        <div className="space-y-sm">
-          {mealType.options.map((opt) => (
-            <div
-              key={opt.id}
-              className="border-border bg-muted/20 overflow-hidden rounded-lg border"
-            >
-              {/* Option header */}
-              <div className="border-border/60 bg-card px-sm py-xs flex items-center justify-between border-b">
-                <div className="gap-xs flex items-center">
-                  <div className="bg-category-nutrition/10 flex h-6 w-6 items-center justify-center rounded-lg">
-                    <BookOpen className="text-category-nutrition h-3.5 w-3.5" />
+        // Cada opção traz a lista de ingredientes: 3 por página (itens longos)
+        <PaginatedSlide
+          key={mealType.id}
+          items={mealType.options}
+          pageSize={OPTIONS_PAGE_SIZE}
+          pinNav={false}
+          className="space-y-sm"
+        >
+          {(pageOptions) =>
+            pageOptions.map((opt) => (
+              <div
+                key={opt.id}
+                className="border-border bg-muted/20 overflow-hidden rounded-lg border"
+              >
+                {/* Option header */}
+                <div className="border-border/60 bg-card px-sm py-xs flex items-center justify-between border-b">
+                  <div className="gap-xs flex items-center">
+                    <div className="bg-category-nutrition/10 flex h-6 w-6 items-center justify-center rounded-lg">
+                      <BookOpen className="text-category-nutrition h-3.5 w-3.5" />
+                    </div>
+                    <span className="text-sm font-semibold">{opt.name}</span>
+                    {(() => {
+                      const total = opt.ingredients.reduce((acc, ing) => {
+                        const c = calcCalories(ing);
+                        return c != null ? acc + c : acc;
+                      }, 0);
+                      const hasData = opt.ingredients.some(
+                        (ing) => calcCalories(ing) != null
+                      );
+                      return hasData && total > 0 ? (
+                        <span className="text-warning inline-flex items-center gap-0.5 text-xs">
+                          <Flame className="h-3 w-3" />
+                          {total} kcal
+                        </span>
+                      ) : null;
+                    })()}
                   </div>
-                  <span className="text-sm font-semibold">{opt.name}</span>
-                  {(() => {
-                    const total = opt.ingredients.reduce((acc, ing) => {
-                      const c = calcCalories(ing);
-                      return c != null ? acc + c : acc;
-                    }, 0);
-                    const hasData = opt.ingredients.some(
-                      (ing) => calcCalories(ing) != null
-                    );
-                    return hasData && total > 0 ? (
-                      <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
-                        <Flame className="h-3 w-3" />
-                        {total} kcal
-                      </span>
-                    ) : null;
-                  })()}
+                  <div className="gap-xs flex">
+                    <Button
+                      aria-label={t('common.actions.edit')}
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => onEditOption(opt)}
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      aria-label={t('common.actions.delete')}
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive h-7 w-7"
+                      onClick={() => onDeleteOption(opt)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="gap-xs flex">
-                  <Button
-                    aria-label={t('common.actions.edit')}
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => onEditOption(opt)}
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    aria-label={t('common.actions.delete')}
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive h-7 w-7"
-                    onClick={() => onDeleteOption(opt)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
+                {/* Ingredients */}
+                {opt.ingredients.length > 0 ? (
+                  <IngredientList ingredients={opt.ingredients} />
+                ) : (
+                  <p className="px-sm py-xs text-muted-foreground text-xs">
+                    {t('pages.nutritionMealTypes.noIngredients')}
+                  </p>
+                )}
               </div>
-              {/* Ingredients */}
-              {opt.ingredients.length > 0 ? (
-                <IngredientList ingredients={opt.ingredients} />
-              ) : (
-                <p className="px-sm py-xs text-muted-foreground text-xs">
-                  {t('pages.nutritionMealTypes.noIngredients')}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
+            ))
+          }
+        </PaginatedSlide>
       )}
     </div>
   );
@@ -1348,22 +1302,12 @@ function MealTimeline({
             </div>
 
             {/* Meal card */}
-            <div
-              className={cn(
-                'mb-xs flex-1 overflow-hidden rounded-lg border transition-colors',
-                log
-                  ? 'border-success/30 bg-success/5'
-                  : isLate
-                    ? 'border-warning/30 bg-warning/5'
-                    : theme.border + ' ' + theme.cardBg
-              )}
-            >
+            <div className="mb-xs border-border bg-card flex-1 overflow-hidden rounded-lg border">
               {/* Period label strip */}
               {theme.label && !log && !isLate && (
                 <div
                   className={cn(
-                    'px-sm text-2xs border-b py-0.5 font-semibold tracking-wider uppercase',
-                    theme.border,
+                    'px-sm text-2xs border-border border-b py-0.5 font-semibold tracking-wider uppercase',
                     theme.iconColor
                   )}
                 >
@@ -1420,7 +1364,7 @@ function MealTimeline({
                   {log ? (
                     <>
                       {log.calories > 0 && (
-                        <span className="mr-xs inline-flex items-center gap-0.5 text-sm font-semibold text-orange-500 tabular-nums">
+                        <span className="mr-xs text-warning inline-flex items-center gap-0.5 text-sm font-semibold tabular-nums">
                           <Flame className="h-3.5 w-3.5" />
                           {Math.round(log.calories)} kcal
                         </span>
@@ -1493,7 +1437,7 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
         <p className="leading-snug font-semibold">{food.name}</p>
         <div className="gap-xs mt-0.5 flex flex-wrap items-center">
           {food.calories_per_serving && (
-            <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
+            <span className="text-warning inline-flex items-center gap-0.5 text-xs">
               <Flame className="h-3 w-3" />
               {Math.round(Number(food.calories_per_serving))} kcal
             </span>
@@ -1546,7 +1490,7 @@ function IngredientItem({ ing }: { ing: MenuOptionIngredient }) {
         <span className="text-foreground font-medium">{ing.food_name}</span>
         {ing.quantity ? ` — ${formatQuantity(t, ing.quantity, ing.unit)}` : ''}
         {cal != null && (
-          <span className="ml-xs inline-flex items-center gap-0.5 text-orange-500">
+          <span className="ml-xs text-warning inline-flex items-center gap-0.5">
             <Flame className="h-2.5 w-2.5" />
             {cal} {t('pages.nutritionMealTypes.ingredientKcal')}
           </span>
@@ -1589,7 +1533,7 @@ function IngredientList({ ingredients }: { ingredients: MenuOptionIngredient[] }
               <div key={ing.id}>
                 <IngredientItem ing={ing} />
                 {idx < items.length - 1 && (
-                  <p className="text-category-nutrition/60 text-2xs ml-3 font-semibold tracking-wider uppercase">
+                  <p className="text-category-nutrition/60 text-2xs ml-sm font-semibold tracking-wider uppercase">
                     {t('pages.nutritionMealTypes.ingredientOr')}
                   </p>
                 )}

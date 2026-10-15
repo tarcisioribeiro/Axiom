@@ -6,7 +6,6 @@ import {
   Activity,
   CalendarDays,
   Layers,
-  Loader2,
   PieChart,
   Pipette,
   Plus,
@@ -325,7 +324,13 @@ export default function BodyMetrics() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.measured_at) return;
+    if (!form.measured_at) {
+      toast({
+        title: t('common.fieldRequired', { field: t('pages.bodyMetrics.measuredAt') }),
+        variant: 'destructive',
+      });
+      return;
+    }
 
     const bfPct = liveBodyFat !== null ? String(liveBodyFat) : null;
 
@@ -779,6 +784,7 @@ export default function BodyMetrics() {
                 <DatePicker
                   value={form.measured_at}
                   onChange={(d) => setForm((f) => ({ ...f, measured_at: d }))}
+                  aria-invalid={!form.measured_at}
                 />
               </div>
 
@@ -1125,12 +1131,8 @@ export default function BodyMetrics() {
                   <X className="h-4 w-4" />
                   {t('common.actions.cancel')}
                 </Button>
-                <Button type="submit" disabled={isSaving || !form.measured_at}>
-                  {isSaving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
+                <Button type="submit" loading={isSaving}>
+                  {!isSaving && <Save className="h-4 w-4" />}
                   {isSaving ? t('common.actions.saving') : t('common.actions.save')}
                 </Button>
               </div>

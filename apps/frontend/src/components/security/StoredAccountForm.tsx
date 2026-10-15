@@ -7,7 +7,7 @@ import {
   FileText,
   Hash,
   Link2,
-  Loader2,
+  Shapes,
   Lock,
   Search,
   Save,
@@ -31,7 +31,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { STORED_ACCOUNT_TYPE_ICONS, INSTITUTION_ICONS } from '@/config/icons';
 import { notifyFormErrors } from '@/lib/form-errors';
-import { storedAccountSchema, type StoredBankAccountFormData } from '@/lib/validations';
+import {
+  storedAccountEditSchema,
+  storedAccountSchema,
+  type StoredBankAccountFormData,
+} from '@/lib/validations';
 import type { StoredBankAccount, Account, Member } from '@/types';
 
 const ACCOUNT_TYPE_VALUES = ['CC', 'CS', 'CP', 'CI', 'OTHER'] as const;
@@ -107,7 +111,7 @@ export function StoredAccountForm({
     watch,
     formState: { errors },
   } = useForm<StoredBankAccountFormData>({
-    resolver: zodResolver(storedAccountSchema),
+    resolver: zodResolver(account ? storedAccountEditSchema : storedAccountSchema),
     defaultValues: account
       ? {
           name: account.name,
@@ -115,7 +119,7 @@ export function StoredAccountForm({
           institution_code: account.institution_code || '',
           account_type:
             account.account_type as StoredBankAccountFormData['account_type'],
-          account_number: account.account_number || '',
+          account_number: '',
           agency: account.agency || '',
           password: '',
           digital_password: '',
@@ -140,294 +144,307 @@ export function StoredAccountForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
-      <FormSection
-        title={t('pages.storedAccounts.form.sectionIdentification')}
-        icon={Building2}
-      >
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="name" className="gap-xs flex items-center">
-              <Building2 className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedAccounts.form.nameLabel')}
-            </Label>
-            <Input
-              id="name"
-              {...register('name')}
-              aria-invalid={!!errors.name}
-              placeholder={t('pages.storedAccounts.form.namePlaceholder')}
-              disabled={isLoading}
-            />
-          </div>
+      <div className="gap-lg grid lg:grid-cols-2">
+        <div className="space-y-lg">
+          <FormSection
+            title={t('pages.storedAccounts.form.sectionIdentification')}
+            icon={Building2}
+          >
+            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+              <div className="space-y-sm md:col-span-2">
+                <Label htmlFor="name" className="gap-xs flex items-center">
+                  <Building2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedAccounts.form.nameLabel')}
+                </Label>
+                <Input
+                  id="name"
+                  {...register('name')}
+                  aria-invalid={!!errors.name}
+                  placeholder={t('pages.storedAccounts.form.namePlaceholder')}
+                  disabled={isLoading}
+                />
+              </div>
 
-          <div className="space-y-sm">
-            <Label className="gap-xs flex items-center">
-              <Building2 className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedAccounts.form.institutionLabel')}
-            </Label>
-            <div className="relative">
-              <button
-                type="button"
-                className={`bg-background ring-offset-background focus:ring-ring flex h-10 w-full cursor-pointer items-center justify-between rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-offset-2 ${errors.institution_name ? 'border-destructive ring-destructive/50 ring-2' : 'border-input'}`}
-                onClick={() => setShowBankDropdown((v) => !v)}
-              >
-                {(() => {
-                  const selected = INSTITUTIONS.find(
-                    (i) => i.value === watch('institution_name')
-                  );
-                  if (selected) {
-                    const InstIcon = INSTITUTION_ICONS[selected.value] ?? Building2;
-                    return (
-                      <span className="flex items-center gap-2">
-                        <InstIcon className="h-4 w-4" />
-                        {selected.label}
-                      </span>
-                    );
-                  }
-                  return (
-                    <span className="text-muted-foreground">
-                      {t('pages.storedAccounts.form.institutionPlaceholder')}
-                    </span>
-                  );
-                })()}
-              </button>
-
-              {showBankDropdown && (
-                <div className="border-border bg-popover absolute z-50 mt-1 w-full rounded-md border shadow-md">
-                  <div className="gap-xs border-border p-sm flex items-center border-b">
-                    <Search className="text-muted-foreground h-3.5 w-3.5" />
-                    <input
-                      className="placeholder:text-muted-foreground flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
-                      placeholder={t('pages.storedAccounts.form.bankSearchPlaceholder')}
-                      value={bankSearch}
-                      onChange={(e) => setBankSearch(e.target.value)}
-                    />
-                  </div>
-                  <div className="max-h-48 overflow-y-auto">
-                    {filteredInstitutions.map((inst) => {
-                      const InstIcon = INSTITUTION_ICONS[inst.value] ?? Building2;
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Building2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedAccounts.form.institutionLabel')}
+                </Label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    className={`bg-background ring-offset-background focus:ring-ring flex h-10 w-full cursor-pointer items-center justify-between rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-offset-2 ${errors.institution_name ? 'border-destructive ring-destructive/50 ring-2' : 'border-input'}`}
+                    onClick={() => setShowBankDropdown((v) => !v)}
+                  >
+                    {(() => {
+                      const selected = INSTITUTIONS.find(
+                        (i) => i.value === watch('institution_name')
+                      );
+                      if (selected) {
+                        const InstIcon = INSTITUTION_ICONS[selected.value] ?? Building2;
+                        return (
+                          <span className="flex items-center gap-2">
+                            <InstIcon className="h-4 w-4" />
+                            {selected.label}
+                          </span>
+                        );
+                      }
                       return (
-                        <button
-                          key={inst.value}
-                          type="button"
-                          className="px-md py-sm hover:bg-muted flex w-full items-center gap-2 text-sm"
-                          onClick={() => {
-                            setValue('institution_name', inst.value);
-                            setValue('institution_code', inst.ispb || '');
-                            setBankSearch('');
-                            setShowBankDropdown(false);
-                          }}
-                        >
-                          <InstIcon className="h-4 w-4 shrink-0" />
-                          <span className="flex-1 text-left">{inst.label}</span>
-                          {inst.ispb && (
-                            <span className="text-muted-foreground text-xs">
-                              {inst.ispb}
-                            </span>
+                        <span className="text-muted-foreground">
+                          {t('pages.storedAccounts.form.institutionPlaceholder')}
+                        </span>
+                      );
+                    })()}
+                  </button>
+
+                  {showBankDropdown && (
+                    <div className="border-border bg-popover absolute z-50 mt-1 w-full rounded-md border shadow-md">
+                      <div className="gap-xs border-border p-sm flex items-center border-b">
+                        <Search className="text-muted-foreground h-3.5 w-3.5" />
+                        <input
+                          className="placeholder:text-muted-foreground flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
+                          placeholder={t(
+                            'pages.storedAccounts.form.bankSearchPlaceholder'
                           )}
-                        </button>
+                          value={bankSearch}
+                          onChange={(e) => setBankSearch(e.target.value)}
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        {filteredInstitutions.map((inst) => {
+                          const InstIcon = INSTITUTION_ICONS[inst.value] ?? Building2;
+                          return (
+                            <button
+                              key={inst.value}
+                              type="button"
+                              className="px-md py-sm hover:bg-muted flex w-full items-center gap-2 text-sm"
+                              onClick={() => {
+                                setValue('institution_name', inst.value);
+                                setValue('institution_code', inst.ispb || '');
+                                setBankSearch('');
+                                setShowBankDropdown(false);
+                              }}
+                            >
+                              <InstIcon className="h-4 w-4 shrink-0" />
+                              <span className="flex-1 text-left">{inst.label}</span>
+                              {inst.ispb && (
+                                <span className="text-muted-foreground text-xs">
+                                  {inst.ispb}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                        {filteredInstitutions.length === 0 && (
+                          <p className="px-md py-sm text-muted-foreground text-sm">
+                            {t('common.noResults')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <input type="hidden" {...register('institution_code')} />
+              </div>
+
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Shapes className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedAccounts.form.typeLabel')}
+                </Label>
+                <Select
+                  value={watch('account_type')}
+                  onValueChange={(value) =>
+                    setValue(
+                      'account_type',
+                      value as StoredBankAccountFormData['account_type']
+                    )
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger aria-invalid={!!errors.account_type}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACCOUNT_TYPE_VALUES.map((value) => {
+                      const TypeIcon = STORED_ACCOUNT_TYPE_ICONS[value] ?? Building2;
+                      return (
+                        <SelectItem key={value} value={value}>
+                          <span className="flex items-center gap-2">
+                            <TypeIcon className="h-4 w-4" />
+                            {t(`pages.storedAccounts.accountTypes.${value}`)}
+                          </span>
+                        </SelectItem>
                       );
                     })}
-                    {filteredInstitutions.length === 0 && (
-                      <p className="px-md py-sm text-muted-foreground text-sm">
-                        {t('common.noResults')}
-                      </p>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </FormSection>
+
+          <FormSection
+            title={t('pages.storedAccounts.form.sectionAccountData')}
+            icon={Hash}
+          >
+            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+              <div className="space-y-sm">
+                <Label htmlFor="account_number" className="gap-xs flex items-center">
+                  <Hash className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedAccounts.form.numberLabel')}
+                </Label>
+                <Input
+                  id="account_number"
+                  {...register('account_number')}
+                  aria-invalid={!!errors.account_number}
+                  placeholder={
+                    account
+                      ? t('pages.passwords.keepCurrentPassword')
+                      : t('pages.storedAccounts.form.numberPlaceholder')
+                  }
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-sm">
+                <Label htmlFor="agency" className="gap-xs flex items-center">
+                  <Hash className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedAccounts.form.agencyLabel')}
+                </Label>
+                <Input
+                  id="agency"
+                  {...register('agency')}
+                  aria-invalid={!!errors.agency}
+                  placeholder={t('pages.storedAccounts.form.agencyPlaceholder')}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+          </FormSection>
+        </div>
+        <div className="space-y-lg">
+          <FormSection
+            title={t('pages.storedAccounts.form.sectionPasswords')}
+            icon={Lock}
+          >
+            <div className="gap-md grid">
+              <div className="space-y-sm">
+                <Label htmlFor="password" className="gap-xs flex items-center">
+                  <Lock className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedAccounts.form.password1Label')}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    {...register('password')}
+                    aria-invalid={!!errors.password}
+                    placeholder={
+                      account
+                        ? t('pages.storedAccounts.form.password1EditPlaceholder')
+                        : t('pages.storedAccounts.form.password1Placeholder')
+                    }
+                    disabled={isLoading}
+                  />
+                  <Button
+                    aria-label={t(
+                      showPassword
+                        ? 'auth.login.hidePassword'
+                        : 'auth.login.showPassword'
                     )}
-                  </div>
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-0 right-0 h-full px-3"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
-              )}
-            </div>
-            <input type="hidden" {...register('institution_code')} />
-          </div>
+              </div>
 
-          <div className="space-y-sm">
-            <Label className="gap-xs flex items-center">
-              <Building2 className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedAccounts.form.typeLabel')}
-            </Label>
-            <Select
-              value={watch('account_type')}
-              onValueChange={(value) =>
-                setValue(
-                  'account_type',
-                  value as StoredBankAccountFormData['account_type']
-                )
-              }
-              disabled={isLoading}
+              <div className="space-y-sm">
+                <Label htmlFor="digital_password" className="gap-xs flex items-center">
+                  <Lock className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedAccounts.form.password2Label')}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="digital_password"
+                    type={showSecondPassword ? 'text' : 'password'}
+                    {...register('digital_password')}
+                    aria-invalid={!!errors.digital_password}
+                    placeholder={
+                      account
+                        ? t('pages.storedAccounts.form.password2EditPlaceholder')
+                        : t('pages.storedAccounts.form.password2Placeholder')
+                    }
+                    disabled={isLoading}
+                  />
+                  <Button
+                    aria-label={t(
+                      showSecondPassword
+                        ? 'auth.login.hidePassword'
+                        : 'auth.login.showPassword'
+                    )}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-0 right-0 h-full px-3"
+                    onClick={() => setShowSecondPassword(!showSecondPassword)}
+                  >
+                    {showSecondPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </FormSection>
+
+          {financeAccounts.length > 0 && (
+            <FormSection
+              title={t('pages.storedAccounts.form.sectionLink')}
+              icon={Link2}
             >
-              <SelectTrigger aria-invalid={!!errors.account_type}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ACCOUNT_TYPE_VALUES.map((value) => {
-                  const TypeIcon = STORED_ACCOUNT_TYPE_ICONS[value] ?? Building2;
-                  return (
-                    <SelectItem key={value} value={value}>
-                      <span className="flex items-center gap-2">
-                        <TypeIcon className="h-4 w-4" />
-                        {t(`pages.storedAccounts.accountTypes.${value}`)}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.storedAccounts.form.financeAccountLabel')}
+                </Label>
+                <Select
+                  value={watch('finance_account')?.toString() || 'none'}
+                  onValueChange={(value) =>
+                    setValue(
+                      'finance_account',
+                      value === 'none' ? undefined : parseInt(value)
+                    )
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.actions.none')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {financeAccounts.map((acc) => (
+                      <SelectItem key={acc.id} value={acc.id.toString()}>
+                        {acc.account_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </FormSection>
+          )}
         </div>
-      </FormSection>
-
-      <FormSection
-        title={t('pages.storedAccounts.form.sectionAccountData')}
-        icon={Hash}
-      >
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm">
-            <Label htmlFor="account_number" className="gap-xs flex items-center">
-              <Hash className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedAccounts.form.numberLabel')}
-            </Label>
-            <Input
-              id="account_number"
-              {...register('account_number')}
-              aria-invalid={!!errors.account_number}
-              placeholder={t('pages.storedAccounts.form.numberPlaceholder')}
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="space-y-sm">
-            <Label htmlFor="agency" className="gap-xs flex items-center">
-              <Hash className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedAccounts.form.agencyLabel')}
-            </Label>
-            <Input
-              id="agency"
-              {...register('agency')}
-              aria-invalid={!!errors.agency}
-              placeholder={t('pages.storedAccounts.form.agencyPlaceholder')}
-              disabled={isLoading}
-            />
-          </div>
-        </div>
-      </FormSection>
-
-      <FormSection title={t('pages.storedAccounts.form.sectionPasswords')} icon={Lock}>
-        <div className="gap-md grid">
-          <div className="space-y-sm">
-            <Label htmlFor="password" className="gap-xs flex items-center">
-              <Lock className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedAccounts.form.password1Label')}
-            </Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                {...register('password')}
-                aria-invalid={!!errors.password}
-                placeholder={
-                  account
-                    ? t('pages.storedAccounts.form.password1EditPlaceholder')
-                    : t('pages.storedAccounts.form.password1Placeholder')
-                }
-                disabled={isLoading}
-              />
-              <Button
-                aria-label={t(
-                  showPassword ? 'auth.login.hidePassword' : 'auth.login.showPassword'
-                )}
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute top-0 right-0 h-full px-3"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            {account && (
-              <p className="mt-xs text-warning text-xs">
-                {t('pages.storedAccounts.form.keepCurrentPassword')}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-sm">
-            <Label htmlFor="digital_password" className="gap-xs flex items-center">
-              <Lock className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedAccounts.form.password2Label')}
-            </Label>
-            <div className="relative">
-              <Input
-                id="digital_password"
-                type={showSecondPassword ? 'text' : 'password'}
-                {...register('digital_password')}
-                aria-invalid={!!errors.digital_password}
-                placeholder={
-                  account
-                    ? t('pages.storedAccounts.form.password2EditPlaceholder')
-                    : t('pages.storedAccounts.form.password2Placeholder')
-                }
-                disabled={isLoading}
-              />
-              <Button
-                aria-label={t(
-                  showSecondPassword
-                    ? 'auth.login.hidePassword'
-                    : 'auth.login.showPassword'
-                )}
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute top-0 right-0 h-full px-3"
-                onClick={() => setShowSecondPassword(!showSecondPassword)}
-              >
-                {showSecondPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </FormSection>
-
-      {financeAccounts.length > 0 && (
-        <FormSection title={t('pages.storedAccounts.form.sectionLink')} icon={Link2}>
-          <div className="space-y-sm">
-            <Label className="gap-xs flex items-center">
-              <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.storedAccounts.form.financeAccountLabel')}
-            </Label>
-            <Select
-              value={watch('finance_account')?.toString() || 'none'}
-              onValueChange={(value) =>
-                setValue(
-                  'finance_account',
-                  value === 'none' ? undefined : parseInt(value)
-                )
-              }
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t('common.actions.none')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">{t('common.actions.none')}</SelectItem>
-                {financeAccounts.map((acc) => (
-                  <SelectItem key={acc.id} value={acc.id.toString()}>
-                    {acc.account_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </FormSection>
-      )}
-
+      </div>
       <FormSection title={t('pages.storedAccounts.form.sectionNotes')} icon={FileText}>
         <div className="space-y-sm">
           <Label htmlFor="notes" className="gap-xs flex items-center">
@@ -450,12 +467,8 @@ export function StoredAccountForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
           {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>

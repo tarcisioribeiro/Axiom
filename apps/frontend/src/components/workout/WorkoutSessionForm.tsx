@@ -8,7 +8,6 @@ import {
   Dumbbell,
   Flag,
   ListChecks,
-  Loader2,
   NotebookPen,
   Plus,
   Trash2,
@@ -38,6 +37,7 @@ import { TimePicker } from '@/components/ui/time-picker';
 import { ExerciseThumbnail } from '@/components/workout/ExerciseThumbnail';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatLocalDate } from '@/lib/utils';
 import type { WorkoutDay, WorkoutSession } from '@/types/workout';
 
@@ -162,54 +162,61 @@ export function WorkoutSessionForm({
   const today = formatLocalDate(new Date());
   const defaultStart = nowTimeStr();
 
-  const { register, handleSubmit, control, watch, setValue, getValues } =
-    useForm<WorkoutSessionFormValues>({
-      defaultValues: session
-        ? {
-            workout_day: session.workout_day ? String(session.workout_day) : '',
-            date: session.date,
-            started_at: session.started_at ?? '',
-            finished_at: session.finished_at ?? '',
-            notes: session.notes ?? '',
-            exercises: [...session.session_exercises]
-              .sort((a, b) => a.order - b.order)
-              .map((ex) => ({
-                id: ex.id,
-                exercise: ex.exercise,
-                exercise_name: ex.exercise_name,
-                gif_url: ex.gif_url,
-                thumbnail_url: ex.thumbnail_url,
-                sets_target: ex.sets_target,
-                reps_target_min: ex.reps_target_min,
-                reps_target_max: ex.reps_target_max,
-                load_target: ex.load_target ?? '',
-                load_target_unit: ex.load_target_unit || 'kg',
-                order: ex.order,
-                sets: [...ex.sets]
-                  .sort((a, b) => a.set_number - b.set_number)
-                  .map((s) => ({
-                    id: s.id,
-                    set_number: s.set_number,
-                    load: fmt(s.load),
-                    load_unit: s.load ? s.load_unit : 'bw',
-                    reps_done: s.reps_done != null ? String(s.reps_done) : '',
-                    completed: s.completed,
-                    notes: s.notes ?? '',
-                  })),
-              })),
-          }
-        : {
-            workout_day: '',
-            date: today,
-            started_at: defaultStart,
-            finished_at: addMinutesToTimeStr(
-              defaultStart,
-              DEFAULT_SESSION_DURATION_MINUTES
-            ),
-            notes: '',
-            exercises: [],
-          },
-    });
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = useForm<WorkoutSessionFormValues>({
+    defaultValues: session
+      ? {
+          workout_day: session.workout_day ? String(session.workout_day) : '',
+          date: session.date,
+          started_at: session.started_at ?? '',
+          finished_at: session.finished_at ?? '',
+          notes: session.notes ?? '',
+          exercises: [...session.session_exercises]
+            .sort((a, b) => a.order - b.order)
+            .map((ex) => ({
+              id: ex.id,
+              exercise: ex.exercise,
+              exercise_name: ex.exercise_name,
+              gif_url: ex.gif_url,
+              thumbnail_url: ex.thumbnail_url,
+              sets_target: ex.sets_target,
+              reps_target_min: ex.reps_target_min,
+              reps_target_max: ex.reps_target_max,
+              load_target: ex.load_target ?? '',
+              load_target_unit: ex.load_target_unit || 'kg',
+              order: ex.order,
+              sets: [...ex.sets]
+                .sort((a, b) => a.set_number - b.set_number)
+                .map((s) => ({
+                  id: s.id,
+                  set_number: s.set_number,
+                  load: fmt(s.load),
+                  load_unit: s.load ? s.load_unit : 'bw',
+                  reps_done: s.reps_done != null ? String(s.reps_done) : '',
+                  completed: s.completed,
+                  notes: s.notes ?? '',
+                })),
+            })),
+        }
+      : {
+          workout_day: '',
+          date: today,
+          started_at: defaultStart,
+          finished_at: addMinutesToTimeStr(
+            defaultStart,
+            DEFAULT_SESSION_DURATION_MINUTES
+          ),
+          notes: '',
+          exercises: [],
+        },
+  });
 
   const { fields: exerciseFields, remove: removeExercise } = useFieldArray({
     control,
@@ -252,6 +259,13 @@ export function WorkoutSessionForm({
   };
 
   const selectedDayId = watch('workout_day');
+  // Sessão sempre vinculada a uma divisão (sem sessão avulsa)
+  register('workout_day', {
+    validate: (v) =>
+      !!session ||
+      !!v ||
+      t('common.fieldRequired', { field: t('pages.workoutSessions.workoutDay') }),
+  });
 
   // Skip on initial mount so editing a session doesn't get its loaded
   // sets/reps clobbered by the workout day's template — this effect should
@@ -333,7 +347,7 @@ export function WorkoutSessionForm({
 
   return (
     <form
-      onSubmit={handleSubmit(handleFormSubmit)}
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
       className="gap-md flex min-h-0 flex-1 flex-col"
     >
       <FormSection title={t('pages.workoutSessions.sectionSession')}>
@@ -359,7 +373,7 @@ export function WorkoutSessionForm({
               value={watch('workout_day')}
               onValueChange={(v) => setValue('workout_day', v)}
             >
-              <SelectTrigger id="session-day">
+              <SelectTrigger id="session-day" aria-invalid={!!errors.workout_day}>
                 <SelectValue
                   placeholder={t('pages.workoutSessions.workoutDayPlaceholder')}
                 />
@@ -416,7 +430,7 @@ export function WorkoutSessionForm({
           )}
         </div>
 
-        <div className="flex min-h-40 flex-col overflow-x-hidden pr-1">
+        <div className="pr-xs flex min-h-40 flex-col overflow-x-hidden">
           <AnimatePresence
             initial={false}
             custom={direction}
@@ -500,7 +514,7 @@ export function WorkoutSessionForm({
         <Textarea
           id="session-notes"
           placeholder={t('pages.workoutSessions.sessionNotesPlaceholder')}
-          rows={2}
+          rows={1}
           {...register('notes')}
         />
       </div>
@@ -510,13 +524,8 @@ export function WorkoutSessionForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        {/* Sessão sempre vinculada a uma divisão (sem sessão avulsa) */}
-        <Button type="submit" disabled={isLoading || (!session && !selectedDayId)}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
 
           {t('common.actions.save')}
         </Button>

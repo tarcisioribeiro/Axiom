@@ -62,7 +62,7 @@ export function ExpenseSplitsModal({
 
   const expenseId = expense?.id;
 
-  const { data: splits = [], isLoading } = useQuery({
+  const { data: splits = [], isPending } = useQuery({
     queryKey: ['expense-splits', expenseId],
     queryFn: () => expenseSplitsService.getAll(expenseId!),
     enabled: !!expenseId && open,
@@ -120,7 +120,8 @@ export function ExpenseSplitsModal({
   const expenseTotal = expense ? parseFloat(expense.value) : 0;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    // Abre só com os dados prontos (sem "Carregando…" que faz o modal saltar de tamanho).
+    <Dialog open={open && !isPending} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle icon={Split}>{t('pages.expenses.splits.title')}</DialogTitle>
@@ -129,16 +130,8 @@ export function ExpenseSplitsModal({
           </DialogDescription>
         </DialogHeader>
 
-        <p className="text-muted-foreground text-sm">
-          {expense?.description} — {expense && formatCurrency(expenseTotal)}
-        </p>
-
         <div className="space-y-sm">
-          {isLoading ? (
-            <p className="py-md text-muted-foreground text-center text-sm">
-              {t('common.messages.loading')}
-            </p>
-          ) : splits.length === 0 && !addingNew ? (
+          {splits.length === 0 && !addingNew ? (
             <EmptyState title={t('pages.expenses.splits.empty')} />
           ) : (
             <PaginatedSlide

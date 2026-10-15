@@ -332,8 +332,8 @@ class Book(BaseModel):
     )
     synopsis = models.TextField(
         null=False,
-        blank=False,
-        default="Sem sinopse disponível.",
+        blank=True,
+        default="",
         verbose_name="Sinopse",
     )
     edition = models.CharField(

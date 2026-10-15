@@ -1,16 +1,7 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, parseISO } from 'date-fns';
-import {
-  Activity,
-  CalendarDays,
-  Loader2,
-  Tag,
-  Target,
-  Trophy,
-  Save,
-  X,
-} from 'lucide-react';
+import { Activity, CalendarDays, Tag, Target, Trophy, Save, X } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -175,7 +166,7 @@ export function GoalForm({
               id="description"
               {...register('description')}
               placeholder={t('pages.goals.form.descriptionPlaceholder')}
-              rows={2}
+              rows={1}
               disabled={isLoading}
             />
           </div>
@@ -202,7 +193,7 @@ export function GoalForm({
                   const TypeIcon = GOAL_TYPE_ICONS[type.value];
                   return (
                     <SelectItem key={type.value} value={type.value}>
-                      <span className="flex items-center gap-2">
+                      <span className="gap-sm flex items-center">
                         {TypeIcon && <TypeIcon className="h-4 w-4" />}
                         {t(`pages.goals.form.goalTypeOptions.${type.value}`)}
                       </span>
@@ -345,7 +336,7 @@ export function GoalForm({
                 <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.goals.form.endDateLabel')}
               </Label>
-              <div className="border-input bg-muted/40 text-muted-foreground flex h-10 items-center rounded-md border px-3 text-sm">
+              <div className="border-input bg-muted/40 text-muted-foreground px-sm flex h-10 items-center rounded-md border text-sm">
                 {computedEndDate ? formatDate(computedEndDate) : '—'}
               </div>
             </div>
@@ -386,7 +377,7 @@ export function GoalForm({
             <SelectContent>
               {GOAL_STATUS_CHOICES.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
-                  <span className="flex items-center gap-2">
+                  <span className="gap-sm flex items-center">
                     {(() => {
                       const StatusIcon = GOAL_STATUS_ICONS[status.value];
                       return StatusIcon ? <StatusIcon className="h-4 w-4" /> : null;
@@ -405,12 +396,8 @@ export function GoalForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
           {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>

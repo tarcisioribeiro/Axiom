@@ -1,4 +1,4 @@
-import { FileText, Flame, Loader2, Ruler, Salad, Save, Scale, X } from 'lucide-react';
+import { FileText, Flame, Ruler, Salad, Save, Scale, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { notifyFormErrors } from '@/lib/form-errors';
 import type { Food, FoodFormData } from '@/types/nutrition';
 
 const SERVING_UNIT_VALUES = [
@@ -92,24 +92,28 @@ export function FoodForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+    <form
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       {/* Nome */}
       <FormSection title={t('pages.nutritionFoods.foodName')} icon={Salad}>
         <Input
           placeholder={t('pages.nutritionFoods.foodNamePlaceholder')}
-          {...register('name', { required: true })}
-          className={cn(errors.name && 'border-destructive')}
+          aria-invalid={!!errors.name}
+          {...register('name', {
+            required: t('common.fieldRequired', {
+              field: t('pages.nutritionFoods.foodName'),
+            }),
+          })}
         />
-        {errors.name && (
-          <p className="mt-xs text-destructive text-xs">{t('common.required')}</p>
-        )}
       </FormSection>
 
       {/* Descrição */}
       <FormSection title={t('pages.nutritionFoods.foodDescription')} icon={FileText}>
         <Textarea
           placeholder={t('pages.nutritionFoods.foodDescriptionPlaceholder')}
-          rows={2}
+          rows={1}
           {...register('description')}
           className="resize-none"
         />
@@ -203,12 +207,8 @@ export function FoodForm({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
 
           {t('common.actions.save')}
         </Button>

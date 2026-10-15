@@ -21,6 +21,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -202,9 +203,6 @@ export default function MonthComparison({
   const dataA = queryA.data;
   const dataB = queryB.data;
 
-  const labelA = monthOptions.find((m) => m.value === monthA)?.label ?? monthA;
-  const labelB = monthOptions.find((m) => m.value === monthB)?.label ?? monthB;
-
   const expenseCategoryMap = useMemo(() => {
     if (!dataA || !dataB) return [];
     const allCategories = new Set([
@@ -251,16 +249,6 @@ export default function MonthComparison({
 
       {!isLoading && dataA && dataB && (
         <>
-          <div className="gap-sm flex flex-wrap items-center">
-            <span className="gap-xs bg-warning/10 px-sm py-xs text-warning inline-flex items-center rounded-full text-xs font-semibold">
-              <span className="bg-warning h-1.5 w-1.5 rounded-full" />A — {labelA}
-            </span>
-            <span className="text-muted-foreground text-xs">vs</span>
-            <span className="gap-xs bg-info/10 px-sm py-xs text-info inline-flex items-center rounded-full text-xs font-semibold">
-              <span className="bg-info h-1.5 w-1.5 rounded-full" />B — {labelB}
-            </span>
-          </div>
-
           <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
             <SummaryCard
               title={t('monthComparison.revenues')}
@@ -298,29 +286,40 @@ export default function MonthComparison({
                     <span className="text-info text-right font-semibold">B</span>
                     <span className="text-right">{t('monthComparison.variation')}</span>
                   </div>
-                  {expenseCategoryMap.map(({ cat, totalA, totalB, diff: _diff }) => {
-                    const pct =
-                      totalA !== 0 ? ((totalB - totalA) / Math.abs(totalA)) * 100 : 0;
-                    return (
-                      <div
-                        key={cat}
-                        className="gap-sm pt-sm grid grid-cols-[1fr_auto_auto_auto] items-center border-t text-sm"
-                      >
-                        <span className="truncate font-medium">
-                          {translate('expenseCategories', cat)}
-                        </span>
-                        <span className="text-warning text-right tabular-nums">
-                          {formatCurrency(totalA)}
-                        </span>
-                        <span className="text-info text-right tabular-nums">
-                          {formatCurrency(totalB)}
-                        </span>
-                        <div className="text-right">
-                          <VariationBadge pct={pct} inverse />
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <PaginatedSlide
+                    key={`${monthA}-${monthB}`}
+                    items={expenseCategoryMap}
+                    pageSize={LIST_PAGE_SIZE}
+                    pinNav={false}
+                  >
+                    {(pageItems) =>
+                      pageItems.map(({ cat, totalA, totalB, diff: _diff }) => {
+                        const pct =
+                          totalA !== 0
+                            ? ((totalB - totalA) / Math.abs(totalA)) * 100
+                            : 0;
+                        return (
+                          <div
+                            key={cat}
+                            className="gap-sm pt-sm grid grid-cols-[1fr_auto_auto_auto] items-center border-t text-sm"
+                          >
+                            <span className="truncate font-medium">
+                              {translate('expenseCategories', cat)}
+                            </span>
+                            <span className="text-warning text-right tabular-nums">
+                              {formatCurrency(totalA)}
+                            </span>
+                            <span className="text-info text-right tabular-nums">
+                              {formatCurrency(totalB)}
+                            </span>
+                            <div className="text-right">
+                              <VariationBadge pct={pct} inverse />
+                            </div>
+                          </div>
+                        );
+                      })
+                    }
+                  </PaginatedSlide>
                 </div>
               </CardContent>
             </Card>

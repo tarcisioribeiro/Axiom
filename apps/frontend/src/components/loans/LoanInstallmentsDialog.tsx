@@ -7,7 +7,6 @@ import type { Loan, LoanInstallment } from '@/types';
 interface LoanInstallmentsDialogProps {
   loan: Loan | null;
   installments: LoanInstallment[];
-  isLoading: boolean;
   onClose: () => void;
   onUpdated?: () => void;
 }
@@ -15,7 +14,6 @@ interface LoanInstallmentsDialogProps {
 export function LoanInstallmentsDialog({
   loan,
   installments,
-  isLoading,
   onClose,
   onUpdated,
 }: LoanInstallmentsDialogProps) {
@@ -27,7 +25,6 @@ export function LoanInstallmentsDialog({
       title={t('pages.loans.installments.title')}
       description={loan?.description}
       installments={installments}
-      isLoading={isLoading}
       i18nBase="pages.loans.installments"
       onClose={onClose}
       onChanged={() => onUpdated?.()}

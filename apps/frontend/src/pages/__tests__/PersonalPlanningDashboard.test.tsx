@@ -49,6 +49,7 @@ import { initReactI18next } from 'react-i18next';
 import { MemoryRouter } from 'react-router';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ONBOARDING_KEY } from '@/hooks/use-planning-onboarding';
 import ptBR from '@/i18n/locales/pt-BR.json';
 import { queryClient } from '@/lib/query-client';
 import PersonalPlanningDashboard from '@/pages/PersonalPlanningDashboard';
@@ -104,12 +105,22 @@ function renderPage() {
 
 describe('PersonalPlanningDashboard', () => {
   beforeEach(() => {
+    // O onboarding é um modal: esconde a página dos leitores de tela
+    localStorage.setItem(ONBOARDING_KEY, 'true');
     queryClient.clear();
     mockToast.mockClear();
     vi.mocked(personalPlanningDashboardService.getStats).mockResolvedValue(sampleStats);
     vi.mocked(personalPlanningDashboardService.getAnalytics).mockResolvedValue(
       sampleAnalytics
     );
+  });
+
+  it('shows the onboarding dialog on first access', async () => {
+    localStorage.removeItem(ONBOARDING_KEY);
+    renderPage();
+    expect(
+      await screen.findByRole('dialog', { name: 'Bem-vindo ao Planejamento Pessoal' })
+    ).toBeInTheDocument();
   });
 
   it('renders page heading', async () => {

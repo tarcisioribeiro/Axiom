@@ -5,12 +5,25 @@ import { Target, Pencil, Plus, Trophy, BookOpen, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CircularProgress } from '@/components/ui/circular-progress';
+import {
+  Dialog,
+  DialogCloseFooter,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { ACTION_COLOR } from '@/lib/action-colors';
+import { DURATION, EASE_OUT } from '@/lib/animations/transitions';
+import { cn } from '@/lib/utils';
 import type { ReadingGoalFormData } from '@/lib/validations';
 import { literaryTypeGoalsService } from '@/services/literary-type-goals-service';
 import { readingGoalsService } from '@/services/reading-goals-service';
@@ -29,20 +42,14 @@ function CelebrationBurst() {
         const angle = (i / particles.length) * 360;
         const x = Math.cos((angle * Math.PI) / 180) * 60;
         const y = Math.sin((angle * Math.PI) / 180) * 60;
-        const colors = [
-          'bg-yellow-400',
-          'bg-pink-400',
-          'bg-blue-400',
-          'bg-green-400',
-          'bg-purple-400',
-        ];
+        const colors = ['bg-star', 'bg-accent', 'bg-info', 'bg-success', 'bg-primary'];
         return (
           <motion.div
             key={i}
             className={`absolute top-1/2 left-1/2 h-2 w-2 rounded-full ${colors[i % colors.length]}`}
             initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
             animate={{ x, y, opacity: 0, scale: 0 }}
-            transition={{ duration: 0.8, delay: i * 0.05, ease: 'easeOut' }}
+            transition={{ duration: DURATION.slow, delay: i * 0.05, ease: EASE_OUT }}
           />
         );
       })}
@@ -80,20 +87,20 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6"
+            className="h-7 w-7"
             onClick={onEdit}
-            title={t('pages.libraryDashboard.readingGoals.editTitle')}
+            aria-label={t('pages.libraryDashboard.readingGoals.editTitle')}
           >
-            <Pencil className="h-3 w-3" />
+            <Pencil className={cn('h-3.5 w-3.5', ACTION_COLOR.edit)} />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="text-destructive hover:text-destructive h-6 w-6"
+            className="h-7 w-7"
             onClick={onDelete}
-            title={t('pages.libraryDashboard.readingGoals.deleteTitle')}
+            aria-label={t('pages.libraryDashboard.readingGoals.deleteTitle')}
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash2 className={cn('h-3.5 w-3.5', ACTION_COLOR.delete)} />
           </Button>
         </div>
       </div>
@@ -104,16 +111,15 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
             value={goal.progress_percentage}
             size={100}
             strokeWidth={8}
-            color={isCompleted ? 'hsl(var(--chart-2))' : 'hsl(var(--primary))'}
+            color={isCompleted ? 'hsl(var(--success))' : 'hsl(var(--primary))'}
           >
             <div className="flex flex-col items-center">
               {isCompleted ? (
                 <motion.div
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 200 }}
                 >
-                  <Trophy className="h-5 w-5 text-yellow-500" />
+                  <Trophy className="text-warning h-5 w-5" />
                 </motion.div>
               ) : (
                 <BookOpen className="text-muted-foreground h-4 w-4" />
@@ -183,7 +189,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
 
       {isCompleted && (
         <motion.p
-          className="text-center text-xs font-medium text-yellow-600 dark:text-yellow-400"
+          className="text-warning text-center text-xs font-medium"
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -196,13 +202,18 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-interface ReadingGoalCardProps {
-  onGoalChange?: () => void;
+interface ReadingGoalsDialogProps {
+  open: boolean;
+  onClose: () => void;
 }
 
 const EMPTY_GOALS: ReadingGoal[] = [];
 
-export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
+/**
+ * Metas de leitura do ano (aberto pelo botão "Meta de Leitura" no header de
+ * Obras): modal de ação com o progresso de cada meta e incluir/editar/excluir.
+ */
+export function ReadingGoalsDialog({ open, onClose }: ReadingGoalsDialogProps) {
   const { t } = useTranslation();
   const [isSaving, setIsSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -262,7 +273,6 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
       await readingGoalsService.delete(goal.id);
       toast({ title: t('pages.libraryDashboard.readingGoals.deleted') });
       await refresh();
-      onGoalChange?.();
     } catch (error) {
       toast({
         title: t('pages.libraryDashboard.readingGoals.deleteError', {
@@ -313,10 +323,12 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
       await refresh();
 
       toast({
-        title: `Meta de ${data.books_goal} livros para ${data.year}.`,
+        title: t('pages.libraryDashboard.readingGoals.saved', {
+          count: data.books_goal,
+          year: data.year,
+        }),
       });
       setIsModalOpen(false);
-      onGoalChange?.();
     } catch (error) {
       toast({
         title: t('pages.libraryDashboard.readingGoals.saveError', {
@@ -331,59 +343,54 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
 
   return (
     <>
-      <Card className="relative overflow-hidden">
-        <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-sm font-medium">
-            {t('pages.libraryDashboard.readingGoals.title', { year: currentYear })}
-          </CardTitle>
-          <div className="gap-xs flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={openNewGoal}
-              title={t('pages.libraryDashboard.readingGoals.newTitle')}
+      <Dialog open={open && !isLoading} onOpenChange={(v) => !v && onClose()}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle icon={Target}>
+              {t('pages.libraryDashboard.readingGoals.title', { year: currentYear })}
+            </DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.libraryDashboard.readingGoals.title', { year: currentYear })}
+              </DialogDescription>
+            </VisuallyHidden>
+          </DialogHeader>
+          {goals.length > 0 ? (
+            <PaginatedSlide
+              items={goals}
+              pageSize={2}
+              pinNav={false}
+              className="divide-y"
             >
-              <Plus className="h-3.5 w-3.5" />
-            </Button>
-            <Target className="text-muted-foreground h-4 w-4" />
-          </div>
-        </CardHeader>
-
-        <CardContent>
-          {isLoading ? (
-            <div className="flex h-[140px] items-center justify-center">
-              <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
-            </div>
-          ) : goals.length > 0 ? (
-            <div className="divide-y">
-              {goals.map((goal) => (
-                <div key={goal.id} className="py-3 first:pt-0 last:pb-0">
-                  <GoalPanel
-                    goal={goal}
-                    onEdit={() => openEditGoal(goal)}
-                    onDelete={() => void handleDeleteGoal(goal)}
-                    showCelebration={celebrationId === goal.id}
-                  />
-                </div>
-              ))}
-            </div>
+              {(pageGoals) =>
+                pageGoals.map((goal) => (
+                  <div key={goal.id} className="py-3 first:pt-0 last:pb-0">
+                    <GoalPanel
+                      goal={goal}
+                      onEdit={() => openEditGoal(goal)}
+                      onDelete={() => void handleDeleteGoal(goal)}
+                      showCelebration={celebrationId === goal.id}
+                    />
+                  </div>
+                ))
+              }
+            </PaginatedSlide>
           ) : (
-            <div className="py-md flex flex-col items-center gap-3">
-              <Target className="text-muted-foreground/40 h-10 w-10" />
-              <p className="text-muted-foreground text-center text-sm">
-                {t('pages.libraryDashboard.readingGoals.setGoalFor', {
-                  year: currentYear,
-                })}
-              </p>
-              <Button size="sm" variant="outline" onClick={openNewGoal}>
-                <Plus className="h-3.5 w-3.5" />
-                {t('pages.libraryDashboard.readingGoals.setGoal')}
-              </Button>
-            </div>
+            <EmptyState
+              icon={<Target />}
+              title={t('pages.libraryDashboard.readingGoals.setGoalFor', {
+                year: currentYear,
+              })}
+            />
           )}
-        </CardContent>
-      </Card>
+          <DialogCloseFooter>
+            <Button onClick={openNewGoal}>
+              <Plus className="h-4 w-4" />
+              {t('pages.libraryDashboard.readingGoals.newTitle')}
+            </Button>
+          </DialogCloseFooter>
+        </DialogContent>
+      </Dialog>
 
       <ReadingGoalModal
         isOpen={isModalOpen}

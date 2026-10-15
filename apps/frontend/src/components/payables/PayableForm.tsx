@@ -4,12 +4,13 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
+  FileText,
   Loader2,
   RefreshCw,
   Repeat,
+  Save,
   Tag,
   Wallet,
-  Save,
   X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -150,7 +151,7 @@ export function PayableForm({
       <FormSection title={t('common.form.sections.basicInfo')} icon={Wallet}>
         <div className="space-y-sm">
           <Label htmlFor="description" className="gap-xs flex items-center">
-            <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.payables.form.descriptionLabel')}
           </Label>
           <Input
@@ -163,97 +164,102 @@ export function PayableForm({
         </div>
       </FormSection>
 
-      {/* Seção: Valores */}
-      <FormSection title={t('common.form.sections.values')} icon={Wallet}>
-        <div className="gap-md grid grid-cols-2">
-          <div className="space-y-sm">
-            <Label htmlFor="value" className="gap-xs flex items-center">
-              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.payables.form.valueTotalLabel')}
-            </Label>
-            <CurrencyInput
-              id="value"
-              accentColor="destructive"
-              value={formData.value}
-              onChange={(e) => set({ value: parseFloat(e.target.value) || 0 })}
-              required
-            />
-          </div>
-
-          <div className="space-y-sm">
-            <Label htmlFor="paid_value" className="gap-xs flex items-center">
-              <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.payables.form.paidValueLabel')}
-            </Label>
-            <CurrencyInput
-              id="paid_value"
-              accentColor="success"
-              value={formData.paid_value ?? 0}
-              onChange={(e) => set({ paid_value: parseFloat(e.target.value) || 0 })}
-            />
-          </div>
-
-          {/* Barra de progresso do pagamento */}
-          {formData.value > 0 && (
-            <div className="space-y-xs col-span-2">
-              <div className="text-muted-foreground flex items-center justify-between text-xs">
-                <span>{t('pages.payables.form.paymentProgress')}</span>
-                <span
-                  className={paymentPercent >= 100 ? 'text-success font-semibold' : ''}
-                >
-                  {paymentPercent.toFixed(0)}%
-                </span>
-              </div>
-              <Progress value={paymentPercent} className="h-1.5" />
-              <p className="text-muted-foreground text-xs">
-                {t('pages.payables.form.progressLabel', {
-                  paid: formatCurrency(formData.paid_value ?? 0),
-                  total: formatCurrency(formData.value),
-                })}
-              </p>
+      {/* Valores e Datas lado a lado: o modal é largo (max-w-5xl) para caber sem rolagem. */}
+      <div className="gap-lg grid items-start md:grid-cols-2">
+        {/* Seção: Valores */}
+        <FormSection title={t('common.form.sections.values')} icon={Wallet}>
+          <div className="gap-md grid grid-cols-2">
+            <div className="space-y-sm">
+              <Label htmlFor="value" className="gap-xs flex items-center">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.payables.form.valueTotalLabel')}
+              </Label>
+              <CurrencyInput
+                id="value"
+                accentColor="destructive"
+                value={formData.value}
+                onChange={(e) => set({ value: parseFloat(e.target.value) || 0 })}
+                required
+              />
             </div>
-          )}
-        </div>
-      </FormSection>
 
-      {/* Seção: Datas */}
-      <FormSection title={t('common.form.sections.schedule')} icon={CalendarDays}>
-        <div className="gap-md grid grid-cols-2">
-          <div className="space-y-sm">
-            <Label htmlFor="date" className="gap-xs flex items-center">
-              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.payables.form.dateLabel')}
-            </Label>
-            <DatePicker
-              value={formData.date ?? undefined}
-              onChange={(date) => set({ date: date ? formatLocalDate(date) : '' })}
-            />
-          </div>
+            <div className="space-y-sm">
+              <Label htmlFor="paid_value" className="gap-xs flex items-center">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.payables.form.paidValueLabel')}
+              </Label>
+              <CurrencyInput
+                id="paid_value"
+                accentColor="success"
+                value={formData.paid_value ?? 0}
+                onChange={(e) => set({ paid_value: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
 
-          <div className="space-y-sm">
-            <Label htmlFor="due_date" className="gap-xs flex items-center">
-              <Clock className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.payables.form.dueDateLabel')}
-            </Label>
-            <DatePicker
-              value={formData.due_date ?? undefined}
-              onChange={(date) =>
-                set({ due_date: date ? formatLocalDate(date) : undefined })
-              }
-              placeholder={t('pages.payables.form.dueDatePlaceholder')}
-            />
-            {/* Badge de urgência */}
-            {dueDateInfo && (
-              <div
-                className={`gap-xs px-sm py-xs flex items-center rounded-md border text-xs ${dueDateInfo.bg}`}
-              >
-                <dueDateInfo.icon className={`h-3.5 w-3.5 ${dueDateInfo.color}`} />
-                <span className={dueDateInfo.color}>{dueDateInfo.label}</span>
+            {/* Barra de progresso do pagamento */}
+            {formData.value > 0 && (
+              <div className="space-y-xs col-span-2">
+                <div className="text-muted-foreground flex items-center justify-between text-xs">
+                  <span>{t('pages.payables.form.paymentProgress')}</span>
+                  <span
+                    className={
+                      paymentPercent >= 100 ? 'text-success font-semibold' : ''
+                    }
+                  >
+                    {paymentPercent.toFixed(0)}%
+                  </span>
+                </div>
+                <Progress value={paymentPercent} className="h-1.5" />
+                <p className="text-muted-foreground text-xs">
+                  {t('pages.payables.form.progressLabel', {
+                    paid: formatCurrency(formData.paid_value ?? 0),
+                    total: formatCurrency(formData.value),
+                  })}
+                </p>
               </div>
             )}
           </div>
-        </div>
-      </FormSection>
+        </FormSection>
+
+        {/* Seção: Datas */}
+        <FormSection title={t('common.form.sections.schedule')} icon={CalendarDays}>
+          <div className="gap-md grid grid-cols-2">
+            <div className="space-y-sm">
+              <Label htmlFor="date" className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.payables.form.dateLabel')}
+              </Label>
+              <DatePicker
+                value={formData.date ?? undefined}
+                onChange={(date) => set({ date: date ? formatLocalDate(date) : '' })}
+              />
+            </div>
+
+            <div className="space-y-sm">
+              <Label htmlFor="due_date" className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.payables.form.dueDateLabel')}
+              </Label>
+              <DatePicker
+                value={formData.due_date ?? undefined}
+                onChange={(date) =>
+                  set({ due_date: date ? formatLocalDate(date) : undefined })
+                }
+                placeholder={t('pages.payables.form.dueDatePlaceholder')}
+              />
+              {/* Badge de urgência */}
+              {dueDateInfo && (
+                <div
+                  className={`gap-xs px-sm py-xs flex items-center rounded-md border text-xs ${dueDateInfo.bg}`}
+                >
+                  <dueDateInfo.icon className={`h-3.5 w-3.5 ${dueDateInfo.color}`} />
+                  <span className={dueDateInfo.color}>{dueDateInfo.label}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </FormSection>
+      </div>
 
       {/* Seção: Classificação */}
       <FormSection title={t('common.form.sections.classification')} icon={Tag}>
@@ -349,7 +355,7 @@ export function PayableForm({
 
           <div className="space-y-sm col-span-2">
             <Label htmlFor="notes" className="gap-xs flex items-center">
-              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.payables.form.notesLabel')}
             </Label>
             <Textarea

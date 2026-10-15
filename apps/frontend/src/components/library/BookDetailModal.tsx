@@ -4,23 +4,18 @@ import {
   AlignLeft,
   BookMarked,
   BookOpen,
-  Brain,
   Calendar,
   CheckCircle2,
   Download,
-  Edit,
   FileText,
   Globe,
   Hash,
+  Info,
   Highlighter,
   Library,
-  Loader2,
-  MessageSquare,
-  Palette,
+  Pencil,
   Plus,
   Save,
-  Send,
-  Sparkles,
   Star,
   Tag,
   Trash2,
@@ -29,13 +24,16 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import {
+  DETAIL_TEXT_PAGE_SIZE,
+  LIST_PAGE_SIZE,
+  PaginatedSlide,
+} from '@/components/common/PaginatedSlide';
+import { HighlightForm } from '@/components/library/HighlightForm';
 import { ReadingForm } from '@/components/library/ReadingForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -51,25 +49,16 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { NumberStepper } from '@/components/ui/number-stepper';
 import { Progress } from '@/components/ui/progress';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { TabTransition } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { useAgentStream } from '@/hooks/use-agent-stream';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { ACTION_COLOR } from '@/lib/action-colors';
 import { formatDate } from '@/lib/formatters';
-import { agentService } from '@/services/agent-service';
+import { HIGHLIGHT_TYPE_KEY, highlightBg } from '@/lib/highlight-colors';
+import { cn } from '@/lib/utils';
 import { bookHighlightsService } from '@/services/book-highlights-service';
-import { booksService } from '@/services/books-service';
 import { readingsService } from '@/services/readings-service';
 import { summariesService } from '@/services/summaries-service';
 import type {
@@ -83,330 +72,36 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const COLOR_CLASSES: Record<string, string> = {
-  yellow: 'border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20',
-  green: 'border-green-400 bg-green-50 dark:bg-green-950/20',
-  blue: 'border-blue-400 bg-blue-50 dark:bg-blue-950/20',
-  pink: 'border-pink-400 bg-pink-50 dark:bg-pink-950/20',
-  orange: 'border-orange-400 bg-orange-50 dark:bg-orange-950/20',
-};
-
 const TYPE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
   quote: 'default',
   note: 'secondary',
   idea: 'outline',
 };
 
-// Itens de texto longo (destaques, resumos): menos por página para caber sem rolagem.
-const DETAIL_TEXT_PAGE_SIZE = 3;
 const EMPTY_HIGHLIGHTS: BookHighlight[] = [];
 const EMPTY_READINGS: Reading[] = [];
 const EMPTY_SUMMARIES: Summary[] = [];
 
-interface HighlightInlineFormProps {
-  bookId: number;
-  ownerId: number;
-  highlight?: BookHighlight;
-  onSaved: () => void;
-  onCancel: () => void;
-}
+type DetailTab = 'info' | 'highlights' | 'readings' | 'summaries';
 
-function HighlightInlineForm({
-  bookId,
-  ownerId,
-  highlight,
-  onSaved,
-  onCancel,
-}: HighlightInlineFormProps) {
-  const [text, setText] = useState(highlight?.text ?? '');
-  const [pageNumber, setPageNumber] = useState(
-    highlight?.page_number ? String(highlight.page_number) : ''
-  );
-  const [chapter, setChapter] = useState(highlight?.chapter ?? '');
-  const [highlightType, setHighlightType] = useState(
-    highlight?.highlight_type ?? 'quote'
-  );
-  const [color, setColor] = useState(highlight?.color ?? 'yellow');
-  const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
-  const { t } = useTranslation();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!text.trim()) return;
-    setIsSaving(true);
-    try {
-      const data: BookHighlightFormData = {
-        book: bookId,
-        text: text.trim(),
-        page_number: pageNumber ? Number(pageNumber) : null,
-        chapter: chapter.trim() || null,
-        highlight_type: highlightType,
-        color,
-        owner: ownerId,
-      };
-      if (highlight) {
-        await bookHighlightsService.update(highlight.id, data);
-      } else {
-        await bookHighlightsService.create(data);
-      }
-      onSaved();
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.books.detail.highlightSaveError', {
-          reason: getErrorMessage(error),
-        }),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
+/** Painel de aba empilhado: o inativo continua no grid (mantém a altura), invisível. */
+function StackPanel({
+  active,
+  children,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+}) {
   return (
-    <form
-      onSubmit={(e) => void handleSubmit(e)}
-      className="space-y-3 rounded-lg border p-3"
+    <div
+      className={cn(
+        'min-w-0 [grid-area:1/1]',
+        active ? 'animate-fade-in' : 'invisible'
+      )}
+      aria-hidden={!active}
+      inert={!active}
     >
-      <Textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={t('pages.books.detail.hlTextPlaceholder')}
-        rows={3}
-        required
-      />
-      <div className="gap-sm grid grid-cols-2">
-        <div className="space-y-xs">
-          <Label className="gap-xs flex items-center text-xs">
-            <Highlighter className="text-muted-foreground h-3.5 w-3.5" />
-            {t('pages.books.detail.hlTypeLbl')}
-          </Label>
-          <Select
-            value={highlightType}
-            onValueChange={(v) => setHighlightType(v as typeof highlightType)}
-          >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="quote">
-                {t('pages.highlights.form.typeQuote')}
-              </SelectItem>
-              <SelectItem value="note">
-                {t('pages.highlights.form.typeNote')}
-              </SelectItem>
-              <SelectItem value="idea">
-                {t('pages.highlights.form.typeIdea')}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-xs">
-          <Label className="gap-xs flex items-center text-xs">
-            <Palette className="text-muted-foreground h-3.5 w-3.5" />
-            {t('pages.books.detail.hlColorLbl')}
-          </Label>
-          <Select value={color} onValueChange={(v) => setColor(v as typeof color)}>
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="yellow">
-                {t('pages.highlights.form.colorYellow')}
-              </SelectItem>
-              <SelectItem value="green">
-                {t('pages.highlights.form.colorGreen')}
-              </SelectItem>
-              <SelectItem value="blue">
-                {t('pages.highlights.form.colorBlue')}
-              </SelectItem>
-              <SelectItem value="pink">
-                {t('pages.highlights.form.colorPink')}
-              </SelectItem>
-              <SelectItem value="orange">
-                {t('pages.highlights.form.colorOrange')}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div className="gap-sm grid grid-cols-2">
-        <NumberStepper
-          min={1}
-          optional
-          placeholder={t('pages.books.detail.hlPagePlaceholder')}
-          aria-label={t('pages.books.detail.hlPagePlaceholder')}
-          value={pageNumber === '' ? null : Number(pageNumber)}
-          onChange={(v) => setPageNumber(v === null ? '' : String(v))}
-          className="h-8 w-full"
-        />
-        <Input
-          placeholder={t('pages.books.detail.hlChapterPlaceholder')}
-          value={chapter}
-          onChange={(e) => setChapter(e.target.value)}
-          className="h-8 text-xs"
-        />
-      </div>
-      <div className="gap-sm flex justify-end">
-        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-          <X aria-hidden="true" />
-          {t('common.actions.cancel')}
-        </Button>
-        <Button type="submit" size="sm" disabled={!text.trim()} loading={isSaving}>
-          {!isSaving && <Save aria-hidden="true" />}
-          {isSaving ? t('common.actions.saving') : t('common.actions.save')}
-        </Button>
-      </div>
-    </form>
-  );
-}
-
-type DetailTab = 'info' | 'highlights' | 'readings' | 'summaries' | 'chat';
-
-function BookChat({ book }: { book: Book }) {
-  const { t } = useTranslation();
-  const [sessionId] = useState(() => {
-    const key = `book-chat-${book.id}`;
-    const stored = localStorage.getItem(key);
-    if (stored) return stored;
-    const id = crypto.randomUUID();
-    localStorage.setItem(key, id);
-    return id;
-  });
-  const [chatMessages, setChatMessages] = useState<
-    Array<{ role: 'user' | 'agent'; content: string }>
-  >([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const [chatInput, setChatInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const {
-    isStreaming,
-    accumulatedText,
-    error: streamError,
-    send: sendStream,
-    reset: resetStream,
-  } = useAgentStream();
-
-  useEffect(() => {
-    agentService
-      .getHistory(sessionId)
-      .then((history) => {
-        setChatMessages(
-          history.results.map((m) => ({ role: m.role, content: m.content }))
-        );
-      })
-      .catch(() => {})
-      .finally(() => setIsLoadingHistory(false));
-  }, [sessionId]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages, accumulatedText]);
-
-  const handleChatSend = async () => {
-    const trimmed = chatInput.trim();
-    if (!trimmed || isStreaming) return;
-    setChatMessages((prev) => [...prev, { role: 'user', content: trimmed }]);
-    setChatInput('');
-    const finalText = await sendStream(trimmed, sessionId, {
-      agent_name: 'intellect',
-      book_id: book.id,
-    });
-    if (finalText && !streamError) {
-      setChatMessages((prev) => [...prev, { role: 'agent', content: finalText }]);
-      resetStream();
-    }
-  };
-
-  const showStreamBubble = isStreaming || (accumulatedText.length > 0 && !streamError);
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="pr-xs min-h-0 flex-1 space-y-3 overflow-y-auto">
-        {isLoadingHistory ? (
-          <p className="py-md text-muted-foreground text-center text-xs">
-            {t('common.actions.loading')}
-          </p>
-        ) : chatMessages.length === 0 && !showStreamBubble ? (
-          <p className="py-lg text-muted-foreground text-center text-sm">
-            {t('pages.books.detail.chat.empty')}
-          </p>
-        ) : (
-          <>
-            {chatMessages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
-              >
-                <div
-                  className={`max-w-[82%] rounded-lg px-3 py-2 text-sm ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                      : 'bg-muted text-foreground rounded-tl-sm'
-                  }`}
-                >
-                  {msg.role === 'user' ? (
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
-                  ) : (
-                    <div className="prose prose-sm dark:prose-invert prose-p:my-0.5 prose-ul:my-1 max-w-none">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {msg.content}
-                      </ReactMarkdown>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-            {showStreamBubble && (
-              <div className="flex gap-2">
-                <div className="bg-muted max-w-[82%] rounded-lg rounded-tl-sm px-3 py-2 text-sm">
-                  {!accumulatedText && isStreaming ? (
-                    <span className="text-muted-foreground flex items-center gap-2">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      {t('pages.books.detail.chat.thinking')}
-                    </span>
-                  ) : (
-                    <div className="prose prose-sm dark:prose-invert prose-p:my-0.5 max-w-none">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {accumulatedText}
-                      </ReactMarkdown>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-      <div className="flex gap-2">
-        <Input
-          value={chatInput}
-          onChange={(e) => setChatInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              void handleChatSend();
-            }
-          }}
-          placeholder={t('pages.books.detail.chat.placeholder')}
-          disabled={isStreaming}
-          className="flex-1"
-        />
-        <Button
-          aria-label={t('common.actions.send')}
-          size="sm"
-          onClick={() => void handleChatSend()}
-          disabled={!chatInput.trim() || isStreaming}
-        >
-          {isStreaming ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Send className="h-3.5 w-3.5" />
-          )}
-        </Button>
-      </div>
+      {children}
     </div>
   );
 }
@@ -415,11 +110,7 @@ interface BookDetailModalProps {
   book: Book | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEdit: (book: Book) => void;
-  onDelete: (id: number) => void;
   initialTab?: DetailTab;
-  onAskIntellect?: (book: Book) => void;
-  defaultToChat?: boolean;
 }
 
 const statusVariant = (status: string): 'success' | 'info' | 'warning' => {
@@ -447,6 +138,39 @@ function StarRow({ rating }: { rating: number | null }) {
   );
 }
 
+/** Editar/Excluir de uma linha dentro do modal (só ícone com tooltip). */
+function RowActions({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex shrink-0 gap-0.5">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7"
+        aria-label={t('common.actions.edit')}
+        onClick={onEdit}
+      >
+        <Pencil className={cn('h-3.5 w-3.5', ACTION_COLOR.edit)} aria-hidden="true" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7"
+        aria-label={t('common.actions.delete')}
+        onClick={onDelete}
+      >
+        <Trash2 className={cn('h-3.5 w-3.5', ACTION_COLOR.delete)} aria-hidden="true" />
+      </Button>
+    </div>
+  );
+}
+
 function MetaRow({
   icon,
   label,
@@ -469,16 +193,17 @@ export function BookDetailModal({
   book,
   open,
   onOpenChange,
-  onEdit,
-  onDelete,
   initialTab = 'info',
-  onAskIntellect,
 }: BookDetailModalProps) {
   const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
 
   // Highlights state
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingHighlight, setEditingHighlight] = useState<BookHighlight | undefined>();
+  // Destaque: o mesmo modal inclui (highlight undefined) e edita.
+  const [highlightDialog, setHighlightDialog] = useState<{
+    open: boolean;
+    highlight?: BookHighlight;
+  }>({ open: false });
+  const [isHighlightSubmitting, setIsHighlightSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   // Readings state
@@ -496,7 +221,10 @@ export function BookDetailModal({
     owner: 0,
   });
   const [isSummarySubmitting, setIsSummarySubmitting] = useState(false);
-  const [isGeneratingAiSummary, setIsGeneratingAiSummary] = useState(false);
+  const [summaryInvalid, setSummaryInvalid] = useState<{
+    title?: boolean;
+    text?: boolean;
+  }>({});
 
   const { showConfirm } = useAlertDialog();
   const { toast } = useToast();
@@ -514,7 +242,7 @@ export function BookDetailModal({
           return EMPTY_HIGHLIGHTS;
         }
       },
-      enabled: !!book && open && activeTab === 'highlights',
+      enabled: !!book && open,
     });
   const refreshHighlights = () =>
     queryClient.invalidateQueries({ queryKey: ['book-highlights', book?.id] });
@@ -524,13 +252,12 @@ export function BookDetailModal({
     queryFn: async () => {
       if (!book) return EMPTY_READINGS;
       try {
-        const data = await readingsService.getAll();
-        return data.filter((r) => r.book === book.id);
+        return await readingsService.getAllPages({ book: book.id });
       } catch {
         return EMPTY_READINGS;
       }
     },
-    enabled: !!book && open && activeTab === 'readings',
+    enabled: !!book && open,
   });
   const refreshReadings = () =>
     queryClient.invalidateQueries({ queryKey: ['book-readings', book?.id] });
@@ -541,13 +268,12 @@ export function BookDetailModal({
       queryFn: async () => {
         if (!book) return EMPTY_SUMMARIES;
         try {
-          const data = await summariesService.getAll();
-          return data.filter((s) => s.book === book.id);
+          return await summariesService.getAllPages({ book: book.id });
         } catch {
           return EMPTY_SUMMARIES;
         }
       },
-      enabled: !!book && open && activeTab === 'summaries',
+      enabled: !!book && open,
     }
   );
   const refreshSummaries = () =>
@@ -561,8 +287,7 @@ export function BookDetailModal({
     if (open) {
       setActiveTab(initialTab);
     } else {
-      setShowAddForm(false);
-      setEditingHighlight(undefined);
+      setHighlightDialog({ open: false });
       setIsReadingFormOpen(false);
       setEditingReading(undefined);
       setIsSummaryFormOpen(false);
@@ -628,31 +353,6 @@ export function BookDetailModal({
     setIsSummaryFormOpen(true);
   };
 
-  const handleGenerateAiSummary = async () => {
-    if (!book) return;
-    try {
-      setIsGeneratingAiSummary(true);
-      const result = await booksService.generateAiSummary(book.id);
-      setEditingSummary(null);
-      setSummaryFormData({
-        title: t('pages.books.detail.aiSummaryDefaultTitle', { title: book.title }),
-        book: book.id,
-        text: result.summary,
-        owner: book.owner,
-      });
-      setIsSummaryFormOpen(true);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.books.detail.aiSummaryError', {
-          reason: getErrorMessage(error),
-        }),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsGeneratingAiSummary(false);
-    }
-  };
-
   const openSummaryEdit = (summary: Summary) => {
     setEditingSummary(summary);
     setSummaryFormData({
@@ -667,6 +367,24 @@ export function BookDetailModal({
   const handleSummarySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!book) return;
+    const missing = {
+      title: !summaryFormData.title.trim(),
+      text: !summaryFormData.text.trim(),
+    };
+    setSummaryInvalid(missing);
+    if (missing.title) {
+      toast({
+        title: t('common.fieldRequired', { field: t('pages.summaries.titleField') }),
+        variant: 'destructive',
+      });
+    }
+    if (missing.text) {
+      toast({
+        title: t('common.fieldRequired', { field: t('pages.summaries.contentField') }),
+        variant: 'destructive',
+      });
+    }
+    if (missing.title || missing.text) return;
     setIsSummarySubmitting(true);
     try {
       if (editingSummary) {
@@ -716,6 +434,30 @@ export function BookDetailModal({
     }
   };
 
+  const handleHighlightSubmit = async (data: BookHighlightFormData) => {
+    setIsHighlightSubmitting(true);
+    try {
+      if (highlightDialog.highlight) {
+        await bookHighlightsService.update(highlightDialog.highlight.id, data);
+        toast({ title: t('pages.highlights.updated') });
+      } else {
+        await bookHighlightsService.create(data);
+        toast({ title: t('pages.highlights.saved') });
+      }
+      setHighlightDialog({ open: false });
+      void refreshHighlights();
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.books.detail.highlightSaveError', {
+          reason: getErrorMessage(error),
+        }),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsHighlightSubmitting(false);
+    }
+  };
+
   const handleDeleteHighlight = async (id: number) => {
     const confirmed = await showConfirm({
       title: t('pages.books.detail.highlightDeleteTitle'),
@@ -761,8 +503,12 @@ export function BookDetailModal({
 
   if (!book) return null;
 
+  // O modal só abre com os dados das abas já carregados (§7: sem "Carregando…"
+  // dentro do modal nem salto de tamanho).
+  const isLoadingData = isLoadingHighlights || isLoadingReadings || isLoadingSummaries;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && !isLoadingData} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
@@ -778,7 +524,11 @@ export function BookDetailModal({
         <div className="gap-xs p-xs flex shrink-0 rounded-md border">
           {(
             [
-              { id: 'info', label: t('pages.books.detail.tabInfo'), icon: null },
+              {
+                id: 'info',
+                label: t('pages.books.detail.tabInfo'),
+                icon: <Info className="h-3.5 w-3.5" />,
+              },
               {
                 id: 'readings',
                 label: t('pages.books.detail.tabReadings'),
@@ -793,11 +543,6 @@ export function BookDetailModal({
                 id: 'highlights',
                 label: t('pages.books.detail.tabHighlights'),
                 icon: <Highlighter className="h-3.5 w-3.5" />,
-              },
-              {
-                id: 'chat',
-                label: t('pages.books.detail.tabChat'),
-                icon: <MessageSquare className="h-3.5 w-3.5" />,
               },
             ] as const
           ).map((tab) => (
@@ -817,557 +562,449 @@ export function BookDetailModal({
           ))}
         </div>
 
-        <div>
-          <TabTransition key={activeTab}>
-            {/* Info tab */}
-            {activeTab === 'info' && (
-              <>
-                {/* Top section: cover + main info */}
-                <div className="gap-lg flex">
-                  {/* Cover */}
-                  <div className="shrink-0">
-                    {book.cover ? (
-                      <img
-                        src={book.cover}
-                        alt={t('pages.books.detail.coverAlt', { title: book.title })}
-                        className="h-64 w-44 rounded-md object-cover shadow-md"
-                      />
-                    ) : (
-                      <div className="bg-muted flex h-64 w-44 items-center justify-center rounded-md border shadow-sm">
-                        <BookOpen className="text-muted-foreground h-10 w-10" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Main info */}
-                  <div className="min-w-0 flex-1 space-y-3">
-                    <p className="text-muted-foreground text-sm">
-                      {book.authors_names.join(', ')}
-                    </p>
-
-                    <div className="gap-sm flex flex-wrap">
-                      <Badge variant={statusVariant(book.read_status)}>
-                        {book.read_status_display}
-                      </Badge>
-                      <Badge variant="secondary">{book.genre_display}</Badge>
-                      {book.media_type_display && (
-                        <Badge variant="outline">{book.media_type_display}</Badge>
-                      )}
-                      {book.has_summary && (
-                        <Badge variant="outline">
-                          {t('pages.books.detail.hasSummary')}
-                        </Badge>
-                      )}
+        {/* Painéis empilhados na mesma célula do grid: o modal fica com a altura
+            do maior (Informações) em todas as abas, sem altura fixa. */}
+        <div className="grid">
+          {/* Info tab */}
+          <StackPanel active={activeTab === 'info'}>
+            <>
+              {/* Top section: cover + main info */}
+              <div className="gap-lg flex">
+                {/* Cover */}
+                <div className="shrink-0">
+                  {book.cover ? (
+                    <img
+                      src={book.cover}
+                      alt={t('pages.books.detail.coverAlt', { title: book.title })}
+                      className="h-64 w-44 rounded-md object-cover shadow-md"
+                    />
+                  ) : (
+                    <div className="bg-muted flex h-64 w-44 items-center justify-center rounded-md border shadow-sm">
+                      <BookOpen className="text-muted-foreground h-10 w-10" />
                     </div>
-
-                    {book.rating !== null && book.rating > 0 && (
-                      <StarRow rating={book.rating} />
-                    )}
-
-                    <div className="space-y-sm">
-                      <MetaRow
-                        icon={<User className="h-4 w-4" />}
-                        label={t('pages.books.detail.metaPublisher')}
-                        value={book.publisher_name}
-                      />
-                      <MetaRow
-                        icon={<BookOpen className="h-4 w-4" />}
-                        label={t('pages.books.detail.metaPages')}
-                        value={t('pages.books.detail.pagesCount', {
-                          count: book.pages,
-                        })}
-                      />
-                      <MetaRow
-                        icon={<Globe className="h-4 w-4" />}
-                        label={t('pages.books.detail.metaLanguage')}
-                        value={book.language_display}
-                      />
-                      <MetaRow
-                        icon={<Library className="h-4 w-4" />}
-                        label={t('pages.books.detail.metaType')}
-                        value={book.literarytype_display}
-                      />
-                      <MetaRow
-                        icon={<Hash className="h-4 w-4" />}
-                        label={t('pages.books.detail.metaEdition')}
-                        value={book.edition}
-                      />
-                      {book.publish_date && (
-                        <MetaRow
-                          icon={<Calendar className="h-4 w-4" />}
-                          label={t('pages.books.detail.metaPublishDate')}
-                          value={formatDate(book.publish_date, 'dd/MM/yyyy')}
-                        />
-                      )}
-                      {book.genre_display && (
-                        <MetaRow
-                          icon={<Tag className="h-4 w-4" />}
-                          label={t('pages.books.detail.metaGenre')}
-                          value={book.genre_display}
-                        />
-                      )}
-                    </div>
-                  </div>
+                  )}
                 </div>
 
-                {/* Reading progress */}
-                {book.reading_progress > 0 && (
-                  <>
-                    <div className="border-t" />
-                    <div className="space-y-sm">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="gap-xs flex items-center font-medium">
-                          <TrendingUp className="h-4 w-4" />
-                          {t('pages.books.detail.readingProgress')}
-                        </span>
-                        <span className="font-semibold">{book.reading_progress}%</span>
-                      </div>
-                      <Progress value={book.reading_progress} className="h-2" />
-                      <p className="text-muted-foreground text-xs">
-                        {t('pages.books.detail.pagesRead', {
-                          read: book.total_pages_read,
-                          total: book.pages,
-                        })}
-                      </p>
-                    </div>
-                  </>
-                )}
+                {/* Main info */}
+                <div className="min-w-0 flex-1 space-y-3">
+                  <p className="text-muted-foreground text-sm">
+                    {book.authors_names.join(', ')}
+                  </p>
 
-                {/* Completion forecast */}
-                {book.read_status === 'reading' &&
-                  (book.estimated_completion_general ||
-                    book.estimated_completion_book) && (
-                    <>
-                      <div className="border-t" />
-                      <div className="space-y-sm">
-                        <span className="gap-xs flex items-center text-sm font-medium">
-                          <Calendar className="h-4 w-4" />
-                          {t('pages.books.detail.completionForecast')}
-                        </span>
-                        <div className="gap-sm grid grid-cols-1 text-xs">
-                          {book.estimated_completion_book && (
-                            <div className="bg-muted py-sm flex items-center justify-between rounded-md px-3">
-                              <span className="text-muted-foreground">
-                                {t('pages.books.detail.bookAvg')}
-                                {book.book_avg_pages_per_day > 0 && (
-                                  <span className="ml-xs">
-                                    {t('pages.books.detail.pagesPerDay', {
-                                      count: book.book_avg_pages_per_day,
-                                    })}
-                                  </span>
-                                )}
-                              </span>
-                              <span className="font-semibold">
-                                {new Date(
-                                  book.estimated_completion_book + 'T12:00:00'
-                                ).toLocaleDateString('pt-BR')}
-                              </span>
-                            </div>
-                          )}
-                          {book.estimated_completion_general && (
-                            <div className="bg-muted py-sm flex items-center justify-between rounded-md px-3">
-                              <span className="text-muted-foreground">
-                                {t('pages.books.detail.generalAvg')}
-                                {book.general_avg_pages_per_day > 0 && (
-                                  <span className="ml-xs">
-                                    {t('pages.books.detail.pagesPerDay', {
-                                      count: book.general_avg_pages_per_day,
-                                    })}
-                                  </span>
-                                )}
-                              </span>
-                              <span className="font-semibold">
-                                {new Date(
-                                  book.estimated_completion_general + 'T12:00:00'
-                                ).toLocaleDateString('pt-BR')}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </>
+                  <div className="gap-sm flex flex-wrap">
+                    <Badge variant={statusVariant(book.read_status)}>
+                      {t(`pages.books.readStatuses.${book.read_status}`, {
+                        defaultValue: book.read_status_display,
+                      })}
+                    </Badge>
+                    <Badge variant="secondary">
+                      {t(`pages.books.genres.${book.genre}`, {
+                        defaultValue: book.genre_display,
+                      })}
+                    </Badge>
+                    {book.media_type && (
+                      <Badge variant="outline">
+                        {t(`pages.books.mediaTypes.${book.media_type}`, {
+                          defaultValue: book.media_type_display,
+                        })}
+                      </Badge>
+                    )}
+                    {book.has_summary && (
+                      <Badge variant="outline">
+                        {t('pages.books.detail.hasSummary')}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {book.rating !== null && book.rating > 0 && (
+                    <StarRow rating={book.rating} />
                   )}
 
-                {/* Synopsis */}
-                {book.synopsis && book.synopsis !== 'Sem sinopse disponível.' && (
+                  <div className="space-y-sm">
+                    <MetaRow
+                      icon={<User className="h-4 w-4" />}
+                      label={t('pages.books.detail.metaPublisher')}
+                      value={book.publisher_name}
+                    />
+                    <MetaRow
+                      icon={<BookOpen className="h-4 w-4" />}
+                      label={t('pages.books.detail.metaPages')}
+                      value={t('pages.books.detail.pagesCount', {
+                        count: book.pages,
+                      })}
+                    />
+                    <MetaRow
+                      icon={<Globe className="h-4 w-4" />}
+                      label={t('pages.books.detail.metaLanguage')}
+                      value={t(`pages.books.languages.${book.language}`, {
+                        defaultValue: book.language_display,
+                      })}
+                    />
+                    <MetaRow
+                      icon={<Library className="h-4 w-4" />}
+                      label={t('pages.books.detail.metaType')}
+                      value={t(`pages.books.literaryTypes.${book.literarytype}`, {
+                        defaultValue: book.literarytype_display,
+                      })}
+                    />
+                    <MetaRow
+                      icon={<Hash className="h-4 w-4" />}
+                      label={t('pages.books.detail.metaEdition')}
+                      value={book.edition}
+                    />
+                    {book.publish_date && (
+                      <MetaRow
+                        icon={<Calendar className="h-4 w-4" />}
+                        label={t('pages.books.detail.metaPublishDate')}
+                        value={formatDate(book.publish_date, 'dd/MM/yyyy')}
+                      />
+                    )}
+                    {book.genre_display && (
+                      <MetaRow
+                        icon={<Tag className="h-4 w-4" />}
+                        label={t('pages.books.detail.metaGenre')}
+                        value={t(`pages.books.genres.${book.genre}`, {
+                          defaultValue: book.genre_display,
+                        })}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Reading progress */}
+              {book.reading_progress > 0 && (
+                <>
+                  <div className="border-t" />
+                  <div className="space-y-sm">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="gap-xs flex items-center font-medium">
+                        <TrendingUp className="h-4 w-4" />
+                        {t('pages.books.detail.readingProgress')}
+                      </span>
+                      <span className="font-semibold">{book.reading_progress}%</span>
+                    </div>
+                    <Progress value={book.reading_progress} className="h-2" />
+                    <p className="text-muted-foreground text-xs">
+                      {t('pages.books.detail.pagesRead', {
+                        read: book.total_pages_read,
+                        total: book.pages,
+                      })}
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {/* Completion forecast */}
+              {book.read_status === 'reading' &&
+                (book.estimated_completion_general ||
+                  book.estimated_completion_book) && (
                   <>
                     <div className="border-t" />
-                    <div className="space-y-xs">
-                      <p className="text-sm font-medium">
-                        {t('pages.books.detail.synopsis')}
-                      </p>
-                      <p className="text-muted-foreground text-sm leading-relaxed">
-                        {book.synopsis}
-                      </p>
+                    <div className="space-y-sm">
+                      <span className="gap-xs flex items-center text-sm font-medium">
+                        <Calendar className="h-4 w-4" />
+                        {t('pages.books.detail.completionForecast')}
+                      </span>
+                      <div className="gap-sm grid grid-cols-1 text-xs">
+                        {book.estimated_completion_book && (
+                          <div className="bg-muted py-sm flex items-center justify-between rounded-md px-3">
+                            <span className="text-muted-foreground">
+                              {t('pages.books.detail.bookAvg')}
+                              {book.book_avg_pages_per_day > 0 && (
+                                <span className="ml-xs">
+                                  {t('pages.books.detail.pagesPerDay', {
+                                    count: book.book_avg_pages_per_day,
+                                  })}
+                                </span>
+                              )}
+                            </span>
+                            <span className="font-semibold">
+                              {formatDate(book.estimated_completion_book, 'dd/MM/yyyy')}
+                            </span>
+                          </div>
+                        )}
+                        {book.estimated_completion_general && (
+                          <div className="bg-muted py-sm flex items-center justify-between rounded-md px-3">
+                            <span className="text-muted-foreground">
+                              {t('pages.books.detail.generalAvg')}
+                              {book.general_avg_pages_per_day > 0 && (
+                                <span className="ml-xs">
+                                  {t('pages.books.detail.pagesPerDay', {
+                                    count: book.general_avg_pages_per_day,
+                                  })}
+                                </span>
+                              )}
+                            </span>
+                            <span className="font-semibold">
+                              {formatDate(
+                                book.estimated_completion_general,
+                                'dd/MM/yyyy'
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </>
                 )}
-              </> /* end info tab */
-            )}
 
-            {/* Highlights tab */}
-            {activeTab === 'highlights' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-sm font-medium">
-                    {t('pages.books.detail.highlightsCount', {
-                      count: highlights.length,
-                    })}
-                  </span>
-                  <div className="gap-sm flex">
-                    {highlights.length > 0 && (
-                      <Button
-                        variant="outline"
-                        onClick={() => void handleExport()}
-                        disabled={isExporting}
-                      >
-                        <Download className="h-4 w-4" />
-                        {isExporting
-                          ? t('pages.books.detail.exportingBtn')
-                          : t('pages.books.detail.exportBtn')}
-                      </Button>
-                    )}
-                    <Button
-                      onClick={() => {
-                        setEditingHighlight(undefined);
-                        setShowAddForm(true);
-                      }}
+              {/* Synopsis */}
+              {book.synopsis && (
+                <>
+                  <div className="border-t" />
+                  <div className="space-y-xs">
+                    <p className="text-sm font-medium">
+                      {t('pages.books.detail.synopsis')}
+                    </p>
+                    <p
+                      className="text-muted-foreground line-clamp-4 text-sm leading-relaxed"
+                      title={book.synopsis}
                     >
-                      <Plus className="h-4 w-4" />
-                      {t('pages.books.detail.addBtn')}
-                    </Button>
+                      {book.synopsis}
+                    </p>
                   </div>
+                </>
+              )}
+            </>{' '}
+            {/* end info tab */}
+          </StackPanel>
+
+          {/* Highlights tab */}
+          <StackPanel active={activeTab === 'highlights'}>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-sm font-medium">
+                  {t('pages.books.detail.highlightsCount', {
+                    count: highlights.length,
+                  })}
+                </span>
+                <div className="gap-sm flex">
+                  {highlights.length > 0 && (
+                    <Button
+                      variant="outline"
+                      onClick={() => void handleExport()}
+                      loading={isExporting}
+                    >
+                      {!isExporting && <Download className="h-4 w-4" />}
+                      {t('pages.books.detail.exportBtn')}
+                    </Button>
+                  )}
+                  <Button onClick={() => setHighlightDialog({ open: true })}>
+                    <Plus className="h-4 w-4" />
+                    {t('pages.books.detail.addBtn')}
+                  </Button>
                 </div>
+              </div>
 
-                {showAddForm && (
-                  <HighlightInlineForm
-                    bookId={book.id}
-                    ownerId={book.owner}
-                    onSaved={() => {
-                      setShowAddForm(false);
-                      void refreshHighlights();
-                    }}
-                    onCancel={() => setShowAddForm(false)}
-                  />
-                )}
-
-                {isLoadingHighlights ? (
-                  <p className="py-md text-muted-foreground text-center text-sm">
-                    {t('pages.books.detail.loadingHighlights')}
-                  </p>
-                ) : highlights.length === 0 && !showAddForm ? (
-                  <EmptyState title={t('pages.books.detail.noHighlights')} />
-                ) : (
-                  <PaginatedSlide
-                    items={highlights}
-                    pageSize={DETAIL_TEXT_PAGE_SIZE}
-                    pinNav={false}
-                    className="space-y-sm"
-                  >
-                    {(pageHighlights) =>
-                      pageHighlights.map((h) =>
-                        editingHighlight?.id === h.id ? (
-                          <HighlightInlineForm
-                            key={h.id}
-                            bookId={book.id}
-                            ownerId={book.owner}
-                            highlight={h}
-                            onSaved={() => {
-                              setEditingHighlight(undefined);
-                              void refreshHighlights();
-                            }}
-                            onCancel={() => setEditingHighlight(undefined)}
+              {highlights.length === 0 ? (
+                <EmptyState title={t('pages.books.detail.noHighlights')} />
+              ) : (
+                <PaginatedSlide
+                  items={highlights}
+                  pageSize={DETAIL_TEXT_PAGE_SIZE}
+                  pinNav={false}
+                  className="space-y-sm"
+                >
+                  {(pageHighlights) =>
+                    pageHighlights.map((h) => (
+                      <div
+                        key={h.id}
+                        className={cn('rounded-lg border p-3', highlightBg(h.color))}
+                      >
+                        <div className="mb-sm gap-sm flex items-start justify-between">
+                          <div className="gap-sm flex flex-wrap items-center">
+                            <Badge
+                              variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}
+                              className="text-xs"
+                            >
+                              {t(HIGHLIGHT_TYPE_KEY[h.highlight_type] ?? '', {
+                                defaultValue: h.highlight_type_display,
+                              })}
+                            </Badge>
+                            {h.page_number && (
+                              <span className="text-muted-foreground text-xs">
+                                {t('pages.highlights.pageShort', {
+                                  page: h.page_number,
+                                })}
+                              </span>
+                            )}
+                            {h.chapter && (
+                              <span className="text-muted-foreground text-xs">
+                                {h.chapter}
+                              </span>
+                            )}
+                          </div>
+                          <RowActions
+                            onEdit={() =>
+                              setHighlightDialog({ open: true, highlight: h })
+                            }
+                            onDelete={() => void handleDeleteHighlight(h.id)}
                           />
-                        ) : (
-                          <div
-                            key={h.id}
-                            className={`rounded-lg border-l-4 p-3 ${COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow}`}
-                          >
-                            <div className="mb-sm gap-sm flex items-start justify-between">
-                              <div className="gap-sm flex flex-wrap items-center">
-                                <Badge
-                                  variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}
-                                  className="text-xs"
-                                >
-                                  {h.highlight_type_display}
-                                </Badge>
-                                {h.page_number && (
-                                  <span className="text-muted-foreground text-xs">
-                                    p. {h.page_number}
-                                  </span>
-                                )}
-                                {h.chapter && (
-                                  <span className="text-muted-foreground text-xs">
-                                    {h.chapter}
-                                  </span>
-                                )}
+                        </div>
+                        <p
+                          className="line-clamp-4 text-sm leading-relaxed"
+                          title={h.text}
+                        >
+                          {h.text}
+                        </p>
+                      </div>
+                    ))
+                  }
+                </PaginatedSlide>
+              )}
+            </div>
+          </StackPanel>
+
+          {/* Readings tab */}
+          <StackPanel active={activeTab === 'readings'}>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-sm font-medium">
+                  {t('pages.books.detail.readingsCount', { count: readings.length })}
+                </span>
+                <Button
+                  onClick={() => {
+                    setEditingReading(undefined);
+                    setIsReadingFormOpen(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('pages.books.detail.addBtn')}
+                </Button>
+              </div>
+
+              {readings.length === 0 ? (
+                <EmptyState title={t('pages.books.detail.noReadings')} />
+              ) : (
+                <PaginatedSlide
+                  items={readings}
+                  pageSize={LIST_PAGE_SIZE}
+                  pinNav={false}
+                  className="space-y-sm"
+                >
+                  {(pageReadings) =>
+                    pageReadings.map((r) => (
+                      <Card key={r.id}>
+                        <CardHeader className="pb-sm pt-3">
+                          <div className="gap-sm flex items-start justify-between">
+                            <div className="space-y-xs">
+                              <div className="gap-sm flex items-center text-sm">
+                                <Calendar className="text-muted-foreground h-3.5 w-3.5" />
+                                <span className="font-medium">
+                                  {formatDate(r.reading_date, 'dd/MM/yyyy')}
+                                </span>
                               </div>
-                              <div className="flex shrink-0 gap-0.5">
-                                <Button
-                                  aria-label={t('common.actions.edit')}
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0"
-                                  onClick={() => setEditingHighlight(h)}
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  aria-label={t('common.actions.delete')}
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-destructive hover:text-destructive h-6 w-6 p-0"
-                                  onClick={() => void handleDeleteHighlight(h.id)}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
+                              <div className="text-muted-foreground flex items-center gap-3 text-xs">
+                                <span>
+                                  {t('pages.books.detail.readingPagesRead', {
+                                    count: r.pages_read,
+                                  })}
+                                </span>
+                                {r.reading_time > 0 && (
+                                  <span>
+                                    {t('pages.books.detail.readingTime', {
+                                      count: r.reading_time,
+                                    })}
+                                  </span>
+                                )}
                               </div>
                             </div>
-                            <p className="text-sm leading-relaxed">{h.text}</p>
+                            <RowActions
+                              onEdit={() => {
+                                setEditingReading(r);
+                                setIsReadingFormOpen(true);
+                              }}
+                              onDelete={() => void handleDeleteReading(r.id)}
+                            />
                           </div>
-                        )
-                      )
-                    }
-                  </PaginatedSlide>
-                )}
-              </div>
-            )}
+                        </CardHeader>
+                        {r.notes && (
+                          <CardContent className="pt-0 pb-3">
+                            <p className="text-muted-foreground line-clamp-2 text-xs">
+                              {r.notes}
+                            </p>
+                          </CardContent>
+                        )}
+                      </Card>
+                    ))
+                  }
+                </PaginatedSlide>
+              )}
+            </div>
+          </StackPanel>
 
-            {/* Readings tab */}
-            {activeTab === 'readings' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-sm font-medium">
-                    {t('pages.books.detail.readingsCount', { count: readings.length })}
-                  </span>
+          {/* Summaries tab */}
+          <StackPanel active={activeTab === 'summaries'}>
+            <div className="space-y-3">
+              <div className="gap-sm flex flex-wrap items-center justify-between">
+                <span className="text-muted-foreground text-sm font-medium">
+                  {t('pages.books.detail.summariesCount', {
+                    count: summaries.length,
+                  })}
+                </span>
+                <div className="gap-xs flex shrink-0 items-center">
                   <Button
-                    onClick={() => {
-                      setEditingReading(undefined);
-                      setIsReadingFormOpen(true);
-                    }}
+                    onClick={openSummaryCreate}
+                    disabled={book.read_status !== 'read'}
                   >
                     <Plus className="h-4 w-4" />
                     {t('pages.books.detail.addBtn')}
                   </Button>
                 </div>
+              </div>
 
-                {isLoadingReadings ? (
-                  <p className="py-md text-muted-foreground text-center text-sm">
-                    {t('pages.books.detail.loadingReadings')}
-                  </p>
-                ) : readings.length === 0 ? (
-                  <EmptyState title={t('pages.books.detail.noReadings')} />
-                ) : (
-                  <PaginatedSlide
-                    items={readings}
-                    pageSize={LIST_PAGE_SIZE}
-                    pinNav={false}
-                    className="space-y-sm"
-                  >
-                    {(pageReadings) =>
-                      pageReadings.map((r) => (
-                        <Card key={r.id}>
-                          <CardHeader className="pb-sm pt-3">
-                            <div className="gap-sm flex items-start justify-between">
-                              <div className="space-y-xs">
-                                <div className="gap-sm flex items-center text-sm">
-                                  <Calendar className="text-muted-foreground h-3.5 w-3.5" />
-                                  <span className="font-medium">
-                                    {formatDate(r.reading_date, 'dd/MM/yyyy')}
-                                  </span>
-                                </div>
-                                <div className="text-muted-foreground flex items-center gap-3 text-xs">
-                                  <span>
-                                    {t('pages.books.detail.readingPagesRead', {
-                                      count: r.pages_read,
-                                    })}
-                                  </span>
-                                  {r.reading_time > 0 && (
-                                    <span>
-                                      {t('pages.books.detail.readingTime', {
-                                        count: r.reading_time,
-                                      })}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex shrink-0 gap-0.5">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0"
-                                  title={t('common.actions.edit')}
-                                  onClick={() => {
-                                    setEditingReading(r);
-                                    setIsReadingFormOpen(true);
-                                  }}
-                                >
-                                  <Edit className="h-3 w-3" aria-hidden="true" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-destructive hover:text-destructive h-6 w-6 p-0"
-                                  title={t('common.actions.delete')}
-                                  onClick={() => void handleDeleteReading(r.id)}
-                                >
-                                  <Trash2 className="h-3 w-3" aria-hidden="true" />
-                                </Button>
+              {summaries.length === 0 ? (
+                <EmptyState title={t('pages.books.detail.noSummaries')} />
+              ) : (
+                <PaginatedSlide
+                  items={summaries}
+                  pageSize={DETAIL_TEXT_PAGE_SIZE}
+                  pinNav={false}
+                  className="space-y-sm"
+                >
+                  {(pageSummaries) =>
+                    pageSummaries.map((s) => (
+                      <Card key={s.id}>
+                        <CardHeader className="pb-sm pt-3">
+                          <div className="gap-sm flex items-start justify-between">
+                            <div className="space-y-xs">
+                              <CardTitle className="text-sm">{s.title}</CardTitle>
+                              <div className="gap-sm flex items-center">
+                                {s.is_vectorized ? (
+                                  <Badge variant="default" className="gap-xs text-xs">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    {t('pages.summaries.vectorized')}
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="gap-xs text-xs">
+                                    <XCircle className="h-3 w-3" />
+                                    {t('pages.summaries.notVectorized')}
+                                  </Badge>
+                                )}
                               </div>
                             </div>
-                          </CardHeader>
-                          {r.notes && (
-                            <CardContent className="pt-0 pb-3">
-                              <p className="text-muted-foreground line-clamp-2 text-xs">
-                                {r.notes}
-                              </p>
-                            </CardContent>
-                          )}
-                        </Card>
-                      ))
-                    }
-                  </PaginatedSlide>
-                )}
-              </div>
-            )}
+                            <RowActions
+                              onEdit={() => openSummaryEdit(s)}
+                              onDelete={() => void handleDeleteSummary(s.id)}
+                            />
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0 pb-3">
+                          <p className="text-muted-foreground line-clamp-4 text-xs whitespace-pre-wrap">
+                            {s.text}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))
+                  }
+                </PaginatedSlide>
+              )}
+            </div>
+          </StackPanel>
+        </div>
 
-            {/* Summaries tab */}
-            {activeTab === 'summaries' && (
-              <div className="space-y-3">
-                <div className="gap-sm flex flex-wrap items-center justify-between">
-                  <span className="text-muted-foreground text-sm font-medium">
-                    {t('pages.books.detail.summariesCount', {
-                      count: summaries.length,
-                    })}
-                  </span>
-                  <div className="gap-xs flex shrink-0 items-center">
-                    {book.read_status === 'read' && (
-                      <Button
-                        variant="outline"
-                        onClick={() => void handleGenerateAiSummary()}
-                        disabled={isGeneratingAiSummary}
-                        title={t('pages.books.detail.aiSummaryBtn')}
-                      >
-                        {isGeneratingAiSummary ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-4 w-4" />
-                        )}
-                        {t('pages.books.detail.aiSummaryBtn')}
-                      </Button>
-                    )}
-                    <Button
-                      onClick={openSummaryCreate}
-                      disabled={book.read_status !== 'read'}
-                      title={
-                        book.read_status !== 'read'
-                          ? t('pages.books.detail.summariesReadOnlyBtn')
-                          : undefined
-                      }
-                    >
-                      <Plus className="h-4 w-4" />
-                      {t('pages.books.detail.addBtn')}
-                    </Button>
-                  </div>
-                </div>
-                {book.read_status !== 'read' && (
-                  <p
-                    className="bg-muted py-sm text-muted-foreground rounded-md px-3 text-xs"
-                    dangerouslySetInnerHTML={{
-                      __html: t('pages.books.detail.summariesReadOnlyNote'),
-                    }}
-                  />
-                )}
-
-                {isLoadingSummaries ? (
-                  <p className="py-md text-muted-foreground text-center text-sm">
-                    {t('pages.books.detail.loadingSummaries')}
-                  </p>
-                ) : summaries.length === 0 ? (
-                  <EmptyState title={t('pages.books.detail.noSummaries')} />
-                ) : (
-                  <PaginatedSlide
-                    items={summaries}
-                    pageSize={DETAIL_TEXT_PAGE_SIZE}
-                    pinNav={false}
-                    className="space-y-sm"
-                  >
-                    {(pageSummaries) =>
-                      pageSummaries.map((s) => (
-                        <Card key={s.id}>
-                          <CardHeader className="pb-sm pt-3">
-                            <div className="gap-sm flex items-start justify-between">
-                              <div className="space-y-xs">
-                                <CardTitle className="text-sm">{s.title}</CardTitle>
-                                <div className="gap-sm flex items-center">
-                                  {s.is_vectorized ? (
-                                    <Badge variant="default" className="gap-xs text-xs">
-                                      <CheckCircle2 className="h-3 w-3" />
-                                      {t('pages.summaries.vectorized')}
-                                    </Badge>
-                                  ) : (
-                                    <Badge
-                                      variant="secondary"
-                                      className="gap-xs text-xs"
-                                    >
-                                      <XCircle className="h-3 w-3" />
-                                      {t('pages.summaries.notVectorized')}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex shrink-0 gap-0.5">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0"
-                                  title={t('common.actions.edit')}
-                                  onClick={() => openSummaryEdit(s)}
-                                >
-                                  <Edit className="h-3 w-3" aria-hidden="true" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-destructive hover:text-destructive h-6 w-6 p-0"
-                                  title={t('common.actions.delete')}
-                                  onClick={() => void handleDeleteSummary(s.id)}
-                                >
-                                  <Trash2 className="h-3 w-3" aria-hidden="true" />
-                                </Button>
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-0 pb-3">
-                            <p className="text-muted-foreground line-clamp-4 text-xs whitespace-pre-wrap">
-                              {s.text}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      ))
-                    }
-                  </PaginatedSlide>
-                )}
-              </div>
-            )}
-
-            {/* Chat tab */}
-            {activeTab === 'chat' && (
-              <div className="flex h-[60vh] flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <Brain className="text-primary h-4 w-4" />
-                  <span className="text-sm font-medium">
-                    {t('pages.books.detail.chat.title')}
-                  </span>
-                  <span className="text-muted-foreground ml-auto text-xs">
-                    {book.title}
-                  </span>
-                </div>
-                <BookChat book={book} />
-              </div>
-            )}
-          </TabTransition>
-
+        <div>
           {/* Reading form dialog */}
           <Dialog open={isReadingFormOpen} onOpenChange={setIsReadingFormOpen}>
             <DialogContent>
@@ -1391,6 +1028,38 @@ export function BookDetailModal({
                 onSubmit={handleReadingSubmit}
                 onCancel={() => setIsReadingFormOpen(false)}
                 isLoading={isReadingSubmitting}
+              />
+            </DialogContent>
+          </Dialog>
+
+          {/* Highlight form dialog (incluir / editar) */}
+          <Dialog
+            open={highlightDialog.open}
+            onOpenChange={(v) => !v && setHighlightDialog({ open: false })}
+          >
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle mode={highlightDialog.highlight ? 'edit' : 'create'}>
+                  {highlightDialog.highlight
+                    ? t('pages.highlights.editTitle')
+                    : t('pages.highlights.newTitle')}
+                </DialogTitle>
+                <VisuallyHidden>
+                  <DialogDescription>
+                    {highlightDialog.highlight
+                      ? t('pages.highlights.editDesc')
+                      : t('pages.highlights.newDesc')}
+                  </DialogDescription>
+                </VisuallyHidden>
+              </DialogHeader>
+              <HighlightForm
+                key={highlightDialog.highlight?.id ?? 'new'}
+                highlight={highlightDialog.highlight}
+                bookId={book.id}
+                ownerId={book.owner}
+                onSubmit={handleHighlightSubmit}
+                onCancel={() => setHighlightDialog({ open: false })}
+                isLoading={isHighlightSubmitting}
               />
             </DialogContent>
           </Dialog>
@@ -1429,7 +1098,7 @@ export function BookDetailModal({
                           title: e.target.value,
                         })
                       }
-                      required
+                      aria-invalid={summaryInvalid.title}
                     />
                   </div>
                   <div className="space-y-sm">
@@ -1445,7 +1114,7 @@ export function BookDetailModal({
                         setSummaryFormData({ ...summaryFormData, text: e.target.value })
                       }
                       rows={10}
-                      required
+                      aria-invalid={summaryInvalid.text}
                     />
                   </div>
                 </div>
@@ -1459,17 +1128,9 @@ export function BookDetailModal({
                     <X className="h-4 w-4" />
                     {t('common.actions.cancel')}
                   </Button>
-                  <Button type="submit" disabled={isSummarySubmitting}>
-                    {isSummarySubmitting ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Save className="h-4 w-4" />
-                    )}
-                    {isSummarySubmitting
-                      ? t('common.actions.saving')
-                      : editingSummary
-                        ? t('pages.summaries.saveBtn')
-                        : t('pages.summaries.createBtn')}
+                  <Button type="submit" loading={isSummarySubmitting}>
+                    {!isSummarySubmitting && <Save className="h-4 w-4" />}
+                    {t('common.actions.save')}
                   </Button>
                 </DialogFooter>
               </form>
@@ -1477,44 +1138,7 @@ export function BookDetailModal({
           </Dialog>
         </div>
 
-        <DialogCloseFooter>
-          {activeTab === 'info' && (
-            <>
-              {onAskIntellect && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onOpenChange(false);
-                    onAskIntellect(book);
-                  }}
-                >
-                  <Brain className="text-primary h-4 w-4" />
-                  {t('pages.books.chatTabDesc')}
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => {
-                  onOpenChange(false);
-                  onDelete(book.id);
-                }}
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-                {t('common.actions.delete')}
-              </Button>
-              <Button
-                onClick={() => {
-                  onOpenChange(false);
-                  onEdit(book);
-                }}
-              >
-                <Edit className="h-4 w-4" />
-                {t('common.actions.edit')}
-              </Button>
-            </>
-          )}
-        </DialogCloseFooter>
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

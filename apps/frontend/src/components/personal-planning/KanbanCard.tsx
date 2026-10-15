@@ -91,7 +91,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
       exit={{ opacity: 0, y: -8 }}
       className="border-border bg-card p-md cursor-grab rounded-lg border active:cursor-grabbing"
     >
-      <div className="flex items-start gap-3">
+      <div className="gap-sm flex items-start">
         {/* Drag Handle / Done indicator */}
         <div className="mt-xs hover:text-foreground">
           <AnimatePresence mode="wait">

@@ -2,12 +2,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  Award,
   BookOpen,
   Brain,
   CheckCircle2,
   CircleDot,
-  Clock,
-  Edit,
   GraduationCap,
   Layers,
   MonitorPlay,
@@ -15,23 +14,13 @@ import {
   Search,
   Tag,
   Timer,
-  Trash2,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts';
 
-import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { CardActions } from '@/components/common/CardActions';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -39,11 +28,15 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
-import { CourseDetailModal } from '@/components/library/CourseDetailModal';
+import {
+  CourseCertificateModal,
+  CourseDetailModal,
+  CourseModulesModal,
+  CourseSessionsModal,
+} from '@/components/library/CourseDetailModal';
 import { CourseForm } from '@/components/library/CourseForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -68,9 +61,8 @@ import {
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cardVariants } from '@/lib/animations';
-import { useChartColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
-import { coursesService, courseSessionsService } from '@/services/courses-service';
+import { coursesService } from '@/services/courses-service';
 import { membersService } from '@/services/members-service';
 import type {
   Course,
@@ -121,20 +113,30 @@ const STATUS_BADGE: Record<
   paused: 'destructive',
 };
 
+type CourseAction = 'modules' | 'sessions' | 'certificate';
+
+/**
+ * Card de grade (§5): ícone da plataforma + título + plataforma (1 linha) +
+ * progresso (métrica) + status. Aulas, horas e categoria ficam no detalhe.
+ */
 function CourseCard({
   course,
   onOpen,
   onEdit,
   onDelete,
+  onAction,
   onAskIntellect,
 }: {
   course: Course;
   onOpen: (c: Course) => void;
   onEdit: (c: Course) => void;
   onDelete: (c: Course) => void;
+  onAction: (c: Course, action: CourseAction) => void;
   onAskIntellect: (c: Course) => void;
 }) {
   const { t } = useTranslation();
+  const PlatformIcon = PLATFORM_ICONS[course.platform] ?? PLATFORM_ICONS['other'];
+  const StatusIcon = COURSE_STATUS_ICONS[course.status];
 
   return (
     <motion.div
@@ -143,7 +145,7 @@ function CourseCard({
       animate="visible"
       exit="exit"
       layout
-      className="group border-border bg-card flex cursor-pointer flex-col overflow-hidden rounded-lg border transition-colors"
+      className="border-border bg-card flex cursor-pointer flex-col rounded-lg border"
       onClick={() => onOpen(course)}
       role="button"
       tabIndex={0}
@@ -151,107 +153,70 @@ function CourseCard({
         if (e.key === 'Enter' || e.key === ' ') onOpen(course);
       }}
     >
-      {/* Header band */}
-      <div className="gap-sm bg-primary/10 px-md pb-sm pt-md flex items-center">
-        <div className="bg-primary/20 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-          {(() => {
-            const PlatformIcon =
-              PLATFORM_ICONS[course.platform] ?? PLATFORM_ICONS['other'];
-            return <PlatformIcon className="text-primary h-5 w-5" />;
-          })()}
+      <div className="gap-sm px-md py-sm flex flex-1 items-center">
+        <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+          <PlatformIcon className="text-primary h-5 w-5" />
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm leading-tight font-semibold">{course.title}</p>
-          <p className="text-muted-foreground text-xs">
+        <div className="space-y-xs min-w-0 flex-1">
+          <div className="gap-sm flex items-start justify-between">
+            <p className="truncate text-sm font-semibold" title={course.title}>
+              {course.title}
+            </p>
+            <Badge
+              variant={STATUS_BADGE[course.status]}
+              className="gap-xs shrink-0 text-xs"
+            >
+              {StatusIcon && <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />}
+              {t(`pages.courses.status.${course.status}`)}
+            </Badge>
+          </div>
+          <p className="text-muted-foreground truncate text-xs">
             {t(`pages.courses.platform.${course.platform}`)}
           </p>
-        </div>
-        <Badge
-          variant={STATUS_BADGE[course.status]}
-          className="gap-xs shrink-0 text-xs"
-        >
-          {(() => {
-            const StatusIcon = COURSE_STATUS_ICONS[course.status];
-            return StatusIcon ? (
-              <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
-            ) : null;
-          })()}
-          {t(`pages.courses.status.${course.status}`)}
-        </Badge>
-      </div>
-
-      {/* Body */}
-      <div className="gap-sm px-md py-sm flex flex-1 flex-col">
-        <div className="text-muted-foreground flex items-center justify-between text-xs">
-          <span className="gap-xs flex items-center">
-            <Layers className="h-3.5 w-3.5" />
-            {course.completed_lessons}/{course.total_lessons}{' '}
-            {t('pages.courses.stats.lessons').toLowerCase()}
-          </span>
-          <span className="gap-xs flex items-center">
-            <Timer className="h-3.5 w-3.5" />
-            {course.invested_hours.toFixed(1)}h
-          </span>
-        </div>
-
-        <div>
-          <div className="mb-xs flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">
-              {t('pages.courses.stats.progress')}
-            </span>
-            <span className="text-primary font-semibold">
+          <div className="gap-sm flex items-center">
+            <Progress value={course.progress_percentage} className="h-1.5 flex-1" />
+            <span className="text-muted-foreground text-xs">
               {course.progress_percentage}%
             </span>
           </div>
-          <Progress
-            value={course.progress_percentage}
-            className="bg-primary/20 h-1.5"
-          />
         </div>
-
-        <Badge variant="outline" className="w-fit text-xs">
-          {t(`pages.courses.category.${course.category}`)}
-        </Badge>
       </div>
-
-      {/* Actions */}
-      <div className="gap-xs border-border/50 px-md py-sm flex border-t">
-        <Button
-          size="sm"
-          variant="ghost"
-          className="gap-xs h-7 text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            onAskIntellect(course);
-          }}
-          title={t('pages.courses.askIntellect')}
-        >
-          <Brain className="h-3 w-3" />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="gap-xs h-7 flex-1 text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(course);
-          }}
-        >
-          <Edit className="h-3 w-3" />
-          {t('common.actions.edit')}
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="gap-xs text-destructive hover:text-destructive h-7 flex-1 text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(course);
-          }}
-        >
-          <Trash2 className="h-3 w-3" />
-          {t('common.actions.delete')}
-        </Button>
+      <div
+        role="presentation"
+        className="gap-xs px-sm py-xs flex items-center justify-end border-t"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <CardActions
+          onEdit={() => onEdit(course)}
+          onDelete={() => onDelete(course)}
+          menuActions={[
+            {
+              icon: Layers,
+              label: t('pages.courses.modulesAndLessons'),
+              onClick: () => onAction(course, 'modules'),
+              color: 'plan',
+            },
+            {
+              icon: Timer,
+              label: t('pages.courses.sessions.title'),
+              onClick: () => onAction(course, 'sessions'),
+              color: 'progress',
+            },
+            {
+              icon: Award,
+              label: t('pages.courses.tabs.certificate'),
+              onClick: () => onAction(course, 'certificate'),
+              color: 'preview',
+            },
+            {
+              icon: Brain,
+              label: t('pages.courses.askIntellect'),
+              onClick: () => onAskIntellect(course),
+              color: 'chat',
+            },
+          ]}
+        />
       </div>
     </motion.div>
   );
@@ -274,6 +239,10 @@ export default function Courses() {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [detailCourse, setDetailCourse] = useState<Course | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [actionModal, setActionModal] = useState<{
+    course: Course;
+    action: CourseAction;
+  } | null>(null);
 
   const { data: member } = useQuery({
     queryKey: ['member-me'],
@@ -281,7 +250,7 @@ export default function Courses() {
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
-  const params: Record<string, unknown> = { page_size: 200 };
+  const params: Record<string, unknown> = {};
   if (statusFilter !== 'all') params.status = statusFilter;
   if (categoryFilter !== 'all') params.category = categoryFilter;
   if (platformFilter !== 'all') params.platform = platformFilter;
@@ -289,45 +258,9 @@ export default function Courses() {
 
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ['courses', statusFilter, categoryFilter, platformFilter, search],
-    queryFn: () => coursesService.getAll(params),
+    queryFn: () => coursesService.getAllPages(params),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
-
-  const weekStart = useMemo(() => {
-    const now = new Date();
-    const day = now.getDay();
-    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(now.setDate(diff));
-    monday.setHours(0, 0, 0, 0);
-    return monday.toISOString().split('T')[0];
-  }, []);
-
-  const { data: weekSessions = [] } = useQuery({
-    queryKey: ['course-sessions', 'week', weekStart],
-    queryFn: () =>
-      courseSessionsService
-        .getAll({ page_size: 200, session_date__gte: weekStart })
-        .then((r) =>
-          Array.isArray(r) ? r : ((r as { results: typeof r }).results ?? r)
-        ),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-  });
-
-  const COLORS = useChartColors();
-
-  const weeklyHoursData = useMemo(() => {
-    const totals: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-    const sessions = Array.isArray(weekSessions) ? weekSessions : [];
-    sessions.forEach((s) => {
-      const d = new Date(s.session_date + 'T00:00:00');
-      const dow = (d.getDay() + 6) % 7;
-      totals[dow] = (totals[dow] ?? 0) + (s.duration_hours ?? s.duration_minutes / 60);
-    });
-    return Array.from({ length: 7 }, (_, i) => ({
-      name: t(`pages.planningDashboard.weekdayShort.${i}`),
-      hours: Number((totals[i] ?? 0).toFixed(1)),
-    }));
-  }, [weekSessions, t]);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['courses'] });
 
@@ -392,7 +325,9 @@ export default function Courses() {
   };
 
   const handleAskIntellect = (course: Course) => {
-    const context = encodeURIComponent(`Curso: ${course.title}`);
+    const context = encodeURIComponent(
+      t('pages.courses.agentContext', { title: course.title })
+    );
     void navigate(`/agents?context=${context}`);
   };
 
@@ -403,66 +338,12 @@ export default function Courses() {
           title={t('pages.courses.title')}
           icon={<GraduationCap className="text-primary h-6 w-6" />}
           actions={
-            <Button
-              onClick={openNew}
-              className="gap-sm bg-primary text-primary-foreground hover:bg-primary/90"
-            >
+            <Button onClick={openNew}>
               <Plus className="h-4 w-4" />
               {t('pages.courses.newBtn')}
             </Button>
           }
         />
-
-        {/* Study hours this week */}
-        <Card>
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-sm font-medium">
-              <Clock className="text-primary h-4 w-4" />
-              {t('pages.courses.studyHours.title')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={140}>
-              <BarChart
-                data={weeklyHoursData}
-                margin={{ top: 4, right: 8, bottom: 0, left: -24 }}
-              >
-                <XAxis
-                  dataKey="name"
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                  tickLine={false}
-                  axisLine={{ stroke: 'hsl(var(--border))' }}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
-                  content={
-                    <EnhancedTooltip
-                      formatter={(value) => `${Number(value)}h`}
-                      nameFormatter={() => t('pages.courses.studyHours.hours')}
-                    />
-                  }
-                />
-                <Bar dataKey="hours" radius={[4, 4, 0, 0]} maxBarSize={40}>
-                  {weeklyHoursData.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[0]}
-                      fillOpacity={_.hours > 0 ? 1 : 0.25}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            <p className="mt-xs text-muted-foreground text-center text-xs">
-              {t('pages.courses.studyHours.subtitle')}
-            </p>
-          </CardContent>
-        </Card>
 
         {/* Filters */}
         <FilterBar
@@ -620,7 +501,7 @@ export default function Courses() {
               key={`${statusFilter}-${categoryFilter}-${platformFilter}-${search}`}
               items={courses}
               pageSize={GRID_PAGE_SIZE}
-              className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
             >
               {(pageItems) =>
                 pageItems.map((course) => (
@@ -633,6 +514,7 @@ export default function Courses() {
                     }}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    onAction={(c, action) => setActionModal({ course: c, action })}
                     onAskIntellect={handleAskIntellect}
                   />
                 ))
@@ -653,25 +535,18 @@ export default function Courses() {
         >
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <div className="gap-sm flex items-center">
-                <div className="bg-primary/20 flex h-8 w-8 items-center justify-center rounded-lg">
-                  <GraduationCap className="text-primary h-4 w-4" />
-                </div>
-                <div>
-                  <DialogTitle mode={editingCourse ? 'edit' : 'create'}>
-                    {editingCourse
-                      ? t('pages.courses.editTitle')
-                      : t('pages.courses.newTitle')}
-                  </DialogTitle>
-                  <VisuallyHidden>
-                    <DialogDescription>
-                      {editingCourse
-                        ? t('pages.courses.editDesc')
-                        : t('pages.courses.newDesc')}
-                    </DialogDescription>
-                  </VisuallyHidden>
-                </div>
-              </div>
+              <DialogTitle mode={editingCourse ? 'edit' : 'create'}>
+                {editingCourse
+                  ? t('pages.courses.editTitle')
+                  : t('pages.courses.newTitle')}
+              </DialogTitle>
+              <VisuallyHidden>
+                <DialogDescription>
+                  {editingCourse
+                    ? t('pages.courses.editDesc')
+                    : t('pages.courses.newDesc')}
+                </DialogDescription>
+              </VisuallyHidden>
             </DialogHeader>
             <CourseForm
               course={editingCourse ?? undefined}
@@ -694,11 +569,21 @@ export default function Courses() {
             setDetailOpen(false);
             setDetailCourse(null);
           }}
-          onEdit={handleEdit}
-          onDelete={(c) => {
-            setDetailOpen(false);
-            handleDelete(c);
-          }}
+        />
+        <CourseModulesModal
+          course={actionModal?.course ?? null}
+          open={actionModal?.action === 'modules'}
+          onClose={() => setActionModal(null)}
+        />
+        <CourseSessionsModal
+          course={actionModal?.course ?? null}
+          open={actionModal?.action === 'sessions'}
+          onClose={() => setActionModal(null)}
+        />
+        <CourseCertificateModal
+          course={actionModal?.course ?? null}
+          open={actionModal?.action === 'certificate'}
+          onClose={() => setActionModal(null)}
         />
       </PageContainer>
     </AnimatedPage>

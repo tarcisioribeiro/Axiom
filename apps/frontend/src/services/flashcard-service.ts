@@ -33,11 +33,20 @@ export interface FlashCardReviewResult {
 }
 
 class FlashCardService {
-  getAll(dueOnly?: boolean): Promise<{ results: FlashCard[]; count: number }> {
-    const url = dueOnly
-      ? `${API_CONFIG.ENDPOINTS.FLASHCARDS}?due=true`
-      : API_CONFIG.ENDPOINTS.FLASHCARDS;
-    return apiClient.get(url);
+  /** Todas as páginas (a tela filtra e pagina no cliente). */
+  async getAll(dueOnly?: boolean): Promise<{ results: FlashCard[]; count: number }> {
+    const results: FlashCard[] = [];
+    for (let page = 1; ; page++) {
+      const params = new URLSearchParams({ page: String(page), page_size: '500' });
+      if (dueOnly) params.set('due', 'true');
+      const res = await apiClient.get<{
+        results: FlashCard[];
+        count: number;
+        next: string | null;
+      }>(`${API_CONFIG.ENDPOINTS.FLASHCARDS}?${params}`);
+      results.push(...res.results);
+      if (!res.next) return { results, count: res.count };
+    }
   }
 
   getById(id: number): Promise<FlashCard> {

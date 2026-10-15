@@ -198,6 +198,7 @@ export interface GraphNodeMetadata {
   pages?: number;
   rating?: number | null;
   // Author
+  nationality?: string | null;
   nationality_display?: string;
   // Summary
   book_title?: string | null;

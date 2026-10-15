@@ -11,7 +11,7 @@ import {
   Maximize2,
   Network,
   PenLine,
-  Search,
+  ArrowRight,
   Sparkles,
   Trash2,
   X,
@@ -25,14 +25,25 @@ import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { PlainButton } from '@/components/ui/plain-button';
-import { Tooltip } from '@/components/ui/tooltip';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { ACTION_COLOR } from '@/lib/action-colors';
+import { HIGHLIGHT_TYPE_KEY } from '@/lib/highlight-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { knowledgeGraphService } from '@/services/knowledge-graph-service';
@@ -187,17 +198,10 @@ function NodeDetailPanel({
       initial={{ x: 320, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 320, opacity: 0 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="border-border bg-card absolute top-0 right-0 z-20 flex h-full w-80 flex-col border-l shadow-2xl"
+      className="border-border bg-card absolute top-0 right-0 z-20 flex h-full w-80 flex-col border-l"
     >
       {/* Header */}
-      <div
-        className="border-border px-md py-sm flex items-center justify-between border-b"
-        style={{
-          borderLeftColor: `hsl(var(${nodeColorVar}))`,
-          borderLeftWidth: 3,
-        }}
-      >
+      <div className="border-border px-md py-sm flex items-center justify-between border-b">
         <div className="gap-sm flex items-center">
           <div
             className="flex h-8 w-8 items-center justify-center rounded-full"
@@ -217,30 +221,36 @@ function NodeDetailPanel({
             </p>
           </div>
         </div>
-        <PlainButton
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
           aria-label={t('common.actions.close')}
           onClick={onClose}
-          className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="h-4 w-4" />
-        </PlainButton>
+        </Button>
       </div>
 
       {/* Metadata */}
-      <div className="p-md flex-1 overflow-y-auto">
+      <div className="p-md flex-1">
         <div className="space-y-sm">
           {node.type === 'book' && node.metadata && (
             <>
               {node.metadata.genre && (
                 <MetaRow
                   label={t('pages.knowledgeGraph.meta.genre')}
-                  value={node.metadata.genre}
+                  value={t(`pages.books.genres.${node.metadata.genre}`, {
+                    defaultValue: node.metadata.genre,
+                  })}
                 />
               )}
               {node.metadata.read_status && (
                 <MetaRow
                   label={t('pages.knowledgeGraph.meta.status')}
-                  value={node.metadata.read_status}
+                  value={t(`pages.books.readStatuses.${node.metadata.read_status}`, {
+                    defaultValue: node.metadata.read_status,
+                  })}
                 />
               )}
               {node.metadata.pages && (
@@ -260,7 +270,13 @@ function NodeDetailPanel({
           {node.type === 'author' && node.metadata && (
             <MetaRow
               label={t('pages.knowledgeGraph.meta.nationality')}
-              value={node.metadata.nationality_display ?? '—'}
+              value={
+                node.metadata.nationality
+                  ? t(`pages.authors.nationalities.${node.metadata.nationality}`, {
+                      defaultValue: node.metadata.nationality_display,
+                    })
+                  : (node.metadata.nationality_display ?? '—')
+              }
             />
           )}
           {node.type === 'course' && node.metadata && (
@@ -268,19 +284,25 @@ function NodeDetailPanel({
               {node.metadata.platform && (
                 <MetaRow
                   label={t('pages.knowledgeGraph.meta.platform')}
-                  value={node.metadata.platform}
+                  value={t(`pages.courses.platform.${node.metadata.platform}`, {
+                    defaultValue: node.metadata.platform,
+                  })}
                 />
               )}
               {node.metadata.category && (
                 <MetaRow
                   label={t('pages.knowledgeGraph.meta.category')}
-                  value={node.metadata.category}
+                  value={t(`pages.courses.category.${node.metadata.category}`, {
+                    defaultValue: node.metadata.category,
+                  })}
                 />
               )}
               {node.metadata.status && (
                 <MetaRow
                   label={t('pages.knowledgeGraph.meta.status')}
-                  value={node.metadata.status}
+                  value={t(`pages.courses.status.${node.metadata.status}`, {
+                    defaultValue: node.metadata.status,
+                  })}
                 />
               )}
               {node.metadata.progress_percentage !== undefined && (
@@ -309,19 +331,25 @@ function NodeDetailPanel({
               {node.metadata.category && (
                 <MetaRow
                   label={t('pages.knowledgeGraph.meta.category')}
-                  value={node.metadata.category}
+                  value={t(`pages.skills.category.${node.metadata.category}`, {
+                    defaultValue: node.metadata.category,
+                  })}
                 />
               )}
               {node.metadata.proficiency && (
                 <MetaRow
                   label={t('pages.knowledgeGraph.meta.proficiency')}
-                  value={node.metadata.proficiency}
+                  value={t(`pages.skills.proficiency.${node.metadata.proficiency}`, {
+                    defaultValue: node.metadata.proficiency,
+                  })}
                 />
               )}
               {node.metadata.status && (
                 <MetaRow
                   label={t('pages.knowledgeGraph.meta.status')}
-                  value={node.metadata.status}
+                  value={t(`pages.skills.status.${node.metadata.status}`, {
+                    defaultValue: node.metadata.status,
+                  })}
                 />
               )}
             </>
@@ -337,7 +365,9 @@ function NodeDetailPanel({
               {node.metadata.highlight_type && (
                 <MetaRow
                   label={t('pages.knowledgeGraph.meta.type')}
-                  value={node.metadata.highlight_type}
+                  value={t(HIGHLIGHT_TYPE_KEY[node.metadata.highlight_type] ?? '', {
+                    defaultValue: node.metadata.highlight_type,
+                  })}
                 />
               )}
               {node.metadata.page_number && (
@@ -379,17 +409,23 @@ function NodeDetailPanel({
                       />
                       <span className="truncate text-xs">{other.label}</span>
                       <span className="text-muted-foreground shrink-0 text-xs">
-                        ({link.relation_display ?? link.relation})
+                        (
+                        {t(`pages.knowledgeGraph.relations.${link.relation}`, {
+                          defaultValue: link.relation_display ?? link.relation,
+                        })}
+                        )
                       </span>
                     </div>
                     {link.link_id && (
-                      <PlainButton
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="ml-xs h-6 w-6 shrink-0"
                         aria-label={t('common.actions.delete')}
                         onClick={() => onDeleteLink(link.link_id!)}
-                        className="ml-xs text-destructive/60 hover:text-destructive shrink-0 transition-colors"
                       >
-                        <Trash2 className="h-3 w-3" />
-                      </PlainButton>
+                        <Trash2 className={cn('h-3 w-3', ACTION_COLOR.delete)} />
+                      </Button>
                     )}
                   </div>
                 );
@@ -401,26 +437,17 @@ function NodeDetailPanel({
 
       {/* Actions */}
       <div className="border-border p-md border-t">
-        <Tooltip
-          content={
-            linkingFrom?.id === node.id
-              ? t('pages.knowledgeGraph.cancelLinkTooltip')
-              : t('pages.knowledgeGraph.createLinkTooltip')
-          }
-          side="top"
+        <Button
+          size="sm"
+          variant={linkingFrom?.id === node.id ? 'default' : 'outline'}
+          className="w-full"
+          onClick={() => onStartLink(node)}
         >
-          <Button
-            size="sm"
-            variant={linkingFrom?.id === node.id ? 'default' : 'outline'}
-            className="w-full"
-            onClick={() => onStartLink(node)}
-          >
-            <Link2 className="h-3.5 w-3.5" />
-            {linkingFrom?.id === node.id
-              ? t('pages.knowledgeGraph.cancelLink')
-              : t('pages.knowledgeGraph.createLink')}
-          </Button>
-        </Tooltip>
+          <Link2 className="h-3.5 w-3.5" />
+          {linkingFrom?.id === node.id
+            ? t('pages.knowledgeGraph.cancelLink')
+            : t('pages.knowledgeGraph.createLink')}
+        </Button>
       </div>
     </motion.div>
   );
@@ -430,7 +457,7 @@ function MetaRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="gap-sm flex items-start justify-between">
       <span className="text-muted-foreground text-xs">{label}</span>
-      <span className="text-right text-xs font-medium capitalize">{value}</span>
+      <span className="text-right text-xs font-medium">{value}</span>
     </div>
   );
 }
@@ -446,8 +473,8 @@ function CreateLinkModal({
   onCancel,
   isLoading,
 }: {
-  from: GraphNode;
-  to: GraphNode;
+  from: GraphNode | null;
+  to: GraphNode | null;
   onConfirm: (relation: KnowledgeLinkRelation) => void;
   onCancel: () => void;
   isLoading: boolean;
@@ -455,82 +482,71 @@ function CreateLinkModal({
   const { t } = useTranslation();
   const [relation, setRelation] = useState<KnowledgeLinkRelation>('relates');
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+  const chip = (node: GraphNode) => (
+    <span
+      className="px-sm truncate rounded-md py-0.5 text-xs font-medium"
+      style={{
+        backgroundColor: `hsl(var(${NODE_COLOR_VARS[node.type]}) / 0.2)`,
+        color: `hsl(var(${NODE_COLOR_VARS[node.type]}))`,
+      }}
+      title={node.label}
     >
-      <motion.div
-        initial={{ scale: 0.92, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.92, opacity: 0 }}
-        className="border-border bg-card p-lg w-96 rounded-lg border shadow-2xl"
-      >
-        <h3 className="mb-md text-base font-semibold">
-          {t('pages.knowledgeGraph.createLinkModal.title')}
-        </h3>
-        <div className="mb-md gap-sm flex items-center text-sm">
-          <span
-            className="px-sm rounded-md py-0.5 text-xs font-medium"
-            style={{
-              backgroundColor: `hsl(var(${NODE_COLOR_VARS[from.type]}) / 0.2)`,
-              color: `hsl(var(${NODE_COLOR_VARS[from.type]}))`,
-            }}
-          >
-            {from.label.length > 24 ? from.label.slice(0, 24) + '…' : from.label}
-          </span>
-          <span className="text-muted-foreground">→</span>
-          <span
-            className="px-sm rounded-md py-0.5 text-xs font-medium"
-            style={{
-              backgroundColor: `hsl(var(${NODE_COLOR_VARS[to.type]}) / 0.2)`,
-              color: `hsl(var(${NODE_COLOR_VARS[to.type]}))`,
-            }}
-          >
-            {to.label.length > 24 ? to.label.slice(0, 24) + '…' : to.label}
-          </span>
-        </div>
+      {node.label}
+    </span>
+  );
 
-        <div className="mb-lg gap-sm grid grid-cols-3">
-          {ALL_RELATIONS.map((key) => (
-            <button
-              key={key}
-              onClick={() => setRelation(key)}
-              className={cn(
-                'px-sm py-xs rounded-md border text-xs transition',
-                relation === key
-                  ? 'text-background border-transparent'
-                  : 'border-border bg-muted/30 text-foreground hover:bg-muted'
-              )}
-              style={
-                relation === key
-                  ? {
-                      backgroundColor: `hsl(var(${RELATION_COLOR_VARS[key]}))`,
-                    }
-                  : {}
-              }
-            >
-              {t(`pages.knowledgeGraph.relations.${key}`)}
-            </button>
-          ))}
-        </div>
-
-        <div className="gap-sm flex justify-end">
-          <Button variant="ghost" size="sm" onClick={onCancel}>
-            <X aria-hidden="true" />
-            {t('pages.knowledgeGraph.createLinkModal.cancel')}
-          </Button>
-          <Button size="sm" onClick={() => onConfirm(relation)} loading={isLoading}>
-            {!isLoading && <Link2 aria-hidden="true" />}
-            {isLoading
-              ? t('pages.knowledgeGraph.createLinkModal.creating')
-              : t('pages.knowledgeGraph.createLinkModal.confirm')}
-          </Button>
-        </div>
-      </motion.div>
-    </motion.div>
+  return (
+    <Dialog open={!!from && !!to} onOpenChange={(v) => !v && onCancel()}>
+      <DialogContent className="max-w-md">
+        {from && to && (
+          <>
+            <DialogHeader>
+              <DialogTitle icon={Link2}>
+                {t('pages.knowledgeGraph.createLinkModal.title')}
+              </DialogTitle>
+              <VisuallyHidden>
+                <DialogDescription>
+                  {from.label} → {to.label}
+                </DialogDescription>
+              </VisuallyHidden>
+            </DialogHeader>
+            <div className="gap-sm flex min-w-0 items-center text-sm">
+              {chip(from)}
+              <ArrowRight className="text-muted-foreground h-4 w-4 shrink-0" />
+              {chip(to)}
+            </div>
+            <div className="gap-sm grid grid-cols-3">
+              {ALL_RELATIONS.map((key) => (
+                <Button
+                  key={key}
+                  type="button"
+                  size="sm"
+                  variant={relation === key ? 'default' : 'outline'}
+                  onClick={() => setRelation(key)}
+                  className="text-xs"
+                >
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: `hsl(var(${RELATION_COLOR_VARS[key]}))` }}
+                  />
+                  {t(`pages.knowledgeGraph.relations.${key}`)}
+                </Button>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={onCancel} disabled={isLoading}>
+                <X aria-hidden="true" />
+                {t('pages.knowledgeGraph.createLinkModal.cancel')}
+              </Button>
+              <Button onClick={() => onConfirm(relation)} loading={isLoading}>
+                {!isLoading && <Link2 aria-hidden="true" />}
+                {t('pages.knowledgeGraph.createLinkModal.confirm')}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -925,6 +941,13 @@ export default function KnowledgeGraph() {
     [filteredGraphData]
   );
 
+  const handleGraphControl = (action: 'export' | 'in' | 'out' | 'fit') => {
+    const g = graphRef.current;
+    if (action === 'export') handleExportPNG();
+    else if (action === 'fit') g?.zoomToFit(400);
+    else if (g) g.zoom(g.zoom() * (action === 'in' ? 1.4 : 0.7), 300);
+  };
+
   return (
     <AnimatedPage>
       <PageContainer>
@@ -933,44 +956,27 @@ export default function KnowledgeGraph() {
           icon={<Network className="h-5 w-5" />}
         />
 
-        <div className="border-border bg-card relative flex h-[calc(100vh-12rem)] overflow-hidden rounded-lg border">
+        <div className="border-border bg-card relative flex h-[calc(100dvh-15.5rem)] overflow-hidden rounded-lg border">
           {/* Left sidebar */}
           <div className="gap-md border-border bg-card p-md z-10 flex w-52 shrink-0 flex-col border-r">
             {/* Suggest links button */}
-            <Tooltip content={t('pages.knowledgeGraph.suggestLinks')} side="right">
-              <button
-                onClick={() => setShowSuggestions((v) => !v)}
-                className={cn(
-                  'gap-sm px-sm py-xs flex w-full items-center rounded-md text-xs font-medium transition-colors',
-                  showSuggestions
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                )}
-              >
-                <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                {t('pages.knowledgeGraph.suggestLinks')}
-              </button>
-            </Tooltip>
+            <Button
+              variant={showSuggestions ? 'secondary' : 'outline'}
+              size="sm"
+              className="w-full justify-start text-xs"
+              onClick={() => setShowSuggestions((v) => !v)}
+            >
+              <Sparkles className="h-3.5 w-3.5 shrink-0" />
+              {t('pages.knowledgeGraph.suggestLinks')}
+            </Button>
 
             {/* Search */}
-            <div className="relative">
-              <Search className="text-muted-foreground absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
-              <Input
-                placeholder={t('pages.knowledgeGraph.search')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-xl h-8 text-xs"
-              />
-              {search && (
-                <PlainButton
-                  aria-label={t('common.actions.clear')}
-                  onClick={() => setSearch('')}
-                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-                >
-                  <X className="h-3 w-3" />
-                </PlainButton>
-              )}
-            </div>
+            <SearchInput
+              placeholder={t('pages.knowledgeGraph.search')}
+              value={search}
+              onValueChange={setSearch}
+              className="w-full flex-none"
+            />
 
             {/* Node type filters */}
             <div>
@@ -1107,61 +1113,71 @@ export default function KnowledgeGraph() {
 
             {/* Suggest links panel */}
             {showSuggestions && (
-              <div className="animate-pop-in right-md top-md border-border bg-card absolute z-20 flex max-h-[60vh] w-72 flex-col overflow-hidden rounded-lg border shadow-lg">
+              <div className="animate-pop-in right-md top-md border-border bg-card absolute z-20 flex w-72 flex-col rounded-lg border">
                 <div className="border-border px-md py-sm flex items-center justify-between border-b">
                   <p className="text-sm font-semibold">
                     {t('pages.knowledgeGraph.suggestionsPanel')}
                   </p>
-                  <PlainButton
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
                     aria-label={t('common.actions.close')}
                     onClick={() => setShowSuggestions(false)}
-                    className="hover:bg-muted rounded p-0.5"
                   >
                     <X className="h-3.5 w-3.5" />
-                  </PlainButton>
+                  </Button>
                 </div>
-                <div className="p-sm flex-1 overflow-y-auto">
+                <div className="p-sm flex-1">
                   {suggestLoading ? (
-                    <p className="py-md text-muted-foreground text-center text-xs">
-                      {t('pages.knowledgeGraph.loadingSuggestions')}
-                    </p>
+                    <LoadingState />
                   ) : !suggestData?.suggestions?.length ? (
                     <EmptyState title={t('pages.knowledgeGraph.noSuggestions')} />
                   ) : (
-                    <div className="space-y-xs">
-                      {suggestData.suggestions.map((s, i) => (
-                        <div key={i} className="border-border p-sm rounded-md border">
-                          <p className="truncate text-xs font-medium">
-                            {s.source_title}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            → {s.target_title}
-                          </p>
-                          <div className="mt-xs flex items-center justify-between">
-                            <span className="text-muted-foreground text-xs">
-                              {t('pages.knowledgeGraph.similarity')}:{' '}
-                              {Math.round(s.similarity * 100)}%
-                            </span>
-                            <button
-                              onClick={() => {
-                                if (!memberData?.id) return;
-                                createLinkMutation.mutate({
-                                  source_type: s.source_type as KnowledgeNodeType,
-                                  source_id: s.source_id,
-                                  target_type: s.target_type as KnowledgeNodeType,
-                                  target_id: s.target_id,
-                                  relation_label: 'relates',
-                                  owner: memberData.id,
-                                });
-                              }}
-                              className="px-xs text-primary hover:bg-primary/10 rounded py-0.5 text-xs"
-                            >
-                              {t('pages.knowledgeGraph.addLink')}
-                            </button>
+                    <PaginatedSlide
+                      items={suggestData.suggestions}
+                      pageSize={LIST_PAGE_SIZE}
+                      pinNav={false}
+                      className="space-y-xs"
+                    >
+                      {(pageSuggestions) =>
+                        pageSuggestions.map((s, i) => (
+                          <div key={i} className="border-border p-sm rounded-md border">
+                            <p className="truncate text-xs font-medium">
+                              {s.source_title}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              → {s.target_title}
+                            </p>
+                            <div className="mt-xs flex items-center justify-between">
+                              <span className="text-muted-foreground text-xs">
+                                {t('pages.knowledgeGraph.similarity')}:{' '}
+                                {Math.round(s.similarity * 100)}%
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-xs"
+                                onClick={() => {
+                                  if (!memberData?.id) return;
+                                  createLinkMutation.mutate({
+                                    source_type: s.source_type as KnowledgeNodeType,
+                                    source_id: s.source_id,
+                                    target_type: s.target_type as KnowledgeNodeType,
+                                    target_id: s.target_id,
+                                    relation_label: 'relates',
+                                    owner: memberData.id,
+                                  });
+                                }}
+                              >
+                                <Link2 className="h-3 w-3" />
+                                {t('pages.knowledgeGraph.addLink')}
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))
+                      }
+                    </PaginatedSlide>
                   )}
                 </div>
               </div>
@@ -1173,43 +1189,26 @@ export default function KnowledgeGraph() {
               onMouseEnter={() => setHiddenByNav(true)}
               onMouseLeave={() => setHiddenByNav(false)}
             >
-              <Tooltip content={t('pages.knowledgeGraph.exportPNG')} side="left">
-                <PlainButton
-                  onClick={handleExportPNG}
-                  className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
+              {(
+                [
+                  ['export', t('pages.knowledgeGraph.exportPNG'), Download],
+                  ['in', t('common.actions.zoomIn'), ZoomIn],
+                  ['out', t('common.actions.zoomOut'), ZoomOut],
+                  ['fit', t('common.actions.fitView'), Maximize2],
+                ] as const
+              ).map(([action, label, Icon]) => (
+                <Button
+                  key={action}
+                  variant="outline"
+                  size="icon"
+                  className="bg-card/80 h-8 w-8 backdrop-blur-sm"
+                  aria-label={label}
+                  tooltipSide="left"
+                  onClick={() => handleGraphControl(action)}
                 >
-                  <Download className="h-3.5 w-3.5" />
-                </PlainButton>
-              </Tooltip>
-              <PlainButton
-                aria-label={t('common.actions.zoomIn')}
-                onClick={() => {
-                  const g = graphRef.current;
-                  if (!g) return;
-                  g.zoom(g.zoom() * 1.4, 300);
-                }}
-                className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
-              >
-                <ZoomIn className="h-3.5 w-3.5" />
-              </PlainButton>
-              <PlainButton
-                aria-label={t('common.actions.zoomOut')}
-                onClick={() => {
-                  const g = graphRef.current;
-                  if (!g) return;
-                  g.zoom(g.zoom() * 0.7, 300);
-                }}
-                className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
-              >
-                <ZoomOut className="h-3.5 w-3.5" />
-              </PlainButton>
-              <PlainButton
-                aria-label={t('common.actions.fitView')}
-                onClick={() => graphRef.current?.zoomToFit(400)}
-                className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
-              >
-                <Maximize2 className="h-3.5 w-3.5" />
-              </PlainButton>
+                  <Icon className="h-3.5 w-3.5" />
+                </Button>
+              ))}
             </div>
 
             {/* Linking mode indicator */}
@@ -1234,16 +1233,18 @@ export default function KnowledgeGraph() {
                   <kbd className="border-accent/30 bg-accent/10 px-xs text-2xs rounded border py-0.5">
                     Esc
                   </kbd>
-                  <PlainButton
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="ml-xs text-accent h-5 w-5"
                     onClick={() => {
                       setLinkingFrom(null);
                       setLinkTarget(null);
                     }}
-                    className="ml-xs text-accent/70 hover:text-accent"
                     aria-label={t('pages.knowledgeGraph.cancelLink')}
                   >
                     <X className="h-3 w-3" />
-                  </PlainButton>
+                  </Button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -1297,20 +1298,16 @@ export default function KnowledgeGraph() {
       </PageContainer>
 
       {/* Create link modal */}
-      <AnimatePresence>
-        {linkingFrom && linkTarget && (
-          <CreateLinkModal
-            from={linkingFrom}
-            to={linkTarget}
-            onConfirm={handleConfirmLink}
-            onCancel={() => {
-              setLinkTarget(null);
-              setLinkingFrom(null);
-            }}
-            isLoading={createLinkMutation.isPending}
-          />
-        )}
-      </AnimatePresence>
+      <CreateLinkModal
+        from={linkTarget ? linkingFrom : null}
+        to={linkTarget}
+        onConfirm={handleConfirmLink}
+        onCancel={() => {
+          setLinkTarget(null);
+          setLinkingFrom(null);
+        }}
+        isLoading={createLinkMutation.isPending}
+      />
     </AnimatedPage>
   );
 }

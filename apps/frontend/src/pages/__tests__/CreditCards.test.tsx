@@ -352,9 +352,10 @@ describe('CreditCards page', () => {
     expect(screen.queryByText(/compras da fatura/i)).not.toBeInTheDocument();
 
     fireEvent.click(rows[1].querySelector('td')!);
-    expect(await screen.findByRole('dialog')).toHaveTextContent(
-      /compras da fatura - .*\/2026/i
-    );
+    // O modal de compras só abre quando os dados chegam; o de pagamento já está aberto.
+    expect(
+      await screen.findByText(/compras da fatura - .*\/2026/i)
+    ).toBeInTheDocument();
     expect(creditCardInstallmentsService.getByBill).toHaveBeenCalledWith(7);
   });
 

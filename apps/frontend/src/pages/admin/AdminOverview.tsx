@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   Activity,
+  Archive,
   AlertTriangle,
   CheckCircle2,
   Database,
@@ -8,7 +9,6 @@ import {
   Mail,
   RefreshCw,
   Server,
-  Wifi,
   XCircle,
   Zap,
 } from 'lucide-react';
@@ -16,31 +16,34 @@ import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { Badge, type BadgeProps } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
 import type { ServiceCheck, ServiceStatus } from '@/types';
 
 const statusConfig: Record<
   ServiceStatus,
-  { icon: React.ElementType; color: string; statusKey: string }
+  { icon: React.ElementType; color: string; variant: BadgeProps['variant'] }
 > = {
-  healthy: { icon: CheckCircle2, color: 'text-green-500', statusKey: 'healthy' },
-  unhealthy: { icon: XCircle, color: 'text-destructive', statusKey: 'unhealthy' },
-  warning: { icon: AlertTriangle, color: 'text-yellow-500', statusKey: 'warning' },
+  healthy: { icon: CheckCircle2, color: 'text-success', variant: 'success' },
+  unhealthy: { icon: XCircle, color: 'text-destructive', variant: 'destructive' },
+  warning: { icon: AlertTriangle, color: 'text-warning', variant: 'warning' },
   not_configured: {
     icon: AlertTriangle,
     color: 'text-muted-foreground',
-    statusKey: 'not_configured',
+    variant: 'secondary',
   },
   unknown: {
     icon: AlertTriangle,
     color: 'text-muted-foreground',
-    statusKey: 'unknown',
+    variant: 'secondary',
   },
   not_active: {
     icon: AlertTriangle,
     color: 'text-muted-foreground',
-    statusKey: 'not_active',
+    variant: 'secondary',
   },
 };
 
@@ -55,7 +58,6 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
   const { t } = useTranslation();
   const s = check?.status ?? 'unknown';
   const cfg = statusConfig[s] ?? statusConfig.unknown;
-  const StatusIcon = cfg.icon;
 
   const messageText = check?.message_key
     ? t(`pages.adminOverview.messages.${check.message_key}`, {
@@ -67,40 +69,31 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
     : check?.message;
 
   return (
-    <div className="border-border bg-card rounded-lg border p-5">
-      <div className="mb-md flex items-center justify-between">
-        <div className="gap-sm flex items-center">
-          <div className="bg-primary/10 flex h-9 w-9 items-center justify-center rounded-lg">
+    <div className="border-border bg-card p-md space-y-sm rounded-lg border">
+      <div className="gap-sm flex items-center justify-between">
+        <div className="gap-sm flex min-w-0 items-center">
+          <div className="bg-primary/10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
             <Icon className="text-primary h-4 w-4" />
           </div>
-          <span className="text-foreground font-medium">{name}</span>
+          <span className="text-foreground truncate font-medium">{name}</span>
         </div>
         {loading ? (
           <RefreshCw className="text-muted-foreground h-4 w-4 animate-spin" />
         ) : (
-          <StatusIcon className={cn('h-5 w-5', cfg.color)} />
+          <Badge variant={cfg.variant}>{t(`pages.adminOverview.status.${s}`)}</Badge>
         )}
       </div>
-      <p className={cn('text-sm font-medium', cfg.color)}>
-        {t(`pages.adminOverview.status.${cfg.statusKey}`)}
-      </p>
       {messageText && (
-        <p className="mt-xs text-muted-foreground line-clamp-2 text-xs">
+        <p className="text-muted-foreground truncate text-xs" title={messageText}>
           {messageText}
         </p>
       )}
       {check?.free_percent !== undefined && (
-        <div className="mt-sm">
-          <div className="bg-secondary h-1.5 w-full rounded-full">
-            <div
-              className={cn(
-                'h-1.5 rounded-full transition',
-                check.free_percent < 10 ? 'bg-destructive' : 'bg-green-500'
-              )}
-              style={{ width: `${check.free_percent}%` }}
-            />
-          </div>
-        </div>
+        <Progress
+          value={check.free_percent}
+          className="h-1.5"
+          indicatorClassName={check.free_percent < 10 ? 'bg-destructive' : 'bg-success'}
+        />
       )}
     </div>
   );
@@ -108,16 +101,12 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
 
 export default function AdminOverview() {
   const { t, i18n } = useTranslation();
-  const { data, isLoading, refetch, dataUpdatedAt } = useQuery({
+  const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['admin', 'health'],
     queryFn: () => adminService.getHealth(),
     refetchInterval: 30_000,
     staleTime: 15_000,
   });
-
-  const lastUpdate = dataUpdatedAt
-    ? new Date(dataUpdatedAt).toLocaleTimeString(i18n.language)
-    : null;
 
   return (
     <PageContainer>
@@ -125,43 +114,21 @@ export default function AdminOverview() {
         title={t('pages.adminOverview.title')}
         icon={<Activity />}
         actions={
-          <div className="flex items-center gap-3">
-            {lastUpdate && (
-              <span className="text-muted-foreground text-xs">
-                {t('pages.adminOverview.updatedAt', { time: lastUpdate })}
-              </span>
-            )}
-            <button
-              onClick={() => void refetch()}
-              disabled={isLoading}
-              className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
-              {t('pages.adminOverview.refresh')}
-            </button>
-          </div>
+          <Button variant="outline" onClick={() => void refetch()} loading={isFetching}>
+            {!isFetching && <RefreshCw />}
+            {t('pages.adminOverview.refresh')}
+          </Button>
         }
       />
 
       {/* Overall status banner */}
       {data && (
-        <div
-          className={cn(
-            'py-md flex items-center gap-3 rounded-lg border px-5',
-            data.status === 'healthy' && 'border-green-500/30 bg-green-500/10',
-            data.status === 'warning' && 'border-yellow-500/30 bg-yellow-500/10',
-            data.status === 'unhealthy' && 'border-destructive/30 bg-destructive/10'
-          )}
-        >
-          {data.status === 'healthy' && (
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
-          )}
-          {data.status === 'warning' && (
-            <AlertTriangle className="h-5 w-5 text-yellow-500" />
-          )}
-          {data.status === 'unhealthy' && (
-            <XCircle className="text-destructive h-5 w-5" />
-          )}
+        <div className="border-border bg-card py-md px-md gap-md flex items-center rounded-lg border">
+          {(() => {
+            const { icon: StatusIcon, color } =
+              statusConfig[data.status] ?? statusConfig.unknown;
+            return <StatusIcon className={cn('h-5 w-5 shrink-0', color)} />;
+          })()}
           <div>
             <p className="text-foreground font-semibold">
               {data.status === 'healthy' && t('pages.adminOverview.statusHealthy')}
@@ -193,7 +160,7 @@ export default function AdminOverview() {
         />
         <ServiceCard
           name={t('pages.adminOverview.services.storage')}
-          icon={HardDrive}
+          icon={Archive}
           check={data?.checks.storage}
           loading={isLoading}
         />
@@ -211,7 +178,7 @@ export default function AdminOverview() {
         />
         <ServiceCard
           name={t('pages.adminOverview.services.disk')}
-          icon={Wifi}
+          icon={HardDrive}
           check={data?.checks.disk}
           loading={isLoading}
         />

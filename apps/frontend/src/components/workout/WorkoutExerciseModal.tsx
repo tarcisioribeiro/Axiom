@@ -1,14 +1,5 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import {
-  ChevronDown,
-  ChevronUp,
-  Dumbbell,
-  Loader2,
-  Minus,
-  Timer,
-  Save,
-  X,
-} from 'lucide-react';
+import { ChevronDown, ChevronUp, Dumbbell, Minus, Timer, Save, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { degradedReps } from '@/lib/workout-reps';
 import type { Exercise, SetTarget, WorkoutExercise } from '@/types/workout';
@@ -160,8 +152,19 @@ export function WorkoutExerciseModal({
     if (selectedExercise) setValue('exercise_id', selectedExercise.id);
   }, [selectedExercise, setValue]);
 
+  const [exerciseInvalid, setExerciseInvalid] = useState(false);
+
   const handleFormSubmit = async (data: FormValues) => {
-    if (!selectedExercise) return;
+    if (!selectedExercise) {
+      setExerciseInvalid(true);
+      toast({
+        title: t('common.fieldRequired', {
+          field: t('pages.workoutPlans.selectExercise'),
+        }),
+        variant: 'destructive',
+      });
+      return;
+    }
     const targets = Array.from({ length: data.sets }, (_, i) => ({
       // Série vazia grava a sugestão (máximo → mínimo ao longo das séries)
       reps:
@@ -195,12 +198,16 @@ export function WorkoutExerciseModal({
         <FormSection title={t('pages.workoutPlans.selectExercise')} icon={Dumbbell}>
           <Select
             value={selectedExercise ? String(selectedExercise.id) : undefined}
-            onValueChange={(id) =>
-              setSelectedExercise(exercises.find((e) => String(e.id) === id) ?? null)
-            }
+            onValueChange={(id) => {
+              setSelectedExercise(exercises.find((e) => String(e.id) === id) ?? null);
+              setExerciseInvalid(false);
+            }}
             disabled={exercises.length === 0}
           >
-            <SelectTrigger aria-label={t('pages.workoutPlans.selectExercise')}>
+            <SelectTrigger
+              aria-label={t('pages.workoutPlans.selectExercise')}
+              aria-invalid={exerciseInvalid}
+            >
               <SelectValue
                 placeholder={
                   exercises.length === 0
@@ -386,12 +393,8 @@ export function WorkoutExerciseModal({
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading || !selectedExercise}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+        <Button type="submit" loading={isLoading}>
+          {!isLoading && <Save className="h-4 w-4" />}
 
           {t('common.actions.save')}
         </Button>

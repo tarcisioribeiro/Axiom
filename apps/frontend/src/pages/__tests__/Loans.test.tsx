@@ -75,7 +75,7 @@ vi.mock('@/components/common/AnimatedPage', () => ({
 }));
 
 vi.mock('@/components/receipts', () => ({
-  ReceiptButton: () => <button>Recibo</button>,
+  ReceiptPreviewDialog: () => null,
 }));
 
 import { QueryClientProvider } from '@tanstack/react-query';

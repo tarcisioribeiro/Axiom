@@ -50,7 +50,6 @@ interface Props {
   title: string;
   description?: string;
   installments: InstallmentRow[];
-  isLoading: boolean;
   /** Namespace i18n: `pages.payables.installments` | `pages.loans.installments` */
   i18nBase: string;
   onClose: () => void;
@@ -74,7 +73,6 @@ export function InstallmentsPlanDialog({
   title,
   description,
   installments,
-  isLoading,
   i18nBase,
   onClose,
   saveInstallment,
@@ -201,11 +199,7 @@ export function InstallmentsPlanDialog({
 
         {extra}
 
-        {isLoading ? (
-          <div className="py-xl text-muted-foreground text-center text-sm">
-            {t('common.actions.loading')}
-          </div>
-        ) : installments.length === 0 ? (
+        {installments.length === 0 ? (
           <div className="py-xl text-muted-foreground text-center text-sm">
             {tr('emptyState')}
           </div>
@@ -277,7 +271,6 @@ export function InstallmentsPlanDialog({
 
             {isEditing && (
               <div className="space-y-sm pt-md border-t">
-                <p className="text-muted-foreground text-xs">{tr('editHint')}</p>
                 <div className="space-y-xs">
                   <Label className="gap-xs flex items-center">
                     <Hash className="text-muted-foreground h-3.5 w-3.5" />
@@ -304,7 +297,6 @@ export function InstallmentsPlanDialog({
                       {tr('recalcApply')}
                     </Button>
                   </div>
-                  <p className="text-muted-foreground text-xs">{tr('recalcHint')}</p>
                 </div>
 
                 {recalcPreview && (

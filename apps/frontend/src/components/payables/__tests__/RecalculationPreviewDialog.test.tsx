@@ -24,7 +24,7 @@ const buildPreview = (
 });
 
 describe('RecalculationPreviewDialog', () => {
-  it('shows a loading placeholder when no preview is available yet', () => {
+  it('stays closed until the preview is available', () => {
     render(
       <RecalculationPreviewDialog
         open
@@ -36,7 +36,7 @@ describe('RecalculationPreviewDialog', () => {
         onCancel={vi.fn()}
       />
     );
-    expect(screen.getByText('Carregando...')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('renders the installment count change and each installment row', () => {

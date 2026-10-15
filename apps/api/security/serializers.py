@@ -209,6 +209,14 @@ class StoredCreditCardCreateUpdateSerializer(serializers.ModelSerializer):
         write_only=True, required=True, max_length=4
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Na edição, número e CVV em branco mantêm os valores atuais.
+        if self.instance is not None:
+            for name in ("card_number", "security_code"):
+                self.fields[name].required = False
+                self.fields[name].allow_blank = True
+
     class Meta:
         model = StoredCreditCard
         fields = [
@@ -227,6 +235,8 @@ class StoredCreditCardCreateUpdateSerializer(serializers.ModelSerializer):
         ]
 
     def validate_card_number(self, value):
+        if not value and self.instance is not None:
+            return value
         from security.models import (
             _normalize_card_number,
             _validate_card_number,
@@ -240,6 +250,8 @@ class StoredCreditCardCreateUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_security_code(self, value):
+        if not value and self.instance is not None:
+            return value
         from security.models import _validate_cvv
 
         try:
@@ -348,6 +360,13 @@ class StoredBankAccountCreateUpdateSerializer(serializers.ModelSerializer):
     digital_password = serializers.CharField(
         write_only=True, required=False, allow_blank=True
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Na edição, número em branco mantém o valor atual.
+        if self.instance is not None:
+            self.fields["account_number"].required = False
+            self.fields["account_number"].allow_blank = True
 
     class Meta:
         model = StoredBankAccount

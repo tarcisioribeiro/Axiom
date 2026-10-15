@@ -234,14 +234,11 @@ export default function ActivityLogs() {
           variant="outline"
           size="sm"
           onClick={() => void handleExport()}
-          disabled={isExporting || logs.length === 0}
+          disabled={logs.length === 0}
+          loading={isExporting}
           className="gap-xs"
         >
-          {isExporting ? (
-            <Activity className="h-4 w-4 animate-spin" />
-          ) : (
-            <FileDown className="h-4 w-4" />
-          )}
+          {!isExporting && <FileDown className="h-4 w-4" />}
           {t('pages.activityLogs.exportBtn')}
         </Button>
       </PageHeader>
@@ -382,7 +379,7 @@ export default function ActivityLogs() {
                               </div>
                               <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
                                 <span>
-                                  {format(new Date(log.created_at), 'HH:mm:ss', {
+                                  {format(new Date(log.created_at), 'HH:mm', {
                                     locale: dateFnsLocale,
                                   })}
                                 </span>

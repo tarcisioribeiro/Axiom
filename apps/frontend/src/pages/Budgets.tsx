@@ -599,7 +599,7 @@ export default function Budgets() {
                       htmlFor="rollover_amount"
                       className="gap-xs flex items-center"
                     >
-                      <RotateCcw className="text-muted-foreground h-3.5 w-3.5" />
+                      <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.budgets.rollover.amount')}
                     </Label>
                     <CurrencyInput

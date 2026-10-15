@@ -272,13 +272,37 @@ export default function SpendingInsights({
               <Flame className="text-destructive h-4 w-4" />
             </div>
           </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold tracking-tight">
-              {growing_categories.length}
-            </p>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('spendingInsights.aboveAverage')}
-            </p>
+          {/* Ranking das categorias em alta (top 3) no lugar do bloco separado no rodapé. */}
+          <CardContent className="space-y-xs">
+            {growing_categories.length === 0 ? (
+              <p className="text-3xl font-bold tracking-tight">0</p>
+            ) : (
+              growing_categories.slice(0, 3).map((item, idx) => (
+                <div
+                  key={item.category}
+                  className="gap-sm flex items-center justify-between text-sm"
+                  title={`${t('spendingInsights.current')}: ${formatCurrency(item.current)} · ${t('spendingInsights.average')}: ${formatCurrency(item.prior_avg)}`}
+                >
+                  <span className="gap-sm flex min-w-0 items-center">
+                    <span
+                      className="text-primary-foreground flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                      style={{ backgroundColor: chartColors[idx % chartColors.length] }}
+                    >
+                      {idx + 1}
+                    </span>
+                    <span className="truncate font-medium">
+                      {translateCategory(item.category, 'expense')}
+                    </span>
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className="border-destructive/50 text-destructive shrink-0 text-xs font-semibold"
+                  >
+                    +{item.pct_change.toFixed(1)}%
+                  </Badge>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
@@ -385,58 +409,6 @@ export default function SpendingInsights({
           </CardContent>
         </Card>
       </div>
-
-      {/* Growing categories list */}
-      {growing_categories.length > 0 && (
-        <Card>
-          <CardHeader className="pb-sm">
-            <CardTitle className="text-sm font-medium">
-              {t('spendingInsights.highestGrowthCategories')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="divide-border divide-y">
-              {growing_categories.map((item, idx) => (
-                <div
-                  key={item.category}
-                  className="py-sm flex items-center justify-between"
-                >
-                  <div className="gap-sm flex items-center">
-                    <span
-                      className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
-                      style={{
-                        backgroundColor: chartColors[idx % chartColors.length],
-                      }}
-                    >
-                      {idx + 1}
-                    </span>
-                    <span className="text-sm font-medium">
-                      {translateCategory(item.category, 'expense')}
-                    </span>
-                  </div>
-                  <div className="gap-md flex items-center text-right">
-                    <div className="hidden sm:block">
-                      <p className="text-muted-foreground text-xs">
-                        {t('spendingInsights.current')}: {formatCurrency(item.current)}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {t('spendingInsights.average')}:{' '}
-                        {formatCurrency(item.prior_avg)}
-                      </p>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className="border-destructive/50 text-destructive text-xs font-semibold"
-                    >
-                      +{item.pct_change.toFixed(1)}%
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </Wrapper>
   );
 }

@@ -1,20 +1,10 @@
 /* eslint-disable max-lines */
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  History,
-  Pencil,
-  Save,
-  Shapes,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { CalendarDays, History, Pencil, Save, Shapes, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
-import { LoadingState } from '@/components/common/LoadingState';
 import { PaginatedSlide, LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
@@ -74,7 +64,9 @@ export function VaultTransactionsDialog({
   const { user } = useAuthStore();
 
   const [transactions, setTransactions] = useState<VaultTransaction[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  // Cofre cujos dados já chegaram: o modal só abre depois disso, senão abre
+  // vazio e cresce até a tabela (efeito de "modal fantasma").
+  const [loadedFor, setLoadedFor] = useState<number>();
   const [filter, setFilter] = useState('all');
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
@@ -85,7 +77,6 @@ export function VaultTransactionsDialog({
 
   const loadTransactions = async () => {
     if (!vault) return;
-    setIsLoading(true);
     try {
       const data = await vaultsService.getTransactions(vault.id, {
         type: filter === 'all' ? undefined : filter,
@@ -99,7 +90,7 @@ export function VaultTransactionsDialog({
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setLoadedFor(vault.id);
     }
   };
 
@@ -126,6 +117,8 @@ export function VaultTransactionsDialog({
       setStartDate(undefined);
       setEndDate(undefined);
       setEditingTx(null);
+    } else {
+      setLoadedFor(undefined);
     }
   }
 
@@ -194,7 +187,7 @@ export function VaultTransactionsDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && loadedFor === vault?.id} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
@@ -233,17 +226,15 @@ export function VaultTransactionsDialog({
                 </SelectContent>
               </Select>
             </FilterField>
-            <FilterField label={t('common.fields.from')} icon={ArrowUpRight}>
+            <FilterField label={t('common.fields.from')} icon={CalendarDays}>
               <DatePicker value={startDate} onChange={setStartDate} />
             </FilterField>
-            <FilterField label={t('common.fields.to')} icon={ArrowDownLeft}>
+            <FilterField label={t('common.fields.to')} icon={CalendarDays}>
               <DatePicker value={endDate} onChange={setEndDate} />
             </FilterField>
           </FilterBar>
 
-          {isLoading ? (
-            <LoadingState />
-          ) : transactions.length === 0 ? (
+          {transactions.length === 0 ? (
             <EmptyState title={t('pages.vaults.noTransactions')} />
           ) : (
             <PaginatedSlide
@@ -310,17 +301,24 @@ export function VaultTransactionsDialog({
                               </span>
                             )}
                           </TableCell>
-                          <TableCell className="whitespace-nowrap">
-                            {editingTx?.id === tx.id ? (
-                              <Input
-                                value={editDesc}
-                                placeholder={t('pages.vaults.depositPlaceholder')}
-                                onChange={(e) => setEditDesc(e.target.value)}
-                                className="w-40"
-                              />
-                            ) : (
-                              tx.description || '-'
-                            )}
+                          <TableCell title={tx.description || undefined}>
+                            {/* max-width não vale em <td>: o wrapper limita a coluna.
+                                Sem truncate na edição, que cortaria o anel de foco. */}
+                            <div
+                              className={
+                                editingTx?.id === tx.id ? 'w-48' : 'max-w-48 truncate'
+                              }
+                            >
+                              {editingTx?.id === tx.id ? (
+                                <Input
+                                  value={editDesc}
+                                  placeholder={t('pages.vaults.depositPlaceholder')}
+                                  onChange={(e) => setEditDesc(e.target.value)}
+                                />
+                              ) : (
+                                tx.description || '-'
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
                             {formatCurrency(parseFloat(tx.balance_after))}
@@ -346,20 +344,22 @@ export function VaultTransactionsDialog({
                                   <>
                                     <Button
                                       variant="ghost"
-                                      size="sm"
+                                      size="icon"
                                       onClick={() => void handleUpdate()}
                                       disabled={isSubmitting}
+                                      aria-label={t('common.actions.save')}
+                                      title={t('common.actions.save')}
                                     >
-                                      <Save aria-hidden="true" />
-                                      {t('common.actions.save')}
+                                      <Save className="h-4 w-4" aria-hidden="true" />
                                     </Button>
                                     <Button
                                       variant="ghost"
-                                      size="sm"
+                                      size="icon"
                                       onClick={cancelEdit}
+                                      aria-label={t('common.actions.cancel')}
+                                      title={t('common.actions.cancel')}
                                     >
-                                      <X aria-hidden="true" />
-                                      {t('common.actions.cancel')}
+                                      <X className="h-4 w-4" aria-hidden="true" />
                                     </Button>
                                   </>
                                 ) : (
