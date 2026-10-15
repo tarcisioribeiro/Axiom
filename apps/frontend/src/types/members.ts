@@ -11,6 +11,7 @@ export interface Member {
   is_benefited: boolean;
   active: boolean;
   email_verified?: boolean;
+  password_strength?: number | null;
   birth_date?: string | null;
   address?: string | null;
   profile_photo?: string | null;

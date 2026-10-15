@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import {
@@ -60,18 +61,20 @@ export function useCommandPalette(): UseCommandPaletteReturn {
   const [query, setQueryState] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { logout } = useAuthStore();
   const { isDark, toggle: toggleTheme } = useTheme();
 
   // Obtém todos os comandos com ações dinâmicas
-  const allCommands = getAllCommands(logout, toggleTheme, isDark);
+  const allCommands = getAllCommands(logout, toggleTheme, isDark, (id) =>
+    t(`layout.commandPalette.commands.${id}`)
+  );
 
-  // Filtra comandos baseado na query
-  const filteredCommands = searchCommands(allCommands, query);
-
-  // Agrupa comandos por seção
-  const groupedCommands = groupCommandsBySection(filteredCommands);
+  // Filtra e agrupa por seção; a lista plana segue a ordem exibida, para o
+  // índice selecionado (↑/↓/Enter) apontar para o item destacado.
+  const groupedCommands = groupCommandsBySection(searchCommands(allCommands, query));
+  const filteredCommands = Object.values(groupedCommands).flat();
 
   // Wrapper para setQuery que também reseta o índice
   const setQuery = useCallback((newQuery: string) => {
@@ -86,7 +89,7 @@ export function useCommandPalette(): UseCommandPaletteReturn {
     setSelectedIndex(0);
   }, [storeClose]);
 
-  // Listener global para Ctrl+K / Cmd+K e atalhos de teclado (N D, N R, T, Q)
+  // Listener global para Win+K / Cmd+K (Ctrl+K também) e atalhos de teclado (N D, N R, T, Q)
   useEffect(() => {
     let pendingKey = '';
     let pendingTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -104,7 +107,7 @@ export function useCommandPalette(): UseCommandPaletteReturn {
     };
 
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+K ou Cmd+K — abre/fecha o palette
+      // Win+K / Cmd+K (metaKey) ou Ctrl+K — abre/fecha o palette
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         toggle();

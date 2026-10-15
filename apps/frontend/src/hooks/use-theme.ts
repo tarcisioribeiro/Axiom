@@ -44,6 +44,30 @@ const DARK_VARIANT_KEY = 'darkVariant';
 const LIGHT_VARIANT_KEY = 'lightVariant';
 const DEFAULT_DARK_VARIANT: DarkVariant = 'dracula';
 const DEFAULT_LIGHT_VARIANT: LightVariant = 'alucard';
+// Avisa as outras instâncias de useTheme (header, paleta, atalho T) da troca
+const THEME_CHANGE_EVENT = 'axiom:theme-change';
+
+/** Par claro de cada tema escuro — `T` alterna dentro do par */
+export const LIGHT_PAIR: Record<DarkVariant, LightVariant> = {
+  dracula: 'alucard',
+  'catppuccin-mocha': 'catppuccin-latte',
+  'tokyo-night': 'tokyo-day',
+  'gruvbox-dark': 'gruvbox-light',
+  everforest: 'everforest-light',
+  ubuntu: 'ubuntu-light',
+  'mint-dark': 'mint-light',
+};
+
+export const DARK_PAIR = Object.fromEntries(
+  Object.entries(LIGHT_PAIR).map(([dark, light]) => [light, dark])
+) as Record<LightVariant, DarkVariant>;
+
+function readIsDark(): boolean {
+  if (typeof window === 'undefined') return true;
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved !== null) return saved !== 'false';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
 
 function readDarkVariant(): DarkVariant {
   if (typeof window === 'undefined') return DEFAULT_DARK_VARIANT;
@@ -116,12 +140,7 @@ function applyLightVariantAttr(variant: LightVariant) {
  * const { isDark, toggle, darkVariant, setDarkVariant, lightVariant, setLightVariant } = useTheme();
  */
 export function useTheme(): UseThemeReturn {
-  const [isDark, setIsDark] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved !== null) return saved !== 'false';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  const [isDark, setIsDark] = useState<boolean>(readIsDark);
 
   const [darkVariant, setDarkVariantState] = useState<DarkVariant>(readDarkVariant);
   const [lightVariant, setLightVariantState] = useState<LightVariant>(readLightVariant);
@@ -177,45 +196,47 @@ export function useTheme(): UseThemeReturn {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
+  // Re-lê o storage quando outra instância troca o tema
+  useEffect(() => {
+    const sync = () => {
+      setIsDark(readIsDark());
+      setDarkVariantState(readDarkVariant());
+      setLightVariantState(readLightVariant());
+    };
+    window.addEventListener(THEME_CHANGE_EVENT, sync);
+    return () => window.removeEventListener(THEME_CHANGE_EVENT, sync);
+  }, []);
+
+  // Salva modo + par de variantes e aplica; as variantes vêm do storage para
+  // não usar o estado defasado de uma instância que não viu a última troca.
+  const commit = useCallback(
+    (dark: boolean, dVariant: DarkVariant, lVariant: LightVariant) => {
+      localStorage.setItem(STORAGE_KEY, String(dark));
+      localStorage.setItem(DARK_VARIANT_KEY, dVariant);
+      localStorage.setItem(LIGHT_VARIANT_KEY, lVariant);
+      applyTheme(dark, dVariant, lVariant, true);
+      window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
+    },
+    [applyTheme]
+  );
+
   const toggle = useCallback(() => {
-    setIsDark((prev) => {
-      const next = !prev;
-      localStorage.setItem(STORAGE_KEY, String(next));
-      applyTheme(next, darkVariant, lightVariant, true);
-      return next;
-    });
-  }, [applyTheme, darkVariant, lightVariant]);
+    commit(!readIsDark(), readDarkVariant(), readLightVariant());
+  }, [commit]);
 
   const setTheme = useCallback(
-    (theme: Theme) => {
-      const dark = theme === 'dark';
-      setIsDark(dark);
-      localStorage.setItem(STORAGE_KEY, String(dark));
-      applyTheme(dark, darkVariant, lightVariant, true);
-    },
-    [applyTheme, darkVariant, lightVariant]
+    (theme: Theme) => commit(theme === 'dark', readDarkVariant(), readLightVariant()),
+    [commit]
   );
 
   const setDarkVariant = useCallback(
-    (variant: DarkVariant) => {
-      setDarkVariantState(variant);
-      localStorage.setItem(DARK_VARIANT_KEY, variant);
-      setIsDark(true);
-      localStorage.setItem(STORAGE_KEY, 'true');
-      applyTheme(true, variant, lightVariant, true);
-    },
-    [applyTheme, lightVariant]
+    (variant: DarkVariant) => commit(true, variant, LIGHT_PAIR[variant]),
+    [commit]
   );
 
   const setLightVariant = useCallback(
-    (variant: LightVariant) => {
-      setLightVariantState(variant);
-      localStorage.setItem(LIGHT_VARIANT_KEY, variant);
-      setIsDark(false);
-      localStorage.setItem(STORAGE_KEY, 'false');
-      applyTheme(false, darkVariant, variant, true);
-    },
-    [applyTheme, darkVariant]
+    (variant: LightVariant) => commit(false, DARK_PAIR[variant], variant),
+    [commit]
   );
 
   return {

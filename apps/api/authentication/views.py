@@ -23,6 +23,23 @@ from app.request_utils import request_data
 from .throttles import RegisterRateThrottle, ThemeSyncRateThrottle
 
 
+def record_password_strength(
+    user: User, password: str, only_if_missing: bool = False
+) -> None:
+    """Guarda no membro o score zxcvbn (0-4) da senha de login."""
+    from zxcvbn import zxcvbn
+
+    from members.models import Member
+
+    members = Member.objects.filter(user=user)
+    if only_if_missing:
+        members = members.filter(password_strength__isnull=True)
+        if not members.exists():
+            return
+    # zxcvbn rejeita entradas acima de 72 caracteres
+    members.update(password_strength=zxcvbn(password[:72])["score"])
+
+
 def validate_cpf(cpf: str) -> bool:
     """Valida CPF brasileiro."""
     cpf = re.sub(r"[^0-9]", "", cpf)
@@ -310,6 +327,7 @@ def create_user_with_member(request: Request) -> Response:
             )
             member.document = document_clean
             member.save()
+            record_password_strength(user, password)
 
             # Enviar email de verificação se tiver email
             if email and hasattr(member, "email_verification_token"):
@@ -524,6 +542,7 @@ class PasswordResetConfirmView(APIView):
 
         user.set_password(new_password)
         user.save(update_fields=["password"])
+        record_password_strength(user, new_password)
 
         return Response({"message": "Senha redefinida com sucesso."})
 
@@ -746,6 +765,7 @@ class ChangePasswordView(APIView):
 
         user.set_password(new_password)
         user.save(update_fields=["password"])
+        record_password_strength(user, new_password)
 
         return Response({"message": "Senha alterada com sucesso."})
 

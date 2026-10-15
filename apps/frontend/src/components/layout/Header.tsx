@@ -1,4 +1,4 @@
-import { Compass, Menu, Search } from 'lucide-react';
+import { Command, Compass, Grid2x2, Menu, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 
@@ -12,6 +12,11 @@ import { getTourKey, OPEN_TOUR_EVENT } from '@/config/page-tour';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useVaultStatus } from '@/hooks/use-vault-status';
 import { useCommandPaletteStore } from '@/stores/command-palette-store';
+
+// Tecla meta (metaKey) do atalho da paleta: ⌘ no Mac, Win no Windows/Linux.
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.userAgent);
+const META_KEY = IS_MAC ? '⌘' : 'Win';
+const MetaKeyIcon = IS_MAC ? Command : Grid2x2;
 
 export const Header = () => {
   const { toggle: toggleSidebar } = useSidebar();
@@ -55,12 +60,12 @@ export const Header = () => {
           <button
             onClick={openCommandPalette}
             className="gap-sm border-border/60 bg-background/60 py-sm text-muted-foreground hover:border-border hover:text-foreground hidden items-center rounded-md border px-3 text-sm transition-colors md:flex"
-            aria-label={t('layout.openCommandPalette')}
+            aria-label={t('layout.openCommandPalette', { shortcut: `${META_KEY}+K` })}
           >
             <Search className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span className="hidden lg:inline">{t('layout.search')}</span>
             <kbd className="ml-xs bg-muted px-sm text-muted-foreground hidden items-center gap-0.5 rounded py-0.5 text-xs lg:flex">
-              <span className="text-sm">⌘</span>K
+              <MetaKeyIcon className="h-3 w-3" aria-hidden="true" /> K
             </kbd>
           </button>
 
@@ -71,7 +76,7 @@ export const Header = () => {
             tooltipSide="bottom"
             onClick={openCommandPalette}
             className="md:hidden"
-            aria-label={t('layout.openCommandPalette')}
+            aria-label={t('layout.openCommandPalette', { shortcut: `${META_KEY}+K` })}
           >
             <Search className="h-4 w-4" aria-hidden="true" />
           </Button>

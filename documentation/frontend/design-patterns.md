@@ -1,6 +1,6 @@
 # Padrões de design do frontend web
 
-**Documento oficial** · versão 1.6 · 14/10/2026
+**Documento oficial** · versão 1.7 · 15/10/2026
 
 Padrões de UI/UX definidos pelo product owner desde 25/08/2026. Toda mudança visual no frontend web segue este documento. Quando um pedido contradiz uma regra, a regra é atualizada aqui primeiro.
 
@@ -67,6 +67,7 @@ Há três tipos de modal:
 - **[regra]** Botões **Cancelar** e **Salvar** (ou o verbo da ação: Registrar, Confirmar, Depositar…) com ícones. Fluxos em etapas mantêm Cancelar em todas as etapas. Na tela final de resultado, o rodapé vira o de detalhe (Fechar à esquerda).
 - **[regra]** Configuração e desbloqueio do cofre (módulo Segurança, `VaultGuard`) são modais de ação abertos sobre a página vazia, não cards no lugar da página. Rodapé com Cancelar + ação (Configurar / Desbloquear). Cancelar, Esc ou clique fora voltam à página anterior (ou ao Dashboard em acesso direto). A chave de recuperação abre um modal por cima do de desbloqueio.
 - **[regra]** Onboarding em etapas (ex.: boas-vindas do Planejamento Pessoal) é um `Dialog` padrão: título da etapa no header com ícone, sem X, rodapé com Cancelar, Voltar (a partir da 2ª etapa) e Próximo/Começar, troca de etapa com `slideVariants`. Na tela de sucesso, o rodapé vira `DialogCloseFooter`.
+- **[regra]** A paleta de comandos (`components/layout/CommandPalette.tsx`, aberta pela busca do header ou por Win+K / ⌘K) é um modal de ação: header "Paleta de comandos" com ícone, `SearchInput`, comandos paginados em 5 (`PageSlide` controlado, `pinNav={false}`; ↑/↓ trocam de página ao passar do último/primeiro item), só ícone + título + atalho (sem descrição), nome da seção acima do primeiro item de cada seção na página, `EmptyState` sem resultados e rodapé Cancelar + Executar (`CornerDownLeft`), sem dicas de teclado. O botão do header mostra a tecla meta como ícone + `K`: `Command` (⌘) no Mac e `Grid2x2` (tecla Win) no Windows/Linux. Títulos dos comandos em `layout.commandPalette.commands.<id>`.
 - **[regra]** Fluxo de perguntas em etapas (ex.: avaliação de autoestima): rodapé com Cancelar, **Voltar** (`ChevronLeft`, a partir da 2ª etapa, mantendo as respostas) e Confirmar/Enviar. A troca de etapa usa deslize lateral (`slideVariants` de `lib/animations`, `custom` = direção: avança para a esquerda, volta para a direita), a mesma animação do `PaginatedSlide`.
 
 ### 2.5 Sem rolagem em desktop
@@ -77,7 +78,7 @@ Há três tipos de modal:
   - **Grupo fixo de opções** (checkboxes de eventos etc.): mais colunas.
   - **Lista de tamanho variável dentro do modal:** paginar com `PaginatedSlide` e `pinNav={false}`, com no máximo 5 itens por página (`LIST_PAGE_SIZE`). Itens de texto longo (resumos, destaques, opções de refeição com ingredientes) usam 3 por página. Lista editável em que o usuário adiciona itens (ingredientes da opção de cardápio, 3 por página por terem vários campos por linha) usa `PageSlide` controlado e pula para a última página ao adicionar (também as Receitas/Despesas Avulsas do Planejador Mensal, 5 por página). Grades de imagens usam até 8 (4 × 2).
   - **Fluxo longo:** etapas (um passo por vez), como no formulário de sessão de treino.
-- **Exceções** (conteúdo que por natureza rola): transcrição de chat (aba Chat do livro), visualizador de documento/PDF (certificado de curso, pré-visualização de arquivo) e a paleta de comandos.
+- **Exceções** (conteúdo que por natureza rola): transcrição de chat (aba Chat do livro) e visualizador de documento/PDF (certificado de curso, pré-visualização de arquivo).
 - **Status:** medido em 1024 px de altura (mais rigoroso que 1080) nos formulários de inclusão, detalhes de card/linha e modais de ação dos módulos Controle Financeiro, Intelecto e Planejamento Pessoal, todos sem rolagem. Módulo Segurança revisado em 14/10/2026: formulários de Cartão, Conta e Arquivo em duas colunas (`max-w-4xl`), gerador de senha em modal sobre o formulário, Compartilhar Credencial em duas colunas (assistente + links existentes), importação de senhas em etapas com prévia no `DataTable` paginado. Medido no navegador em 14/10/2026 (viewport ~880 px): grades em `md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4`, modais sem rolagem; Painel de Segurança sem rolagem com Atividade Recente como 4ª coluna da linha de Saúde do Cofre e Configurações de Alertas em modal (botão "Alertas" no header, salva a cada alteração).
 
 ## 3. Validação de formulários
@@ -125,6 +126,8 @@ Há três tipos de modal:
 - **[regra]** Data em card de registro é texto dd/mm/aaaa (`formatDate`), não bloco com dia em cima e mês embaixo. Ex.: card de sessão de treino, com a data num chip `bg-primary/10` à esquerda.
 - **[pontual]** Linha de métricas/chips abaixo do título do card de sessão de treino fica centralizada na horizontal. O card usa `p-sm` e `mt-xs` entre título e chips, para 5 sessões caberem em 880 px de altura.
 - **[pontual]** Card de intervenção (Bem-Estar Emocional): linha 1 com categoria, duração, dificuldade e título à esquerda, benefício esperado centralizado no card e botão de ação à direita (`grid-cols-[1fr_auto_1fr]` a partir de `sm`); linha 2 só com a descrição. Assim 5 cards cabem na página sem rolagem. Sem rodapé com borda.
+- **[pontual]** Resultado da avaliação de autoestima (Bem-Estar Emocional): nota centralizada, análise em card de largura total e Pontos fortes / Crenças para trabalhar / Sugestões lado a lado em `lg:grid-cols-3` (cards `h-full`), para caber sem rolagem.
+- **[pontual]** Meu Perfil: card em duas colunas da altura toda (`lg:grid-cols-[minmax(0,1fr)_28rem]`): à esquerda foto + nome e, abaixo, Dados Pessoais; à direita, desde o topo, Verificação de E-mail, Preferências de Notificação e Segurança. Sem rolagem em 855 px. O modal Alterar senha usa `warnCapsLock` nos três campos. Em Segurança, duas linhas iguais: ícone + rótulo com badge de status alinhado à direita e, abaixo, o botão à esquerda. "Autenticação de dois fatores" (Ativa/Inativa → Gerenciar 2FA) e "Senha" (badge de força zxcvbn guardada em `Member.password_strength`, "Desconhecida" até o próximo login/troca → Alterar senha; `PasswordRow`). "Alterar dados" fica logo abaixo dos campos, sem rodapé com borda.
 
 ## 6. Paginação e filtros
 
@@ -158,6 +161,7 @@ Há três tipos de modal:
 
 ## 9. Tema, cores e tipografia
 
+- **[regra]** Seletor de tema (`components/common/ThemeToggle.tsx`, botão ☀/☾ do header) abre um modal "Temas" (ícone `Palette`, `size="xl"`, só "Fechar" no rodapé) com as seções **Temas claros** e **Temas escuros**, 4 por linha; cada cartão é uma miniatura do app (barra lateral, card com texto e botão primário) nas cores do tema, com o nome embaixo e borda primária + ✓ no ativo. Os temas formam pares claro/escuro (Alucard↔Dracula, Latte↔Mocha, Tokyo Day↔Night, Gruvbox, Everforest, Ubuntu, Mint) na mesma coluna; escolher um salva o modo e o par, e a tecla `T` alterna dentro do par. As cores da miniatura ficam em `theme-options.ts` (cópia das variáveis de `index.css` — manter em sincronia).
 - **[regra]** Nenhuma cor fixa. Usar variáveis de cor do tema, em claro e escuro. Exceção: o degradê da bandeira do cartão de crédito (`card-brands.ts`, Visa/Master/Elo…) e o texto branco sobre ele, que imitam o cartão físico. Status: Controle Financeiro sem cores fixas fora dessa exceção (13/10/2026); ainda há `slate`, `black` e `white` em outros módulos.
 - **[regra]** Cada ação de card/modal tem uma variável de cor própria `--action-<ação>` em `index.css` (Tailwind `text-action-<ação>`, mapa `ACTION_COLOR` em `lib/action-colors.ts`). As variáveis apontam para o tema, por significado: editar `--info`; excluir `--destructive`; "..." e ações neutras (compartilhar, revelar, baixar, pré-visualizar, parcelas, plano, progresso, amortização, transações, aportes, simulador, gerenciar cofres, verificar conclusão) `--muted-foreground`; pagar, receber, depositar e aplicar rendimento `--success`; sacar e favoritar `--warning`; comprovante e copiar `--primary`; verificar vazamento `--muted-foreground` (`--action-check-leak`). Para mudar a cor de uma ação, altere só a variável dela.
 - **[regra]** Cores de ícones são globais, não exclusivas de um módulo. Mapeamentos: chama/calorias `text-warning`; hidratação `text-info`; período da refeição: manhã `text-warning`, almoço/tarde `text-category-nutrition`, noite `text-info`.
@@ -178,7 +182,7 @@ Há três tipos de modal:
 ## 11. Textos, formatação e tradução
 
 - **[regra]** Títulos de tela sem subtítulo (`PageHeader` sem `subtitle`).
-- **[regra]** Todo texto passa pelo sistema de tradução. Status: parcial (ex.: "Command Palette").
+- **[regra]** Todo texto passa pelo sistema de tradução. Status: parcial (paleta de comandos traduzida em 15/10/2026).
 - **[regra]** Campos de escolha vindos da API (gênero, status, plataforma, categoria, nacionalidade, tipo de destaque, conquista, dia da semana) são traduzidos pelo código, ``t(`...${code}`, { defaultValue: x_display })``, nunca exibindo o `*_display` (pt-BR fixo do backend). Mensagens de erro de campo do servidor (título/nome duplicado) também usam chave do frontend (`serverFieldError` em `lib/form-errors.ts` + `setError` + toast).
 - **[regra]** Toasts padronizados, sem linha técnica. Status: parcial.
 - **[regra]** Moeda em BRL com vírgula e duas casas: `R$ 0,00`.

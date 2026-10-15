@@ -30,39 +30,18 @@ describe('ThemeToggle', () => {
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
-  it('shows "Mudar para Modo Escuro" aria-label when in light mode', () => {
-    mockUseTheme.mockReturnValue({ ...baseThemeMock, isDark: false });
-    render(<ThemeToggle />);
-    expect(
-      screen.getByRole('button', { name: 'Mudar para Modo Escuro' })
-    ).toBeInTheDocument();
-  });
-
-  it('shows "Mudar para Modo Claro" aria-label when in dark mode', () => {
-    mockUseTheme.mockReturnValue({ ...baseThemeMock, isDark: true });
-    render(<ThemeToggle />);
-    expect(
-      screen.getByRole('button', { name: 'Mudar para Modo Claro' })
-    ).toBeInTheDocument();
-  });
-
-  it('opens dropdown when trigger button is clicked', async () => {
+  it('opens the themes modal with light and dark sections', async () => {
     const user = userEvent.setup();
     mockUseTheme.mockReturnValue({ ...baseThemeMock, isDark: false });
     render(<ThemeToggle />);
-    await user.click(screen.getByRole('button'));
-    expect(screen.getByText('Alucard')).toBeInTheDocument();
-    expect(screen.getByText('Catppuccin Latte')).toBeInTheDocument();
-    expect(screen.getByText('Dracula')).toBeInTheDocument();
-    expect(screen.getByText('Catppuccin Mocha')).toBeInTheDocument();
-    expect(screen.getByText('Tokyo Night')).toBeInTheDocument();
-    expect(screen.getByText('Gruvbox Dark')).toBeInTheDocument();
-    expect(screen.getByText('Tokyo Day')).toBeInTheDocument();
-    expect(screen.getByText('Ubuntu Dark')).toBeInTheDocument();
-    expect(screen.getByText('Ubuntu Light')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Temas' }));
+    expect(screen.getByText('Temas claros')).toBeInTheDocument();
+    expect(screen.getByText('Temas escuros')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Alucard' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Linux Mint Dark' })).toBeInTheDocument();
   });
 
-  it('calls setLightVariant("alucard") when Alucard option is clicked', async () => {
+  it('calls setLightVariant("alucard") when Alucard is clicked', async () => {
     const user = userEvent.setup();
     const setLightVariantFn = vi.fn();
     mockUseTheme.mockReturnValue({
@@ -71,12 +50,12 @@ describe('ThemeToggle', () => {
       setLightVariant: setLightVariantFn,
     });
     render(<ThemeToggle />);
-    await user.click(screen.getByRole('button'));
-    await user.click(screen.getByText('Alucard'));
+    await user.click(screen.getByRole('button', { name: 'Temas' }));
+    await user.click(screen.getByRole('button', { name: 'Alucard' }));
     expect(setLightVariantFn).toHaveBeenCalledWith('alucard');
   });
 
-  it('calls setDarkVariant when a dark variant is clicked', async () => {
+  it('calls setDarkVariant when a dark theme is clicked', async () => {
     const user = userEvent.setup();
     const setDarkVariantFn = vi.fn();
     mockUseTheme.mockReturnValue({
@@ -85,8 +64,8 @@ describe('ThemeToggle', () => {
       setDarkVariant: setDarkVariantFn,
     });
     render(<ThemeToggle />);
-    await user.click(screen.getByRole('button'));
-    await user.click(screen.getByText('Tokyo Night'));
+    await user.click(screen.getByRole('button', { name: 'Temas' }));
+    await user.click(screen.getByRole('button', { name: 'Tokyo Night' }));
     expect(setDarkVariantFn).toHaveBeenCalledWith('tokyo-night');
   });
 
@@ -96,7 +75,7 @@ describe('ThemeToggle', () => {
     expect(screen.getByRole('button')).toHaveClass('my-custom-class');
   });
 
-  it('shows checkmark next to active dark variant', async () => {
+  it('marks only the active theme as pressed', async () => {
     const user = userEvent.setup();
     mockUseTheme.mockReturnValue({
       ...baseThemeMock,
@@ -104,19 +83,14 @@ describe('ThemeToggle', () => {
       darkVariant: 'catppuccin-mocha' as const,
     });
     render(<ThemeToggle />);
-    await user.click(screen.getByRole('button'));
-    const catppuccinItem = screen
-      .getByText('Catppuccin Mocha')
-      .closest('[role="menuitem"]');
-    expect(catppuccinItem).toBeInTheDocument();
-  });
-
-  it('shows checkmark next to Alucard when light mode is active', async () => {
-    const user = userEvent.setup();
-    mockUseTheme.mockReturnValue({ ...baseThemeMock, isDark: false });
-    render(<ThemeToggle />);
-    await user.click(screen.getByRole('button'));
-    const alucardItem = screen.getByText('Alucard').closest('[role="menuitem"]');
-    expect(alucardItem).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Temas' }));
+    expect(screen.getByRole('button', { name: 'Catppuccin Mocha' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(screen.getByRole('button', { name: 'Alucard' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
   });
 });

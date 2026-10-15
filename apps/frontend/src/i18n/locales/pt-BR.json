@@ -390,8 +390,14 @@
     "mainMenu": "Menu principal",
     "logout": "Sair",
     "toggleTheme": "Alternar tema",
+    "themes": {
+      "title": "Temas",
+      "description": "Escolha o tema do app; a tecla T alterna entre a versão clara e a escura.",
+      "light": "Temas claros",
+      "dark": "Temas escuros"
+    },
     "language": "Idioma",
-    "openCommandPalette": "Abrir paleta de comandos (Ctrl+K)",
+    "openCommandPalette": "Abrir paleta de comandos ({{shortcut}})",
     "search": "Buscar...",
     "expandSidebar": "Expandir menu lateral",
     "collapseSidebar": "Recolher menu lateral",
@@ -408,11 +414,54 @@
     "commandPalette": {
       "placeholder": "Buscar comando",
       "noResults": "Nenhum comando encontrado",
-      "noResultsHint": "Tente buscar por outra palavra-chave",
-      "navigate": "navegar",
-      "select": "selecionar",
-      "close": "fechar",
-      "ariaLabel": "Comandos disponíveis"
+      "ariaLabel": "Comandos disponíveis",
+      "title": "Paleta de comandos",
+      "description": "Buscar e executar comandos",
+      "execute": "Executar",
+      "sections": {
+        "navigation": "Navegação",
+        "actions": "Ações Rápidas",
+        "settings": "Configurações"
+      },
+      "commands": {
+        "home": "Início",
+        "planning-dashboard": "Planejamento - Dashboard",
+        "planning-daily": "Checklist Diário",
+        "planning-routine": "Tarefas Rotineiras",
+        "planning-goals": "Objetivos Pessoais",
+        "financial-dashboard": "Dashboard Financeiro",
+        "accounts": "Contas Bancárias",
+        "credit-cards": "Cartões de Crédito",
+        "credit-card-bills": "Faturas",
+        "expenses": "Despesas",
+        "revenues": "Receitas",
+        "credit-card-expenses": "Gastos do Cartão",
+        "fixed-expenses": "Gastos Fixos",
+        "transfers": "Transferências",
+        "loans": "Empréstimos",
+        "payables": "Valores a Pagar",
+        "vaults": "Cofres",
+        "financial-goals": "Metas Financeiras",
+        "members": "Beneficiários/Credores",
+        "security-dashboard": "Segurança - Dashboard",
+        "passwords": "Senhas",
+        "stored-cards": "Cartões Armazenados",
+        "stored-accounts": "Contas Armazenadas",
+        "archives": "Arquivos",
+        "vault-health": "Saúde do Cofre",
+        "2fa-setup": "Autenticação de Dois Fatores",
+        "library-dashboard": "Leitura - Dashboard",
+        "books": "Livros",
+        "authors": "Autores",
+        "publishers": "Editoras",
+        "summaries": "Resumos",
+        "readings": "Leituras",
+        "new-expense": "Nova Despesa",
+        "new-revenue": "Nova Receita",
+        "theme-light": "Modo Claro",
+        "theme-dark": "Modo Escuro",
+        "logout": "Sair"
+      }
     },
     "notifications": {
       "title": "Notificações",
@@ -6387,6 +6436,7 @@
       "twoFactorActive": "Ativa",
       "twoFactorInactive": "Inativa",
       "twoFactorManage": "Gerenciar 2FA",
+      "password": "Senha",
       "rules": {
         "minLength": "Mínimo de 8 caracteres",
         "notNumeric": "Não pode conter apenas números",
@@ -6398,6 +6448,14 @@
         "medium": "Senha média.",
         "strong": "Senha forte.",
         "veryStrong": "Senha muito forte."
+      },
+      "strengthBadge": {
+        "unknown": "Desconhecida",
+        "veryWeak": "Muito fraca",
+        "weak": "Fraca",
+        "medium": "Média",
+        "strong": "Forte",
+        "veryStrong": "Muito forte"
       },
       "recoveryKey": {
         "menuBtn": "Chave de Recuperação",

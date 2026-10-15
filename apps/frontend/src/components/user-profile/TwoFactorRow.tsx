@@ -14,8 +14,6 @@ import {
 } from '@/components/ui/dialog';
 import { authService } from '@/services/auth-service';
 
-import { PasswordSection } from './PasswordSection';
-
 export function TwoFactorRow() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -28,26 +26,25 @@ export function TwoFactorRow() {
   const isActive = data?.is_active ?? false;
 
   return (
-    <div className="gap-md flex flex-wrap items-center justify-between">
-      <div className="flex items-center gap-3">
+    <div className="space-y-md">
+      <div className="gap-sm flex flex-wrap items-center">
         {isActive ? (
           <ShieldCheck className="text-success h-5 w-5" />
         ) : (
           <ShieldOff className="text-muted-foreground h-5 w-5" />
         )}
         <p className="text-sm font-medium">{t('userProfile.security.twoFactor')}</p>
-      </div>
-      <div className="gap-sm ml-auto flex flex-wrap items-center justify-end">
-        <Badge variant={isActive ? 'success' : 'outline'}>
+        <Badge className="ml-auto" variant={isActive ? 'success' : 'outline'}>
           {isActive
             ? t('userProfile.security.twoFactorActive')
             : t('userProfile.security.twoFactorInactive')}
         </Badge>
+      </div>
+      <div className="gap-sm flex flex-wrap items-center">
         <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
           <Settings />
           {t('userProfile.security.twoFactorManage')}
         </Button>
-        <PasswordSection />
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>

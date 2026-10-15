@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { EmailVerificationSection } from '@/components/user-profile/EmailVerificationSection';
+import { PasswordRow } from '@/components/user-profile/PasswordSection';
 import { PersonalDataSection } from '@/components/user-profile/PersonalDataSection';
 import { ProfileAvatar } from '@/components/user-profile/ProfileAvatar';
 import { Section } from '@/components/user-profile/Section';
@@ -38,44 +39,44 @@ export default function UserProfile() {
   return (
     <PageContainer>
       <PageHeader title={t('breadcrumb.profile')} icon={<UserPen />} />
-      <Card className="divide-border/60 divide-y overflow-hidden">
-        <header className="gap-md p-lg sm:p-xl flex items-center">
-          <ProfileAvatar name={fullName} photoUrl={member?.profile_photo} />
-          <h2 className="text-2xl font-bold tracking-tight">{fullName || '—'}</h2>
-        </header>
+      <Card className="divide-border/60 grid overflow-hidden max-lg:divide-y lg:grid-cols-[minmax(0,1fr)_28rem] lg:divide-x">
+        <div className="divide-border/60 divide-y">
+          <header className="gap-md p-lg sm:p-xl flex items-center">
+            <ProfileAvatar name={fullName} photoUrl={member?.profile_photo} />
+            <h2 className="text-2xl font-bold tracking-tight">{fullName || '—'}</h2>
+          </header>
+          {member && <PersonalDataSection memberId={member.id} />}
+        </div>
 
-        <div className="divide-border/60 grid max-lg:divide-y lg:grid-cols-[minmax(0,1fr)_24rem] lg:divide-x">
-          <div>{member && <PersonalDataSection memberId={member.id} />}</div>
+        <div className="divide-border/60 divide-y">
+          <EmailVerificationSection emailVerified={emailVerified} />
 
-          <div className="divide-border/60 divide-y">
-            <EmailVerificationSection emailVerified={emailVerified} />
+          <Section
+            icon={<Bell className="h-4 w-4" />}
+            title={t('pages.notificationPreferences.title')}
+          >
+            <div className="gap-md flex items-center justify-between">
+              <p className="text-muted-foreground text-sm">
+                {t('nav.notificationPreferences')}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setNotificationsOpen(true)}
+              >
+                <Pencil />
+                {t('common.actions.edit')}
+              </Button>
+            </div>
+          </Section>
 
-            <Section
-              icon={<Bell className="h-4 w-4" />}
-              title={t('pages.notificationPreferences.title')}
-            >
-              <div className="gap-md flex items-center justify-between">
-                <p className="text-muted-foreground text-sm">
-                  {t('nav.notificationPreferences')}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setNotificationsOpen(true)}
-                >
-                  <Pencil />
-                  {t('common.actions.edit')}
-                </Button>
-              </div>
-            </Section>
-
-            <Section
-              icon={<Shield className="h-4 w-4" />}
-              title={t('userProfile.security.title')}
-            >
-              <TwoFactorRow />
-            </Section>
-          </div>
+          <Section
+            icon={<Shield className="h-4 w-4" />}
+            title={t('userProfile.security.title')}
+          >
+            <TwoFactorRow />
+            <PasswordRow strength={member?.password_strength} />
+          </Section>
         </div>
       </Card>
 

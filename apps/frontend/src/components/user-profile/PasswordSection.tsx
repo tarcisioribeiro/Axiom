@@ -1,9 +1,10 @@
 /* eslint-disable max-lines */
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, Check, Eye, EyeOff, KeyRound, Lock, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -143,6 +144,33 @@ export function Rule({ ok, children }: { ok: boolean; children: React.ReactNode 
   );
 }
 
+// Escala 0-4 do zxcvbn guardada no membro → rótulo e cor do badge.
+const STRENGTH_BADGES = [
+  { key: 'veryWeak', variant: 'destructive' },
+  { key: 'weak', variant: 'warning' },
+  { key: 'medium', variant: 'info' },
+  { key: 'strong', variant: 'default' },
+  { key: 'veryStrong', variant: 'success' },
+] as const;
+
+export function PasswordRow({ strength }: { strength?: number | null }) {
+  const { t } = useTranslation();
+  const badge = strength == null ? undefined : STRENGTH_BADGES[strength];
+
+  return (
+    <div className="space-y-md">
+      <div className="gap-sm flex flex-wrap items-center">
+        <KeyRound className="text-muted-foreground h-5 w-5" />
+        <p className="text-sm font-medium">{t('userProfile.security.password')}</p>
+        <Badge className="ml-auto" variant={badge?.variant ?? 'outline'}>
+          {t(`userProfile.security.strengthBadge.${badge?.key ?? 'unknown'}`)}
+        </Badge>
+      </div>
+      <PasswordSection />
+    </div>
+  );
+}
+
 export function PasswordSection() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -172,6 +200,7 @@ export function PasswordSection() {
 function PasswordForm({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const scorer = useStrengthScorer();
   const [current, setCurrent] = useState('');
   const [currentError, setCurrentError] = useState('');
@@ -188,6 +217,7 @@ function PasswordForm({ onClose }: { onClose: () => void }) {
   const mutation = useMutation({
     mutationFn: () => authService.changePassword(current, next, confirm),
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['members', 'me'] });
       toast({ title: t('userProfile.security.passwordSuccess') });
       onClose();
     },
@@ -229,6 +259,7 @@ function PasswordForm({ onClose }: { onClose: () => void }) {
               setCurrentError('');
             }}
             autoComplete="current-password"
+            warnCapsLock
             error={currentError}
           />
         }
@@ -241,6 +272,7 @@ function PasswordForm({ onClose }: { onClose: () => void }) {
             value={next}
             onChange={setNext}
             autoComplete="new-password"
+            warnCapsLock
           />
         }
         aside={
@@ -267,6 +299,7 @@ function PasswordForm({ onClose }: { onClose: () => void }) {
             value={confirm}
             onChange={setConfirm}
             autoComplete="new-password"
+            warnCapsLock
           />
         }
         aside={

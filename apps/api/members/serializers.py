@@ -28,6 +28,7 @@ class MemberSerializer(serializers.ModelSerializer):
             "phone",
             "email",
             "email_verified",
+            "password_strength",
             "sex",
             "user",
             "is_creditor",
@@ -48,6 +49,7 @@ class MemberSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "uuid",
             "email_verified",
+            "password_strength",
             "created_at",
             "updated_at",
             "created_by",

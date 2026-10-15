@@ -390,8 +390,14 @@
     "mainMenu": "Main menu",
     "logout": "Logout",
     "toggleTheme": "Toggle theme",
+    "themes": {
+      "title": "Themes",
+      "description": "Choose the app theme; the T key switches between the light and dark version.",
+      "light": "Light themes",
+      "dark": "Dark themes"
+    },
     "language": "Language",
-    "openCommandPalette": "Open command palette (Ctrl+K)",
+    "openCommandPalette": "Open command palette ({{shortcut}})",
     "search": "Search...",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
@@ -408,11 +414,54 @@
     "commandPalette": {
       "placeholder": "Search command",
       "noResults": "No commands found",
-      "noResultsHint": "Try searching with a different keyword",
-      "navigate": "navigate",
-      "select": "select",
-      "close": "close",
-      "ariaLabel": "Available commands"
+      "ariaLabel": "Available commands",
+      "title": "Command palette",
+      "description": "Search and run commands",
+      "execute": "Run",
+      "sections": {
+        "navigation": "Navigation",
+        "actions": "Quick Actions",
+        "settings": "Settings"
+      },
+      "commands": {
+        "home": "Home",
+        "planning-dashboard": "Planning - Dashboard",
+        "planning-daily": "Daily Checklist",
+        "planning-routine": "Routine Tasks",
+        "planning-goals": "Personal Goals",
+        "financial-dashboard": "Financial Dashboard",
+        "accounts": "Bank Accounts",
+        "credit-cards": "Credit Cards",
+        "credit-card-bills": "Bills",
+        "expenses": "Expenses",
+        "revenues": "Revenues",
+        "credit-card-expenses": "Card Expenses",
+        "fixed-expenses": "Fixed Expenses",
+        "transfers": "Transfers",
+        "loans": "Loans",
+        "payables": "Payables",
+        "vaults": "Vaults",
+        "financial-goals": "Financial Goals",
+        "members": "Beneficiaries/Creditors",
+        "security-dashboard": "Security - Dashboard",
+        "passwords": "Passwords",
+        "stored-cards": "Stored Cards",
+        "stored-accounts": "Stored Accounts",
+        "archives": "Files",
+        "vault-health": "Vault Health",
+        "2fa-setup": "Two-Factor Authentication",
+        "library-dashboard": "Reading - Dashboard",
+        "books": "Books",
+        "authors": "Authors",
+        "publishers": "Publishers",
+        "summaries": "Summaries",
+        "readings": "Readings",
+        "new-expense": "New Expense",
+        "new-revenue": "New Revenue",
+        "theme-light": "Light Mode",
+        "theme-dark": "Dark Mode",
+        "logout": "Log Out"
+      }
     },
     "notifications": {
       "title": "Notifications",
@@ -6342,6 +6391,7 @@
       "twoFactorActive": "Active",
       "twoFactorInactive": "Inactive",
       "twoFactorManage": "Manage 2FA",
+      "password": "Password",
       "rules": {
         "minLength": "At least 8 characters",
         "notNumeric": "Cannot be numbers only",
@@ -6353,6 +6403,14 @@
         "medium": "Medium password.",
         "strong": "Strong password.",
         "veryStrong": "Very strong password."
+      },
+      "strengthBadge": {
+        "unknown": "Unknown",
+        "veryWeak": "Very weak",
+        "weak": "Weak",
+        "medium": "Medium",
+        "strong": "Strong",
+        "veryStrong": "Very strong"
       },
       "recoveryKey": {
         "menuBtn": "Recovery Key",

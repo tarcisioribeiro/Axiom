@@ -1,16 +1,23 @@
-import { Check, Moon, Sun } from 'lucide-react';
+import { Check, Moon, Palette, Sun } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import {
+  DARK_THEMES,
+  LIGHT_THEMES,
+  type ThemeOption,
+} from '@/components/common/theme-options';
 import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  Dialog,
+  DialogCloseFooter,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useDesktopThemeSync } from '@/hooks/use-desktop-theme-sync';
-import { type DarkVariant, type LightVariant, useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
 
 interface ThemeToggleProps {
@@ -19,141 +26,130 @@ interface ThemeToggleProps {
   syncWithDesktop?: boolean;
 }
 
-interface DarkVariantOption {
-  id: DarkVariant;
-  label: string;
-  primary: string;
-  bg: string;
+/** Miniatura do app nas cores do tema: barra lateral + card com texto e botão */
+function ThemeCard<T extends string>({
+  theme,
+  active,
+  onSelect,
+}: {
+  theme: ThemeOption<T>;
+  active: boolean;
+  onSelect: (id: T) => void;
+}) {
+  const c = (v: string, alpha = 1) => `hsl(${v} / ${alpha})`;
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(theme.id)}
+      aria-pressed={active}
+      className={cn(
+        'gap-xs p-xs flex flex-col rounded-lg border-2 text-left transition',
+        active ? 'border-primary' : 'hover:border-border border-transparent'
+      )}
+    >
+      <div
+        className="flex h-16 overflow-hidden rounded-md border"
+        style={{ background: c(theme.bg), borderColor: c(theme.fg, 0.15) }}
+        aria-hidden="true"
+      >
+        <div className="w-1/4" style={{ background: c(theme.card) }} />
+        <div className="p-xs flex flex-1 flex-col justify-center">
+          <div
+            className="p-xs gap-xs flex flex-col rounded"
+            style={{ background: c(theme.card) }}
+          >
+            <span className="h-1 w-3/4 rounded" style={{ background: c(theme.fg) }} />
+            <span
+              className="h-1 w-1/2 rounded"
+              style={{ background: c(theme.fg, 0.5) }}
+            />
+            <span
+              className="h-2 w-1/3 self-end rounded"
+              style={{ background: c(theme.primary) }}
+            />
+          </div>
+        </div>
+      </div>
+      <span className="gap-xs flex items-center text-xs font-medium">
+        <span className="flex-1 truncate">{theme.label}</span>
+        {active && <Check className="text-primary h-3.5 w-3.5" aria-hidden="true" />}
+      </span>
+    </button>
+  );
 }
-
-interface LightVariantOption {
-  id: LightVariant;
-  label: string;
-  primary: string;
-  bg: string;
-}
-
-const DARK_VARIANTS: DarkVariantOption[] = [
-  { id: 'dracula', label: 'Dracula', primary: '#BD93F9', bg: '#282A36' },
-  {
-    id: 'catppuccin-mocha',
-    label: 'Catppuccin Mocha',
-    primary: '#CBA6F7',
-    bg: '#1E1E2E',
-  },
-  { id: 'tokyo-night', label: 'Tokyo Night', primary: '#7AA2F7', bg: '#1A1B26' },
-  { id: 'gruvbox-dark', label: 'Gruvbox Dark', primary: '#FABD2F', bg: '#282828' },
-  { id: 'everforest', label: 'Everforest', primary: '#7FBBB3', bg: '#2D353B' },
-  { id: 'ubuntu', label: 'Ubuntu Dark', primary: '#E95420', bg: '#300A24' },
-  { id: 'mint-dark', label: 'Linux Mint Dark', primary: '#1F9EDE', bg: '#2E2E33' },
-];
-
-const LIGHT_VARIANTS: LightVariantOption[] = [
-  { id: 'alucard', label: 'Alucard', primary: '#644AC9', bg: '#FFFBEB' },
-  {
-    id: 'catppuccin-latte',
-    label: 'Catppuccin Latte',
-    primary: '#8839EF',
-    bg: '#EFF1F5',
-  },
-  {
-    id: 'everforest-light',
-    label: 'Everforest Light',
-    primary: '#3A94C5',
-    bg: '#F3F0E4',
-  },
-  { id: 'gruvbox-light', label: 'Gruvbox Light', primary: '#D65D0E', bg: '#FBF1C7' },
-  { id: 'tokyo-day', label: 'Tokyo Day', primary: '#2E7DE9', bg: '#E1E2E7' },
-  { id: 'ubuntu-light', label: 'Ubuntu Light', primary: '#E95420', bg: '#FFFFFF' },
-  { id: 'mint-light', label: 'Linux Mint Light', primary: '#1F9EDE', bg: '#F8F8F9' },
-];
 
 export function ThemeToggle({ className, syncWithDesktop = false }: ThemeToggleProps) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
   const { isDark, darkVariant, lightVariant, setDarkVariant, setLightVariant } =
     useTheme();
   useDesktopThemeSync(syncWithDesktop, setDarkVariant, setLightVariant);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          tooltipSide="bottom"
-          className={cn('hover:bg-secondary transition', className)}
-          aria-label={isDark ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
-        >
-          {isDark ? (
-            <Sun
-              className="text-warning duration-normal h-5 w-5 transition-transform hover:rotate-12"
-              aria-hidden="true"
-            />
-          ) : (
-            <Moon
-              className="text-primary duration-normal h-5 w-5 transition-transform hover:rotate-12"
-              aria-hidden="true"
-            />
-          )}
-        </Button>
-      </DropdownMenuTrigger>
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        tooltipSide="bottom"
+        onClick={() => setOpen(true)}
+        className={cn('hover:bg-secondary transition', className)}
+        aria-label={t('layout.themes.title')}
+      >
+        {isDark ? (
+          <Sun
+            className="text-warning duration-normal h-5 w-5 transition-transform hover:rotate-12"
+            aria-hidden="true"
+          />
+        ) : (
+          <Moon
+            className="text-primary duration-normal h-5 w-5 transition-transform hover:rotate-12"
+            aria-hidden="true"
+          />
+        )}
+      </Button>
 
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">
-          Modo Claro
-        </DropdownMenuLabel>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent size="xl">
+          <DialogHeader>
+            <DialogTitle icon={Palette}>{t('layout.themes.title')}</DialogTitle>
+            <DialogDescription>{t('layout.themes.description')}</DialogDescription>
+          </DialogHeader>
 
-        {LIGHT_VARIANTS.map((variant) => {
-          const isActive = !isDark && lightVariant === variant.id;
-          return (
-            <DropdownMenuItem
-              key={variant.id}
-              onClick={() => setLightVariant(variant.id)}
-              className="gap-sm flex cursor-pointer items-center"
-            >
-              <span
-                className="border-border/50 h-4 w-4 flex-shrink-0 rounded-full border"
-                style={{
-                  background: `linear-gradient(135deg, ${variant.bg} 50%, ${variant.primary} 50%)`,
-                }}
-                aria-hidden="true"
-              />
-              <span className="flex-1">{variant.label}</span>
-              {isActive && (
-                <Check className="text-primary h-3.5 w-3.5" aria-hidden="true" />
-              )}
-            </DropdownMenuItem>
-          );
-        })}
+          <section className="space-y-sm">
+            <h3 className="text-muted-foreground text-sm font-medium">
+              {t('layout.themes.light')}
+            </h3>
+            <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
+              {LIGHT_THEMES.map((theme) => (
+                <ThemeCard
+                  key={theme.id}
+                  theme={theme}
+                  active={!isDark && lightVariant === theme.id}
+                  onSelect={setLightVariant}
+                />
+              ))}
+            </div>
+          </section>
 
-        <DropdownMenuSeparator />
+          <section className="space-y-sm">
+            <h3 className="text-muted-foreground text-sm font-medium">
+              {t('layout.themes.dark')}
+            </h3>
+            <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
+              {DARK_THEMES.map((theme) => (
+                <ThemeCard
+                  key={theme.id}
+                  theme={theme}
+                  active={isDark && darkVariant === theme.id}
+                  onSelect={setDarkVariant}
+                />
+              ))}
+            </div>
+          </section>
 
-        <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">
-          Modo Escuro
-        </DropdownMenuLabel>
-
-        {DARK_VARIANTS.map((variant) => {
-          const isActive = isDark && darkVariant === variant.id;
-          return (
-            <DropdownMenuItem
-              key={variant.id}
-              onClick={() => setDarkVariant(variant.id)}
-              className="gap-sm flex cursor-pointer items-center"
-            >
-              <span
-                className="border-border/50 h-4 w-4 flex-shrink-0 rounded-full border"
-                style={{
-                  background: `linear-gradient(135deg, ${variant.bg} 50%, ${variant.primary} 50%)`,
-                }}
-                aria-hidden="true"
-              />
-              <span className="flex-1">{variant.label}</span>
-              {isActive && (
-                <Check className="text-primary h-3.5 w-3.5" aria-hidden="true" />
-              )}
-            </DropdownMenuItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DialogCloseFooter />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

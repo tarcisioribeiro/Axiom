@@ -37,6 +37,7 @@ import type { IconComponent } from '@/types/icon';
 export type CommandSection = 'navigation' | 'actions' | 'settings';
 
 export interface Command {
+  /** Também é a chave do título em `layout.commandPalette.commands`. */
   id: string;
   title: string;
   description?: string;
@@ -48,13 +49,14 @@ export interface Command {
   shortcut?: string;
 }
 
+type CommandDef = Omit<Command, 'title'>;
+
 /**
  * Comandos de navegação - todas as rotas principais
  */
-export const navigationCommands: Command[] = [
+export const navigationCommands: CommandDef[] = [
   {
     id: 'home',
-    title: 'Início',
     description: 'Página inicial',
     icon: Home,
     href: '/',
@@ -64,7 +66,6 @@ export const navigationCommands: Command[] = [
   // Personal Planning
   {
     id: 'planning-dashboard',
-    title: 'Planejamento - Dashboard',
     description: 'Dashboard do planejamento pessoal',
     icon: LayoutDashboard,
     href: '/planning/dashboard',
@@ -73,7 +74,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'planning-daily',
-    title: 'Checklist Diário',
     description: 'Tarefas do dia',
     icon: CheckCircle2,
     href: '/planning/daily',
@@ -82,7 +82,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'planning-routine',
-    title: 'Tarefas Rotineiras',
     description: 'Gerenciar tarefas recorrentes',
     icon: Calendar,
     href: '/planning/routine-tasks',
@@ -91,7 +90,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'planning-goals',
-    title: 'Objetivos Pessoais',
     description: 'Metas e objetivos pessoais',
     icon: Target,
     href: '/planning/goals',
@@ -102,7 +100,6 @@ export const navigationCommands: Command[] = [
   // Financial Control
   {
     id: 'financial-dashboard',
-    title: 'Dashboard Financeiro',
     description: 'Visão geral das finanças',
     icon: LayoutDashboard,
     href: '/dashboard',
@@ -111,7 +108,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'accounts',
-    title: 'Contas Bancárias',
     description: 'Gerenciar contas bancárias',
     icon: Wallet,
     href: '/accounts',
@@ -120,7 +116,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'credit-cards',
-    title: 'Cartões de Crédito',
     description: 'Gerenciar cartões de crédito',
     icon: CreditCard,
     href: '/credit-cards',
@@ -129,7 +124,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'credit-card-bills',
-    title: 'Faturas',
     description: 'Faturas dos cartões de crédito',
     icon: Receipt,
     href: '/credit-cards',
@@ -138,7 +132,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'expenses',
-    title: 'Despesas',
     description: 'Registrar e ver despesas',
     icon: TrendingDown,
     href: '/expenses',
@@ -147,7 +140,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'revenues',
-    title: 'Receitas',
     description: 'Registrar e ver receitas',
     icon: TrendingUp,
     href: '/revenues',
@@ -156,7 +148,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'credit-card-expenses',
-    title: 'Gastos do Cartão',
     description: 'Ver gastos no cartão de crédito',
     icon: ShoppingCart,
     href: '/credit-card-expenses',
@@ -165,7 +156,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'fixed-expenses',
-    title: 'Gastos Fixos',
     description: 'Gerenciar gastos fixos mensais',
     icon: CalendarClock,
     href: '/fixed-expenses',
@@ -174,7 +164,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'transfers',
-    title: 'Transferências',
     description: 'Transferências entre contas',
     icon: ArrowLeftRight,
     href: '/transfers',
@@ -183,7 +172,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'loans',
-    title: 'Empréstimos',
     description: 'Gerenciar empréstimos',
     icon: HandCoins,
     href: '/loans',
@@ -192,7 +180,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'payables',
-    title: 'Valores a Pagar',
     description: 'Contas a pagar',
     icon: Receipt,
     href: '/payables',
@@ -201,7 +188,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'vaults',
-    title: 'Cofres',
     description: 'Gerenciar cofres de economia',
     icon: Vault,
     href: '/vaults',
@@ -210,7 +196,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'financial-goals',
-    title: 'Metas Financeiras',
     description: 'Metas e objetivos financeiros',
     icon: Target,
     href: '/financial-goals',
@@ -219,7 +204,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'members',
-    title: 'Beneficiários/Credores',
     description: 'Gerenciar beneficiários e credores',
     icon: Users,
     href: '/members',
@@ -230,7 +214,6 @@ export const navigationCommands: Command[] = [
   // Security Module
   {
     id: 'security-dashboard',
-    title: 'Segurança - Dashboard',
     description: 'Dashboard de segurança',
     icon: Shield,
     href: '/security/dashboard',
@@ -239,7 +222,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'passwords',
-    title: 'Senhas',
     description: 'Gerenciador de senhas',
     icon: Key,
     href: '/security/passwords',
@@ -248,7 +230,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'stored-cards',
-    title: 'Cartões Armazenados',
     description: 'Cartões salvos de forma segura',
     icon: CreditCard,
     href: '/security/stored-cards',
@@ -257,7 +238,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'stored-accounts',
-    title: 'Contas Armazenadas',
     description: 'Contas salvas de forma segura',
     icon: Wallet,
     href: '/security/stored-accounts',
@@ -266,7 +246,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'archives',
-    title: 'Arquivos',
     description: 'Arquivos criptografados',
     icon: Archive,
     href: '/security/archives',
@@ -275,7 +254,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'vault-health',
-    title: 'Saúde do Cofre',
     description: 'Análise de segurança das senhas',
     icon: ShieldCheck,
     href: '/security/health',
@@ -284,7 +262,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: '2fa-setup',
-    title: 'Autenticação de Dois Fatores',
     description: 'Configurar ou desativar 2FA/TOTP',
     icon: ShieldCheck,
     href: '/settings/two-factor',
@@ -302,7 +279,6 @@ export const navigationCommands: Command[] = [
   // Library Module
   {
     id: 'library-dashboard',
-    title: 'Leitura - Dashboard',
     description: 'Dashboard da biblioteca',
     icon: Library,
     href: '/library/dashboard',
@@ -311,7 +287,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'books',
-    title: 'Livros',
     description: 'Gerenciar livros',
     icon: BookOpen,
     href: '/library/books',
@@ -320,7 +295,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'authors',
-    title: 'Autores',
     description: 'Gerenciar autores',
     icon: UserPen,
     href: '/library/authors',
@@ -329,7 +303,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'publishers',
-    title: 'Editoras',
     description: 'Gerenciar editoras',
     icon: Building2,
     href: '/library/publishers',
@@ -338,7 +311,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'summaries',
-    title: 'Resumos',
     description: 'Resumos de livros',
     icon: FileText,
     href: '/library/summaries',
@@ -347,7 +319,6 @@ export const navigationCommands: Command[] = [
   },
   {
     id: 'readings',
-    title: 'Leituras',
     description: 'Histórico de leituras',
     icon: BookMarked,
     href: '/library/readings',
@@ -359,10 +330,9 @@ export const navigationCommands: Command[] = [
 /**
  * Comandos de ação rápida (sem navegação)
  */
-export const actionCommands: Command[] = [
+export const actionCommands: CommandDef[] = [
   {
     id: 'new-expense',
-    title: 'Nova Despesa',
     description: 'Registrar nova despesa',
     icon: Plus,
     href: '/expenses',
@@ -372,7 +342,6 @@ export const actionCommands: Command[] = [
   },
   {
     id: 'new-revenue',
-    title: 'Nova Receita',
     description: 'Registrar nova receita',
     icon: Plus,
     href: '/revenues',
@@ -389,10 +358,9 @@ export const createSettingsCommands = (
   onLogout: () => void,
   onToggleTheme: () => void,
   isDark: boolean
-): Command[] => [
+): CommandDef[] => [
   {
-    id: 'toggle-theme',
-    title: isDark ? 'Modo Claro' : 'Modo Escuro',
+    id: isDark ? 'theme-light' : 'theme-dark',
     description: `Alternar para tema ${isDark ? 'claro' : 'escuro'}`,
     icon: isDark ? Sun : Moon,
     action: onToggleTheme,
@@ -402,7 +370,6 @@ export const createSettingsCommands = (
   },
   {
     id: 'logout',
-    title: 'Sair',
     description: 'Fazer logout da conta',
     icon: LogOut,
     action: onLogout,
@@ -413,18 +380,19 @@ export const createSettingsCommands = (
 ];
 
 /**
- * Retorna todos os comandos disponíveis
+ * Retorna todos os comandos disponíveis, com o título traduzido pelo `id`
  */
 export function getAllCommands(
   onLogout: () => void,
   onToggleTheme: () => void,
-  isDark: boolean
+  isDark: boolean,
+  translateTitle: (id: string) => string
 ): Command[] {
   return [
     ...navigationCommands,
     ...actionCommands,
     ...createSettingsCommands(onLogout, onToggleTheme, isDark),
-  ];
+  ].map((command) => ({ ...command, title: translateTitle(command.id) }));
 }
 
 /**
@@ -492,9 +460,3 @@ export function groupCommandsBySection(
     settings: commands.filter((c) => c.section === 'settings'),
   };
 }
-
-export const sectionLabels: Record<CommandSection, string> = {
-  navigation: 'Navegação',
-  actions: 'Ações Rápidas',
-  settings: 'Configurações',
-};

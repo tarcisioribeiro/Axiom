@@ -94,6 +94,12 @@ class Member(BaseModel):
     email_verification_sent_at = models.DateTimeField(
         null=True, blank=True, verbose_name="Envio do Token de Verificação"
     )
+    password_strength = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Força da Senha",
+        help_text="Score zxcvbn (0-4) da senha de login; null = desconhecida",
+    )
     sex = models.CharField(
         max_length=200, choices=SEX_OPTION, verbose_name="Sexo"
     )

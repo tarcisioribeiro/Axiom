@@ -668,59 +668,61 @@ function SelfEsteemTab({
               </CardContent>
             </Card>
 
-            {aiParsed.strengths?.length > 0 && (
-              <Card>
-                <CardHeader className="px-md pb-sm pt-md">
-                  <CardTitle className="text-success text-sm">
-                    {t('pages.emotionalWellness.selfEsteem.strengthsTitle')}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-sm px-md pb-md">
-                  {aiParsed.strengths.map((s, i) => (
-                    <div key={i} className="gap-sm flex items-start">
-                      <CheckCircle2 className="text-success mt-0.5 h-4 w-4 shrink-0" />
-                      <p className="text-foreground text-sm">{s}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+            <div className="gap-md grid items-stretch lg:grid-cols-3">
+              {aiParsed.strengths?.length > 0 && (
+                <Card className="h-full">
+                  <CardHeader className="px-md pb-sm pt-md">
+                    <CardTitle className="text-success text-sm">
+                      {t('pages.emotionalWellness.selfEsteem.strengthsTitle')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-sm px-md pb-md">
+                    {aiParsed.strengths.map((s, i) => (
+                      <div key={i} className="gap-sm flex items-start">
+                        <CheckCircle2 className="text-success mt-0.5 h-4 w-4 shrink-0" />
+                        <p className="text-foreground text-sm">{s}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
 
-            {aiParsed.limiting_beliefs?.length > 0 && (
-              <Card>
-                <CardHeader className="px-md pb-sm pt-md">
-                  <CardTitle className="text-warning text-sm">
-                    {t('pages.emotionalWellness.selfEsteem.limitingBeliefsTitle')}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-sm px-md pb-md">
-                  {aiParsed.limiting_beliefs.map((b, i) => (
-                    <div key={i} className="gap-sm flex items-start">
-                      <AlertCircle className="text-warning mt-0.5 h-4 w-4 shrink-0" />
-                      <p className="text-foreground text-sm">{b}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+              {aiParsed.limiting_beliefs?.length > 0 && (
+                <Card className="h-full">
+                  <CardHeader className="px-md pb-sm pt-md">
+                    <CardTitle className="text-warning text-sm">
+                      {t('pages.emotionalWellness.selfEsteem.limitingBeliefsTitle')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-sm px-md pb-md">
+                    {aiParsed.limiting_beliefs.map((b, i) => (
+                      <div key={i} className="gap-sm flex items-start">
+                        <AlertCircle className="text-warning mt-0.5 h-4 w-4 shrink-0" />
+                        <p className="text-foreground text-sm">{b}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
 
-            {aiParsed.weekly_suggestions?.length > 0 && (
-              <Card>
-                <CardHeader className="px-md pb-sm pt-md">
-                  <CardTitle className="text-primary text-sm">
-                    {t('pages.emotionalWellness.selfEsteem.suggestionsTitle')}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-sm px-md pb-md">
-                  {aiParsed.weekly_suggestions.map((s, i) => (
-                    <div key={i} className="gap-sm flex items-start">
-                      <ChevronRight className="text-primary mt-0.5 h-4 w-4 shrink-0" />
-                      <p className="text-foreground text-sm">{s}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+              {aiParsed.weekly_suggestions?.length > 0 && (
+                <Card className="h-full">
+                  <CardHeader className="px-md pb-sm pt-md">
+                    <CardTitle className="text-primary text-sm">
+                      {t('pages.emotionalWellness.selfEsteem.suggestionsTitle')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-sm px-md pb-md">
+                    {aiParsed.weekly_suggestions.map((s, i) => (
+                      <div key={i} className="gap-sm flex items-start">
+                        <ChevronRight className="text-primary mt-0.5 h-4 w-4 shrink-0" />
+                        <p className="text-foreground text-sm">{s}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
 
             <Button
               variant="outline"
