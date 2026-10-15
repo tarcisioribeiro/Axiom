@@ -267,3 +267,36 @@ class UserPermissionsSuperuserTest(BasePush2TestCase):
         url = reverse("user-permissions")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+# ---------------------------------------------------------------------------
+# Reserved usernames (admin/root/...) — admin-only, email required
+# ---------------------------------------------------------------------------
+
+
+class ReservedUsernameTest(APITestCase):
+    def test_registration_rejects_reserved_username_case_insensitive(self):
+        from authentication.views import validate_registration_data
+
+        for name in ("admin", "ROOT", "Administrator", "superuser"):
+            _, errors = validate_registration_data({"username": name})
+            self.assertIn("Username reservado", errors, name)
+
+    def test_non_staff_cannot_use_reserved_username(self):
+        from django.core.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError):
+            User.objects.create_user(username="root", email="r@test.com")
+
+    def test_staff_with_reserved_username_requires_email(self):
+        from django.core.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError):
+            User.objects.create_user(username="admin", is_staff=True)
+        user = User.objects.create_user(
+            username="admin", email="a@test.com", is_staff=True
+        )
+        # Saves parciais fora dos campos protegidos não são bloqueados
+        User.objects.filter(pk=user.pk).update(email="")
+        user.refresh_from_db()
+        user.save(update_fields=["last_login"])

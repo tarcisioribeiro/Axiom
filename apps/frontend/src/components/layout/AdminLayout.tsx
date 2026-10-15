@@ -8,7 +8,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet, useLocation } from 'react-router';
+import { NavLink, useLocation, useOutlet } from 'react-router';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { Breadcrumb } from '@/components/layout/Breadcrumb';
@@ -18,6 +18,7 @@ import { useAuthStore } from '@/stores/auth-store';
 export const AdminLayout = () => {
   const { user, logout } = useAuthStore();
   const location = useLocation();
+  const outlet = useOutlet();
   const { t } = useTranslation();
 
   const NAV_ITEMS = [
@@ -134,10 +135,8 @@ export const AdminLayout = () => {
         </header>
 
         <main className="p-lg flex-1 overflow-auto">
-          <AnimatePresence mode="wait">
-            <AnimatedPage key={location.pathname}>
-              <Outlet />
-            </AnimatedPage>
+          <AnimatePresence mode="wait" initial={false}>
+            <AnimatedPage key={location.pathname}>{outlet}</AnimatedPage>
           </AnimatePresence>
         </main>
       </div>

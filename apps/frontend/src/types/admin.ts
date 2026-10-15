@@ -42,6 +42,14 @@ export interface HealthResponse {
   };
 }
 
+/** Aviso do sistema de agentes; o texto é montado via i18n a partir do `code`. */
+export interface LlmWarning {
+  code: string;
+  role?: 'primary' | 'fallback' | 'embeddings';
+  provider?: string;
+  [param: string]: string | undefined;
+}
+
 export interface IntegrationsResponse {
   database: ServiceCheck;
   cache: ServiceCheck;
@@ -52,7 +60,7 @@ export interface IntegrationsResponse {
   llm_provider: string;
   ollama_model: string;
   anthropic_model: string;
-  llm_warnings: string[];
+  llm_warnings: LlmWarning[];
 }
 
 export interface AdminLog {

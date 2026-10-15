@@ -5134,7 +5134,31 @@
       "modelsCount_one": "{{count}} modelo",
       "modelsCount_other": "{{count}} modelos",
       "models": "Modelos",
-      "recipient": "Destinatário"
+      "recipient": "Destinatário",
+      "llmRoles": {
+        "primary": "Provedor principal ({{provider}})",
+        "fallback": "Fallback ({{provider}})",
+        "embeddings": "Embeddings (RAG)"
+      },
+      "llmReasons": {
+        "dns": "endereço não encontrado",
+        "refused": "conexão recusada",
+        "timeout": "tempo esgotado",
+        "http": "resposta de erro do servidor",
+        "other": "erro de conexão"
+      },
+      "llmIssues": {
+        "unknown_provider": "provedor desconhecido. Use ollama, groq, anthropic ou openai em LLM_PROVIDER / LLM_FALLBACK_PROVIDERS.",
+        "missing_key": "{{key}} não configurada. Cadastre-a em Configurações.",
+        "invalid_key": "{{key}} recusada pelo serviço. Gere uma nova chave e atualize em Configurações.",
+        "retired_model": "o modelo {{model}} foi descontinuado. Atualize GROQ_MODEL em Configurações.",
+        "model_not_pulled": "o modelo {{model}} não está baixado no Ollama. Rode: ollama pull {{model}}.",
+        "ollama_unreachable": "Ollama inacessível em {{url}} ({{reason}}). Verifique se o serviço está rodando ou corrija OLLAMA_BASE_URL.",
+        "provider_unreachable": "serviço inacessível ({{reason}}). Verifique a conexão de saída do servidor.",
+        "decrypt_failed": "{{key}} não pôde ser lida (salva com outra ENCRYPTION_KEY). Cadastre-a novamente em Configurações.",
+        "model_replaced": "O modelo do Groq {{model}} foi descontinuado; usando {{fallback}} temporariamente. Atualize GROQ_MODEL em Configurações.",
+        "no_fallback": "Nenhum fallback configurado. Defina LLM_FALLBACK_PROVIDERS (ex.: groq,anthropic)."
+      }
     },
     "adminConfig": {
       "title": "Configurações do Sistema",

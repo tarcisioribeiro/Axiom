@@ -5066,7 +5066,31 @@
       "modelsCount_one": "{{count}} model",
       "modelsCount_other": "{{count}} models",
       "models": "Models",
-      "recipient": "Recipient"
+      "recipient": "Recipient",
+      "llmRoles": {
+        "primary": "Primary provider ({{provider}})",
+        "fallback": "Fallback ({{provider}})",
+        "embeddings": "Embeddings (RAG)"
+      },
+      "llmReasons": {
+        "dns": "host not found",
+        "refused": "connection refused",
+        "timeout": "timed out",
+        "http": "server returned an error",
+        "other": "connection error"
+      },
+      "llmIssues": {
+        "unknown_provider": "unknown provider. Use ollama, groq, anthropic or openai in LLM_PROVIDER / LLM_FALLBACK_PROVIDERS.",
+        "missing_key": "{{key}} is not set. Add it under Settings.",
+        "invalid_key": "{{key}} was rejected by the service. Generate a new key and update it under Settings.",
+        "retired_model": "model {{model}} has been retired. Update GROQ_MODEL under Settings.",
+        "model_not_pulled": "model {{model}} is not pulled in Ollama. Run: ollama pull {{model}}.",
+        "ollama_unreachable": "Ollama unreachable at {{url}} ({{reason}}). Check that the service is running or fix OLLAMA_BASE_URL.",
+        "provider_unreachable": "service unreachable ({{reason}}). Check the server's outbound connectivity.",
+        "decrypt_failed": "{{key}} could not be read (saved with another ENCRYPTION_KEY). Re-enter it under Settings.",
+        "model_replaced": "Groq model {{model}} has been retired; temporarily using {{fallback}}. Update GROQ_MODEL under Settings.",
+        "no_fallback": "No fallback configured. Set LLM_FALLBACK_PROVIDERS (e.g. groq,anthropic)."
+      }
     },
     "adminConfig": {
       "title": "System Settings",

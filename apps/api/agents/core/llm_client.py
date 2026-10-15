@@ -666,14 +666,36 @@ class LLMClient:
     # ── Status
     # ─────────────────────────────────────────────────────────────────
 
+    @staticmethod
+    def _unreachable(provider: str, exc: requests.RequestException) -> dict:
+        """Aviso estruturado de falha de rede; o erro cru vai só para o log."""
+        logger.warning("LLM '%s' inacessível: %s", provider, exc)
+        if isinstance(exc, requests.Timeout):
+            reason = "timeout"
+        elif isinstance(exc, requests.ConnectionError):
+            msg = str(exc)
+            dns = "NameResolution" in msg or "Failed to resolve" in msg
+            reason = "dns" if dns else "refused"
+        elif isinstance(exc, requests.HTTPError):
+            reason = "http"
+        else:
+            reason = "other"
+        if provider == "ollama":
+            url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
+            return {"code": "ollama_unreachable", "url": url, "reason": reason}
+        return {"code": "provider_unreachable", "reason": reason}
+
     @classmethod
-    def _provider_problems(cls, provider: str) -> list[str]:
-        """Motivos pelos quais o provider não conseguiria responder."""
+    def _provider_problems(cls, provider: str) -> list[dict]:
+        """Motivos pelos quais o provider não conseguiria responder.
+
+        Cada item é ``{"code": ..., **params}``; o frontend traduz pelo code.
+        """
         if provider not in {"ollama", "groq", "anthropic", "openai"}:
-            return [f"provider desconhecido '{provider}'"]
+            return [{"code": "unknown_provider"}]
         key_name = f"{provider.upper()}_API_KEY"
         if provider != "ollama" and not _cfg(key_name):
-            return [f"{key_name} não configurada"]
+            return [{"code": "missing_key", "key": key_name}]
         try:
             if provider == "groq":
                 model = _cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)
@@ -684,22 +706,16 @@ class LLMClient:
                         exc.response is not None
                         and exc.response.status_code == 401
                     ):
-                        return ["GROQ_API_KEY inválida"]
+                        return [{"code": "invalid_key", "key": key_name}]
                     raise
                 if model not in ids and GROQ_DEFAULT_MODEL not in ids:
-                    return [
-                        f"modelo '{model}' não existe mais no Groq"
-                        " — atualize GROQ_MODEL"
-                    ]
+                    return [{"code": "retired_model", "model": model}]
             elif provider == "ollama":
                 model = _cfg("OLLAMA_MODEL", "mistral:7b-instruct")
                 if not cls._ollama_has_model(model):
-                    return [
-                        f"modelo '{model}' não baixado"
-                        f" (ollama pull {model})"
-                    ]
+                    return [{"code": "model_not_pulled", "model": model}]
         except requests.RequestException as exc:
-            return [f"inacessível: {exc}"]
+            return [cls._unreachable(provider, exc)]
         return []
 
     @classmethod
@@ -721,46 +737,55 @@ class LLMClient:
             return False
 
     @classmethod
-    def diagnostics(cls) -> list[str]:
-        """Problemas de configuração do LLM — exibido só para admins."""
-        warnings: list[str] = []
+    def diagnostics(cls) -> list[dict]:
+        """Problemas de configuração do LLM — exibido só para admins.
+
+        Itens ``{"code", "role"?, "provider"?, ...params}``; o texto (no
+        idioma do usuário) é montado no frontend a partir do ``code``.
+        """
+        warnings: list[dict] = []
         from admin_panel.models import SystemConfig
 
         for row in SystemConfig.objects.filter(  # type: ignore[attr-defined]
             category="llm", is_secret=True
         ):
             if row._value and row.get_value() is None:
-                warnings.append(
-                    f"{row.key} não pôde ser descriptografada"
-                    " (salva com outra ENCRYPTION_KEY) — cadastre-a novamente."
-                )
+                warnings.append({"code": "decrypt_failed", "key": row.key})
 
         providers = cls._get_providers()
         for i, provider in enumerate(providers):
-            label = "Provider" if i == 0 else "Fallback"
+            role = "primary" if i == 0 else "fallback"
             for problem in cls._provider_problems(provider):
-                warnings.append(f"{label} '{provider}': {problem}.")
+                warnings.append(
+                    {"role": role, "provider": provider, **problem}
+                )
         configured = _cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)
         if "groq" in providers and _groq_model() != configured:
             warnings.append(
-                f"GROQ_MODEL '{configured}' não existe mais no Groq — usando"
-                f" '{GROQ_DEFAULT_MODEL}'; atualize GROQ_MODEL."
+                {
+                    "code": "model_replaced",
+                    "model": configured,
+                    "fallback": GROQ_DEFAULT_MODEL,
+                }
             )
         if len(providers) == 1:
-            warnings.append(
-                "Nenhum fallback configurado (LLM_FALLBACK_PROVIDERS vazio)."
-            )
+            warnings.append({"code": "no_fallback"})
 
         # Embeddings (RAG) sempre usam o Ollama, qualquer que seja o provider.
         embed = _cfg("OLLAMA_EMBED_MODEL", "nomic-embed-text")
         try:
             if not cls._ollama_has_model(embed):
                 warnings.append(
-                    f"Embeddings (RAG): modelo '{embed}' não baixado"
-                    f" (ollama pull {embed})."
+                    {
+                        "role": "embeddings",
+                        "code": "model_not_pulled",
+                        "model": embed,
+                    }
                 )
         except requests.RequestException as exc:
-            warnings.append(f"Embeddings (RAG): Ollama inacessível: {exc}")
+            warnings.append(
+                {"role": "embeddings", **cls._unreachable("ollama", exc)}
+            )
         return warnings
 
     @classmethod

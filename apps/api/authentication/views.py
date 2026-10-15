@@ -20,6 +20,7 @@ from rest_framework.views import APIView
 from app.config import cfg
 from app.request_utils import request_data
 
+from .signals import is_reserved_username
 from .throttles import RegisterRateThrottle, ThemeSyncRateThrottle
 
 
@@ -96,6 +97,8 @@ def validate_registration_data(data: dict) -> tuple[bool, list[str]]:
             errors.append(
                 "Username deve conter apenas letras, numeros e underscore"
             )
+        if is_reserved_username(username):
+            errors.append("Username reservado")
 
     # Validar senha usando validators do Django
     if password:

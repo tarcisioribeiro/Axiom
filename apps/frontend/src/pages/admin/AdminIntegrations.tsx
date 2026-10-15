@@ -99,9 +99,18 @@ export default function AdminIntegrations() {
           <div>
             <p className="font-medium">{t('pages.adminIntegrations.llmWarnings')}</p>
             <ul className="pl-md list-disc">
-              {data.llm_warnings.map((w) => (
-                <li key={w}>{w}</li>
-              ))}
+              {data.llm_warnings.map((w) => {
+                const text = t(`pages.adminIntegrations.llmIssues.${w.code}`, {
+                  ...w,
+                  reason:
+                    w.reason && t(`pages.adminIntegrations.llmReasons.${w.reason}`),
+                });
+                const scope =
+                  w.role && t(`pages.adminIntegrations.llmRoles.${w.role}`, w);
+                return (
+                  <li key={JSON.stringify(w)}>{scope ? `${scope}: ${text}` : text}</li>
+                );
+              })}
             </ul>
           </div>
         </div>
