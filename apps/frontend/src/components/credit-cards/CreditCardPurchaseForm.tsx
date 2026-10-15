@@ -39,6 +39,7 @@ import {
 } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
 import type {
@@ -46,6 +47,11 @@ import type {
   CreditCardPurchaseFormData,
   CreditCard,
 } from '@/types';
+
+// Parcelas começam vazias: o resumo só aparece depois que o usuário preenche.
+type PurchaseFormValues = Omit<CreditCardPurchaseFormData, 'total_installments'> & {
+  total_installments: number | null;
+};
 
 interface CreditCardPurchaseFormProps {
   purchase?: CreditCardPurchase;
@@ -64,21 +70,20 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const { showAlert } = useAlertDialog();
-  const { register, handleSubmit, setValue, control } =
-    useForm<CreditCardPurchaseFormData>({
-      defaultValues: {
-        description: '',
-        total_value: 0,
-        purchase_date: formatLocalDate(new Date()),
-        purchase_time: new Date().toTimeString().split(' ')[0].substring(0, 5),
-        category: '',
-        card: 0,
-        total_installments: 1,
-        merchant: '',
-        member: null,
-        notes: '',
-      },
-    });
+  const { register, handleSubmit, setValue, control } = useForm<PurchaseFormValues>({
+    defaultValues: {
+      description: '',
+      total_value: 0,
+      purchase_date: formatLocalDate(new Date()),
+      purchase_time: new Date().toTimeString().split(' ')[0].substring(0, 5),
+      category: '',
+      card: 0,
+      total_installments: null,
+      merchant: '',
+      member: null,
+      notes: '',
+    },
+  });
 
   // Watch valores para cálculo de parcela
   const watchedTotalValue = useWatch({ control, name: 'total_value' });
@@ -90,7 +95,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
 
   // Calcular valor por parcela
   const installmentValue = useMemo(() => {
-    if (watchedTotalInstallments > 0 && watchedTotalValue > 0) {
+    if (watchedTotalInstallments && watchedTotalValue > 0) {
       return watchedTotalValue / watchedTotalInstallments;
     }
     return watchedTotalValue || 0;
@@ -171,7 +176,9 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
     }
   }, [purchase, setValue]);
 
-  const handleFormSubmit = async (data: CreditCardPurchaseFormData) => {
+  const handleFormSubmit = async (values: PurchaseFormValues) => {
+    // `rules.required` garante que as parcelas estão preenchidas aqui.
+    const data = { ...values, total_installments: values.total_installments ?? 1 };
     if (!data.card || data.card === 0) {
       await showAlert({
         title: t('pages.creditCardExpenses.form.requiredField'),
@@ -211,7 +218,11 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
   const isEditMode = !!purchase;
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md" noValidate>
+    <form
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+      className="space-y-md"
+      noValidate
+    >
       <div className="gap-md grid grid-cols-1 md:grid-cols-2">
         <div className="space-y-sm md:col-span-2">
           <Label className="gap-xs flex items-center" htmlFor="description">
@@ -362,10 +373,10 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
               {t('pages.creditCardExpenses.form.cardLocked')}
             </p>
           )}
-          {/* Exibir limite disponível do cartão selecionado */}
-          {selectedCardInfo && !isEditMode && (
+          {/* Limite disponível: espaço reservado até escolher o cartão */}
+          {!isEditMode && (
             <div
-              className={`p-sm rounded-md text-sm ${exceedsLimit ? 'border-destructive/30 bg-destructive/10 border' : 'bg-muted'}`}
+              className={`p-sm rounded-md text-sm ${exceedsLimit ? 'border-destructive/30 bg-destructive/10 border' : 'bg-muted'} ${selectedCardInfo ? '' : 'invisible'}`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">
@@ -374,10 +385,10 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
                 <span
                   className={`font-semibold ${exceedsLimit ? 'text-destructive' : 'text-success'}`}
                 >
-                  {formatCurrency(selectedCardInfo.availableCredit)}
+                  {formatCurrency(selectedCardInfo?.availableCredit ?? 0)}
                 </span>
               </div>
-              {exceedsLimit && watchedTotalValue > 0 && (
+              {selectedCardInfo && exceedsLimit && watchedTotalValue > 0 && (
                 <p className="mt-xs text-destructive text-xs">
                   {t('pages.creditCardExpenses.form.exceedsLimitBy', {
                     value: formatCurrency(
@@ -399,36 +410,40 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             control={control}
             name="total_installments"
             rules={{
-              required: true,
+              required: t('pages.creditCardExpenses.form.installmentsRequired'),
               min: 1,
               max: 48,
             }}
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <NumberStepper
                 id="total_installments"
                 disabled={isLoading || isEditMode}
+                optional
                 min={1}
                 max={48}
                 value={field.value}
                 onChange={field.onChange}
+                aria-invalid={!!fieldState.error}
               />
             )}
           />
-          <div className="bg-muted p-sm rounded-md">
-            {watchedTotalInstallments > 1 ? (
-              <p className="text-primary text-sm font-medium">
-                {t('pages.creditCardExpenses.form.installmentsSummary', {
-                  total: formatCurrency(watchedTotalValue),
-                  count: watchedTotalInstallments,
-                  installmentValue: formatCurrency(installmentValue),
-                })}
-              </p>
-            ) : (
-              <p className="text-sm">
-                {t('pages.creditCardExpenses.form.cashPayment')}
-              </p>
-            )}
-          </div>
+          {!!watchedTotalInstallments && (
+            <div className="bg-muted p-sm rounded-md">
+              {watchedTotalInstallments > 1 ? (
+                <p className="text-primary text-sm font-medium">
+                  {t('pages.creditCardExpenses.form.installmentsSummary', {
+                    total: formatCurrency(watchedTotalValue),
+                    count: watchedTotalInstallments,
+                    installmentValue: formatCurrency(installmentValue),
+                  })}
+                </p>
+              ) : (
+                <p className="text-sm">
+                  {t('pages.creditCardExpenses.form.cashPayment')}
+                </p>
+              )}
+            </div>
+          )}
           {isEditMode && (
             <p className="text-warning text-xs">
               {t('pages.creditCardExpenses.form.installmentsLocked')}

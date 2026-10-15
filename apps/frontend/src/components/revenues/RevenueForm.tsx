@@ -1,8 +1,6 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
   CalendarDays,
-  ChevronDown,
-  ChevronUp,
   Clock,
   FileText,
   Link2,
@@ -13,7 +11,7 @@ import {
   Wallet,
   X,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -73,7 +71,6 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const { data: currentUserMember = null } = useCurrentMember();
-  const [linksOpen, setLinksOpen] = useState(false);
 
   const { register, handleSubmit, setValue, watch } = useForm<RevenueFormData>({
     defaultValues: revenue
@@ -314,88 +311,81 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
         </div>
       </FormSection>
 
-      {/* Seção: Vínculos (colapsável) */}
+      {/* Seção: Vínculos */}
       {hasEligibleLinks && (
         <div className="space-y-md">
-          <button
-            type="button"
-            onClick={() => setLinksOpen((o) => !o)}
-            className="gap-xs flex w-full items-center text-left"
-          >
+          <div className="gap-xs flex w-full items-center">
             <Link2 className="text-muted-foreground h-3.5 w-3.5" />
             <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-              {t('common.form.sections.links')}
+              {t('pages.revenues.form.linksSection')}
             </span>
             <div className="bg-border/50 h-px flex-1" />
-            {linksOpen ? (
-              <ChevronUp className="text-muted-foreground h-3.5 w-3.5" />
-            ) : (
-              <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
+          </div>
+
+          <div className="space-y-sm">
+            {eligibleLoans.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.revenues.form.relatedLoanLabel')}
+                </Label>
+                <Select
+                  value={watch('related_loan')?.toString() || 'none'}
+                  onValueChange={(v) =>
+                    setValue('related_loan', v === 'none' ? null : parseInt(v))
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.fields.select_optional')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {eligibleLoans.map((loan) => (
+                      <SelectItem key={loan.id} value={loan.id.toString()}>
+                        {loan.description} — {formatCurrency(loan.remaining_balance)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
-          </button>
 
-          {linksOpen && (
-            <div className="space-y-sm">
-              <Label className="gap-xs flex items-center">
-                <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                {t('pages.revenues.form.relatedLoanLabel')}
-              </Label>
-              <Select
-                value={watch('related_loan')?.toString() || 'none'}
-                onValueChange={(v) =>
-                  setValue('related_loan', v === 'none' ? null : parseInt(v))
-                }
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('common.fields.select_optional')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">{t('common.actions.none')}</SelectItem>
-                  {eligibleLoans.map((loan) => (
-                    <SelectItem key={loan.id} value={loan.id.toString()}>
-                      {loan.description} — {formatCurrency(loan.remaining_balance)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {eligibleFixedRevenues.length > 0 && (
-                <div className="space-y-sm">
-                  <Label className="gap-xs flex items-center">
-                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.revenues.form.relatedFixedRevenueLabel')}
-                  </Label>
-                  <Select
-                    value={watch('fixed_revenue_template')?.toString() || 'none'}
-                    onValueChange={(v) =>
-                      setValue(
-                        'fixed_revenue_template',
-                        v === 'none' ? null : parseInt(v)
-                      )
-                    }
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('common.fields.select_optional')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{t('common.actions.none')}</SelectItem>
-                      {eligibleFixedRevenues.map((fixedRevenue) => (
-                        <SelectItem
-                          key={fixedRevenue.id}
-                          value={fixedRevenue.id.toString()}
-                        >
-                          {fixedRevenue.description} —{' '}
-                          {formatCurrency(fixedRevenue.default_value)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-          )}
+            {eligibleFixedRevenues.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.revenues.form.relatedFixedRevenueLabel')}
+                </Label>
+                <Select
+                  value={watch('fixed_revenue_template')?.toString() || 'none'}
+                  onValueChange={(v) =>
+                    setValue(
+                      'fixed_revenue_template',
+                      v === 'none' ? null : parseInt(v)
+                    )
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.fields.select_optional')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {eligibleFixedRevenues.map((fixedRevenue) => (
+                      <SelectItem
+                        key={fixedRevenue.id}
+                        value={fixedRevenue.id.toString()}
+                      >
+                        {fixedRevenue.description} —{' '}
+                        {formatCurrency(fixedRevenue.default_value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
