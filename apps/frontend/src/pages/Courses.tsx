@@ -339,10 +339,12 @@ export default function Courses() {
           title={t('pages.courses.title')}
           icon={<GraduationCap className="text-primary h-6 w-6" />}
           actions={
-            <Can action="add"><Button onClick={openNew}>
-              <Plus className="h-4 w-4" />
-              {t('pages.courses.newBtn')}
-            </Button></Can>
+            <Can action="add">
+              <Button onClick={openNew}>
+                <Plus className="h-4 w-4" />
+                {t('pages.courses.newBtn')}
+              </Button>
+            </Can>
           }
         />
 

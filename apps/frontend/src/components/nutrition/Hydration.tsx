@@ -158,10 +158,12 @@ export function WaterLogPanel({ date }: { date: string }) {
             className="h-8"
             aria-label={t('pages.nutritionHydration.customAmount')}
           />
-          <Can action="add"><Button size="sm" type="submit" loading={addMutation.isPending}>
-            {!addMutation.isPending && <Plus className="h-3.5 w-3.5" />}
-            {t('pages.nutritionHydration.add')}
-          </Button></Can>
+          <Can action="add">
+            <Button size="sm" type="submit" loading={addMutation.isPending}>
+              {!addMutation.isPending && <Plus className="h-3.5 w-3.5" />}
+              {t('pages.nutritionHydration.add')}
+            </Button>
+          </Can>
         </form>
       </div>
 

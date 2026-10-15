@@ -567,18 +567,22 @@ export default function NutritionPage() {
           icon={TAB_HEADERS[activeTab].icon}
           actions={
             activeTab === 'meal-types' ? (
-              <Can action="add"><Button
-                disabled={mealTypes.length >= MAX_MEAL_TYPES}
-                onClick={() => setDialog({ type: 'new-meal-type' })}
-              >
-                <Plus className="h-4 w-4" />
-                {t('pages.nutritionMealTypes.newMealTypeBtn')}
-              </Button></Can>
+              <Can action="add">
+                <Button
+                  disabled={mealTypes.length >= MAX_MEAL_TYPES}
+                  onClick={() => setDialog({ type: 'new-meal-type' })}
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('pages.nutritionMealTypes.newMealTypeBtn')}
+                </Button>
+              </Can>
             ) : activeTab === 'foods' ? (
-              <Can action="add"><Button onClick={() => setDialog({ type: 'new-food' })}>
-                <Plus className="h-4 w-4" />
-                {t('pages.nutritionFoods.newFoodBtn')}
-              </Button></Can>
+              <Can action="add">
+                <Button onClick={() => setDialog({ type: 'new-food' })}>
+                  <Plus className="h-4 w-4" />
+                  {t('pages.nutritionFoods.newFoodBtn')}
+                </Button>
+              </Can>
             ) : undefined
           }
         />
@@ -1038,14 +1042,16 @@ export default function NutritionPage() {
             )}
             <DialogCloseFooter>
               {optionsMealType && (
-                <Can action="add"><Button
-                  onClick={() =>
-                    setDialog({ type: 'new-option', mealTypeId: optionsMealType.id })
-                  }
-                >
-                  <Plus className="h-4 w-4" />
-                  {t('pages.nutritionMealTypes.newOptionBtn')}
-                </Button></Can>
+                <Can action="add">
+                  <Button
+                    onClick={() =>
+                      setDialog({ type: 'new-option', mealTypeId: optionsMealType.id })
+                    }
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t('pages.nutritionMealTypes.newOptionBtn')}
+                  </Button>
+                </Can>
               )}
             </DialogCloseFooter>
           </DialogContent>
@@ -1402,25 +1408,29 @@ function MealTimeline({
                       </Can>
                     </>
                   ) : isLate ? (
-                    <Can action="add"><Button
-                      size="sm"
-                      variant="outline"
-                      className="border-warning/50 hover:bg-warning/10 h-7 text-xs"
-                      onClick={() => onRegister(mt.id)}
-                    >
-                      <Plus className="h-3 w-3" />
-                      {t('pages.nutritionLog.registerMeal')}
-                    </Button></Can>
+                    <Can action="add">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-warning/50 hover:bg-warning/10 h-7 text-xs"
+                        onClick={() => onRegister(mt.id)}
+                      >
+                        <Plus className="h-3 w-3" />
+                        {t('pages.nutritionLog.registerMeal')}
+                      </Button>
+                    </Can>
                   ) : (
-                    <Can action="add"><Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-muted-foreground hover:text-foreground h-7 text-xs"
-                      onClick={() => onRegister(mt.id)}
-                    >
-                      <Plus className="h-3 w-3" />
-                      {t('pages.nutritionLog.registerMeal')} →
-                    </Button></Can>
+                    <Can action="add">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-muted-foreground hover:text-foreground h-7 text-xs"
+                        onClick={() => onRegister(mt.id)}
+                      >
+                        <Plus className="h-3 w-3" />
+                        {t('pages.nutritionLog.registerMeal')} →
+                      </Button>
+                    </Can>
                   )}
                 </div>
               </div>

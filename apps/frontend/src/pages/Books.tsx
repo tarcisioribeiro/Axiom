@@ -597,10 +597,12 @@ export default function Books() {
               <Target className="h-4 w-4" />
               {t('pages.books.readingGoalBtn')}
             </Button>
-            <Can action="add"><Button onClick={handleCreate}>
-              <Plus className="h-4 w-4" />
-              {t('pages.books.newBtn')}
-            </Button></Can>
+            <Can action="add">
+              <Button onClick={handleCreate}>
+                <Plus className="h-4 w-4" />
+                {t('pages.books.newBtn')}
+              </Button>
+            </Can>
           </div>
         )}
         {activeTab === 'highlights' && (
@@ -615,10 +617,12 @@ export default function Books() {
                 {t('pages.highlights.exportBtn')}
               </Button>
             </Can>
-            <Can action="add"><Button onClick={() => setIsHighlightCreateOpen(true)}>
-              <Plus className="h-4 w-4" />
-              {t('pages.highlights.newBtn')}
-            </Button></Can>
+            <Can action="add">
+              <Button onClick={() => setIsHighlightCreateOpen(true)}>
+                <Plus className="h-4 w-4" />
+                {t('pages.highlights.newBtn')}
+              </Button>
+            </Can>
           </div>
         )}
       </PageHeader>

@@ -421,17 +421,21 @@ export default function RoutineTasks({
 
   const header = (
     <PageHeader title={t('pages.routineTasks.title')} icon={<CheckSquare />}>
-      <Can action="add"><Button
-        onClick={
-          activeTab === 'tasks' ? handleCreate : () => focusBlocksRef.current?.create()
-        }
-        className="gap-sm"
-      >
-        <Plus className="h-4 w-4" />
-        {activeTab === 'tasks'
-          ? t('pages.routineTasks.newBtn')
-          : t('pages.routineTasks.focusBlocks.newBlock')}
-      </Button></Can>
+      <Can action="add">
+        <Button
+          onClick={
+            activeTab === 'tasks'
+              ? handleCreate
+              : () => focusBlocksRef.current?.create()
+          }
+          className="gap-sm"
+        >
+          <Plus className="h-4 w-4" />
+          {activeTab === 'tasks'
+            ? t('pages.routineTasks.newBtn')
+            : t('pages.routineTasks.focusBlocks.newBlock')}
+        </Button>
+      </Can>
     </PageHeader>
   );
 

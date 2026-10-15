@@ -916,20 +916,26 @@ export default function WorkoutPage() {
           icon={TAB_HEADERS[activeTab].icon}
           actions={
             activeTab === 'sessions' ? (
-              <Can action="add"><Button onClick={() => setDialog({ type: 'new-session' })}>
-                <Plus className="h-4 w-4" />
-                {t('pages.workoutSessions.newSessionBtn')}
-              </Button></Can>
+              <Can action="add">
+                <Button onClick={() => setDialog({ type: 'new-session' })}>
+                  <Plus className="h-4 w-4" />
+                  {t('pages.workoutSessions.newSessionBtn')}
+                </Button>
+              </Can>
             ) : activeTab === 'plans' ? (
-              <Can action="add"><Button onClick={() => setDialog({ type: 'new-plan' })}>
-                <Plus className="h-4 w-4" />
-                {t('pages.workoutPlans.newPlanBtn')}
-              </Button></Can>
+              <Can action="add">
+                <Button onClick={() => setDialog({ type: 'new-plan' })}>
+                  <Plus className="h-4 w-4" />
+                  {t('pages.workoutPlans.newPlanBtn')}
+                </Button>
+              </Can>
             ) : activeTab === 'exercises' ? (
-              <Can action="add"><Button onClick={() => setDialog({ type: 'new-catalog-exercise' })}>
-                <Plus className="h-4 w-4" />
-                {t('pages.exercises.newBtn')}
-              </Button></Can>
+              <Can action="add">
+                <Button onClick={() => setDialog({ type: 'new-catalog-exercise' })}>
+                  <Plus className="h-4 w-4" />
+                  {t('pages.exercises.newBtn')}
+                </Button>
+              </Can>
             ) : undefined
           }
         />
@@ -1415,14 +1421,16 @@ export default function WorkoutPage() {
                   />
                 </div>
                 <DialogCloseFooter>
-                  <Can action="add"><Button
-                    onClick={() =>
-                      setDialog({ type: 'new-day', planId: viewedPlan.id })
-                    }
-                  >
-                    <Plus className="h-4 w-4" />
-                    {t('pages.workoutPlans.newDayBtn')}
-                  </Button></Can>
+                  <Can action="add">
+                    <Button
+                      onClick={() =>
+                        setDialog({ type: 'new-day', planId: viewedPlan.id })
+                      }
+                    >
+                      <Plus className="h-4 w-4" />
+                      {t('pages.workoutPlans.newDayBtn')}
+                    </Button>
+                  </Can>
                 </DialogCloseFooter>
               </>
             )}
@@ -1497,12 +1505,16 @@ export default function WorkoutPage() {
                   </div>
                 </div>
                 <DialogCloseFooter>
-                  <Can action="add"><Button
-                    onClick={() => setDialog({ type: 'add-exercise', day: viewedDay })}
-                  >
-                    <Plus className="h-4 w-4" />
-                    {t('pages.workoutPlans.addExerciseBtn')}
-                  </Button></Can>
+                  <Can action="add">
+                    <Button
+                      onClick={() =>
+                        setDialog({ type: 'add-exercise', day: viewedDay })
+                      }
+                    >
+                      <Plus className="h-4 w-4" />
+                      {t('pages.workoutPlans.addExerciseBtn')}
+                    </Button>
+                  </Can>
                 </DialogCloseFooter>
               </>
             )}

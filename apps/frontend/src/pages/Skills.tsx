@@ -388,15 +388,17 @@ export default function Skills() {
                   { value: 'radar', label: t('pages.skills.viewRadar'), icon: Radar },
                 ]}
               />
-              <Can action="add"><Button
-                onClick={() => {
-                  setEditingSkill(null);
-                  setFormOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4" />
-                {t('pages.skills.newBtn')}
-              </Button></Can>
+              <Can action="add">
+                <Button
+                  onClick={() => {
+                    setEditingSkill(null);
+                    setFormOpen(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('pages.skills.newBtn')}
+                </Button>
+              </Can>
             </div>
           }
         />

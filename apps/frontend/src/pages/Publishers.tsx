@@ -312,10 +312,12 @@ export default function Publishers() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.publishers.title')} icon={<Building2 />}>
-        <Can action="add"><Button onClick={handleCreate}>
-          <Plus className="h-4 w-4" />
-          {t('pages.publishers.newBtn')}
-        </Button></Can>
+        <Can action="add">
+          <Button onClick={handleCreate}>
+            <Plus className="h-4 w-4" />
+            {t('pages.publishers.newBtn')}
+          </Button>
+        </Can>
       </PageHeader>
 
       <FilterBar

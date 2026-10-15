@@ -329,10 +329,12 @@ export default function Authors() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.authors.title')} icon={<UserPen />}>
-        <Can action="add"><Button onClick={handleCreate}>
-          <Plus className="h-4 w-4" />
-          {t('pages.authors.newBtn')}
-        </Button></Can>
+        <Can action="add">
+          <Button onClick={handleCreate}>
+            <Plus className="h-4 w-4" />
+            {t('pages.authors.newBtn')}
+          </Button>
+        </Can>
       </PageHeader>
 
       <FilterBar

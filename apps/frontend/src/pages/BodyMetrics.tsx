@@ -463,10 +463,12 @@ export default function BodyMetrics() {
                   {t('pages.bodyMetrics.recalcBtn')}
                 </Button>
               )}
-              <Can action="add"><Button className="gap-sm" onClick={openCreate}>
-                <Plus className="h-4 w-4" />
-                {t('pages.bodyMetrics.newBtn')}
-              </Button></Can>
+              <Can action="add">
+                <Button className="gap-sm" onClick={openCreate}>
+                  <Plus className="h-4 w-4" />
+                  {t('pages.bodyMetrics.newBtn')}
+                </Button>
+              </Can>
             </div>
           }
         />
