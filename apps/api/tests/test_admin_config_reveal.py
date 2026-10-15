@@ -27,3 +27,8 @@ class SystemConfigRevealTest(APITestCase):
         user = User.objects.create_user("usr", "u@u.com", "pw")
         self.client.force_authenticate(user)
         self.assertEqual(self.client.get(self.url).status_code, 403)
+
+    def test_staff_is_forbidden(self) -> None:
+        staff = User.objects.create_user("stf", "s@s.com", "pw", is_staff=True)
+        self.client.force_authenticate(staff)
+        self.assertEqual(self.client.get(self.url).status_code, 403)

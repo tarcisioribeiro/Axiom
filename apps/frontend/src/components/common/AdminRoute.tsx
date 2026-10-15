@@ -1,6 +1,7 @@
 import { Loader2 } from 'lucide-react';
-import { Navigate } from 'react-router';
+import { Navigate, useLocation } from 'react-router';
 
+import { PERMISSIONS_PATH } from '@/config/nav-config';
 import { useAuthStore } from '@/stores/auth-store';
 
 interface AdminRouteProps {
@@ -8,7 +9,8 @@ interface AdminRouteProps {
 }
 
 export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
-  const { isAuthenticated, isInitializing, isAdmin } = useAuthStore();
+  const { isAuthenticated, isInitializing, isAdmin, user } = useAuthStore();
+  const { pathname } = useLocation();
 
   if (isInitializing) {
     return (
@@ -19,6 +21,12 @@ export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   }
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  // Staff só entra no painel de permissões; o resto do /admin é do superuser
+  if (!isAdmin && user?.is_staff) {
+    if (!pathname.startsWith(PERMISSIONS_PATH))
+      return <Navigate to={PERMISSIONS_PATH} replace />;
+    return <>{children}</>;
+  }
   if (!isAdmin) return <Navigate to="/unauthorized" replace />;
 
   return <>{children}</>;

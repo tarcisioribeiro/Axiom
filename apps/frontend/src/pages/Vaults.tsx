@@ -4,6 +4,7 @@ import { Building2, Plus, Search, Vault, Wallet, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -156,14 +157,18 @@ export default function Vaults() {
     <PageContainer>
       <PageHeader title={t('pages.vaults.title')} icon={<Vault />}>
         <div className="gap-sm flex items-center">
-          <Button variant="outline" onClick={() => setIsGenerateOpen(true)}>
-            <Zap className="h-4 w-4" />
-            {t('pages.vaults.recurringContributions.generateBtn')}
-          </Button>
-          <Button onClick={handleCreate}>
-            <Plus className="h-4 w-4" />
-            {t('pages.vaults.newBtn')}
-          </Button>
+          <Can action="generate_contributions">
+            <Button variant="outline" onClick={() => setIsGenerateOpen(true)}>
+              <Zap className="h-4 w-4" />
+              {t('pages.vaults.recurringContributions.generateBtn')}
+            </Button>
+          </Can>
+          <Can action="add">
+            <Button onClick={handleCreate}>
+              <Plus className="h-4 w-4" />
+              {t('pages.vaults.newBtn')}
+            </Button>
+          </Can>
         </div>
       </PageHeader>
 

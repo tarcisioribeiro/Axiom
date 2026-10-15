@@ -36,6 +36,8 @@ Axiom/
 
 **Permissions**: `GlobalDefaultPermission` (`app/permissions.py`) auto-derives model perms from HTTP method (GET→view, POST→add, PUT/PATCH→change, DELETE→delete).
 
+**Screen access** (`admin_panel/screens.py`): common users only reach module routes (finance, planning, security, library) granted per screen/action in `UserScreenAccess`; enforced by `ScreenAccessMiddleware` (staff/superuser bypass). Every new route under those prefixes must be added to a screen's `routes` — `tests/test_screen_access.py` fails otherwise. New users get `ScreenDefault`.
+
 **Soft Delete**: filter `is_deleted=False` in querysets.
 
 **Signals**: accounts, credit_cards, loans, payables, receivables, personal_planning, transfers — registered via `apps.py:ready()`.
@@ -46,7 +48,7 @@ Axiom/
 
 **Desktop theme sync**: `ThemePreference` (one per user) updated via `PUT /api/v1/theme-sync/` (`Authorization: ThemeSync <token>`, no JWT). Token issued with `manage.py issue_theme_sync_token` or `POST /api/v1/me/theme/sync-token/` (authenticated; used by the dotfiles repo's `setup-env.sh`). Web app reads via `GET /api/v1/me/theme/` in `hooks/use-desktop-theme-sync.ts` (applies when different from `localStorage.desktopThemeSynced`).
 
-**Agents / LLM** (`apps/api/agents/`): Six domain agents selected by `core/router.py`. Endpoints: `/api/v1/agents/` (ask/, stream/, history/, sessions/, status/). **Rule**: `providers/` is the **only** place in `agents/` allowed to import models from other apps — tools, domain agents, and views consume data through it. See `documentation/architecture/agents-llm-boundary.md`.
+**Agents / LLM** (`apps/api/agents/`): Six domain agents selected by `core/router.py`. Endpoints: `/api/v1/agents/` (ask/, stream/, history/, sessions/, status/). **Rule**: `providers/` is the **only** place in `agents/` allowed to import models from other apps — tools, domain agents, and views consume data through it. Provider functions taking `user` must be decorated with `@requires_screen(...)` (`providers/access.py`) so agents respect screen access. See `documentation/architecture/agents-llm-boundary.md`.
 
 **Async Tasks**: Worker `axiom-worker`, beat `axiom-queue` (`DatabaseScheduler`). Tests: `CELERY_TASK_ALWAYS_EAGER=True`.
 

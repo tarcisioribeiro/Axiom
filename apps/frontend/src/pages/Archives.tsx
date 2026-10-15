@@ -48,6 +48,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { ARCHIVE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatFileSize } from '@/lib/formatters';
 import { cn, copyToClipboard } from '@/lib/utils';
@@ -77,6 +78,7 @@ const ARCHIVE_CATEGORY_KEYS = [
 const ARCHIVE_TYPE_KEYS = ['text', 'pdf', 'image', 'document', 'other'] as const;
 
 function ArchivesContent() {
+  const { can } = useCurrentScreen();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -337,10 +339,12 @@ function ArchivesContent() {
     <>
       <PageContainer>
         <PageHeader title={t('pages.archives.title')} icon={<ArchiveIcon />}>
-          <Button onClick={handleCreate} className="gap-sm">
-            <Plus className="h-4 w-4" />
-            {t('pages.archives.newBtn')}
-          </Button>
+          {can('add') && (
+            <Button onClick={handleCreate} className="gap-sm">
+              <Plus className="h-4 w-4" />
+              {t('pages.archives.newBtn')}
+            </Button>
+          )}
         </PageHeader>
 
         <FilterBar
@@ -501,6 +505,7 @@ function ArchivesContent() {
                           : t('pages.archives.downloadFile'),
                         onClick: () => void handleDownload(arc),
                         color: isText ? ('preview' as const) : ('download' as const),
+                        action: 'reveal',
                       },
                       ...(arc.archive_type === 'image' || arc.archive_type === 'pdf'
                         ? [
@@ -511,6 +516,7 @@ function ArchivesContent() {
                               }),
                               onClick: () => void handlePreview(arc),
                               color: 'preview' as const,
+                              action: 'reveal',
                             },
                           ]
                         : []),

@@ -8,6 +8,8 @@ class AdminPanelConfig(AppConfig):
     def ready(self) -> None:
         from django.db.models.signals import post_migrate
 
+        import admin_panel.signals  # noqa: F401
+
         post_migrate.connect(_populate_defaults, sender=self)
 
 

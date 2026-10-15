@@ -16,9 +16,8 @@ const Checkbox = React.forwardRef<
     )}
     {...props}
   >
-    <CheckboxPrimitive.Indicator
-      className={cn('flex items-center justify-center text-current')}
-    >
+    {/* Presence do Radix mantém o ✓ montado durante o pop-out ao desmarcar */}
+    <CheckboxPrimitive.Indicator className="data-[state=checked]:animate-pop-in data-[state=unchecked]:animate-pop-out flex items-center justify-center text-current">
       <Check className="h-4 w-4" />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>

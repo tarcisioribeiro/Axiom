@@ -13,7 +13,6 @@ import {
   Star,
   UtensilsCrossed,
   BarChart3,
-  Bell,
   Calendar,
   CalendarCheck,
   CalendarClock,
@@ -26,15 +25,12 @@ import {
   Landmark,
   LayoutList,
   Receipt,
-  ScrollText,
   Shield,
-  ShieldCheck,
   Tag,
   TrendingDown,
   TrendingUp,
   Trophy,
   UserPen,
-  Webhook,
   Zap,
 } from 'lucide-react';
 import { useMemo } from 'react';
@@ -118,29 +114,12 @@ interface ExtraRoute {
 }
 
 const extraRoutes: Record<string, ExtraRoute> = {
-  '/webhooks': { labelKey: 'webhooks.title', icon: Webhook, moduleId: 'finance' },
   '/vaults/simulator': {
     labelKey: 'pages.vaultSimulator.title',
     icon: TrendingUp,
     moduleId: 'finance',
   },
-  '/security/activity-logs': {
-    labelKey: 'pages.activityLogs.title',
-    icon: ScrollText,
-    moduleId: 'security',
-  },
-  '/security/health': {
-    labelKey: 'pages.vaultHealth.title',
-    icon: ShieldCheck,
-    moduleId: 'security',
-  },
   '/settings/profile': { labelKey: 'breadcrumb.profile', icon: UserPen },
-  '/settings/permissions': { labelKey: 'pages.permissions.title', icon: Shield },
-  '/settings/notifications': {
-    labelKey: 'pages.notificationPreferences.title',
-    icon: Bell,
-  },
-  '/settings/two-factor': { labelKey: 'pages.twoFactor.title', icon: Shield },
   // Detalhe de conciliação (/bank-reconciliation/:importId) — casada por
   // prefixo abaixo, já que o id na URL impede um match exato.
   '/bank-reconciliation': {

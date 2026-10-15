@@ -3,6 +3,10 @@ import type {
   AdminLogsResponse,
   HealthResponse,
   IntegrationsResponse,
+  PermissionUser,
+  ScreenCatalogModule,
+  ScreenGrants,
+  StaffUser,
   SystemConfig,
 } from '@/types';
 
@@ -51,6 +55,69 @@ class AdminService {
     return apiClient.post<{ message: string }>(API_CONFIG.ENDPOINTS.ADMIN_EMAIL_TEST, {
       to_email: toEmail,
     });
+  }
+
+  async getStaff(): Promise<StaffUser[]> {
+    return apiClient.get<StaffUser[]>(API_CONFIG.ENDPOINTS.ADMIN_STAFF);
+  }
+
+  async createStaff(data: {
+    username: string;
+    password: string;
+    name: string;
+    document: string;
+    phone: string;
+    email: string;
+  }): Promise<unknown> {
+    return apiClient.post(API_CONFIG.ENDPOINTS.ADMIN_STAFF, data);
+  }
+
+  async setStaffActive(id: number, isActive: boolean): Promise<StaffUser> {
+    return apiClient.patch<StaffUser>(API_CONFIG.ENDPOINTS.ADMIN_STAFF_DETAIL(id), {
+      is_active: isActive,
+    });
+  }
+
+  async getScreenCatalog(): Promise<ScreenCatalogModule[]> {
+    return apiClient.get<ScreenCatalogModule[]>(
+      API_CONFIG.ENDPOINTS.ADMIN_PERMISSIONS_SCREENS
+    );
+  }
+
+  async getPermissionUsers(q?: string): Promise<PermissionUser[]> {
+    return apiClient.get<PermissionUser[]>(
+      API_CONFIG.ENDPOINTS.ADMIN_PERMISSIONS_USERS,
+      {
+        q: q || undefined,
+      }
+    );
+  }
+
+  async getUserScreens(
+    id: number
+  ): Promise<PermissionUser & { screens: ScreenGrants }> {
+    return apiClient.get(API_CONFIG.ENDPOINTS.ADMIN_PERMISSIONS_USER(id));
+  }
+
+  async saveUserScreens(id: number, screens: ScreenGrants): Promise<unknown> {
+    return apiClient.put(API_CONFIG.ENDPOINTS.ADMIN_PERMISSIONS_USER(id), { screens });
+  }
+
+  async setUserActive(id: number, isActive: boolean): Promise<PermissionUser> {
+    return apiClient.patch<PermissionUser>(
+      API_CONFIG.ENDPOINTS.ADMIN_PERMISSIONS_USER(id),
+      { is_active: isActive }
+    );
+  }
+
+  async getScreenDefaults(): Promise<{ screens: ScreenGrants }> {
+    return apiClient.get<{ screens: ScreenGrants }>(
+      API_CONFIG.ENDPOINTS.ADMIN_PERMISSIONS_DEFAULTS
+    );
+  }
+
+  async saveScreenDefaults(screens: ScreenGrants): Promise<unknown> {
+    return apiClient.put(API_CONFIG.ENDPOINTS.ADMIN_PERMISSIONS_DEFAULTS, { screens });
   }
 
   async getAgentsStatus(): Promise<Record<string, unknown>> {

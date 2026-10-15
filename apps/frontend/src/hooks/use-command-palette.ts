@@ -9,7 +9,9 @@ import {
   type Command,
   type CommandSection,
 } from '@/config/commands';
+import { useScreenAccess } from '@/hooks/use-screen-access';
 import { useTheme } from '@/hooks/use-theme';
+import { screenForPath } from '@/lib/screen-access';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCommandPaletteStore } from '@/stores/command-palette-store';
 
@@ -67,9 +69,11 @@ export function useCommandPalette(): UseCommandPaletteReturn {
   const { isDark, toggle: toggleTheme } = useTheme();
 
   // Obtém todos os comandos com ações dinâmicas
+  // Comando que leva a uma tela sem acesso não aparece
+  const { can } = useScreenAccess();
   const allCommands = getAllCommands(logout, toggleTheme, isDark, (id) =>
     t(`layout.commandPalette.commands.${id}`)
-  );
+  ).filter((cmd) => !cmd.href || can(screenForPath(cmd.href)));
 
   // Filtra e agrupa por seção; a lista plana segue a ordem exibida, para o
   // índice selecionado (↑/↓/Enter) apontar para o item destacado.

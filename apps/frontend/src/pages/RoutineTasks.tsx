@@ -19,6 +19,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
+import { Can } from '@/components/common/Can';
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -389,24 +390,28 @@ export default function RoutineTasks({
       >
         <BarChart2 className="h-4 w-4" aria-hidden="true" />
       </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => handleEdit(task)}
-        aria-label={t('common.actions.edit')}
-        title={t('common.actions.edit')}
-      >
-        <Edit className="h-4 w-4" aria-hidden="true" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => handleDelete(task.id)}
-        aria-label={t('common.actions.delete')}
-        title={t('common.actions.delete')}
-      >
-        <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
-      </Button>
+      <Can action="change">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleEdit(task)}
+          aria-label={t('common.actions.edit')}
+          title={t('common.actions.edit')}
+        >
+          <Edit className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </Can>
+      <Can action="delete">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleDelete(task.id)}
+          aria-label={t('common.actions.delete')}
+          title={t('common.actions.delete')}
+        >
+          <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
+        </Button>
+      </Can>
     </div>
   );
 
@@ -416,7 +421,7 @@ export default function RoutineTasks({
 
   const header = (
     <PageHeader title={t('pages.routineTasks.title')} icon={<CheckSquare />}>
-      <Button
+      <Can action="add"><Button
         onClick={
           activeTab === 'tasks' ? handleCreate : () => focusBlocksRef.current?.create()
         }
@@ -426,7 +431,7 @@ export default function RoutineTasks({
         {activeTab === 'tasks'
           ? t('pages.routineTasks.newBtn')
           : t('pages.routineTasks.focusBlocks.newBlock')}
-      </Button>
+      </Button></Can>
     </PageHeader>
   );
 

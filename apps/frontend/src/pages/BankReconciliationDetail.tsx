@@ -552,6 +552,7 @@ export default function BankReconciliationDetail() {
           icon: (
             <RefreshCw className={`h-4 w-4 ${matchLoading ? 'animate-spin' : ''}`} />
           ),
+          permission: 'reconcile',
           onClick: () => {
             void handleRunMatch();
           },

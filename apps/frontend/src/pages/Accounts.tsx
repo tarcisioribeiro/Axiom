@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router';
 
 import { AccountDetailModal } from '@/components/accounts/AccountDetailModal';
 import { AccountForm } from '@/components/accounts/AccountForm';
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -284,10 +285,12 @@ export default function Accounts() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.accounts.title')} icon={<Wallet />}>
-        <Button onClick={handleCreate} className="gap-sm">
-          <Plus className="h-4 w-4" />
-          {t('pages.accounts.newBtn')}
-        </Button>
+        <Can action="add">
+          <Button onClick={handleCreate} className="gap-sm">
+            <Plus className="h-4 w-4" />
+            {t('pages.accounts.newBtn')}
+          </Button>
+        </Can>
       </PageHeader>
 
       <FilterBar
@@ -438,29 +441,33 @@ export default function Accounts() {
                         >
                           <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleEdit(account)}
-                          title={t('common.actions.edit')}
-                          aria-label={t('common.actions.edit')}
-                        >
-                          <Pencil className="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleDelete(account.id)}
-                          title={t('common.actions.delete')}
-                          aria-label={t('common.actions.delete')}
-                        >
-                          <Trash2
-                            className="text-destructive h-4 w-4"
-                            aria-hidden="true"
-                          />
-                        </Button>
+                        <Can action="change">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => handleEdit(account)}
+                            title={t('common.actions.edit')}
+                            aria-label={t('common.actions.edit')}
+                          >
+                            <Pencil className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                        </Can>
+                        <Can action="delete">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => handleDelete(account.id)}
+                            title={t('common.actions.delete')}
+                            aria-label={t('common.actions.delete')}
+                          >
+                            <Trash2
+                              className="text-destructive h-4 w-4"
+                              aria-hidden="true"
+                            />
+                          </Button>
+                        </Can>
                       </div>
                     </div>
                   </CardContent>
@@ -515,10 +522,12 @@ export default function Accounts() {
           </DialogHeader>
 
           <div className="flex justify-end">
-            <Button size="sm" onClick={() => setIsUploadOpen(true)}>
-              <FileUp className="h-4 w-4" />
-              {t('pages.accounts.importStatement')}
-            </Button>
+            <Can action="reconcile">
+              <Button size="sm" onClick={() => setIsUploadOpen(true)}>
+                <FileUp className="h-4 w-4" />
+                {t('pages.accounts.importStatement')}
+              </Button>
+            </Can>
           </div>
 
           {imports.length === 0 ? (

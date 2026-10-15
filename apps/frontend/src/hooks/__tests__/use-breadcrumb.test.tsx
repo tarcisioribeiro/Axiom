@@ -36,14 +36,22 @@ describe('useBreadcrumb', () => {
 
   it('resolve uma página secundária (fora da sidebar) via extraRoutes', () => {
     const { result } = renderHook(() => useBreadcrumb(), {
-      wrapper: wrapper('/webhooks'),
+      wrapper: wrapper('/vaults/simulator'),
     });
 
     expect(labels(result.current.breadcrumbs)).toEqual([
       'Início',
       'Controle Financeiro',
-      'Webhooks',
+      'Simulador de Cofre',
     ]);
+  });
+
+  it('resolve um item do menu principal (fora dos módulos)', () => {
+    const { result } = renderHook(() => useBreadcrumb(), {
+      wrapper: wrapper('/webhooks'),
+    });
+
+    expect(labels(result.current.breadcrumbs)).toEqual(['Início', 'Webhooks']);
   });
 
   it('casa o detalhe de conciliação bancária por prefixo, ignorando o :importId', () => {

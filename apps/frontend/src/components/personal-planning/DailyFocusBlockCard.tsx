@@ -2,6 +2,7 @@ import { CheckCircle2, Circle, Edit } from 'lucide-react';
 import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { Button } from '@/components/ui/button';
 import { getIconByName } from '@/components/ui/icon-picker';
 import { PlainButton } from '@/components/ui/plain-button';
@@ -53,15 +54,17 @@ export function DailyFocusBlockCard({
             {doneCount}/{total}
           </span>
         )}
-        <Button
-          aria-label={t('common.actions.edit')}
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          onClick={onEdit}
-        >
-          <Edit className="h-3.5 w-3.5" aria-hidden="true" />
-        </Button>
+        <Can action="change">
+          <Button
+            aria-label={t('common.actions.edit')}
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={onEdit}
+          >
+            <Edit className="h-3.5 w-3.5" aria-hidden="true" />
+          </Button>
+        </Can>
       </div>
 
       {total > 0 && (

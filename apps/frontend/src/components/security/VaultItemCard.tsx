@@ -81,6 +81,7 @@ export function VaultItemCard({
               {
                 icon: Star,
                 label: t('common.actions.favorite'),
+                action: 'change',
                 onClick: onFavorite,
                 color: 'favorite',
                 filled: isFavorite,

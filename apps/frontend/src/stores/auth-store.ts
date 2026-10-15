@@ -30,7 +30,6 @@ interface AuthState {
   loadUserData: () => Promise<void>;
   setError: (error: string | null) => void;
   hasPermission: (appName: string, action: string) => boolean;
-  hasSystemAccess: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -60,8 +59,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
-      const { permissions: permissionsResponse, is_superuser } =
-        await authService.getUserPermissions();
+      const {
+        permissions: permissionsResponse,
+        is_superuser,
+        is_staff,
+      } = await authService.getUserPermissions();
 
       if (is_superuser) {
         const adminUser = buildAdminUser(credentials.username);
@@ -80,7 +82,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       authService.savePermissions(permissionsResponse);
 
-      let user = buildMemberUser(credentials.username);
+      let user: User = { ...buildMemberUser(credentials.username), is_staff };
 
       user = await enrichUserWithMemberData(user, '[AuthStore] login:');
       authService.saveUserData(user);
@@ -116,8 +118,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await authService.verifyTwoFactor(tempToken, code);
 
-      const { permissions: permissionsResponse, is_superuser } =
-        await authService.getUserPermissions();
+      const {
+        permissions: permissionsResponse,
+        is_superuser,
+        is_staff,
+      } = await authService.getUserPermissions();
 
       if (is_superuser) {
         const adminUser = buildAdminUser('');
@@ -137,7 +142,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       authService.savePermissions(permissionsResponse);
-      let user = buildMemberUser('');
+      let user: User = { ...buildMemberUser(''), is_staff };
       user = await enrichUserWithMemberData(user, '[AuthStore] verify2FA:');
       authService.saveUserData(user);
       set({
@@ -200,6 +205,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           if (isAuthenticated && user && !user.is_superuser) {
             user = await enrichUserWithMemberData(user, '[AuthStore] loadUserData:');
+            // Papel vem do servidor: promoção/rebaixamento de staff vale sem novo login
+            try {
+              const { is_staff } = await authService.getUserPermissions();
+              user = { ...user, is_staff };
+            } catch (error) {
+              logger.log('[AuthStore] loadUserData: could not refresh role:', error);
+            }
             authService.saveUserData(user);
           }
 
@@ -247,11 +259,5 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!Array.isArray(permissions)) return false;
     const codename = `${action}_${appName}`;
     return permissions.some((perm) => perm.codename === codename);
-  },
-
-  hasSystemAccess: () => {
-    const { user } = get();
-    if (!user || !Array.isArray(user.groups)) return false;
-    return user.groups.includes('Membros');
   },
 }));

@@ -1,5 +1,6 @@
 import os
 import sys
+import tempfile
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -133,6 +134,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "authentication.middleware.JWTCookieMiddleware",  # JWT via cookies
     "app.middleware.AuditLoggingMiddleware",
+    "admin_panel.middleware.ScreenAccessMiddleware",  # acesso por tela
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "app.middleware.SecurityHeadersMiddleware",
@@ -225,6 +227,10 @@ SIMPLE_JWT = {
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
+# Testes gravam uploads fora do projeto: não dependem da permissão da pasta
+# media/ (criada pelo container como root) nem deixam arquivos nela.
+if _TESTING:
+    MEDIA_ROOT = os.path.join(tempfile.gettempdir(), "axiom-test-media")
 
 # MinIO / S3 Object Storage
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "")
@@ -312,7 +318,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API para gerenciamento financeiro pessoal",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAdminUser"],
+    "SERVE_PERMISSIONS": ["app.permissions.IsSuperuser"],
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": "/api/v1",
     "TAGS": [

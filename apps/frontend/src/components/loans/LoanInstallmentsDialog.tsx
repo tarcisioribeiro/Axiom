@@ -32,6 +32,7 @@ export function LoanInstallmentsDialog({
         if (!loan) return;
         await loanInstallmentsService.updateInstallment(loan.id, num, data);
       }}
+      recalcPermission="recalculate"
       recalculate={async (count, dryRun) => {
         if (!loan) return { installments_preview: [] };
         const res = await loanInstallmentsService.recalculateInstallments(

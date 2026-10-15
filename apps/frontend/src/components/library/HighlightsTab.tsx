@@ -3,6 +3,7 @@ import { Highlighter, Pencil, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -196,24 +197,28 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
                     </span>
                   </div>
                   <div className="gap-xs flex shrink-0">
-                    <Button
-                      aria-label={t('common.actions.edit')}
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => setEditingHighlight(h)}
-                    >
-                      <Pencil className={cn('h-4 w-4', ACTION_COLOR.edit)} />
-                    </Button>
-                    <Button
-                      aria-label={t('common.actions.delete')}
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => void handleDelete(h.id)}
-                    >
-                      <Trash2 className={cn('h-4 w-4', ACTION_COLOR.delete)} />
-                    </Button>
+                    <Can action="change">
+                      <Button
+                        aria-label={t('common.actions.edit')}
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setEditingHighlight(h)}
+                      >
+                        <Pencil className={cn('h-4 w-4', ACTION_COLOR.edit)} />
+                      </Button>
+                    </Can>
+                    <Can action="delete">
+                      <Button
+                        aria-label={t('common.actions.delete')}
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => void handleDelete(h.id)}
+                      >
+                        <Trash2 className={cn('h-4 w-4', ACTION_COLOR.delete)} />
+                      </Button>
+                    </Can>
                   </div>
                 </div>
                 <p

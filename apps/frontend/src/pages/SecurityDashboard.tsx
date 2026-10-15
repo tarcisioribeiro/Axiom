@@ -46,6 +46,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { useScreenAccess } from '@/hooks/use-screen-access';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -156,6 +157,7 @@ function VaultAlertConfigDialog({
 }
 
 function SecurityDashboardContent() {
+  const canManageVault = useScreenAccess().can('security.vault', 'manage_vault');
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -208,24 +210,26 @@ function SecurityDashboardContent() {
     <>
       <PageContainer>
         <PageHeader title={t('pages.securityDashboard.title')} icon={<Shield />}>
-          <div className="gap-sm flex items-center">
-            <Button variant="outline" onClick={() => setIsAlertsOpen(true)}>
-              <Bell className="h-4 w-4" />
-              {t('pages.securityDashboard.alerts')}
-            </Button>
-            <Button variant="outline" onClick={() => setIsRecoveryKeyOpen(true)}>
-              <Key className="h-4 w-4" />
-              {t('userProfile.security.recoveryKey.menuBtn')}
-            </Button>
-            <Button
-              variant="outline"
-              loading={isExporting}
-              onClick={() => void handleExport()}
-            >
-              {!isExporting && <Download className="h-4 w-4" />}
-              {t('pages.securityDashboard.exportVault')}
-            </Button>
-          </div>
+          {canManageVault && (
+            <div className="gap-sm flex items-center">
+              <Button variant="outline" onClick={() => setIsAlertsOpen(true)}>
+                <Bell className="h-4 w-4" />
+                {t('pages.securityDashboard.alerts')}
+              </Button>
+              <Button variant="outline" onClick={() => setIsRecoveryKeyOpen(true)}>
+                <Key className="h-4 w-4" />
+                {t('userProfile.security.recoveryKey.menuBtn')}
+              </Button>
+              <Button
+                variant="outline"
+                loading={isExporting}
+                onClick={() => void handleExport()}
+              >
+                {!isExporting && <Download className="h-4 w-4" />}
+                {t('pages.securityDashboard.exportVault')}
+              </Button>
+            </div>
+          )}
         </PageHeader>
 
         {/* Itens do Cofre */}

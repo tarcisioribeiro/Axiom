@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { PlainButton } from '@/components/ui/plain-button';
 import { useAgentStream } from '@/hooks/use-agent-stream';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useScreenAccess } from '@/hooks/use-screen-access';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
 import { cn } from '@/lib/utils';
@@ -113,6 +114,13 @@ function getAgentBadgeClass(name: string | null): string {
 }
 
 const AGENT_KEYS: AgentName[] = ['personal', 'financial', 'security', 'intellect'];
+/** Módulo de cada agente: sem nenhuma tela liberada no módulo, o agente some. */
+const AGENT_MODULE: Record<AgentName, string> = {
+  personal: 'planning',
+  financial: 'finance',
+  security: 'security',
+  intellect: 'intellect',
+};
 
 const AGENT_ICONS: Record<AgentName, React.ElementType> = {
   personal: Brain,
@@ -407,6 +415,7 @@ function AgentSelector({
   onSelect: (key: AgentName) => void;
 }) {
   const { t } = useTranslation();
+  const { canModule } = useScreenAccess();
 
   return (
     <motion.div
@@ -424,7 +433,7 @@ function AgentSelector({
       </div>
 
       <div className="grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
-        {AGENT_KEYS.map((key) => (
+        {AGENT_KEYS.filter((key) => canModule(AGENT_MODULE[key])).map((key) => (
           <AgentSelectorCard
             key={key}
             agentKey={key}

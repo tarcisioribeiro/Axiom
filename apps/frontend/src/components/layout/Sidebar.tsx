@@ -8,6 +8,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   Settings,
+  ShieldCheck,
   LogOut,
 } from 'lucide-react';
 import { useEffect, useReducer, useRef } from 'react';
@@ -26,15 +27,19 @@ import { Tooltip } from '@/components/ui/tooltip';
 import {
   navItems,
   navModules,
+  filterNavModules,
   getAllModuleItems,
   isPathActive,
   type NavModule,
   type NavSubItem,
 } from '@/config/nav-config';
+import { PERMISSIONS_PATH } from '@/config/nav-config';
 import { prefetchRoute } from '@/config/route-prefetch';
+import { useScreenAccess } from '@/hooks/use-screen-access';
 import { useSidebar, useIsMobile } from '@/hooks/use-sidebar';
 import { useThemeAssets } from '@/hooks/use-theme-assets';
 import { APP_ENV, APP_VERSION, IS_PRODUCTION } from '@/lib/app-info';
+import { screenForPath } from '@/lib/screen-access';
 import { cn } from '@/lib/utils';
 import { libraryDashboardService } from '@/services/library-dashboard-service';
 import { useAuthStore } from '@/stores/auth-store';
@@ -156,12 +161,19 @@ export const Sidebar = () => {
     subModule: null,
   });
 
+  const { can } = useScreenAccess();
   const { data: streakData } = useQuery({
     queryKey: ['library', 'streak'],
     queryFn: () => libraryDashboardService.getStreak(),
+    // Selo do módulo Intelecto: só para quem tem tela que usa a sequência
+    enabled: can('intellect.dashboard') || can('intellect.today'),
     staleTime: 30_000,
     retry: false,
   });
+
+  const visibleModules = filterNavModules(navModules, (item) =>
+    can(screenForPath(item.href))
+  );
 
   const filteredNavItems = navItems.filter(
     (item) =>
@@ -415,7 +427,7 @@ export const Sidebar = () => {
         <NavLink key={item.href} item={item} isCollapsed={true} />
       ))}
       <div className="my-xs border-border/40 w-8 border-t" />
-      {navModules.map((module) => renderModule(module))}
+      {visibleModules.map((module) => renderModule(module))}
     </div>
   );
 
@@ -480,7 +492,7 @@ export const Sidebar = () => {
 
             <div className="my-sm border-border/40 border-t" />
 
-            {navModules.map((module) => renderModule(module))}
+            {visibleModules.map((module) => renderModule(module))}
           </div>
         )}
       </nav>
@@ -531,6 +543,15 @@ export const Sidebar = () => {
                   <Settings className="h-4 w-4" aria-hidden="true" />
                   {t('layout.userSettings')}
                 </DropdownMenuItem>
+                {user.is_staff && (
+                  <DropdownMenuItem
+                    onClick={() => void navigate(PERMISSIONS_PATH)}
+                    className="gap-sm"
+                  >
+                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                    {t('layout.permissionsPanel')}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={logout}

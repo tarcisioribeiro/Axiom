@@ -27,6 +27,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { NumberStepper } from '@/components/ui/number-stepper';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -61,6 +62,8 @@ interface Props {
     count: number,
     dryRun: boolean
   ) => Promise<{ installments_preview: RecalcPreviewRow[] }>;
+  /** Ação da tela que libera o recálculo (Empréstimos: recalculate; Contas a Pagar: renegotiate). */
+  recalcPermission: string;
   onChanged: () => void;
   /** Conteúdo extra exibido acima da tabela (ex.: ações da dívida). */
   extra?: ReactNode;
@@ -77,6 +80,7 @@ export function InstallmentsPlanDialog({
   onClose,
   saveInstallment,
   recalculate,
+  recalcPermission,
   onChanged,
   extra,
 }: Props) {
@@ -85,6 +89,7 @@ export function InstallmentsPlanDialog({
   const [isEditing, setIsEditing] = useState(false);
   const [drafts, setDrafts] = useState<Record<number, Draft>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const { can } = useCurrentScreen();
   const [recalcCount, setRecalcCount] = useState('');
   const [recalcPreview, setRecalcPreview] = useState<RecalcPreviewRow[] | null>(null);
   const [isRecalculating, setIsRecalculating] = useState(false);
@@ -269,7 +274,7 @@ export function InstallmentsPlanDialog({
               </table>
             </div>
 
-            {isEditing && (
+            {isEditing && can(recalcPermission) && (
               <div className="space-y-sm pt-md border-t">
                 <div className="space-y-xs">
                   <Label className="gap-xs flex items-center">
@@ -351,7 +356,8 @@ export function InstallmentsPlanDialog({
                   </Button>
                 </>
               ) : (
-                canEdit && (
+                canEdit &&
+                can('change') && (
                   <Button variant="outline" onClick={() => setIsEditing(true)}>
                     <Pencil className="h-4 w-4" />
                     {tr('editPlan')}

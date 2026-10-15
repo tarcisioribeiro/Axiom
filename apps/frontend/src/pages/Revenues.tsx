@@ -14,6 +14,7 @@ import {
 import { type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { DataTable } from '@/components/common/DataTable';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { ExportModal } from '@/components/common/ExportModal';
@@ -101,18 +102,22 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
     <Wrapper>
       <PageHeader title={t('pages.revenues.title')} icon={<TrendingUp />}>
         <div className="gap-sm flex items-center">
-          <Button
-            variant="outline"
-            onClick={() => setIsExportModalOpen(true)}
-            className="gap-sm"
-          >
-            <Download className="h-4 w-4" />
-            {t('common.actions.export')}
-          </Button>
-          <Button onClick={handleCreate} className="gap-sm">
-            <Plus className="h-4 w-4" />
-            {t('pages.revenues.newBtn')}
-          </Button>
+          <Can action="export">
+            <Button
+              variant="outline"
+              onClick={() => setIsExportModalOpen(true)}
+              className="gap-sm"
+            >
+              <Download className="h-4 w-4" />
+              {t('common.actions.export')}
+            </Button>
+          </Can>
+          <Can action="add">
+            <Button onClick={handleCreate} className="gap-sm">
+              <Plus className="h-4 w-4" />
+              {t('pages.revenues.newBtn')}
+            </Button>
+          </Can>
         </div>
       </PageHeader>
 
@@ -275,22 +280,26 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
                   memberName={getMemberDisplayName(revenue.member_name, user)}
                 />
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleEdit(revenue)}
-                aria-label={t('common.actions.edit')}
-              >
-                <Pencil className="h-4 w-4" aria-hidden="true" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDelete(revenue.id)}
-                aria-label={t('common.actions.delete')}
-              >
-                <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
-              </Button>
+              <Can action="change">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleEdit(revenue)}
+                  aria-label={t('common.actions.edit')}
+                >
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </Can>
+              <Can action="delete">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDelete(revenue.id)}
+                  aria-label={t('common.actions.delete')}
+                >
+                  <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
+                </Button>
+              </Can>
             </div>
           </div>
         )}
@@ -302,24 +311,28 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
                 memberName={getMemberDisplayName(revenue.member_name, user)}
               />
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleEdit(revenue)}
-              aria-label={t('common.actions.edit')}
-              title={t('common.actions.edit')}
-            >
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleDelete(revenue.id)}
-              aria-label={t('common.actions.delete')}
-              title={t('common.actions.delete')}
-            >
-              <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
-            </Button>
+            <Can action="change">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEdit(revenue)}
+                aria-label={t('common.actions.edit')}
+                title={t('common.actions.edit')}
+              >
+                <Pencil className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </Can>
+            <Can action="delete">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDelete(revenue.id)}
+                aria-label={t('common.actions.delete')}
+                title={t('common.actions.delete')}
+              >
+                <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
+              </Button>
+            </Can>
           </div>
         )}
       />

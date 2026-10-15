@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { ACTION_COLOR } from '@/lib/action-colors';
 import { formatDate, formatFileSize } from '@/lib/formatters';
 import type { Archive } from '@/types';
@@ -41,6 +42,8 @@ export function ArchiveDetailModal({
   onClose,
 }: Props) {
   const { t } = useTranslation();
+  // Visualizar/baixar exigem a ação "reveal" da tela
+  const canReveal = useCurrentScreen().can('reveal');
   // Mantém o último arquivo para o modal sair inteiro na animação de fechamento.
   const [archive, setArchive] = useState(selected);
   if (selected && selected !== archive) setArchive(selected);
@@ -131,22 +134,26 @@ export function ArchiveDetailModal({
         )}
 
         <DialogCloseFooter>
-          <div className="gap-sm flex flex-wrap justify-end">
-            {canPreview && (
-              <Button variant="outline" onClick={() => onPreview(archive)}>
-                <Eye className={ACTION_COLOR.preview} />
-                {t('pages.archives.preview', { defaultValue: 'Pré-visualizar' })}
-              </Button>
-            )}
-            <Button variant="outline" onClick={() => onOpenContent(archive)}>
-              {isText ? (
-                <FileText className={ACTION_COLOR.preview} />
-              ) : (
-                <Download className={ACTION_COLOR.download} />
+          {canReveal && (
+            <div className="gap-sm flex flex-wrap justify-end">
+              {canPreview && (
+                <Button variant="outline" onClick={() => onPreview(archive)}>
+                  <Eye className={ACTION_COLOR.preview} />
+                  {t('pages.archives.preview', { defaultValue: 'Pré-visualizar' })}
+                </Button>
               )}
-              {isText ? t('pages.archives.viewContent') : t('common.actions.download')}
-            </Button>
-          </div>
+              <Button variant="outline" onClick={() => onOpenContent(archive)}>
+                {isText ? (
+                  <FileText className={ACTION_COLOR.preview} />
+                ) : (
+                  <Download className={ACTION_COLOR.download} />
+                )}
+                {isText
+                  ? t('pages.archives.viewContent')
+                  : t('common.actions.download')}
+              </Button>
+            </div>
+          )}
         </DialogCloseFooter>
       </DialogContent>
     </Dialog>

@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { translate } from '@/config/constants';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { ACTION_COLOR } from '@/lib/action-colors';
 import type { StoredBankAccount } from '@/types';
 
@@ -49,6 +50,7 @@ export function StoredAccountDetailModal({
   onClose,
 }: Props) {
   const { t } = useTranslation();
+  const canReveal = useCurrentScreen().can('reveal');
   const navigate = useNavigate();
   // Mantém a última conta para o modal sair inteiro na animação de fechamento.
   const [account, setAccount] = useState(selected);
@@ -152,19 +154,21 @@ export function StoredAccountDetailModal({
 
         <DialogCloseFooter>
           <div className="gap-sm flex flex-wrap justify-end">
-            <Button
-              variant="outline"
-              onClick={() => onReveal(account.id)}
-              loading={isRevealing}
-            >
-              {!isRevealing &&
-                (revealed ? (
-                  <EyeOff className={ACTION_COLOR.reveal} />
-                ) : (
-                  <Eye className={ACTION_COLOR.reveal} />
-                ))}
-              {revealed ? t('common.actions.hide') : t('common.actions.reveal')}
-            </Button>
+            {canReveal && (
+              <Button
+                variant="outline"
+                onClick={() => onReveal(account.id)}
+                loading={isRevealing}
+              >
+                {!isRevealing &&
+                  (revealed ? (
+                    <EyeOff className={ACTION_COLOR.reveal} />
+                  ) : (
+                    <Eye className={ACTION_COLOR.reveal} />
+                  ))}
+                {revealed ? t('common.actions.hide') : t('common.actions.reveal')}
+              </Button>
+            )}
           </div>
         </DialogCloseFooter>
       </DialogContent>

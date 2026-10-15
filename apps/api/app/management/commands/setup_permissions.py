@@ -77,6 +77,7 @@ class Command(BaseCommand):
             "notifications": ["notification"],
             "budgets": ["budget"],
             "monthly_planning": ["monthlyplan"],
+            "webhooks": ["webhook", "webhookdelivery"],
         }
 
         # Define the permissions: view, add, change, delete (full CRUD)

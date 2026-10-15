@@ -22,6 +22,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { BudgetPurchasesDialog } from '@/components/budgets/BudgetPurchasesDialog';
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { IconButton } from '@/components/common/IconButton';
@@ -271,10 +272,12 @@ export default function Budgets() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.budgets.title')} icon={<PiggyBank />}>
-        <Button onClick={handleCreate} className="gap-sm">
-          <Plus className="h-4 w-4" />
-          {t('pages.budgets.newBtn')}
-        </Button>
+        <Can action="add">
+          <Button onClick={handleCreate} className="gap-sm">
+            <Plus className="h-4 w-4" />
+            {t('pages.budgets.newBtn')}
+          </Button>
+        </Can>
       </PageHeader>
 
       <FilterBar
@@ -763,24 +766,28 @@ function BudgetCard({
             </IconButton>
           </Tooltip>
           <Tooltip content={t('common.actions.edit')}>
-            <IconButton
-              variant="ghost"
-              className="h-8 w-8 rounded-md"
-              aria-label={t('common.actions.edit')}
-              onClick={() => onEdit(budget)}
-            >
-              <Pencil className="h-4 w-4" />
-            </IconButton>
+            <Can action="change">
+              <IconButton
+                variant="ghost"
+                className="h-8 w-8 rounded-md"
+                aria-label={t('common.actions.edit')}
+                onClick={() => onEdit(budget)}
+              >
+                <Pencil className="h-4 w-4" />
+              </IconButton>
+            </Can>
           </Tooltip>
           <Tooltip content={t('common.actions.delete')}>
-            <IconButton
-              variant="ghost"
-              aria-label={t('common.actions.delete')}
-              className="text-destructive hover:text-destructive h-8 w-8 rounded-md"
-              onClick={() => void onDelete(budget)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </IconButton>
+            <Can action="delete">
+              <IconButton
+                variant="ghost"
+                aria-label={t('common.actions.delete')}
+                className="text-destructive hover:text-destructive h-8 w-8 rounded-md"
+                onClick={() => void onDelete(budget)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </IconButton>
+            </Can>
           </Tooltip>
         </div>
       </div>

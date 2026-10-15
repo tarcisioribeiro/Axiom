@@ -24,6 +24,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 
 const BookReader = lazy(() => import('./BookReader'));
 
+import { Can } from '@/components/common/Can';
 import { CardActions, type CardMenuAction } from '@/components/common/CardActions';
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -596,26 +597,28 @@ export default function Books() {
               <Target className="h-4 w-4" />
               {t('pages.books.readingGoalBtn')}
             </Button>
-            <Button onClick={handleCreate}>
+            <Can action="add"><Button onClick={handleCreate}>
               <Plus className="h-4 w-4" />
               {t('pages.books.newBtn')}
-            </Button>
+            </Button></Can>
           </div>
         )}
         {activeTab === 'highlights' && (
           <div className="gap-sm flex items-center">
-            <Button
-              variant="outline"
-              onClick={() => void handleExportHighlights()}
-              loading={isExportingHighlights}
-            >
-              {!isExportingHighlights && <Download className="h-4 w-4" />}
-              {t('pages.highlights.exportBtn')}
-            </Button>
-            <Button onClick={() => setIsHighlightCreateOpen(true)}>
+            <Can action="export">
+              <Button
+                variant="outline"
+                onClick={() => void handleExportHighlights()}
+                loading={isExportingHighlights}
+              >
+                {!isExportingHighlights && <Download className="h-4 w-4" />}
+                {t('pages.highlights.exportBtn')}
+              </Button>
+            </Can>
+            <Can action="add"><Button onClick={() => setIsHighlightCreateOpen(true)}>
               <Plus className="h-4 w-4" />
               {t('pages.highlights.newBtn')}
-            </Button>
+            </Button></Can>
           </div>
         )}
       </PageHeader>

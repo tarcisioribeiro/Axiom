@@ -10,6 +10,10 @@ export type {
   IntegrationsResponse,
   AdminLog,
   AdminLogsResponse,
+  StaffUser,
+  ScreenGrants,
+  ScreenCatalogModule,
+  PermissionUser,
 } from './admin';
 export type {
   AgentRole,

@@ -16,6 +16,7 @@ import { useState, useMemo, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { CardActions } from '@/components/common/CardActions';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -191,10 +192,12 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
 
   const header = (
     <PageHeader title={t('pages.payables.title')} icon={<Receipt />}>
-      <Button onClick={handleCreate} className="gap-sm">
-        <Plus className="h-4 w-4" />
-        {t('pages.payables.newBtn')}
-      </Button>
+      <Can action="add">
+        <Button onClick={handleCreate} className="gap-sm">
+          <Plus className="h-4 w-4" />
+          {t('pages.payables.newBtn')}
+        </Button>
+      </Can>
     </PageHeader>
   );
 
@@ -481,6 +484,7 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
                               {
                                 icon: CreditCard,
                                 label: t('pages.payables.payBtn'),
+                                action: 'pay',
                                 onClick: () => setPaymentPayable(payable),
                                 color: 'pay' as const,
                               },
@@ -502,12 +506,14 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
                           ? {
                               icon: List,
                               label: t('pages.payables.manageDebtBtn'),
+                              action: 'renegotiate',
                               onClick: () => void handleOpenInstallments(payable),
                               color: 'installments' as const,
                             }
                           : {
                               icon: CalendarRange,
                               label: t('pages.payables.form.createPaymentPlanBtn'),
+                              action: 'renegotiate',
                               onClick: () => setPaymentPlanPayable(payable),
                               color: 'plan' as const,
                             },

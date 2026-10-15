@@ -37,7 +37,6 @@ const EXACT: Record<string, string> = {
   '/security/archives': 'archives',
   '/security/activity-logs': 'activityLogs',
   '/security/health': 'vaultHealth',
-  '/settings/two-factor': 'twoFactor',
   '/library/dashboard': 'libraryDashboard',
   '/library/books': 'books',
   '/library/authors': 'authors',
@@ -64,8 +63,6 @@ const EXACT: Record<string, string> = {
   '/planning/emotional-wellness': 'emotionalWellness',
   '/agents': 'agents',
   '/settings/profile': 'profile',
-  '/settings/permissions': 'permissions',
-  '/settings/notifications': 'notifications',
 };
 
 const PATTERNS: [RegExp, string][] = [

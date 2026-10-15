@@ -46,7 +46,6 @@ const StoredCards = lazy(() => import('./pages/StoredCards'));
 const StoredAccounts = lazy(() => import('./pages/StoredAccounts'));
 const Archives = lazy(() => import('./pages/Archives'));
 const VaultHealthReport = lazy(() => import('./pages/VaultHealthReport'));
-const TwoFactorSetup = lazy(() => import('./pages/TwoFactorSetup'));
 
 // Library / Intellect Module
 const LibraryDashboard = lazy(() => import('./pages/LibraryDashboard'));
@@ -78,7 +77,6 @@ const Budgets = lazy(() => import('./pages/Budgets'));
 const Webhooks = lazy(() => import('./pages/Webhooks'));
 
 // Notification Preferences
-const NotificationPreferences = lazy(() => import('./pages/NotificationPreferences'));
 
 // User Profile / Settings
 const UserProfile = lazy(() => import('./pages/UserProfile'));
@@ -91,7 +89,6 @@ const VaultSimulator = lazy(() => import('./pages/VaultSimulator'));
 
 // Security extras
 const ActivityLogs = lazy(() => import('./pages/ActivityLogs'));
-const Permissions = lazy(() => import('./pages/Permissions'));
 
 // Planning extras
 const DailyReflections = lazy(() => import('./pages/DailyReflections'));
@@ -114,6 +111,8 @@ const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
 const AdminConfig = lazy(() => import('./pages/admin/AdminConfig'));
 const AdminIntegrations = lazy(() => import('./pages/admin/AdminIntegrations'));
 const AdminLogs = lazy(() => import('./pages/admin/AdminLogs'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminPermissions = lazy(() => import('./pages/admin/AdminPermissions'));
 
 const LoadingFallback = () => (
   <div className="flex h-screen items-center justify-center">
@@ -374,14 +373,6 @@ function AnimatedRoutes() {
           element={
             <PageWrapper>
               <VaultHealthReport />
-            </PageWrapper>
-          }
-        />
-        <Route
-          path="/settings/two-factor"
-          element={
-            <PageWrapper>
-              <TwoFactorSetup />
             </PageWrapper>
           }
         />
@@ -742,22 +733,6 @@ function AnimatedRoutes() {
             </PageWrapper>
           }
         />
-        <Route
-          path="/settings/permissions"
-          element={
-            <PageWrapper>
-              <Permissions />
-            </PageWrapper>
-          }
-        />
-        <Route
-          path="/settings/notifications"
-          element={
-            <PageWrapper>
-              <NotificationPreferences />
-            </PageWrapper>
-          }
-        />
       </Route>
 
       {/* Admin Panel routes — exclusivo para superusuários */}
@@ -797,6 +772,26 @@ function AnimatedRoutes() {
           element={
             <PageWrapper>
               <AdminLogs />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <PageWrapper>
+              <AdminUsers />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/admin/permissions"
+          element={<Navigate to="/admin/permissions/users" replace />}
+        />
+        <Route
+          path="/admin/permissions/:tab"
+          element={
+            <PageWrapper>
+              <AdminPermissions />
             </PageWrapper>
           }
         />

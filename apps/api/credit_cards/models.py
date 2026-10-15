@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -200,13 +202,13 @@ class CreditCardBill(BaseModel):
         verbose_name="Valor Total",
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal("0.00"),
     )
     minimum_payment = models.DecimalField(
         verbose_name="Pagamento Mínimo",
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal("0.00"),
     )
     due_date = models.DateField(
         verbose_name="Data de Vencimento", null=True, blank=True
@@ -215,7 +217,7 @@ class CreditCardBill(BaseModel):
         verbose_name="Valor Pago",
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal("0.00"),
     )
     payment_date = models.DateField(
         verbose_name="Data do Pagamento", null=True, blank=True
@@ -224,13 +226,13 @@ class CreditCardBill(BaseModel):
         verbose_name="Juros Cobrados",
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal("0.00"),
     )
     late_fee = models.DecimalField(
         verbose_name="Multa por Atraso",
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal("0.00"),
     )
     status = models.CharField(
         max_length=20,

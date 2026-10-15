@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { ACTION_COLOR, type ActionColor } from '@/lib/action-colors';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,8 @@ export interface CardMenuAction {
   disabled?: boolean;
   /** Ícone preenchido (ex.: estrela de favorito ativo). */
   filled?: boolean;
+  /** Ação da tela exigida (controle por tela); padrão `view` (só consulta). */
+  action?: string;
 }
 
 interface Props {
@@ -40,28 +43,34 @@ export function CardActions({
   onMenuPointerDown,
 }: Props) {
   const { t } = useTranslation();
+  const { can } = useCurrentScreen();
+  const visibleActions = menuActions.filter((a) => can(a.action ?? 'view'));
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7"
-        onClick={onEdit}
-        aria-label={t('common.actions.edit')}
-      >
-        <Pencil className={cn('h-4 w-4', ACTION_COLOR.edit)} aria-hidden="true" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7"
-        onClick={onDelete}
-        aria-label={t('common.actions.delete')}
-      >
-        <Trash2 className={cn('h-4 w-4', ACTION_COLOR.delete)} aria-hidden="true" />
-      </Button>
-      {menuActions.length > 0 && (
+      {can('change') && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onEdit}
+          aria-label={t('common.actions.edit')}
+        >
+          <Pencil className={cn('h-4 w-4', ACTION_COLOR.edit)} aria-hidden="true" />
+        </Button>
+      )}
+      {can('delete') && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onDelete}
+          aria-label={t('common.actions.delete')}
+        >
+          <Trash2 className={cn('h-4 w-4', ACTION_COLOR.delete)} aria-hidden="true" />
+        </Button>
+      )}
+      {visibleActions.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -77,7 +86,7 @@ export function CardActions({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" onPointerDown={onMenuPointerDown}>
-            {menuActions.map(
+            {visibleActions.map(
               ({ icon: Icon, label, onClick, color, disabled, filled }) => (
                 <DropdownMenuItem key={label} onClick={onClick} disabled={disabled}>
                   <Icon

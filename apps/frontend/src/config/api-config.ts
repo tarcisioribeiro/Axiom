@@ -40,6 +40,7 @@ export const API_CONFIG = {
     REFRESH_TOKEN: '/api/v1/authentication/token/refresh/',
     VERIFY_TOKEN: '/api/v1/authentication/token/verify/',
     REGISTER: '/api/v1/users/register/',
+    REGISTRATION_STATUS: '/api/v1/users/registration-status/',
     USER_PERMISSIONS: '/api/v1/user/permissions/',
     PASSWORD_RESET_REQUEST: '/api/v1/users/password-reset/',
     PASSWORD_RESET_CONFIRM: '/api/v1/users/password-reset/confirm/',
@@ -72,7 +73,6 @@ export const API_CONFIG = {
     MEMBERS: '/api/v1/members/',
     CURRENT_USER_MEMBER: '/api/v1/members/me/',
     MEMBER_PROFILE_PHOTO: '/api/v1/members/me/photo/',
-    AVAILABLE_PERMISSIONS: '/api/v1/permissions/available/',
 
     // Security Module
     PASSWORDS: '/api/v1/security/passwords/',
@@ -133,8 +133,6 @@ export const API_CONFIG = {
     KNOWLEDGE_GRAPH_SUGGEST_LINKS: '/api/v1/library/knowledge-graph/suggest-links/',
     KINDLE_IMPORT: '/api/v1/library/highlights/kindle-import/',
     GOODREADS_IMPORT: '/api/v1/library/goodreads-import/',
-    LIBRARY_MENTOR_PLAN: '/api/v1/library/mentor-plan/',
-    LIBRARY_MONTHLY_REPORT: '/api/v1/library/monthly-report/',
     AGENTS_CLASSIFY_CATEGORY: '/api/v1/agents/classify-category/',
     HIBP_CHECK: '/api/v1/security/hibp-check/',
 
@@ -159,8 +157,7 @@ export const API_CONFIG = {
     WORKOUT_SESSIONS: '/api/v1/personal-planning/workout-sessions/',
     WORKOUT_SESSION_EXERCISES: '/api/v1/personal-planning/workout-session-exercises/',
     WORKOUT_SESSION_SETS: '/api/v1/personal-planning/workout-session-sets/',
-    // Challenges & Body Metrics
-    CHALLENGES: '/api/v1/personal-planning/challenges/',
+    // Body Metrics
     BODY_METRICS: '/api/v1/personal-planning/body-metrics/',
     AI_ROUTINE_SUGGESTION: '/api/v1/personal-planning/ai-routine/',
     AI_WORKOUT_PLAN: '/api/v1/personal-planning/ai-workout-plan/',
@@ -230,7 +227,6 @@ export const API_CONFIG = {
     DASHBOARD_LGPD_EXPORT: '/api/v1/dashboard/lgpd-export/',
     DASHBOARD_IR_REPORT: '/api/v1/dashboard/ir-report/',
     DASHBOARD_ALERTS_STREAM: '/api/v1/dashboard/alerts/stream/',
-    DASHBOARD_AUDIT_LOG: '/api/v1/dashboard/audit-log/',
     DASHBOARD_HEALTH_SCORE: '/api/v1/dashboard/health-score/',
 
     // Fixed Revenues
@@ -308,6 +304,12 @@ export const API_CONFIG = {
     ADMIN_EMAIL_TEST: '/api/v1/admin/email/test/',
     ADMIN_AGENTS_STATUS: '/api/v1/admin/agents/status/',
     ADMIN_RESTART_ALL: '/api/v1/admin/restart/',
+    ADMIN_STAFF: '/api/v1/admin/staff/',
+    ADMIN_PERMISSIONS_SCREENS: '/api/v1/admin/permissions/screens/',
+    ADMIN_PERMISSIONS_USERS: '/api/v1/admin/permissions/users/',
+    ADMIN_PERMISSIONS_USER: (id: number) => `/api/v1/admin/permissions/users/${id}/`,
+    ADMIN_PERMISSIONS_DEFAULTS: '/api/v1/admin/permissions/defaults/',
+    ADMIN_STAFF_DETAIL: (id: number) => `/api/v1/admin/staff/${id}/`,
 
     // Webhooks
     WEBHOOKS: '/api/v1/webhooks/',

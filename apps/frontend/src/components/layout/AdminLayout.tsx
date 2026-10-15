@@ -5,13 +5,17 @@ import {
   LogOut,
   Settings,
   ScrollText,
+  Home,
   Shield,
+  ShieldCheck,
+  UserCog,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, useLocation, useOutlet } from 'react-router';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { Breadcrumb } from '@/components/layout/Breadcrumb';
+import { PERMISSIONS_PATH } from '@/config/nav-config';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -21,7 +25,15 @@ export const AdminLayout = () => {
   const outlet = useOutlet();
   const { t } = useTranslation();
 
-  const NAV_ITEMS = [
+  const isStaff = !user?.is_superuser && !!user?.is_staff;
+  const PERMISSIONS_ITEM = {
+    href: PERMISSIONS_PATH,
+    label: t('layout.adminNav.permissions'),
+    icon: ShieldCheck,
+    exact: false,
+  };
+
+  const ALL_ITEMS = [
     {
       href: '/admin',
       label: t('layout.adminNav.overview'),
@@ -46,7 +58,16 @@ export const AdminLayout = () => {
       icon: ScrollText,
       exact: false,
     },
+    {
+      href: '/admin/users',
+      label: t('layout.adminNav.users'),
+      icon: UserCog,
+      exact: false,
+    },
+    PERMISSIONS_ITEM,
   ];
+  // Staff vê só o painel de permissões
+  const NAV_ITEMS = isStaff ? [PERMISSIONS_ITEM] : ALL_ITEMS;
 
   const currentItem = NAV_ITEMS.find((n) =>
     n.exact ? location.pathname === n.href : location.pathname.startsWith(n.href)
@@ -107,9 +128,20 @@ export const AdminLayout = () => {
               <p className="text-foreground truncate text-sm font-medium">
                 {user?.username}
               </p>
-              <p className="text-muted-foreground text-xs">{t('layout.superuser')}</p>
+              <p className="text-muted-foreground text-xs">
+                {isStaff ? t('layout.staff') : t('layout.superuser')}
+              </p>
             </div>
           </div>
+          {isStaff && (
+            <NavLink
+              to="/"
+              className="py-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground mb-xs flex w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors"
+            >
+              <Home className="h-4 w-4" />
+              {t('layout.backToApp')}
+            </NavLink>
+          )}
           <button
             onClick={logout}
             className="py-sm text-destructive hover:bg-destructive/10 hover:text-destructive flex w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors"
@@ -126,7 +158,11 @@ export const AdminLayout = () => {
         <header className="border-border bg-card px-lg flex h-14 items-center border-b">
           <Breadcrumb
             items={[
-              { label: t('layout.adminPanel'), href: '/admin', icon: Shield },
+              {
+                label: t('layout.adminPanel'),
+                href: isStaff ? PERMISSIONS_PATH : '/admin',
+                icon: Shield,
+              },
               ...(currentItem
                 ? [{ label: currentItem.label, icon: currentItem.icon }]
                 : []),

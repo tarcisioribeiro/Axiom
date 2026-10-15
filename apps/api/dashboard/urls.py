@@ -5,7 +5,6 @@ from .views import (
     AccountReconciliationView,
     AlertsStreamView,
     AnomalyDetectionView,
-    AuditLogView,
     BalanceForecastView,
     CashFlowForecastView,
     CreditCardExpensesByCategoryView,
@@ -71,7 +70,6 @@ urlpatterns = [
     path("lgpd-export/", LGPDExportView.as_view(), name="lgpd-export"),
     path("ir-report/", IRReportView.as_view(), name="ir-report"),
     path("alerts/stream/", AlertsStreamView.as_view(), name="alerts-stream"),
-    path("audit-log/", AuditLogView.as_view(), name="audit-log"),
     path(
         "health-score/",
         FinancialHealthScoreView.as_view(),

@@ -3,6 +3,21 @@ from typing import Any, Optional
 from rest_framework import permissions
 
 
+class IsSuperuser(permissions.BasePermission):
+    """Restringe a superusuários. `IsAdminUser` do DRF checa só `is_staff`."""
+
+    def has_permission(self, request: Any, view: Any) -> bool:
+        return bool(request.user and request.user.is_superuser)
+
+
+class IsStaffOrSuperuser(permissions.BasePermission):
+    """Painel de permissões: staff (gerencia usuários comuns) e superuser."""
+
+    def has_permission(self, request: Any, view: Any) -> bool:
+        user = request.user
+        return bool(user and (user.is_staff or user.is_superuser))
+
+
 class GlobalDefaultPermission(permissions.BasePermission):
 
     def has_permission(self, request: Any, view: Any) -> bool:

@@ -4,6 +4,7 @@ import { Droplets, Link2, Plus, Save, Sparkles, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
 import { DecimalInput } from '@/components/ui/decimal-input';
@@ -157,10 +158,10 @@ export function WaterLogPanel({ date }: { date: string }) {
             className="h-8"
             aria-label={t('pages.nutritionHydration.customAmount')}
           />
-          <Button size="sm" type="submit" loading={addMutation.isPending}>
+          <Can action="add"><Button size="sm" type="submit" loading={addMutation.isPending}>
             {!addMutation.isPending && <Plus className="h-3.5 w-3.5" />}
             {t('pages.nutritionHydration.add')}
-          </Button>
+          </Button></Can>
         </form>
       </div>
 
@@ -185,15 +186,17 @@ export function WaterLogPanel({ date }: { date: string }) {
                   </span>
                 )}
               </span>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-destructive h-7 w-7 p-0"
-                aria-label={t('common.actions.delete')}
-                onClick={() => deleteMutation.mutate(log.id)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              <Can action="delete">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive h-7 w-7 p-0"
+                  aria-label={t('common.actions.delete')}
+                  onClick={() => deleteMutation.mutate(log.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </Can>
             </li>
           ))}
         </ul>

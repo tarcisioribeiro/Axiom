@@ -15,6 +15,7 @@ import {
 import { useState, useEffect, useMemo, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
@@ -604,58 +605,68 @@ export default function CreditCardBills({
               />
             )}
             {bill.status !== 'paid' && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleOpenPayment(bill)}
-                aria-label={t('pages.creditCardBills.payBillLabel')}
-                title={t('pages.creditCardBills.payBillLabel')}
-              >
-                <Wallet className="text-primary h-4 w-4" aria-hidden="true" />
-              </Button>
+              <Can action="pay_bill">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleOpenPayment(bill)}
+                  aria-label={t('pages.creditCardBills.payBillLabel')}
+                  title={t('pages.creditCardBills.payBillLabel')}
+                >
+                  <Wallet className="text-primary h-4 w-4" aria-hidden="true" />
+                </Button>
+              </Can>
             )}
             {bill.status !== 'paid' &&
               parseFloat(bill.paid_amount) > 0 &&
               parseFloat(bill.total_amount) - parseFloat(bill.paid_amount) > 0 && (
+                <Can action="renegotiate_bill">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleOpenRenegotiate(bill)}
+                    aria-label={t('pages.creditCardBills.renegotiateBillLabel')}
+                    title={t('pages.creditCardBills.renegotiateBillLabel')}
+                  >
+                    <RefreshCw className="text-warning h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </Can>
+              )}
+            {(bill.closed || bill.status === 'paid' || bill.status === 'closed') && (
+              <Can action="reopen_bill">
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleOpenRenegotiate(bill)}
-                  aria-label={t('pages.creditCardBills.renegotiateBillLabel')}
-                  title={t('pages.creditCardBills.renegotiateBillLabel')}
+                  onClick={() => handleReopenBill(bill)}
+                  aria-label={t('pages.creditCardBills.reopenBillLabel')}
+                  title={t('pages.creditCardBills.reopenBillLabel')}
                 >
-                  <RefreshCw className="text-warning h-4 w-4" aria-hidden="true" />
+                  <RotateCcw className="text-warning h-4 w-4" aria-hidden="true" />
                 </Button>
-              )}
-            {(bill.closed || bill.status === 'paid' || bill.status === 'closed') && (
+              </Can>
+            )}
+            <Can action="change">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => handleReopenBill(bill)}
-                aria-label={t('pages.creditCardBills.reopenBillLabel')}
-                title={t('pages.creditCardBills.reopenBillLabel')}
+                onClick={() => handleEdit(bill)}
+                aria-label={t('common.actions.edit')}
+                title={t('common.actions.edit')}
               >
-                <RotateCcw className="text-warning h-4 w-4" aria-hidden="true" />
+                <Pencil className="h-4 w-4" aria-hidden="true" />
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleEdit(bill)}
-              aria-label={t('common.actions.edit')}
-              title={t('common.actions.edit')}
-            >
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleDelete(bill.id)}
-              aria-label={t('common.actions.delete')}
-              title={t('common.actions.delete')}
-            >
-              <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
-            </Button>
+            </Can>
+            <Can action="delete">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDelete(bill.id)}
+                aria-label={t('common.actions.delete')}
+                title={t('common.actions.delete')}
+              >
+                <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
+              </Button>
+            </Can>
           </div>
         )}
       />

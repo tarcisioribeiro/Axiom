@@ -55,6 +55,10 @@ class AuthService {
    * @returns Promise com dados do usuario criado
    * @throws {Error} Se registro falhar (email/documento duplicado, etc)
    */
+  async getRegistrationStatus(): Promise<{ open: boolean }> {
+    return apiClient.get<{ open: boolean }>(API_CONFIG.ENDPOINTS.REGISTRATION_STATUS);
+  }
+
   async register(data: {
     username: string;
     password: string;
@@ -100,9 +104,18 @@ class AuthService {
    *
    * @returns Promise com lista de permissoes do usuario
    */
+  /** Ações liberadas por tela (`/me`); staff/superuser não usam. */
+  async getScreenGrants(): Promise<Record<string, string[]>> {
+    const me = await apiClient.get<{ screens?: Record<string, string[]> }>(
+      API_CONFIG.ENDPOINTS.CURRENT_USER
+    );
+    return me.screens ?? {};
+  }
+
   async getUserPermissions(): Promise<{
     permissions: Permission[];
     is_superuser: boolean;
+    is_staff?: boolean;
   }> {
     let response: {
       username: string;
@@ -136,7 +149,7 @@ class AuthService {
         'Invalid permissions format received from API:',
         response.permissions
       );
-      return { permissions: [], is_superuser: false };
+      return { permissions: [], is_superuser: false, is_staff: response.is_staff };
     }
 
     const permissions = response.permissions.map((perm: string) => {
@@ -148,7 +161,7 @@ class AuthService {
       };
     });
 
-    return { permissions, is_superuser: false };
+    return { permissions, is_superuser: false, is_staff: response.is_staff };
   }
 
   /**
@@ -400,20 +413,6 @@ class AuthService {
         password,
       }
     );
-  }
-
-  /**
-   * Verifica se o usuario tem acesso ao sistema.
-   *
-   * Usuarios devem pertencer ao grupo "Membros" para ter acesso.
-   *
-   * @returns true se o usuario esta no grupo "Membros"
-   */
-  hasSystemAccess(): boolean {
-    const user = this.getUserData();
-    if (!user || !Array.isArray(user.groups)) return false;
-
-    return user.groups.includes('Membros');
   }
 }
 

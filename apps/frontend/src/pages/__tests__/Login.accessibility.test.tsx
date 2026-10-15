@@ -13,6 +13,10 @@ const { mockAuthStore } = vi.hoisted(() => ({
   },
 }));
 
+vi.mock('@/hooks/use-registration-status', () => ({
+  useRegistrationStatus: () => ({ data: { open: true } }),
+}));
+
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: () => mockAuthStore,
 }));

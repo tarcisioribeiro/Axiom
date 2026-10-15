@@ -254,12 +254,14 @@ function GoalCard({
                 {
                   icon: Link,
                   label: t('pages.financialGoals.manageVaults'),
+                  action: 'change',
                   onClick: () => onManageVaults(goal),
                   color: 'manage-vaults',
                 },
                 {
                   icon: CheckCircle2,
                   label: t('pages.financialGoals.checkCompletion'),
+                  action: 'change',
                   onClick: () => onCheckCompletion(goal),
                   color: 'check-completion',
                   disabled: goal.is_completed,

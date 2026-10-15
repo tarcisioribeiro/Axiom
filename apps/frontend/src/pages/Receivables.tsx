@@ -14,6 +14,7 @@ import { useState, useMemo, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { CardActions } from '@/components/common/CardActions';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -214,10 +215,12 @@ export default function Receivables({
 
   const header = (
     <PageHeader title={t('pages.receivables.title')} icon={<TrendingUp />}>
-      <Button onClick={handleCreate} className="gap-sm">
-        <Plus className="h-4 w-4" />
-        {t('pages.receivables.newBtn')}
-      </Button>
+      <Can action="add">
+        <Button onClick={handleCreate} className="gap-sm">
+          <Plus className="h-4 w-4" />
+          {t('pages.receivables.newBtn')}
+        </Button>
+      </Can>
     </PageHeader>
   );
 
@@ -498,6 +501,7 @@ export default function Receivables({
                               {
                                 icon: Wallet,
                                 label: t('pages.receivables.receiveBtn'),
+                                action: 'receive',
                                 onClick: () => setReceiptReceivable(receivable),
                                 color: 'receive' as const,
                               },

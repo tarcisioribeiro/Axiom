@@ -2,6 +2,7 @@ import { Plus, Tag, Zap } from 'lucide-react';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -32,10 +33,12 @@ export default function RulesAndTagsPage() {
           title={t('pages.automationRules.title')}
           icon={<Zap />}
           actions={
-            <Button variant="outline" onClick={() => applyAllRef.current?.()}>
-              <Zap className="h-4 w-4" />
-              {t('pages.automationRules.applyAll')}
-            </Button>
+            <Can action="apply_rules">
+              <Button variant="outline" onClick={() => applyAllRef.current?.()}>
+                <Zap className="h-4 w-4" />
+                {t('pages.automationRules.applyAll')}
+              </Button>
+            </Can>
           }
           action={{
             label: t('pages.automationRules.newRule'),

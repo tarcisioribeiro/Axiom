@@ -764,7 +764,10 @@ class SuggestContinuationView(APIView):
         context_suffix = ""
         if book_id:
             try:
-                book_title = library_provider.book_title_by_id(book_id)
+                # Só livro do próprio usuário (e com a tela Livros)
+                book_title = library_provider.book_title_for_user(
+                    book_id, cast(User, request.user)
+                )
                 if book_title:
                     context_suffix = (
                         f"\n\n[Contexto: o usuário está escrevendo"

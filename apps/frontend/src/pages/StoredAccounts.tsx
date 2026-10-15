@@ -46,6 +46,7 @@ import {
 import { translate } from '@/config/constants';
 import { STORED_ACCOUNT_TYPE_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useCurrentScreen, useScreenAccess } from '@/hooks/use-screen-access';
 import { useToast } from '@/hooks/use-toast';
 import { cn, copyToClipboard } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
@@ -99,6 +100,9 @@ const EMPTY_ACCOUNTS: StoredBankAccount[] = [];
 const EMPTY_FINANCE_ACCOUNTS: Account[] = [];
 
 function StoredAccountsContent() {
+  const { can } = useCurrentScreen();
+  // Vínculo com a conta de Finanças só para quem tem a tela Contas
+  const canLinkAccounts = useScreenAccess().can('finance.accounts');
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<
@@ -119,12 +123,12 @@ function StoredAccountsContent() {
   const { t } = useTranslation();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['stored-accounts'],
+    queryKey: ['stored-accounts', canLinkAccounts],
     queryFn: async () => {
       try {
         const [accountsData, financeAccountsData, memberData] = await Promise.all([
           storedAccountsService.getAll(),
-          accountsService.getAll(),
+          canLinkAccounts ? accountsService.getAll() : EMPTY_FINANCE_ACCOUNTS,
           membersService.getCurrentUserMember(),
         ]);
         return {
@@ -309,10 +313,12 @@ function StoredAccountsContent() {
     <>
       <PageContainer>
         <PageHeader title={t('pages.storedAccounts.title')} icon={<Wallet />}>
-          <Button onClick={handleCreate} className="gap-sm">
-            <Plus className="h-4 w-4" />
-            {t('pages.storedAccounts.newBtn')}
-          </Button>
+          {can('add') && (
+            <Button onClick={handleCreate} className="gap-sm">
+              <Plus className="h-4 w-4" />
+              {t('pages.storedAccounts.newBtn')}
+            </Button>
+          )}
         </PageHeader>
 
         <FilterBar
@@ -474,6 +480,7 @@ function StoredAccountsContent() {
                       {
                         icon: Copy,
                         label: t('common.actions.copyDetails'),
+                        action: 'reveal',
                         onClick: () => void handleCopyAccountDetails(acc),
                         color: 'copy' as const,
                       },

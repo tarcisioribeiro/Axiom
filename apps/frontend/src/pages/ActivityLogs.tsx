@@ -43,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
@@ -141,6 +142,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
 const ACTION_KEYS = Object.keys(ACTION_CONFIG);
 
 export default function ActivityLogs() {
+  const { can } = useCurrentScreen();
   const [isExporting, setIsExporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
@@ -230,17 +232,19 @@ export default function ActivityLogs() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.activityLogs.title')} icon={<ScrollText />}>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => void handleExport()}
-          disabled={logs.length === 0}
-          loading={isExporting}
-          className="gap-xs"
-        >
-          {!isExporting && <FileDown className="h-4 w-4" />}
-          {t('pages.activityLogs.exportBtn')}
-        </Button>
+        {can('export') && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void handleExport()}
+            disabled={logs.length === 0}
+            loading={isExporting}
+            className="gap-xs"
+          >
+            {!isExporting && <FileDown className="h-4 w-4" />}
+            {t('pages.activityLogs.exportBtn')}
+          </Button>
+        )}
       </PageHeader>
 
       {logs.length === 0 ? (

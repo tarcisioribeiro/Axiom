@@ -23,6 +23,7 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { CardActions } from '@/components/common/CardActions';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -337,10 +338,10 @@ export default function Flashcards() {
           actions={
             mode === 'list' ? (
               <div className="gap-sm flex">
-                <Button onClick={() => openForm()}>
+                <Can action="add"><Button onClick={() => openForm()}>
                   <Plus className="h-4 w-4" />
                   {t('pages.flashcards.newCard')}
-                </Button>
+                </Button></Can>
                 {dueCount > 0 && (
                   <Button onClick={handleStartReview}>
                     <Star className="h-4 w-4" />

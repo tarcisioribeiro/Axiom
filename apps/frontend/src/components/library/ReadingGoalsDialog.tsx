@@ -5,6 +5,7 @@ import { Target, Pencil, Plus, Trophy, BookOpen, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
@@ -84,24 +85,28 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
               })}
         </span>
         <div className="flex items-center gap-0.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={onEdit}
-            aria-label={t('pages.libraryDashboard.readingGoals.editTitle')}
-          >
-            <Pencil className={cn('h-3.5 w-3.5', ACTION_COLOR.edit)} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={onDelete}
-            aria-label={t('pages.libraryDashboard.readingGoals.deleteTitle')}
-          >
-            <Trash2 className={cn('h-3.5 w-3.5', ACTION_COLOR.delete)} />
-          </Button>
+          <Can action="change">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={onEdit}
+              aria-label={t('pages.libraryDashboard.readingGoals.editTitle')}
+            >
+              <Pencil className={cn('h-3.5 w-3.5', ACTION_COLOR.edit)} />
+            </Button>
+          </Can>
+          <Can action="delete">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={onDelete}
+              aria-label={t('pages.libraryDashboard.readingGoals.deleteTitle')}
+            >
+              <Trash2 className={cn('h-3.5 w-3.5', ACTION_COLOR.delete)} />
+            </Button>
+          </Can>
         </div>
       </div>
 

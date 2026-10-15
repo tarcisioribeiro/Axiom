@@ -16,6 +16,7 @@ import {
 import { useState, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -493,35 +494,39 @@ export default function CreditCards({
                                 aria-hidden="true"
                               />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditCard(card);
-                              }}
-                              title={t('common.actions.edit')}
-                              aria-label={t('common.actions.edit')}
-                            >
-                              <Pencil className="h-4 w-4" aria-hidden="true" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                void handleDelete(card);
-                              }}
-                              title={t('common.actions.delete')}
-                              aria-label={t('common.actions.delete')}
-                            >
-                              <Trash2
-                                className="text-destructive h-4 w-4"
-                                aria-hidden="true"
-                              />
-                            </Button>
+                            <Can action="change">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditCard(card);
+                                }}
+                                title={t('common.actions.edit')}
+                                aria-label={t('common.actions.edit')}
+                              >
+                                <Pencil className="h-4 w-4" aria-hidden="true" />
+                              </Button>
+                            </Can>
+                            <Can action="delete">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void handleDelete(card);
+                                }}
+                                title={t('common.actions.delete')}
+                                aria-label={t('common.actions.delete')}
+                              >
+                                <Trash2
+                                  className="text-destructive h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                              </Button>
+                            </Can>
                           </div>
                         </div>
                       </div>

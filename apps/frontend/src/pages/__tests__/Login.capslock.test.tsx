@@ -2,6 +2,10 @@
  * Login page — aviso de Caps Lock no campo de senha.
  */
 
+vi.mock('@/hooks/use-registration-status', () => ({
+  useRegistrationStatus: () => ({ data: { open: true } }),
+}));
+
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: () => ({ login: vi.fn(), isLoading: false, error: null }),
 }));

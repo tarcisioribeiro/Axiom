@@ -1,6 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/hooks/use-screen-access', () => ({
+  useScreenAccess: () => ({ ready: true, can: () => true }),
+}));
 
 import { CommandPalette } from '@/components/layout/CommandPalette';
 import { useCommandPaletteStore } from '@/stores/command-palette-store';

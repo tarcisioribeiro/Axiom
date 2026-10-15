@@ -84,3 +84,30 @@ export interface AdminLogsResponse {
   page_size: number;
   results: AdminLog[];
 }
+
+export interface StaffUser {
+  id: number;
+  username: string;
+  email: string;
+  name: string;
+  is_active: boolean;
+  date_joined: string;
+}
+
+/** {chave da tela: ações} — ex.: { 'security.passwords': ['view', 'reveal'] } */
+export type ScreenGrants = Record<string, string[]>;
+
+export interface ScreenCatalogModule {
+  key: string;
+  label: string;
+  screens: { key: string; label: string; path: string | null; actions: string[] }[];
+}
+
+export interface PermissionUser {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  is_active: boolean;
+  screen_count: number;
+}

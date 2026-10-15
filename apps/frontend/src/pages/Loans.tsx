@@ -20,6 +20,7 @@ import {
 import { useState, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { CardActions } from '@/components/common/CardActions';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -208,10 +209,12 @@ export default function Loans() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.loans.title')} icon={<HandCoins />}>
-        <Button onClick={handleCreate} className="gap-sm">
-          <Plus className="h-4 w-4" />
-          {t('pages.loans.newBtn')}
-        </Button>
+        <Can action="add">
+          <Button onClick={handleCreate} className="gap-sm">
+            <Plus className="h-4 w-4" />
+            {t('pages.loans.newBtn')}
+          </Button>
+        </Can>
       </PageHeader>
 
       <FilterBar
@@ -483,6 +486,7 @@ export default function Loans() {
                                 {
                                   icon: CreditCard,
                                   label: t('pages.loans.receiveBtn'),
+                                  action: 'receive',
                                   onClick: () => setReceiptLoan(loan),
                                   color: 'receive' as const,
                                 },
@@ -491,6 +495,7 @@ export default function Loans() {
                                 {
                                   icon: CreditCard,
                                   label: t('pages.loans.payBtn'),
+                                  action: 'pay',
                                   onClick: () => setPaymentLoan(loan),
                                   color: 'pay' as const,
                                   disabled:

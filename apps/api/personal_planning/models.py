@@ -1,4 +1,5 @@
 from datetime import timedelta
+from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -1679,7 +1680,7 @@ class Exercise(BaseModel):
     met_value = models.DecimalField(
         max_digits=4,
         decimal_places=1,
-        default=5.0,
+        default=Decimal("5.0"),
         verbose_name="MET",
         help_text=(
             "Equivalente Metabólico da Tarefa. "
@@ -2505,76 +2506,6 @@ class WaterLog(BaseModel):
 
     def __str__(self):
         return f"{self.amount_ml} ml — {self.date}"
-
-
-# ============================================================================
-# CHALLENGE MODEL
-# ============================================================================
-
-
-class Challenge(BaseModel):
-    """Desafio por período — ex: 30 dias sem açúcar, 100 dias de exercício."""
-
-    DURATION_CHOICES = [
-        (7, "7 dias"),
-        (21, "21 dias"),
-        (30, "30 dias"),
-        (66, "66 dias"),
-        (100, "100 dias"),
-    ]
-    STATUS_CHOICES = [
-        ("active", "Ativo"),
-        ("completed", "Concluído"),
-        ("failed", "Falhado"),
-        ("cancelled", "Cancelado"),
-    ]
-
-    owner = models.ForeignKey(
-        "members.Member",
-        on_delete=models.CASCADE,
-        related_name="challenges",
-        verbose_name="Proprietário",
-    )
-    title = models.CharField(max_length=255, verbose_name="Título")
-    description = models.TextField(blank=True, verbose_name="Descrição")
-    duration_days = models.IntegerField(
-        choices=DURATION_CHOICES, verbose_name="Duração (dias)"
-    )
-    start_date = models.DateField(verbose_name="Data de Início")
-    end_date = models.DateField(verbose_name="Data de Término")
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default="active",
-        verbose_name="Status",
-    )
-    template_task = models.ForeignKey(
-        "RoutineTask",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="challenges",
-        verbose_name="Tarefa de Referência",
-        help_text="Tarefa rotineira que serve de base para o desafio",
-    )
-    completion_rate = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        default=0,
-        verbose_name="Taxa de Conclusão (%)",
-    )
-
-    class Meta:
-        verbose_name = "Desafio"
-        verbose_name_plural = "Desafios"
-        ordering = ["-created_at"]
-        indexes = [
-            models.Index(fields=["owner", "status"]),
-            models.Index(fields=["start_date", "end_date"]),
-        ]
-
-    def __str__(self):
-        return f"{self.title} ({self.duration_days} dias)"
 
 
 # ============================================================================

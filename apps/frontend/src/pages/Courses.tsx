@@ -19,6 +19,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
+import { Can } from '@/components/common/Can';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { CardActions } from '@/components/common/CardActions';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -338,10 +339,10 @@ export default function Courses() {
           title={t('pages.courses.title')}
           icon={<GraduationCap className="text-primary h-6 w-6" />}
           actions={
-            <Button onClick={openNew}>
+            <Can action="add"><Button onClick={openNew}>
               <Plus className="h-4 w-4" />
               {t('pages.courses.newBtn')}
-            </Button>
+            </Button></Can>
           }
         />
 

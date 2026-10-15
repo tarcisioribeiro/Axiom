@@ -27,6 +27,7 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import {
   DETAIL_TEXT_PAGE_SIZE,
@@ -149,24 +150,31 @@ function RowActions({
   const { t } = useTranslation();
   return (
     <div className="flex shrink-0 gap-0.5">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7"
-        aria-label={t('common.actions.edit')}
-        onClick={onEdit}
-      >
-        <Pencil className={cn('h-3.5 w-3.5', ACTION_COLOR.edit)} aria-hidden="true" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7"
-        aria-label={t('common.actions.delete')}
-        onClick={onDelete}
-      >
-        <Trash2 className={cn('h-3.5 w-3.5', ACTION_COLOR.delete)} aria-hidden="true" />
-      </Button>
+      <Can action="change">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          aria-label={t('common.actions.edit')}
+          onClick={onEdit}
+        >
+          <Pencil className={cn('h-3.5 w-3.5', ACTION_COLOR.edit)} aria-hidden="true" />
+        </Button>
+      </Can>
+      <Can action="delete">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          aria-label={t('common.actions.delete')}
+          onClick={onDelete}
+        >
+          <Trash2
+            className={cn('h-3.5 w-3.5', ACTION_COLOR.delete)}
+            aria-hidden="true"
+          />
+        </Button>
+      </Can>
     </div>
   );
 }
@@ -781,14 +789,16 @@ export function BookDetailModal({
                 </span>
                 <div className="gap-sm flex">
                   {highlights.length > 0 && (
-                    <Button
-                      variant="outline"
-                      onClick={() => void handleExport()}
-                      loading={isExporting}
-                    >
-                      {!isExporting && <Download className="h-4 w-4" />}
-                      {t('pages.books.detail.exportBtn')}
-                    </Button>
+                    <Can action="export">
+                      <Button
+                        variant="outline"
+                        onClick={() => void handleExport()}
+                        loading={isExporting}
+                      >
+                        {!isExporting && <Download className="h-4 w-4" />}
+                        {t('pages.books.detail.exportBtn')}
+                      </Button>
+                    </Can>
                   )}
                   <Button onClick={() => setHighlightDialog({ open: true })}>
                     <Plus className="h-4 w-4" />

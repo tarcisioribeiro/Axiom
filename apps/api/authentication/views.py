@@ -9,6 +9,7 @@ from django.core.validators import validate_email
 from rest_framework import status
 from rest_framework.decorators import (
     api_view,
+    authentication_classes,
     permission_classes,
     throttle_classes,
 )
@@ -17,6 +18,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from admin_panel.access import get_user_actions
 from app.config import cfg
 from app.request_utils import request_data
 
@@ -88,6 +90,8 @@ def validate_registration_data(data: dict) -> tuple[bool, list[str]]:
         errors.append("Documento e obrigatorio")
     if not phone:
         errors.append("Telefone e obrigatorio")
+    if not email:
+        errors.append("Email e obrigatorio")
 
     # Validar username (alfanumerico, 3-30 caracteres)
     if username:
@@ -123,7 +127,6 @@ def validate_registration_data(data: dict) -> tuple[bool, list[str]]:
         if len(phone_clean) < 10 or len(phone_clean) > 11:
             errors.append("Telefone deve ter 10 ou 11 digitos")
 
-    # Validar email (se fornecido)
     if email:
         try:
             validate_email(email)
@@ -184,6 +187,11 @@ def get_current_user(request: Request) -> Response:
             "date_joined": user.date_joined,
             "permissions": list(perms),
             "member": member_data,
+            # Staff/superuser ignoram o controle por tela (acesso total)
+            "screens": {
+                key: sorted(actions)
+                for key, actions in get_user_actions(user).items()
+            },
         }
     )
 
@@ -235,6 +243,21 @@ def get_available_users(request: Request) -> Response:
     return Response(list(available_users))
 
 
+def registration_open() -> bool:
+    """O cadastro público só abre depois que o admin cria um staff ativo,
+    que é quem gerencia as permissões dos novos usuários."""
+    return User.objects.filter(
+        is_staff=True, is_superuser=False, is_active=True
+    ).exists()
+
+
+@api_view(["GET"])
+@permission_classes([])
+@authentication_classes([])
+def registration_status(request: Request) -> Response:
+    return Response({"open": registration_open()})
+
+
 @api_view(["POST"])
 @throttle_classes([RegisterRateThrottle])
 def create_user_with_member(request: Request) -> Response:
@@ -242,6 +265,17 @@ def create_user_with_member(request: Request) -> Response:
     Cria um novo usuário e o vincula a um membro.
     Endpoint público para registro de novos usuários.
     """
+    if not registration_open():
+        return Response(
+            {"error": "Cadastro indisponivel no momento"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+    return create_account(request_data(request), is_staff=False)
+
+
+def create_account(data: dict, *, is_staff: bool) -> Response:
+    """Cria usuário + membro com os campos do cadastro. Usado pelo cadastro
+    público (usuário comum) e pelo admin (staff)."""
     import logging
 
     from django.db import transaction
@@ -250,7 +284,6 @@ def create_user_with_member(request: Request) -> Response:
 
     logger = logging.getLogger("expenselit.audit")
 
-    data = request_data(request)
     username = data.get("username", "").strip()
     password = data.get("password", "")
     name = data.get("name", "").strip()
@@ -299,7 +332,7 @@ def create_user_with_member(request: Request) -> Response:
                     " ".join(name.split()[1:]) if len(name.split()) > 1 else ""
                 ),
                 is_superuser=False,
-                is_staff=False,
+                is_staff=is_staff,
                 is_active=True,
             )
 

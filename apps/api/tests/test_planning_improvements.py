@@ -205,7 +205,7 @@ class AnalyticsEndpointTest(BasePlanningImprovementsTestCase):
         self.assertIn("period_days", data)
         self.assertIn("completion_by_weekday", data)
         self.assertIn("insights", data)
-        self.assertEqual(data["period_days"], 90)
+        self.assertEqual(data["period_days"], 180)
 
     def test_analytics_completion_by_weekday_has_7_entries(self):
         response = self.client.get("/api/v1/personal-planning/analytics/")

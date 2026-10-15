@@ -124,10 +124,13 @@ const AlertDialogHeader = ({
   children,
   ...props
 }: AlertDialogHeaderProps) => {
+  // Elemento JSX (<Icone />) é renderizado como veio; componente (Icone) —
+  // inclusive os do lucide, que são objetos forwardRef, não funções — vai no círculo.
+  const isElement = React.isValidElement(icon);
   const IconComponent = icon
-    ? typeof icon === 'function'
-      ? icon
-      : null
+    ? isElement
+      ? null
+      : (icon as IconComponent)
     : variantIcons[variant];
 
   return (
@@ -137,7 +140,7 @@ const AlertDialogHeader = ({
     >
       {showIcon && (
         <div className="flex justify-center sm:justify-start">
-          {typeof icon === 'object' && icon !== null ? (
+          {isElement ? (
             icon
           ) : IconComponent ? (
             <div

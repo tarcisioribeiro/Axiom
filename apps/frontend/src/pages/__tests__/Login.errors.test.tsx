@@ -12,6 +12,10 @@ const { mockAuthStore, mockToast } = vi.hoisted(() => {
   return { mockAuthStore: store, mockToast: vi.fn() };
 });
 
+vi.mock('@/hooks/use-registration-status', () => ({
+  useRegistrationStatus: () => ({ data: { open: true } }),
+}));
+
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: Object.assign(() => mockAuthStore, { getState: () => mockAuthStore }),
 }));

@@ -24,6 +24,7 @@ import ForceGraph2D from 'react-force-graph-2d';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -417,15 +418,17 @@ function NodeDetailPanel({
                       </span>
                     </div>
                     {link.link_id && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="ml-xs h-6 w-6 shrink-0"
-                        aria-label={t('common.actions.delete')}
-                        onClick={() => onDeleteLink(link.link_id!)}
-                      >
-                        <Trash2 className={cn('h-3 w-3', ACTION_COLOR.delete)} />
-                      </Button>
+                      <Can action="delete">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="ml-xs h-6 w-6 shrink-0"
+                          aria-label={t('common.actions.delete')}
+                          onClick={() => onDeleteLink(link.link_id!)}
+                        >
+                          <Trash2 className={cn('h-3 w-3', ACTION_COLOR.delete)} />
+                        </Button>
+                      </Can>
                     )}
                   </div>
                 );
@@ -960,15 +963,17 @@ export default function KnowledgeGraph() {
           {/* Left sidebar */}
           <div className="gap-md border-border bg-card p-md z-10 flex w-52 shrink-0 flex-col border-r">
             {/* Suggest links button */}
-            <Button
-              variant={showSuggestions ? 'secondary' : 'outline'}
-              size="sm"
-              className="w-full justify-start text-xs"
-              onClick={() => setShowSuggestions((v) => !v)}
-            >
-              <Sparkles className="h-3.5 w-3.5 shrink-0" />
-              {t('pages.knowledgeGraph.suggestLinks')}
-            </Button>
+            <Can action="ai_suggest">
+              <Button
+                variant={showSuggestions ? 'secondary' : 'outline'}
+                size="sm"
+                className="w-full justify-start text-xs"
+                onClick={() => setShowSuggestions((v) => !v)}
+              >
+                <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                {t('pages.knowledgeGraph.suggestLinks')}
+              </Button>
+            </Can>
 
             {/* Search */}
             <SearchInput

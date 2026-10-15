@@ -1,6 +1,15 @@
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { MemoryRouter, Route, Routes } from 'react-router';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+// Telas sem acesso no teste; o resto é liberado
+const deniedScreens = new Set<string>();
+vi.mock('@/hooks/use-screen-access', () => ({
+  useScreenAccess: () => ({
+    ready: true,
+    can: (screen?: string) => !screen || !deniedScreens.has(screen),
+  }),
+}));
 
 import { ProtectedRoute } from '@/components/common/ProtectedRoute';
 import { useAuthStore } from '@/stores/auth-store';
@@ -27,7 +36,29 @@ const renderInRouter = (ui: React.ReactElement, initialEntry = '/protected') =>
 
 describe('ProtectedRoute', () => {
   beforeEach(() => {
+    deniedScreens.clear();
     setAuthState({ isAuthenticated: false, isInitializing: false, permissions: [] });
+  });
+
+  it('redirects to /unauthorized when the screen has no view access', () => {
+    deniedScreens.add('security.passwords');
+    setAuthState({ isAuthenticated: true });
+    render(
+      <MemoryRouter initialEntries={['/security/passwords']}>
+        <Routes>
+          <Route
+            path="/security/passwords"
+            element={
+              <ProtectedRoute>
+                <div>protected content</div>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/unauthorized" element={<div>unauthorized page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+    expect(screen.getByText('unauthorized page')).toBeTruthy();
   });
 
   it('shows a loading spinner while initializing', () => {

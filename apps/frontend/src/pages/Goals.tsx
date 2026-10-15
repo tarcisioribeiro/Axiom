@@ -34,6 +34,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -339,22 +340,26 @@ function GoalCard({
         </div>
 
         <div className="gap-xs pt-sm flex justify-end border-t">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(goal)}
-            aria-label={t('common.actions.edit')}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(goal.id)}
-            aria-label={t('common.actions.delete')}
-          >
-            <Trash2 className="text-destructive h-4 w-4" />
-          </Button>
+          <Can action="change">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(goal)}
+              aria-label={t('common.actions.edit')}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          </Can>
+          <Can action="delete">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(goal.id)}
+              aria-label={t('common.actions.delete')}
+            >
+              <Trash2 className="text-destructive h-4 w-4" />
+            </Button>
+          </Can>
           {goal.status === 'active' && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -20,8 +20,6 @@ import {
   BookOpen,
   UserPen,
   Building2,
-  FileText,
-  BookMarked,
   CheckCircle2,
   Target,
   Vault,
@@ -260,21 +258,6 @@ export const navigationCommands: CommandDef[] = [
     keywords: ['saude', 'cofre', 'seguranca', 'senhas', 'analise', 'health'],
     section: 'navigation',
   },
-  {
-    id: '2fa-setup',
-    description: 'Configurar ou desativar 2FA/TOTP',
-    icon: ShieldCheck,
-    href: '/settings/two-factor',
-    keywords: [
-      '2fa',
-      'totp',
-      'autenticacao',
-      'dois fatores',
-      'seguranca',
-      'configuracoes',
-    ],
-    section: 'settings',
-  },
 
   // Library Module
   {
@@ -307,22 +290,6 @@ export const navigationCommands: CommandDef[] = [
     icon: Building2,
     href: '/library/publishers',
     keywords: ['editoras', 'publishers', 'publicadoras'],
-    section: 'navigation',
-  },
-  {
-    id: 'summaries',
-    description: 'Resumos de livros',
-    icon: FileText,
-    href: '/library/summaries',
-    keywords: ['resumos', 'summaries', 'anotacoes'],
-    section: 'navigation',
-  },
-  {
-    id: 'readings',
-    description: 'Histórico de leituras',
-    icon: BookMarked,
-    href: '/library/readings',
-    keywords: ['leituras', 'readings', 'historico'],
     section: 'navigation',
   },
 ];

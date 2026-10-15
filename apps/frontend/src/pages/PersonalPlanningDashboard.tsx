@@ -46,6 +46,7 @@ import { Progress } from '@/components/ui/progress';
 import { API_CONFIG } from '@/config/api-config';
 import { translate } from '@/config/constants';
 import { usePlanningOnboarding } from '@/hooks/use-planning-onboarding';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
@@ -61,6 +62,8 @@ export default function PersonalPlanningDashboard() {
   const COLORS = useChartColors();
   const categoryColors = useTaskCategoryColors();
   const { shouldShow: showOnboarding } = usePlanningOnboarding();
+  // O onboarding existe para importar um modelo de rotina
+  const canImportTemplate = useCurrentScreen().can('import_template');
   const [onboardingDone, setOnboardingDone] = useState(false);
 
   // Seções em acordeão: abrir uma recolhe as demais
@@ -255,7 +258,7 @@ export default function PersonalPlanningDashboard() {
   return (
     <PageContainer>
       <AnimatePresence>
-        {showOnboarding && !onboardingDone && (
+        {showOnboarding && canImportTemplate && !onboardingDone && (
           <PlanningOnboarding onDone={() => setOnboardingDone(true)} />
         )}
       </AnimatePresence>

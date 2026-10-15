@@ -1,6 +1,7 @@
 import { ArrowLeftRight, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { DataTable } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -63,10 +64,12 @@ export default function Transfers() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.transfers.title')} icon={<ArrowLeftRight />}>
-        <Button onClick={handleCreate} className="gap-sm">
-          <Plus className="h-4 w-4" />
-          {t('pages.transfers.newBtn')}
-        </Button>
+        <Can action="add">
+          <Button onClick={handleCreate} className="gap-sm">
+            <Plus className="h-4 w-4" />
+            {t('pages.transfers.newBtn')}
+          </Button>
+        </Can>
       </PageHeader>
 
       <TransferFilters
@@ -106,24 +109,28 @@ export default function Transfers() {
               source={{ type: 'transfer', data: transfer }}
               memberName={getMemberDisplayName(null, user)}
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleEdit(transfer)}
-              aria-label={t('common.actions.edit')}
-              title={t('common.actions.edit')}
-            >
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => void handleDelete(transfer.id)}
-              aria-label={t('common.actions.delete')}
-              title={t('common.actions.delete')}
-            >
-              <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
-            </Button>
+            <Can action="change">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEdit(transfer)}
+                aria-label={t('common.actions.edit')}
+                title={t('common.actions.edit')}
+              >
+                <Pencil className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </Can>
+            <Can action="delete">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => void handleDelete(transfer.id)}
+                aria-label={t('common.actions.delete')}
+                title={t('common.actions.delete')}
+              >
+                <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
+              </Button>
+            </Can>
           </div>
         )}
       />

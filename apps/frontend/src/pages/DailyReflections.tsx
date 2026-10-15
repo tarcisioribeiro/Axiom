@@ -19,6 +19,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { z } from 'zod';
 
+import { Can } from '@/components/common/Can';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
@@ -155,22 +156,26 @@ function ReflectionCard({
 
           {/* Ações */}
           <div className="gap-xs flex shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit(reflection)}
-              aria-label={t('common.actions.edit')}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(reflection.id)}
-              aria-label={t('common.actions.delete')}
-            >
-              <Trash2 className="text-destructive h-4 w-4" />
-            </Button>
+            <Can action="change">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onEdit(reflection)}
+                aria-label={t('common.actions.edit')}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            </Can>
+            <Can action="delete">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onDelete(reflection.id)}
+                aria-label={t('common.actions.delete')}
+              >
+                <Trash2 className="text-destructive h-4 w-4" />
+              </Button>
+            </Can>
           </div>
         </div>
       </CardContent>
@@ -437,28 +442,32 @@ export default function DailyReflections() {
                 </p>
               </div>
               <DialogCloseFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const r = viewing;
-                    setViewing(undefined);
-                    handleEdit(r);
-                  }}
-                >
-                  <Edit className="h-4 w-4" />
-                  {t('common.actions.edit')}
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    const id = viewing.id;
-                    setViewing(undefined);
-                    void handleDelete(id);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  {t('common.actions.delete')}
-                </Button>
+                <Can action="change">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const r = viewing;
+                      setViewing(undefined);
+                      handleEdit(r);
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                    {t('common.actions.edit')}
+                  </Button>
+                </Can>
+                <Can action="delete">
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      const id = viewing.id;
+                      setViewing(undefined);
+                      void handleDelete(id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {t('common.actions.delete')}
+                  </Button>
+                </Can>
               </DialogCloseFooter>
             </>
           )}

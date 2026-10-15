@@ -20,7 +20,6 @@ from members.models import Member
 from personal_planning.models import (
     AUTO_COMPLETION_GOAL_TYPES,
     BodyMetric,
-    Challenge,
     DailyReflection,
     Exercise,
     ExerciseDatasetEntry,
@@ -50,8 +49,6 @@ from personal_planning.models import (
 from personal_planning.serializers import (
     BodyMetricCreateUpdateSerializer,
     BodyMetricSerializer,
-    ChallengeCreateUpdateSerializer,
-    ChallengeSerializer,
     DailyReflectionCreateUpdateSerializer,
     DailyReflectionSerializer,
     ExerciseCreateUpdateSerializer,
@@ -3023,62 +3020,6 @@ class ExportGoalsView(APIView):
                 filename="metas",
             )
         return build_csv_response(rows(), headers, "metas")
-
-
-# ============================================================================
-# CHALLENGE VIEWS
-# ============================================================================
-
-
-class ChallengeListCreateView(BaseListCreateView):
-    serializer_class = ChallengeSerializer
-
-    def get_serializer_class(self):
-        if self.request.method in ("POST",):
-            return ChallengeCreateUpdateSerializer
-        return ChallengeSerializer
-
-    def get_queryset(self):
-        member = Member.objects.filter(user=self.request.user).first()
-        if not member:
-            return Challenge.objects.none()
-        qs = Challenge.objects.filter(
-            owner=member, is_deleted=False
-        ).select_related("owner", "template_task")
-        status_filter = self.request.query_params.get("status")
-        if status_filter:
-            qs = qs.filter(status=status_filter)
-        return qs
-
-    def perform_create(self, serializer):
-        serializer.save(
-            created_by=self.request.user,
-            updated_by=self.request.user,
-        )
-
-
-class ChallengeRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
-    serializer_class = ChallengeSerializer
-
-    def get_serializer_class(self):
-        if self.request.method in ("PUT", "PATCH"):
-            return ChallengeCreateUpdateSerializer
-        return ChallengeSerializer
-
-    def get_queryset(self):
-        member = Member.objects.filter(user=self.request.user).first()
-        if not member:
-            return Challenge.objects.none()
-        return Challenge.objects.filter(owner=member, is_deleted=False)
-
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
-
-    def perform_destroy(self, instance):
-        instance.is_deleted = True
-        instance.deleted_at = timezone.now()
-        instance.deleted_by = self.request.user
-        instance.save()
 
 
 # ============================================================================

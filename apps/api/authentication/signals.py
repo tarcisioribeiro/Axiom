@@ -38,3 +38,19 @@ def enforce_reserved_usernames(
         raise ValidationError(
             f"O usuário administrativo '{instance.username}' precisa de email."
         )
+
+
+@receiver(pre_save, sender=User)
+def require_email_for_new_admins(
+    sender: type[User], instance: User, raw: bool = False, **kwargs: Any
+) -> None:
+    # Só na criação: contas antigas sem email continuam podendo salvar.
+    # Usuário comum é criado pelo cadastro, que já exige email.
+    if raw or not instance._state.adding:
+        return
+    if (instance.is_staff or instance.is_superuser) and not (
+        instance.email or ""
+    ).strip():
+        raise ValidationError(
+            f"O usuário administrativo '{instance.username}' precisa de email."
+        )

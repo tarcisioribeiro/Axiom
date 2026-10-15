@@ -24,6 +24,7 @@ import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -566,18 +567,18 @@ export default function NutritionPage() {
           icon={TAB_HEADERS[activeTab].icon}
           actions={
             activeTab === 'meal-types' ? (
-              <Button
+              <Can action="add"><Button
                 disabled={mealTypes.length >= MAX_MEAL_TYPES}
                 onClick={() => setDialog({ type: 'new-meal-type' })}
               >
                 <Plus className="h-4 w-4" />
                 {t('pages.nutritionMealTypes.newMealTypeBtn')}
-              </Button>
+              </Button></Can>
             ) : activeTab === 'foods' ? (
-              <Button onClick={() => setDialog({ type: 'new-food' })}>
+              <Can action="add"><Button onClick={() => setDialog({ type: 'new-food' })}>
                 <Plus className="h-4 w-4" />
                 {t('pages.nutritionFoods.newFoodBtn')}
-              </Button>
+              </Button></Can>
             ) : undefined
           }
         />
@@ -1037,14 +1038,14 @@ export default function NutritionPage() {
             )}
             <DialogCloseFooter>
               {optionsMealType && (
-                <Button
+                <Can action="add"><Button
                   onClick={() =>
                     setDialog({ type: 'new-option', mealTypeId: optionsMealType.id })
                   }
                 >
                   <Plus className="h-4 w-4" />
                   {t('pages.nutritionMealTypes.newOptionBtn')}
-                </Button>
+                </Button></Can>
               )}
             </DialogCloseFooter>
           </DialogContent>
@@ -1127,23 +1128,27 @@ function MealTypeCard({
               ? t('pages.nutritionMealTypes.active')
               : t('pages.nutritionMealTypes.inactive')}
           </Badge>
-          <Button
-            aria-label={t('common.actions.edit')}
-            variant="ghost"
-            size="icon"
-            onClick={onEdit}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            aria-label={t('common.actions.delete')}
-            variant="ghost"
-            size="icon"
-            className="text-destructive hover:text-destructive"
-            onClick={onDelete}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <Can action="change">
+            <Button
+              aria-label={t('common.actions.edit')}
+              variant="ghost"
+              size="icon"
+              onClick={onEdit}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          </Can>
+          <Can action="delete">
+            <Button
+              aria-label={t('common.actions.delete')}
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </Can>
         </div>
       </div>
     </div>
@@ -1206,24 +1211,28 @@ function MealOptionsList({
                     })()}
                   </div>
                   <div className="gap-xs flex">
-                    <Button
-                      aria-label={t('common.actions.edit')}
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => onEditOption(opt)}
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      aria-label={t('common.actions.delete')}
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive h-7 w-7"
-                      onClick={() => onDeleteOption(opt)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    <Can action="change">
+                      <Button
+                        aria-label={t('common.actions.edit')}
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => onEditOption(opt)}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                    </Can>
+                    <Can action="delete">
+                      <Button
+                        aria-label={t('common.actions.delete')}
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive h-7 w-7"
+                        onClick={() => onDeleteOption(opt)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </Can>
                   </div>
                 </div>
                 {/* Ingredients */}
@@ -1369,27 +1378,31 @@ function MealTimeline({
                           {Math.round(log.calories)} kcal
                         </span>
                       )}
-                      <Button
-                        aria-label={t('common.actions.edit')}
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => onEdit(log)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        aria-label={t('common.actions.delete')}
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive h-7 w-7"
-                        onClick={() => onDelete(log)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <Can action="change">
+                        <Button
+                          aria-label={t('common.actions.edit')}
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => onEdit(log)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      </Can>
+                      <Can action="delete">
+                        <Button
+                          aria-label={t('common.actions.delete')}
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive h-7 w-7"
+                          onClick={() => onDelete(log)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </Can>
                     </>
                   ) : isLate ? (
-                    <Button
+                    <Can action="add"><Button
                       size="sm"
                       variant="outline"
                       className="border-warning/50 hover:bg-warning/10 h-7 text-xs"
@@ -1397,9 +1410,9 @@ function MealTimeline({
                     >
                       <Plus className="h-3 w-3" />
                       {t('pages.nutritionLog.registerMeal')}
-                    </Button>
+                    </Button></Can>
                   ) : (
-                    <Button
+                    <Can action="add"><Button
                       size="sm"
                       variant="ghost"
                       className="text-muted-foreground hover:text-foreground h-7 text-xs"
@@ -1407,7 +1420,7 @@ function MealTimeline({
                     >
                       <Plus className="h-3 w-3" />
                       {t('pages.nutritionLog.registerMeal')} →
-                    </Button>
+                    </Button></Can>
                   )}
                 </div>
               </div>
@@ -1455,24 +1468,28 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
         )}
       </div>
       <div className="gap-xs flex shrink-0">
-        <Button
-          aria-label={t('common.actions.edit')}
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={onEdit}
-        >
-          <Edit className="h-3 w-3" />
-        </Button>
-        <Button
-          aria-label={t('common.actions.delete')}
-          variant="ghost"
-          size="icon"
-          className="text-destructive hover:text-destructive h-7 w-7"
-          onClick={onDelete}
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
+        <Can action="change">
+          <Button
+            aria-label={t('common.actions.edit')}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onEdit}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+        </Can>
+        <Can action="delete">
+          <Button
+            aria-label={t('common.actions.delete')}
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive h-7 w-7"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </Can>
       </div>
     </div>
   );

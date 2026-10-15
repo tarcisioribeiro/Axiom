@@ -21,6 +21,7 @@ import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -1260,19 +1261,21 @@ export default function MonthlyPlanner({
             </Button>
           </div>
 
-          <Button
-            onClick={() => void handleApply()}
-            disabled={applyMutation.isPending || isLoadingPreview || !planId}
-            size="sm"
-            variant={isApplied ? 'outline' : 'default'}
-          >
-            <CalendarCheck className="h-4 w-4" />
-            {applyMutation.isPending
-              ? t('monthlyPlanner.applyingPlan')
-              : isApplied
-                ? t('monthlyPlanner.reapplyPlan')
-                : t('monthlyPlanner.applyPlan')}
-          </Button>
+          <Can action="apply_plan">
+            <Button
+              onClick={() => void handleApply()}
+              disabled={applyMutation.isPending || isLoadingPreview || !planId}
+              size="sm"
+              variant={isApplied ? 'outline' : 'default'}
+            >
+              <CalendarCheck className="h-4 w-4" />
+              {applyMutation.isPending
+                ? t('monthlyPlanner.applyingPlan')
+                : isApplied
+                  ? t('monthlyPlanner.reapplyPlan')
+                  : t('monthlyPlanner.applyPlan')}
+            </Button>
+          </Can>
         </div>
       }
     />

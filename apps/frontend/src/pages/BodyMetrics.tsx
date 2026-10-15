@@ -27,6 +27,7 @@ import {
   YAxis,
 } from 'recharts';
 
+import { Can } from '@/components/common/Can';
 import { EnhancedPieChart } from '@/components/charts/EnhancedPieChart';
 import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -462,10 +463,10 @@ export default function BodyMetrics() {
                   {t('pages.bodyMetrics.recalcBtn')}
                 </Button>
               )}
-              <Button className="gap-sm" onClick={openCreate}>
+              <Can action="add"><Button className="gap-sm" onClick={openCreate}>
                 <Plus className="h-4 w-4" />
                 {t('pages.bodyMetrics.newBtn')}
-              </Button>
+              </Button></Can>
             </div>
           }
         />

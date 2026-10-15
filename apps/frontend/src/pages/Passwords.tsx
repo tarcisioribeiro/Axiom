@@ -67,6 +67,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { PASSWORD_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { useToast } from '@/hooks/use-toast';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { cn, copyToClipboard } from '@/lib/utils';
@@ -120,6 +121,7 @@ const CATEGORY_CONFIG: Record<string, { badge: string; avatar: string }> = {
 const EMPTY_PASSWORDS: Password[] = [];
 
 function PasswordsContent() {
+  const { can } = useCurrentScreen();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPassword, setSelectedPassword] = useState<Password | undefined>();
@@ -477,18 +479,23 @@ function PasswordsContent() {
       <PageContainer>
         <PageHeader title={t('pages.passwords.title')} icon={<Key />}>
           <div className="gap-sm flex items-center">
-            <Button
-              variant="outline"
-              onClick={() => setIsImportOpen(true)}
-              className="gap-sm"
-            >
-              <Upload className="h-4 w-4" />
-              {t('pages.passwordImport.title')}
-            </Button>
-            <Button onClick={handleCreate} className="gap-sm">
-              <Plus className="h-4 w-4" />
-              {t('pages.passwords.newBtn')}
-            </Button>
+            {can('import') && (
+              <Button
+                variant="outline"
+                onClick={() => setIsImportOpen(true)}
+                className="gap-sm"
+              >
+                <Upload className="h-4 w-4" />
+                {t('pages.passwordImport.title')}
+              </Button>
+            )}
+
+            {can('add') && (
+              <Button onClick={handleCreate} className="gap-sm">
+                <Plus className="h-4 w-4" />
+                {t('pages.passwords.newBtn')}
+              </Button>
+            )}
           </div>
         </PageHeader>
 
@@ -648,18 +655,21 @@ function PasswordsContent() {
                       {
                         icon: Copy,
                         label: t('common.actions.copyDetails'),
+                        action: 'reveal',
                         onClick: () => void handleCopyPasswordDetails(password),
                         color: 'copy' as const,
                       },
                       {
                         icon: Share2,
                         label: t('pages.sharePassword.title'),
+                        action: 'share',
                         onClick: () => setSharingPassword(password),
                         color: 'share' as const,
                       },
                       {
                         icon: ShieldAlert,
                         label: t('pages.passwords.hibp.check'),
+                        action: 'check_breach',
                         onClick: () => void handleCheckLeak(password),
                         color: 'check-leak' as const,
                       },

@@ -55,6 +55,7 @@ export function PayableInstallmentsDialog({
         if (!payable) return;
         await payableInstallmentsService.updateInstallment(payable.id, num, data);
       }}
+      recalcPermission="renegotiate"
       recalculate={async (count, dryRun) => {
         if (!payable) return { installments_preview: [] };
         const res = await payableInstallmentsService.recalculateInstallments(

@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useCurrentScreen, useScreenAccess } from '@/hooks/use-screen-access';
 import { useToast } from '@/hooks/use-toast';
 import { cn, copyToClipboard } from '@/lib/utils';
 import { creditCardsService } from '@/services/credit-cards-service';
@@ -58,6 +59,9 @@ const EMPTY_CARDS: StoredCreditCard[] = [];
 const EMPTY_CREDIT_CARDS: CreditCard[] = [];
 
 function StoredCardsContent() {
+  const { can } = useCurrentScreen();
+  // Vínculo com o cartão de Finanças só para quem tem a tela Cartões
+  const canLinkCards = useScreenAccess().can('finance.credit_cards');
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<StoredCreditCard | undefined>();
@@ -75,12 +79,12 @@ function StoredCardsContent() {
   const { t } = useTranslation();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['stored-cards'],
+    queryKey: ['stored-cards', canLinkCards],
     queryFn: async () => {
       try {
         const [cardsData, creditCardsData, memberData] = await Promise.all([
           storedCardsService.getAll(),
-          creditCardsService.getAll(),
+          canLinkCards ? creditCardsService.getAll() : EMPTY_CREDIT_CARDS,
           membersService.getCurrentUserMember(),
         ]);
         return {
@@ -253,10 +257,12 @@ function StoredCardsContent() {
     <>
       <PageContainer>
         <PageHeader title={t('pages.storedCards.title')} icon={<CreditCardIcon />}>
-          <Button onClick={handleCreate} className="gap-sm">
-            <Plus className="h-4 w-4" />
-            {t('pages.storedCards.newBtn')}
-          </Button>
+          {can('add') && (
+            <Button onClick={handleCreate} className="gap-sm">
+              <Plus className="h-4 w-4" />
+              {t('pages.storedCards.newBtn')}
+            </Button>
+          )}
         </PageHeader>
 
         <FilterBar
@@ -377,6 +383,7 @@ function StoredCardsContent() {
                     {
                       icon: Copy,
                       label: t('common.actions.copyDetails'),
+                      action: 'reveal',
                       onClick: () => void handleCopyCardDetails(card),
                       color: 'copy' as const,
                     },

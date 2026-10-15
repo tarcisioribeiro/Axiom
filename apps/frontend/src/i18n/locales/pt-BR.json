@@ -379,9 +379,12 @@
       "financialHealth": "Saúde Financeira",
       "emotionalWellness": "Bem-Estar Emocional",
       "intellectToday": "Hoje no Intelecto",
-      "flashcards": "Flash Cards"
+      "flashcards": "Flash Cards",
+      "vaultHealth": "Saúde do Cofre",
+      "activityLogs": "Logs de Atividade"
     },
-    "agents": "Agentes IA"
+    "agents": "Agentes IA",
+    "webhooks": "Webhooks"
   },
   "layout": {
     "skipToContent": "Pular para o conteúdo principal",
@@ -409,7 +412,9 @@
       "overview": "Visão Geral",
       "config": "Configurações",
       "integrations": "Integrações",
-      "logs": "Logs de Atividade"
+      "logs": "Logs de Atividade",
+      "users": "Equipe",
+      "permissions": "Permissões"
     },
     "commandPalette": {
       "placeholder": "Buscar comando",
@@ -454,8 +459,6 @@
         "books": "Livros",
         "authors": "Autores",
         "publishers": "Editoras",
-        "summaries": "Resumos",
-        "readings": "Leituras",
         "new-expense": "Nova Despesa",
         "new-revenue": "Nova Receita",
         "theme-light": "Modo Claro",
@@ -468,7 +471,10 @@
       "markAllRead": "Marcar todas como lidas",
       "empty": "Nenhuma notificação",
       "ariaLabel": "Notificações"
-    }
+    },
+    "staff": "Staff",
+    "backToApp": "Voltar ao app",
+    "permissionsPanel": "Painel de permissões"
   },
   "breadcrumb": {
     "home": "Início",
@@ -623,7 +629,10 @@
       "errorTitle": "Erro",
       "successTitle": "Cadastro realizado!",
       "successDesc": "Você já pode fazer login com suas credenciais.",
-      "errorDesc": "Ocorreu um erro ao tentar cadastrar. Tente novamente."
+      "errorDesc": "Ocorreu um erro ao tentar cadastrar. Tente novamente.",
+      "emailRequired": "E-mail: campo obrigatório",
+      "closed": "Cadastro indisponível",
+      "backToLogin": "Voltar ao login"
     }
   },
   "agentWidget": {
@@ -680,7 +689,8 @@
       "modulesTitle": "Módulos Disponíveis",
       "modules": {
         "navigateTo": "Navegar para {{module}}"
-      }
+      },
+      "noModules": "Nenhum módulo liberado"
     },
     "accounts": {
       "title": "Contas Bancárias",
@@ -697,7 +707,7 @@
       "updatedDesc": "A conta foi atualizada com sucesso.",
       "deleted": "Conta excluída",
       "deletedDesc": "A conta foi excluída com sucesso.",
-      "emptyState": "Nenhuma conta cadastrada. Clique em \"Nova Conta\" para começar.",
+      "emptyState": "Nenhuma conta cadastrada",
       "searchPlaceholder": "Buscar conta",
       "allTypes": "Todos os Tipos",
       "columns": {
@@ -979,7 +989,7 @@
       "deleted": "Empréstimo excluído",
       "deletedDesc": "O empréstimo foi excluído com sucesso.",
       "emptySearch": "Nenhum empréstimo encontrado para a pesquisa atual.",
-      "emptyState": "Nenhum empréstimo cadastrado. Clique em \"Novo Empréstimo\" para começar.",
+      "emptyState": "Nenhum empréstimo cadastrado",
       "searchPlaceholder": "Buscar empréstimos",
       "noPrerequisitesMsg": "É necessário ter {{missing}} cadastrados antes de criar um empréstimo.",
       "totalValue": "Valor Total:",
@@ -1177,7 +1187,7 @@
       "updatedDesc": "O membro foi atualizado com sucesso.",
       "deleted": "Membro excluído",
       "deletedDesc": "O membro foi excluído com sucesso.",
-      "emptyState": "Nenhum membro cadastrado. Clique em \"Novo Membro\" para começar.",
+      "emptyState": "Nenhum membro cadastrado",
       "columns": {
         "name": "Nome",
         "document": "Documento",
@@ -1715,7 +1725,7 @@
       "deleted": "Valor a pagar excluído",
       "deletedDesc": "O valor a pagar foi excluído com sucesso.",
       "emptySearch": "Nenhum valor a pagar encontrado para a pesquisa atual.",
-      "emptyState": "Nenhum valor a pagar cadastrado. Clique em \"Novo Pagamento\" para começar.",
+      "emptyState": "Nenhum valor a pagar cadastrado",
       "searchPlaceholder": "Buscar descrição",
       "installments": {
         "title": "Parcelas",
@@ -1841,7 +1851,7 @@
       "deletedDesc": "O orçamento foi excluído com sucesso.",
       "createError": "Erro ao criar orçamento.",
       "emptySearch": "Nenhum orçamento encontrado para a pesquisa atual.",
-      "emptyState": "Nenhum orçamento cadastrado para este período. Clique em \"Novo Orçamento\" para começar.",
+      "emptyState": "Nenhum orçamento cadastrado para este período",
       "searchPlaceholder": "Buscar categoria",
       "allCategories": "Todas as Categorias",
       "allMembers": "Todos os Membros",
@@ -2607,7 +2617,7 @@
       "requiredFieldsDesc": "Preencha todos os campos obrigatórios.",
       "noMemberMsg": "Não foi possível identificar o membro do usuário atual.",
       "emptySearch": "Nenhuma senha encontrada para a pesquisa atual.",
-      "emptyState": "Nenhuma senha cadastrada. Clique em \"Nova Senha\" para começar.",
+      "emptyState": "Nenhuma senha cadastrada",
       "searchPlaceholder": "Buscar senhas",
       "generatePassword": "Gerar Senha",
       "hideGenerator": "Ocultar Gerador",
@@ -2954,7 +2964,7 @@
       "downloadError": "Não foi possível baixar o arquivo. {{reason}}",
       "decryptedContentDesc": "Conteúdo descriptografado",
       "emptySearch": "Nenhum arquivo encontrado para a pesquisa atual.",
-      "emptyState": "Nenhum arquivo cadastrado. Clique em \"Novo Arquivo\" para começar.",
+      "emptyState": "Nenhum arquivo cadastrado",
       "searchPlaceholder": "Buscar arquivos",
       "allCategories": "Todas as Categorias",
       "allTypes": "Todos os Tipos",
@@ -3277,7 +3287,7 @@
       "deletedDesc": "O livro foi excluído com sucesso.",
       "noPrerequisitesMsg": "É necessário ter autores e editoras cadastrados antes de criar um livro.",
       "emptySearch": "Nenhum livro encontrado para a pesquisa atual.",
-      "emptyState": "Nenhum livro cadastrado. Clique em \"Novo Livro\" para começar.",
+      "emptyState": "Nenhum livro cadastrado",
       "searchPlaceholder": "Buscar livro",
       "tabCatalog": "Catálogo",
       "colCover": "Capa",
@@ -3408,7 +3418,7 @@
         "loadingHighlights": "Carregando destaques...",
         "loadingReadings": "Carregando leituras...",
         "loadingSummaries": "Carregando resumos...",
-        "noHighlights": "Nenhum destaque ainda. Clique em \"Adicionar\" para começar.",
+        "noHighlights": "Nenhum destaque ainda",
         "noReadings": "Nenhuma sessão de leitura registrada.",
         "noSummaries": "Nenhum resumo registrado para este livro.",
         "summariesReadOnlyNote": "Resumos só podem ser cadastrados para livros com status <strong>Lido</strong>.",
@@ -3492,7 +3502,7 @@
       "deleted": "Autor excluído",
       "deletedDesc": "O autor foi excluído com sucesso.",
       "emptySearch": "Nenhum autor encontrado para a pesquisa atual.",
-      "emptyState": "Nenhum autor cadastrado. Clique em \"Novo Autor\" para começar.",
+      "emptyState": "Nenhum autor cadastrado",
       "searchPlaceholder": "Buscar autores",
       "allNationalities": "Todas as Nacionalidades",
       "nationalityFilterLabel": "Nacionalidade",
@@ -3586,7 +3596,7 @@
       "deleted": "Editora excluída",
       "deletedDesc": "A editora foi excluída com sucesso.",
       "emptySearch": "Nenhuma editora encontrada para a pesquisa atual.",
-      "emptyState": "Nenhuma editora cadastrada. Clique em \"Nova Editora\" para começar.",
+      "emptyState": "Nenhuma editora cadastrada",
       "searchPlaceholder": "Buscar editoras",
       "allCountries": "Todos os países",
       "foundedYear": "Fundada em {{year}}",
@@ -3628,7 +3638,7 @@
       "deletedDesc": "O resumo foi excluído com sucesso.",
       "noBookMsg": "É necessário ter pelo menos um livro completamente lido antes de criar um resumo.",
       "emptySearch": "Nenhum resumo encontrado para a pesquisa atual.",
-      "emptyState": "Nenhum resumo cadastrado. Clique em \"Novo Resumo\" para começar.",
+      "emptyState": "Nenhum resumo cadastrado",
       "searchPlaceholder": "Buscar resumos...",
       "vectorized": "Vetorizado",
       "notVectorized": "Não Vetorizado",
@@ -3657,7 +3667,7 @@
       "deletedDesc": "A leitura foi excluída com sucesso.",
       "noBookMsg": "É necessário ter pelo menos um livro cadastrado antes de registrar uma leitura.",
       "emptySearch": "Nenhuma leitura encontrada para a pesquisa atual.",
-      "emptyState": "Nenhuma leitura registrada. Clique em \"Nova Leitura\" para começar.",
+      "emptyState": "Nenhuma leitura registrada",
       "searchPlaceholder": "Buscar leituras...",
       "pagesRead": "{{count}} pág.",
       "viewSessions": "Ver sessões",
@@ -3744,7 +3754,7 @@
     "highlights": {
       "title": "Destaques",
       "newBtn": "Novo Destaque",
-      "emptyState": "Nenhum destaque registrado. Clique em \"Novo Destaque\" para começar.",
+      "emptyState": "Nenhum destaque registrado",
       "emptySearch": "Nenhum destaque encontrado para a pesquisa atual.",
       "searchPlaceholder": "Buscar destaques",
       "newTitle": "Novo Destaque",
@@ -3957,7 +3967,7 @@
       "searchPlaceholder": "Buscar habilidades",
       "allStatus": "Todos os status",
       "allCategories": "Todas as categorias",
-      "emptyState": "Nenhuma habilidade cadastrada. Clique em \"Nova Habilidade\" para começar.",
+      "emptyState": "Nenhuma habilidade cadastrada",
       "emptySearch": "Nenhuma habilidade encontrada para a pesquisa atual.",
       "newTitle": "Nova Habilidade",
       "editTitle": "Editar Habilidade",
@@ -4479,47 +4489,6 @@
       "title": "Acesso Negado",
       "message": "Você não tem permissão para acessar esta página.",
       "backBtn": "Voltar ao Início"
-    },
-    "permissions": {
-      "title": "Gerenciamento de Permissões",
-      "membersTitle": "Membros",
-      "membersDesc": "Selecione um membro para gerenciar suas permissões",
-      "noMembers": "Nenhum membro cadastrado",
-      "creditor": "Credor",
-      "beneficiary": "Beneficiário",
-      "permissionsCount": "{{count}} permissões",
-      "permissionsOf": "Permissões de {{name}}",
-      "selectMember": "Selecione um membro",
-      "selectMemberDesc": "Escolha um membro da lista para gerenciar suas permissões",
-      "checkPermissions": "Marque ou desmarque as permissões que este membro terá acesso",
-      "selectMemberStart": "Selecione um membro para começar",
-      "savePermissions": "Salvar Permissões",
-      "saved": "Permissões atualizadas",
-      "savedDesc": "Permissões do membro {{name}} foram atualizadas com sucesso.",
-      "loadError": "Não foi possível carregar os dados. {{reason}}",
-      "loadPermissionsError": "Não foi possível carregar as permissões. {{reason}}",
-      "saveError": "Não foi possível salvar as permissões. {{reason}}",
-      "saveErrorTitle": "Erro",
-      "noUserWarning": "Aviso",
-      "noUserDesc": "Este membro não possui usuário associado e não pode ter permissões.",
-      "loadCategoryError": "Erro ao carregar despesas por categoria",
-      "howItWorks": "Como funciona",
-      "activePermissions": "Permissões Ativas",
-      "activePermissionsDesc": "Permissões marcadas estão ativas para o membro",
-      "inactivePermissions": "Permissões Inativas",
-      "inactivePermissionsDesc": "Permissões desmarcadas não estão disponíveis",
-      "granularity": "Granularidade",
-      "granularityDesc": "Controle fino de visualização e adição",
-      "apps": {
-        "accounts": "Controle Financeiro - Contas",
-        "expenses": "Controle Financeiro - Despesas",
-        "revenues": "Controle Financeiro - Receitas",
-        "credit_cards": "Controle Financeiro - Cartões",
-        "loans": "Controle Financeiro - Empréstimos",
-        "transfers": "Controle Financeiro - Transferências",
-        "security": "Segurança",
-        "library": "Leitura"
-      }
     },
     "dailyReflections": {
       "title": "Reflexões Diárias",
@@ -5361,7 +5330,7 @@
       "deleted": "Valor a receber excluído",
       "deletedDesc": "O valor a receber foi excluído com sucesso.",
       "emptySearch": "Nenhum valor a receber encontrado para a pesquisa atual.",
-      "emptyState": "Nenhum valor a receber cadastrado. Clique em \"Novo Valor a Receber\" para começar.",
+      "emptyState": "Nenhum valor a receber cadastrado",
       "searchPlaceholder": "Buscar descrição",
       "allStatus": "Todos os status",
       "allCategories": "Todas as categorias",
@@ -6411,6 +6380,146 @@
         "first_skill": "Primeira Habilidade",
         "skill_collector": "Colecionador de Habilidades (5 habilidades)"
       }
+    },
+    "adminUsers": {
+      "title": "Equipe",
+      "newStaff": "Novo staff",
+      "empty": "Nenhum staff cadastrado",
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "activate": "Ativar",
+      "deactivate": "Desativar",
+      "deactivateTitle": "Desativar staff",
+      "deactivateConfirm": "Desativar o acesso de {{name}}?",
+      "created": "Staff criado",
+      "saveError": "Não foi possível salvar",
+      "columns": {
+        "username": "Usuário",
+        "name": "Nome",
+        "email": "E-mail",
+        "status": "Status",
+        "createdAt": "Criado em"
+      }
+    },
+    "adminPermissions": {
+      "tabs": {
+        "users": "Usuários",
+        "defaults": "Padrões"
+      },
+      "userTitle": "Permissões de {{name}}",
+      "fullModule": "Liberar módulo inteiro",
+      "edit": "Permissões",
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "activePlural": "Ativos",
+      "inactivePlural": "Inativos",
+      "allStatuses": "Todos",
+      "activate": "Ativar",
+      "deactivate": "Desativar",
+      "deactivateTitle": "Desativar usuário",
+      "deactivateConfirm": "Desativar o acesso de {{name}}?",
+      "searchPlaceholder": "Buscar usuário",
+      "empty": "Nenhum usuário encontrado",
+      "screenCount": "{{count}} de {{total}}",
+      "saved": "Permissões salvas",
+      "saveError": "Não foi possível salvar",
+      "columns": {
+        "username": "Usuário",
+        "name": "Nome",
+        "email": "E-mail",
+        "status": "Status",
+        "screens": "Telas"
+      },
+      "modules": {
+        "planning": "Planejamento Pessoal",
+        "finance": "Controle Financeiro",
+        "security": "Segurança",
+        "intellect": "Intelecto"
+      },
+      "actions": {
+        "view": "Ver",
+        "add": "Criar",
+        "change": "Editar",
+        "delete": "Excluir",
+        "import_template": "Importar modelos",
+        "ai_suggest": "Sugestão por IA",
+        "ai_generate": "Gerar por IA",
+        "ai_report": "Relatório por IA",
+        "ai_summary": "Resumo por IA",
+        "export": "Exportar",
+        "import": "Importar",
+        "reconcile": "Conciliar",
+        "pay_bill": "Pagar fatura",
+        "reopen_bill": "Reabrir fatura",
+        "renegotiate_bill": "Renegociar fatura",
+        "generate": "Gerar",
+        "apply_rules": "Aplicar regras",
+        "ocr": "Ler comprovante",
+        "pay": "Pagar",
+        "receive": "Receber",
+        "renegotiate": "Renegociar",
+        "deposit": "Depositar",
+        "withdraw": "Sacar",
+        "apply_yield": "Aplicar rendimento",
+        "generate_contributions": "Gerar aportes",
+        "recalculate": "Recalcular",
+        "apply_plan": "Aplicar plano",
+        "manage_vault": "Gerenciar cofre",
+        "reveal": "Revelar",
+        "share": "Compartilhar",
+        "check_breach": "Verificar vazamento"
+      },
+      "screens": {
+        "planning": {
+          "dashboard": "Dashboard",
+          "tasks_goals": "Tarefas e Metas",
+          "reflections": "Reflexões",
+          "weekly": "Planejamento Semanal",
+          "workout": "Treino",
+          "nutrition": "Nutrição",
+          "body_metrics": "Métricas Corporais",
+          "wellness": "Bem-estar Emocional",
+          "journey": "Jornada"
+        },
+        "finance": {
+          "dashboard": "Dashboard",
+          "accounts": "Contas",
+          "credit_cards": "Cartões",
+          "members": "Membros",
+          "budgets": "Orçamentos",
+          "financial_goals": "Metas Financeiras",
+          "recurring": "Recorrências",
+          "rules_tags": "Regras e Tags",
+          "transactions": "Transações",
+          "transfers": "Transferências",
+          "bills": "Contas a Pagar/Receber",
+          "vaults": "Cofres",
+          "loans": "Empréstimos",
+          "agenda": "Agenda",
+          "analytics": "Análises",
+          "financial_health": "Saúde Financeira"
+        },
+        "security": {
+          "vault": "Cofre (base do módulo)",
+          "dashboard": "Dashboard",
+          "passwords": "Senhas",
+          "stored_cards": "Cartões Armazenados",
+          "stored_accounts": "Contas Armazenadas",
+          "archives": "Arquivos",
+          "activity_logs": "Logs de Atividade"
+        },
+        "intellect": {
+          "dashboard": "Dashboard",
+          "today": "Hoje",
+          "books": "Livros",
+          "authors": "Autores",
+          "publishers": "Editoras",
+          "courses": "Cursos",
+          "skills": "Habilidades",
+          "flashcards": "Flashcards",
+          "knowledge_graph": "Grafo de Conhecimento"
+        }
+      }
     }
   },
   "userProfile": {
@@ -7108,11 +7217,6 @@
         "title": "Perfil",
         "desc": "Seus dados pessoais, foto, senha e preferências da conta.",
         "tip": "Mantenha o e-mail verificado para recuperar a conta."
-      },
-      "permissions": {
-        "title": "Permissões",
-        "desc": "Veja quais recursos do sistema você pode acessar.",
-        "tip": "Se algo estiver bloqueado, fale com um administrador."
       },
       "notifications": {
         "title": "Preferências de notificação",

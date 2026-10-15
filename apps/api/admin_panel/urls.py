@@ -1,5 +1,11 @@
 from django.urls import path
 
+from admin_panel.permission_views import (
+    PermissionUserDetailView,
+    PermissionUserListView,
+    ScreenCatalogView,
+    ScreenDefaultsView,
+)
 from admin_panel.views import (
     AdminAgentsStatusView,
     AdminEmailTestView,
@@ -7,6 +13,8 @@ from admin_panel.views import (
     AdminIntegrationsView,
     AdminLogsView,
     AdminRestartAllView,
+    StaffDetailView,
+    StaffListCreateView,
     SystemConfigDetailView,
     SystemConfigListView,
     SystemConfigRevealView,
@@ -38,4 +46,28 @@ urlpatterns = [
         name="admin-agents-status",
     ),
     path("restart/", AdminRestartAllView.as_view(), name="admin-restart-all"),
+    path("staff/", StaffListCreateView.as_view(), name="admin-staff-list"),
+    path(
+        "staff/<int:pk>/", StaffDetailView.as_view(), name="admin-staff-detail"
+    ),
+    path(
+        "permissions/screens/",
+        ScreenCatalogView.as_view(),
+        name="admin-permissions-screens",
+    ),
+    path(
+        "permissions/users/",
+        PermissionUserListView.as_view(),
+        name="admin-permissions-users",
+    ),
+    path(
+        "permissions/users/<int:pk>/",
+        PermissionUserDetailView.as_view(),
+        name="admin-permissions-user-detail",
+    ),
+    path(
+        "permissions/defaults/",
+        ScreenDefaultsView.as_view(),
+        name="admin-permissions-defaults",
+    ),
 ]

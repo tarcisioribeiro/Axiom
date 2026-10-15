@@ -33,6 +33,7 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -961,12 +962,12 @@ function CheckinTab({
               {t('common.actions.cancel')}
             </Button>
             {isLastStep ? (
-              <Button onClick={handleSubmit} disabled={mutation.isPending}>
+              <Can action="add"><Button onClick={handleSubmit} disabled={mutation.isPending}>
                 <CheckCircle2 className="h-4 w-4" />
                 {mutation.isPending
                   ? t('common.actions.saving')
                   : t('pages.emotionalWellness.checkin.registerBtn')}
-              </Button>
+              </Button></Can>
             ) : (
               <Button onClick={() => setStep((s) => s + 1)}>
                 <ChevronRight className="h-4 w-4" />
@@ -1767,15 +1768,15 @@ export default function EmotionalWellness() {
           icon={<ActiveIcon />}
           actions={
             tab === 'self-esteem' ? (
-              <Button onClick={() => setSelfEsteemFormOpen(true)}>
+              <Can action="add"><Button onClick={() => setSelfEsteemFormOpen(true)}>
                 <Plus className="h-4 w-4" />
                 {t('pages.emotionalWellness.selfEsteem.newAssessmentBtn')}
-              </Button>
+              </Button></Can>
             ) : tab === 'checkin' ? (
-              <Button onClick={() => setCheckinFormOpen(true)}>
+              <Can action="add"><Button onClick={() => setCheckinFormOpen(true)}>
                 <Plus className="h-4 w-4" />
                 {t('pages.emotionalWellness.checkin.registerBtn')}
-              </Button>
+              </Button></Can>
             ) : (
               tab === 'crisis' && (
                 <Button onClick={() => setCrisisFormOpen(true)}>

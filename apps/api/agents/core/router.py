@@ -15,6 +15,8 @@ Melhorias implementadas:
 import logging
 import math
 import unicodedata
+from collections.abc import Generator
+from typing import Any
 
 from agents.core.base_agent import AgentContext, AgentResponse, BaseAgent
 from agents.core.llm_client import LLMClient
@@ -383,6 +385,34 @@ class SemanticRouter:
 # ──────────────────────────────────────────────────────
 
 
+NO_ACCESS_MESSAGE = "Você não tem acesso a este módulo."
+
+
+class NoAccessAgent(BaseAgent):
+    """Resposta fixa, sem LLM, quando o agente pedido atende um módulo sem
+    telas liberadas para o usuário."""
+
+    description = "Sem acesso ao módulo"
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    def can_handle(self, query: str) -> float:
+        return 0.0
+
+    def build_context(self, ctx: AgentContext) -> dict[str, Any]:
+        return {}
+
+    def build_prompt(self, ctx: AgentContext, data: dict[str, Any]) -> str:
+        return ""
+
+    def run(self, ctx: AgentContext) -> AgentResponse:
+        return AgentResponse(content=NO_ACCESS_MESSAGE, agent_name=self.name)
+
+    def stream(self, ctx: AgentContext) -> Generator[str, None, None]:
+        yield NO_ACCESS_MESSAGE
+
+
 class AgentRouter:
     @staticmethod
     def select_by_name(name: str) -> BaseAgent | None:
@@ -402,12 +432,19 @@ class AgentRouter:
     def select(
         ctx: AgentContext, agent_override: str | None = None
     ) -> BaseAgent:
+        from django.contrib.auth.models import User
+
+        from agents.providers.access import agent_allowed
         from app.config import cfg
+
+        user = User.objects.get(pk=ctx.user_id)
 
         # Override direto: bypassa roteamento automático
         if agent_override:
             agent = AgentRouter.select_by_name(agent_override)
             if agent is not None:
+                if not agent_allowed(user, agent.name):
+                    return NoAccessAgent(agent.name)
                 return agent
             logger.warning(
                 "AgentRouter: override '%s' inválido,"
@@ -415,7 +452,12 @@ class AgentRouter:
                 agent_override,
             )
 
-        registry = _build_registry()
+        # Só agentes de módulos com alguma tela liberada entram na disputa
+        registry = [
+            a for a in _build_registry() if agent_allowed(user, a.name)
+        ]
+        if not registry:
+            return NoAccessAgent("insight")
 
         # Keyword scoring com normalização de acentos
         score_map: dict[BaseAgent, float] = {
@@ -459,7 +501,7 @@ class AgentRouter:
         best_agent = max(score_map, key=lambda a: score_map[a])
         best_score = score_map[best_agent]
 
-        if best_score < 0.2:
+        if best_score < 0.2 and agent_allowed(user, "insight"):
             from agents.agents.insight_agent import InsightAgent
 
             best_agent = InsightAgent()

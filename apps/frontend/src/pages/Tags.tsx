@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -285,20 +286,24 @@ export default function Tags({
                   </span>
                 </div>
                 <div className="gap-xs flex shrink-0">
-                  <PlainButton
-                    aria-label={t('common.actions.edit')}
-                    onClick={() => handleEdit(tag)}
-                    className="p-xs text-muted-foreground hover:bg-muted hover:text-foreground rounded transition-colors"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </PlainButton>
-                  <PlainButton
-                    aria-label={t('common.actions.delete')}
-                    onClick={() => void handleDelete(tag)}
-                    className="p-xs text-destructive hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </PlainButton>
+                  <Can action="change">
+                    <PlainButton
+                      aria-label={t('common.actions.edit')}
+                      onClick={() => handleEdit(tag)}
+                      className="p-xs text-muted-foreground hover:bg-muted hover:text-foreground rounded transition-colors"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </PlainButton>
+                  </Can>
+                  <Can action="delete">
+                    <PlainButton
+                      aria-label={t('common.actions.delete')}
+                      onClick={() => void handleDelete(tag)}
+                      className="p-xs text-destructive hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </PlainButton>
+                  </Can>
                 </div>
               </div>
             ))

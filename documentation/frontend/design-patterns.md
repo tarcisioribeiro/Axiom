@@ -1,6 +1,6 @@
 # Padrões de design do frontend web
 
-**Documento oficial** · versão 1.7 · 15/10/2026
+**Documento oficial** · versão 1.8 · 15/10/2026
 
 Padrões de UI/UX definidos pelo product owner desde 25/08/2026. Toda mudança visual no frontend web segue este documento. Quando um pedido contradiz uma regra, a regra é atualizada aqui primeiro.
 
@@ -112,6 +112,8 @@ Há três tipos de modal:
 - **[pontual]** Botão de revelar senha ou documento é só ícone, com tooltip.
 - **[regra]** No cofre (Senhas, Cartões Guardados, Contas Guardadas), "Copiar dados" no menu "..." do card copia o registro inteiro, um campo por linha com rótulo: senha → Site, Usuário, Senha; cartão → Bandeira, Número, Titular, Validade, CVV; conta → Instituição, Número, Senha 1, Senha 2. É o único botão de cópia: os modais de detalhe de Senha, Cartão e Conta não têm copiar por campo (nem do código TOTP) e ficam só com Fechar + Revelar. Revelar não pede confirmação extra (o cofre já está desbloqueado). "Verificar vazamento" (HIBP) fica no "..." do card de senha e mostra o resultado em toast, sem exibir a senha.
 
+- **[regra]** Controle de acesso por tela (15/10/2026): o que o usuário não pode fazer **some**, nunca fica desabilitado. Tela sem "Ver" sai do menu, da paleta e da Home (card do módulo leva à primeira tela liberada; sem nenhum, `EmptyState` "Nenhum módulo liberado") e a URL direta cai em `/unauthorized`. Botões: `<Can action="…">` (`components/common/Can.tsx`) ou `useCurrentScreen().can(…)`; `CardActions` esconde Editar/Excluir sem `change`/`delete` e cada item do "..." declara `action` (padrão `view`); a ação principal do `PageHeader` exige `add` (ou `permission`). Campos de vínculo com outro módulo só carregam/aparecem com a tela de destino. Mapa rota → tela em `lib/screen-access.ts`.
+
 ## 5. Cards, listas e empty states
 
 - **[regra]** Empty state: sem botão, sem texto abaixo do ícone e do rótulo, centralizado na horizontal e na vertical. Usar o componente `EmptyState`.
@@ -156,6 +158,8 @@ Há três tipos de modal:
 
 - **[regra]** Animações visíveis mas leves, usando só `opacity` e `transform`: abas, páginas, toggles, modais, troca de filtros e carregamentos. Usar os tokens `duration-*`. Status: ainda há ~11 durações fixas no Framer Motion e 6 usos de `transition-all`.
 - **[regra]** A transição de paginação é a da tela de Tarefas Rotineiras (referência).
+- **[regra]** Checkbox (componente base `components/ui/checkbox.tsx`): o ✓ entra com `animate-pop-in` ao marcar e sai com `animate-pop-out` ao desmarcar; o fundo troca sem transição (15/10/2026).
+- **[regra]** Seletor que troca o conteúdo de uma lista (ex.: módulos no editor de permissões) usa a mesma transição da paginação (`slideVariants`), com direção pela posição da opção no seletor.
 - **[regra]** Animações indesejadas são removidas (ex.: giro de número em contador, tela piscando).
 - **[pontual]** Animação na troca entre senha e 2FA, ao abrir campos de data e horário e ao ocultar o widget do agente.
 
@@ -211,5 +215,8 @@ Há três tipos de modal:
   - Configurações: categorias em accordion (`CollapsibleSection`, a primeira aberta), variáveis paginadas em 5 (`PaginatedSlide pinNav={false}`), descrição da variável no popover de ajuda (?), edição em modal "Editar configuração" (Cancelar/Salvar, erro em toast) no lugar da edição em linha, sem aviso âmbar de reinício (cada variável tem o badge "Requer reinicialização"). Variáveis secretas já configuradas têm o botão de ícone Visualizar (`Eye`, `ACTION_COLOR.reveal`, antes do Editar), que abre um modal de detalhe com o valor real (buscado em `config/<key>/reveal/` só ao abrir, sem cache; `DialogCloseFooter`) (15/10/2026). Modal Reiniciar com `DialogTitle icon`, sem textos de apoio e botão de confirmação na variante padrão.
   - Integrações: cards neutros em `md:grid-cols-2 lg:grid-cols-3` (ícone + nome + mensagem em 1 linha + badge; "N modelos" como métrica), clique abre o detalhe (`DialogCloseFooter`, lista de modelos); rodapé `border-t` só com ícones: Ollama → Reiniciar (mesmo `RestartModal` de Configurações), E-mail → modal de ação "Enviar email de teste".
   - Logs: `DataTable` com paginação no servidor (5 por página), data "dd/mm/aaaa hh:mm", descrição truncada com `title`, ação traduzida pelo código em `Badge` com variante do tema; filtros aplicam na hora (sem botão "Aplicar filtros").
-- **[regra]** Rota sem link na interface é removida, não mantida órfã.
+  - Equipe (`/admin/users`, só superuser) (15/10/2026): `PageHeader` "Equipe" (`UserCog`) com "Novo staff" (`UserPlus`, variante padrão); `DataTable` (5 por página) com Usuário, Nome, E-mail, Status (`Badge`) e Criado em; ação única só ícone com tooltip, Desativar (`UserX`, confirmação via `showConfirm`) / Ativar (`UserCheck`). "Novo staff" é modal de formulário com os mesmos campos do cadastro (`components/auth/AccountFields.tsx`).
+  - Permissões (`/admin/permissions/users|defaults`, staff e superuser) (15/10/2026): abas com rota; staff vê no `/admin` só este item (entra pelo menu do avatar → "Painel de permissões", e volta por "Voltar ao app"). Usuários: `FilterBar` (busca + status) e `DataTable` (Usuário, Nome, E-mail, Status, Telas "N de 40"); ações Permissões (`ShieldCheck`) e Desativar/Ativar (confirmação). O editor (`PermissionMatrix`) tem seletor segmentado de módulos (com os ícones do menu), "Liberar módulo inteiro" e telas paginadas em 5: um `Card` por tela (`bg-card`, `min-h-[5.5rem]` para os 5 ocuparem a altura útil em 880 px), com o ícone da tela do menu num quadrado `bg-primary/10` e os checkboxes das ações; sem "Ver" as demais ficam desabilitadas. Na página, `PaginatedSlide` padrão (navegação fixa, lista centralizada com 2+ páginas); no modal, `pinNav={false}`. Espaço `mt-lg` entre o header e as abas e `space-y-lg` entre filtro e tabela na aba. Em Usuários abre em modal de ação (`max-w-5xl`, Cancelar/Salvar); em Padrões fica na página com Salvar no header.
+- **[regra]** Rota sem link na interface é removida, não mantida órfã. Rota de tela com endpoint no backend entra no menu (`nav-config.ts`). Status (15/10/2026): Segurança ganhou "Saúde do Cofre" e "Logs de Atividade"; "Webhooks" entrou no menu principal; `/settings/two-factor` e `/settings/notifications` removidas (já são modais em Meu Perfil).
+- **[regra]** Cadastro público (15/10/2026): só abre com um staff ativo (`useRegistrationStatus`). Fechado, `/register` mostra no card a logo + `EmptyState` "Cadastro indisponível" (`UserX`) e só o link "Voltar ao login"; o login esconde "Não tem conta? Cadastre-se". E-mail obrigatório no cadastro.
 - **[pontual]** O timer de estudo flutuante (`StudyTimer`) aparece em Obras/Autores/Editoras (leitura) e Cursos/Habilidades (curso), não no Grafo de Conhecimento. Obras não tem "Registrar Progresso" no header (leituras são registradas no detalhe da obra ou pelo timer). Status (14/10/2026): Intelecto Hoje e Flash Cards entraram no menu (submódulo Intelecto); `/library/reader/:bookId` removida (o leitor abre sobre a tela de Livros).

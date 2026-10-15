@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation } from 'react-router';
 
 import { Button } from '@/components/ui/button';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
 
 interface PageHeaderProps {
   title: string;
@@ -10,6 +11,8 @@ interface PageHeaderProps {
     label: string;
     icon?: React.ReactNode;
     onClick: () => void;
+    /** Ação da tela exigida (controle por tela); padrão `add`. */
+    permission?: string;
   };
   actions?: React.ReactNode;
   children?: React.ReactNode;
@@ -84,6 +87,8 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 }) => {
   const { pathname } = useLocation();
   const module = getModuleFromPath(pathname);
+  const { can } = useCurrentScreen();
+  const visibleAction = action && can(action.permission ?? 'add') ? action : undefined;
   const colors = module ? moduleColors[module] : null;
 
   const iconStyle = colors
@@ -111,14 +116,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         )}
         <h1 className="heading-1">{title}</h1>
       </div>
-      {(children || actions || action) && (
+      {(children || actions || visibleAction) && (
         <div className={childrenClassName ?? 'flex items-center gap-3'}>
           {children}
           {actions}
-          {action && (
-            <Button onClick={action.onClick} className="gap-sm">
-              {action.icon}
-              {action.label}
+          {visibleAction && (
+            <Button onClick={visibleAction.onClick} className="gap-sm">
+              {visibleAction.icon}
+              {visibleAction.label}
             </Button>
           )}
         </div>

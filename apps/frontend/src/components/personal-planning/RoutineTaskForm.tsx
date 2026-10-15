@@ -45,6 +45,7 @@ import { TimePicker } from '@/components/ui/time-picker';
 import { Tooltip } from '@/components/ui/tooltip';
 import { translate } from '@/config/constants';
 import { TASK_CATEGORY_ICONS, PRIORITY_ICONS, PERIODICITY_ICONS } from '@/config/icons';
+import { useScreenAccess } from '@/hooks/use-screen-access';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { cn, formatLocalDate } from '@/lib/utils';
@@ -199,19 +200,21 @@ export function RoutineTaskForm({
 
   const isIntellect = watch('category') === 'intellect';
   const isFinance = watch('category') === 'finance';
+  // Vínculos com outros módulos só para quem tem a tela de destino
+  const { can } = useScreenAccess();
 
   const { data: financialGoals = [] } = useQuery({
     queryKey: ['financial-goals-active'],
     queryFn: () => financialGoalsService.getAll({ is_active: 'true' }),
     staleTime: 60_000,
-    enabled: isFinance,
+    enabled: isFinance && can('finance.financial_goals'),
   });
 
   const { data: readingBooksList = [] } = useQuery({
     queryKey: ['books-reading'],
     queryFn: () => booksService.getAll({ read_status: 'reading' }),
     staleTime: 60_000,
-    enabled: isIntellect,
+    enabled: isIntellect && can('intellect.books'),
   });
 
   useEffect(() => {
@@ -245,7 +248,7 @@ export function RoutineTaskForm({
     queryKey: ['meal-types', 'active'],
     queryFn: () => mealTypeService.getActive(),
     staleTime: 60_000,
-    enabled: isNutrition,
+    enabled: isNutrition && can('planning.nutrition'),
   });
   const { data: hydrationGoal } = useQuery({
     queryKey: ['hydration-goal'],

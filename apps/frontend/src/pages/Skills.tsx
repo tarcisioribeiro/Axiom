@@ -17,6 +17,7 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { CardActions } from '@/components/common/CardActions';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -387,7 +388,7 @@ export default function Skills() {
                   { value: 'radar', label: t('pages.skills.viewRadar'), icon: Radar },
                 ]}
               />
-              <Button
+              <Can action="add"><Button
                 onClick={() => {
                   setEditingSkill(null);
                   setFormOpen(true);
@@ -395,7 +396,7 @@ export default function Skills() {
               >
                 <Plus className="h-4 w-4" />
                 {t('pages.skills.newBtn')}
-              </Button>
+              </Button></Can>
             </div>
           }
         />

@@ -121,58 +121,6 @@ describe('useAuthStore', () => {
     });
   });
 
-  describe('hasSystemAccess', () => {
-    it('returns false when user is null', () => {
-      const { result } = renderHook(() => useAuthStore());
-      expect(result.current.hasSystemAccess()).toBe(false);
-    });
-
-    it('returns true when user belongs to the Membros group', () => {
-      useAuthStore.setState({
-        user: {
-          id: 1,
-          username: 'testuser',
-          email: 'test@example.com',
-          first_name: 'Test',
-          last_name: 'User',
-          groups: ['Membros'],
-        },
-      });
-      const { result } = renderHook(() => useAuthStore());
-      expect(result.current.hasSystemAccess()).toBe(true);
-    });
-
-    it('returns false when user does not belong to the Membros group', () => {
-      useAuthStore.setState({
-        user: {
-          id: 1,
-          username: 'testuser',
-          email: 'test@example.com',
-          first_name: 'Test',
-          last_name: 'User',
-          groups: ['Admins'],
-        },
-      });
-      const { result } = renderHook(() => useAuthStore());
-      expect(result.current.hasSystemAccess()).toBe(false);
-    });
-
-    it('returns false when user has no groups', () => {
-      useAuthStore.setState({
-        user: {
-          id: 1,
-          username: 'testuser',
-          email: 'test@example.com',
-          first_name: 'Test',
-          last_name: 'User',
-          groups: [],
-        },
-      });
-      const { result } = renderHook(() => useAuthStore());
-      expect(result.current.hasSystemAccess()).toBe(false);
-    });
-  });
-
   describe('logout', () => {
     it('clears user, permissions, and auth state', () => {
       useAuthStore.setState({
@@ -238,6 +186,29 @@ describe('useAuthStore', () => {
       const { isAuthenticated, user } = useAuthStore.getState();
       expect(isAuthenticated).toBe(true);
       expect(user?.username).toBe('authuser');
+    });
+
+    it('refreshes the staff role from the server on session load', async () => {
+      // Cookie salvo antes da promoção não tem is_staff
+      vi.mocked(authService.getUserData).mockReturnValue({
+        id: 1,
+        username: 'promoted',
+        email: 'p@example.com',
+        first_name: 'Pro',
+        last_name: 'Moted',
+        groups: ['Membros'],
+      });
+      vi.mocked(authService.getPermissions).mockReturnValue([]);
+      vi.mocked(authService.isAuthenticated).mockResolvedValue(true);
+      vi.mocked(authService.getUserPermissions).mockResolvedValue({
+        permissions: [],
+        is_superuser: false,
+        is_staff: true,
+      });
+
+      await useAuthStore.getState().loadUserData();
+
+      expect(useAuthStore.getState().user?.is_staff).toBe(true);
     });
 
     it('fetches member data when authenticated user has no first_name', async () => {

@@ -44,6 +44,8 @@ import {
   Heart,
   Layers,
   Sunrise,
+  ScrollText,
+  Webhook,
 } from 'lucide-react';
 
 import type { IconComponent } from '@/types/icon';
@@ -78,9 +80,13 @@ export interface NavItem {
   permission?: { appName: string; action: string };
 }
 
+/** Painel de permissões no /admin (staff e superuser). */
+export const PERMISSIONS_PATH = '/admin/permissions';
+
 export const navItems: NavItem[] = [
   { titleKey: 'nav.home', href: '/', icon: Home },
   { titleKey: 'nav.agents', href: '/agents', icon: BotMessageSquare },
+  { titleKey: 'nav.webhooks', href: '/webhooks', icon: Webhook },
 ];
 
 export const navModules: NavModule[] = [
@@ -240,6 +246,16 @@ export const navModules: NavModule[] = [
         icon: Wallet,
       },
       { titleKey: 'nav.items.archives', href: '/security/archives', icon: Archive },
+      {
+        titleKey: 'nav.items.vaultHealth',
+        href: '/security/health',
+        icon: HeartPulse,
+      },
+      {
+        titleKey: 'nav.items.activityLogs',
+        href: '/security/activity-logs',
+        icon: ScrollText,
+      },
     ],
   },
   {
@@ -299,6 +315,22 @@ export const navModules: NavModule[] = [
     ],
   },
 ];
+
+/** Módulos com só os itens visíveis; submódulo/módulo sem itens somem. */
+export const filterNavModules = (
+  modules: NavModule[],
+  isVisible: (item: NavSubItem) => boolean
+): NavModule[] =>
+  modules
+    .map((m) => ({
+      ...m,
+      topItems: m.topItems?.filter(isVisible),
+      items: m.items?.filter(isVisible),
+      subModules: m.subModules
+        ?.map((sub) => ({ ...sub, items: sub.items.filter(isVisible) }))
+        .filter((sub) => sub.items.length > 0),
+    }))
+    .filter((m) => getAllModuleItems(m).length > 0);
 
 /** Returns all leaf NavSubItems within a module (topItems + items + all subModule items). */
 export const getAllModuleItems = (module: NavModule): NavSubItem[] => {

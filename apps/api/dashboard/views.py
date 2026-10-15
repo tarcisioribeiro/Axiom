@@ -2570,48 +2570,6 @@ class AlertsStreamView(APIView):
         return response
 
 
-class AuditLogView(APIView):
-    """Return audit log entries for a specific object."""
-
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request):
-        from django.contrib.contenttypes.models import ContentType
-
-        from app.audit import ChangeLog
-
-        object_type = request.query_params.get("object_type")
-        object_id = request.query_params.get("object_id")
-
-        qs = ChangeLog.objects.filter(user=request.user)
-
-        if object_type:
-            ct = ContentType.objects.filter(model=object_type.lower()).first()
-            if ct:
-                qs = qs.filter(content_type=ct)
-
-        if object_id:
-            qs = qs.filter(object_id=object_id)
-
-        qs = qs.select_related("user", "content_type")[:100]
-
-        data = [
-            {
-                "id": entry.id,
-                "action": entry.action,
-                "object_type": (
-                    entry.content_type.model if entry.content_type else None
-                ),
-                "object_id": entry.object_id,
-                "changes": entry.changes,
-                "timestamp": entry.timestamp.isoformat(),
-                "ip_address": entry.ip_address,
-            }
-            for entry in qs
-        ]
-        return Response({"results": data, "count": len(data)})
-
-
 class FinancialHealthScoreView(APIView):
     """
     GET /api/v1/dashboard/health-score/

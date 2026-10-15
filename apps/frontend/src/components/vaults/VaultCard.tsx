@@ -108,6 +108,7 @@ export function VaultCard({
               {
                 icon: ArrowDownToLine,
                 label: t('pages.vaults.depositBtn'),
+                action: 'deposit',
                 onClick: () => onDeposit(vault),
                 color: 'deposit',
                 disabled: !vault.is_active,
@@ -115,6 +116,7 @@ export function VaultCard({
               {
                 icon: ArrowUpFromLine,
                 label: t('pages.vaults.withdrawBtn'),
+                action: 'withdraw',
                 onClick: () => onWithdraw(vault),
                 color: 'withdraw',
                 disabled: !vault.is_active || balance <= 0,
@@ -122,6 +124,7 @@ export function VaultCard({
               {
                 icon: RefreshCcw,
                 label: t('pages.vaults.applyYieldBtn'),
+                action: 'apply_yield',
                 onClick: () => onApplyYield(vault),
                 color: 'yield',
                 disabled: !vault.is_active || vault.pending_yield <= 0,

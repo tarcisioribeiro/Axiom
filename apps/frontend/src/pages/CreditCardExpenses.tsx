@@ -21,6 +21,7 @@ import {
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
@@ -1021,29 +1022,35 @@ export default function CreditCardExpenses({
                               aria-hidden="true"
                             />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditPurchase(installment.purchase)}
-                            aria-label={t('pages.creditCardExpenses.editPurchaseLabel')}
-                            title={t('pages.creditCardExpenses.editPurchaseLabel')}
-                          >
-                            <Pencil className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeletePurchase(installment.purchase)}
-                            aria-label={t(
-                              'pages.creditCardExpenses.deletePurchaseLabel'
-                            )}
-                            title={t('pages.creditCardExpenses.deletePurchaseLabel')}
-                          >
-                            <Trash2
-                              className="text-destructive h-4 w-4"
-                              aria-hidden="true"
-                            />
-                          </Button>
+                          <Can action="change">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditPurchase(installment.purchase)}
+                              aria-label={t(
+                                'pages.creditCardExpenses.editPurchaseLabel'
+                              )}
+                              title={t('pages.creditCardExpenses.editPurchaseLabel')}
+                            >
+                              <Pencil className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                          </Can>
+                          <Can action="delete">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeletePurchase(installment.purchase)}
+                              aria-label={t(
+                                'pages.creditCardExpenses.deletePurchaseLabel'
+                              )}
+                              title={t('pages.creditCardExpenses.deletePurchaseLabel')}
+                            >
+                              <Trash2
+                                className="text-destructive h-4 w-4"
+                                aria-hidden="true"
+                              />
+                            </Button>
+                          </Can>
                         </div>
                       );
                     }}
@@ -1081,24 +1088,28 @@ export default function CreditCardExpenses({
                     source={{ type: 'credit_card_purchase', data: purchase }}
                     memberName={getMemberDisplayName(purchase.member_name, user)}
                   />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEditPurchase(purchase.id)}
-                    aria-label={t('pages.creditCardExpenses.editPurchaseLabel')}
-                    title={t('pages.creditCardExpenses.editPurchaseLabel')}
-                  >
-                    <Pencil className="h-4 w-4" aria-hidden="true" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeletePurchase(purchase.id)}
-                    aria-label={t('pages.creditCardExpenses.deletePurchaseLabel')}
-                    title={t('pages.creditCardExpenses.deletePurchaseLabel')}
-                  >
-                    <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
-                  </Button>
+                  <Can action="change">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditPurchase(purchase.id)}
+                      aria-label={t('pages.creditCardExpenses.editPurchaseLabel')}
+                      title={t('pages.creditCardExpenses.editPurchaseLabel')}
+                    >
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </Can>
+                  <Can action="delete">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeletePurchase(purchase.id)}
+                      aria-label={t('pages.creditCardExpenses.deletePurchaseLabel')}
+                      title={t('pages.creditCardExpenses.deletePurchaseLabel')}
+                    >
+                      <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </Can>
                 </div>
               )}
             />

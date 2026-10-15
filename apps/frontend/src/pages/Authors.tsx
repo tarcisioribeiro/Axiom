@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
+import { Can } from '@/components/common/Can';
 import { CardActions } from '@/components/common/CardActions';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
@@ -328,10 +329,10 @@ export default function Authors() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.authors.title')} icon={<UserPen />}>
-        <Button onClick={handleCreate}>
+        <Can action="add"><Button onClick={handleCreate}>
           <Plus className="h-4 w-4" />
           {t('pages.authors.newBtn')}
-        </Button>
+        </Button></Can>
       </PageHeader>
 
       <FilterBar

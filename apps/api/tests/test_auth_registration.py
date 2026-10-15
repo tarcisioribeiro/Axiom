@@ -6,6 +6,7 @@ and auth current-user edge cases.
 from decimal import Decimal
 
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
@@ -52,6 +53,13 @@ class BasePush2TestCase(APITestCase):
 
 
 class AuthRegistrationTest(APITestCase):
+    def setUp(self):
+        cache.clear()  # zera o throttle de cadastro
+        # Cadastro só abre com um staff ativo
+        User.objects.create_user(
+            "staffreg", "staffreg@test.com", "pw", is_staff=True
+        )
+
     def test_register_user_success(self):
         """Covers validate_cpf, validate_registration_data, register
         success."""

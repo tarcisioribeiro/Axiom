@@ -2,6 +2,7 @@ import { Edit, LayoutList, Trash2 } from 'lucide-react';
 import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { Button } from '@/components/ui/button';
 import { getIconByName } from '@/components/ui/icon-picker';
 import type { FocusBlock } from '@/types';
@@ -59,24 +60,28 @@ export function RoutineFocusBlockCard({
       <span className="bg-muted text-muted-foreground px-xs rounded-full py-0.5 text-xs font-medium tabular-nums">
         {block.block_tasks.length}
       </span>
-      <Button
-        aria-label={t('common.actions.edit')}
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7"
-        onClick={onEdit}
-      >
-        <Edit className="h-3.5 w-3.5" aria-hidden="true" />
-      </Button>
-      <Button
-        aria-label={t('common.actions.delete')}
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7"
-        onClick={onDelete}
-      >
-        <Trash2 className="text-destructive h-3.5 w-3.5" aria-hidden="true" />
-      </Button>
+      <Can action="change">
+        <Button
+          aria-label={t('common.actions.edit')}
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onEdit}
+        >
+          <Edit className="h-3.5 w-3.5" aria-hidden="true" />
+        </Button>
+      </Can>
+      <Can action="delete">
+        <Button
+          aria-label={t('common.actions.delete')}
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onDelete}
+        >
+          <Trash2 className="text-destructive h-3.5 w-3.5" aria-hidden="true" />
+        </Button>
+      </Can>
     </div>
   );
 }

@@ -24,6 +24,7 @@ from .views import (
     get_available_users,
     get_current_user,
     get_user_permissions,
+    registration_status,
 )
 
 urlpatterns = [
@@ -55,6 +56,11 @@ urlpatterns = [
     path("user/permissions/", get_user_permissions, name="user-permissions"),
     path("users/available/", get_available_users, name="available-users"),
     path("users/register/", create_user_with_member, name="register-user"),
+    path(
+        "users/registration-status/",
+        registration_status,
+        name="registration-status",
+    ),
     path(
         "users/password-reset/",
         PasswordResetRequestView.as_view(),

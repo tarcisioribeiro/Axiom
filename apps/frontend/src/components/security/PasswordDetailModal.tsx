@@ -30,6 +30,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { ACTION_COLOR } from '@/lib/action-colors';
 import { formatDate } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
@@ -110,10 +111,12 @@ export function PasswordDetailModal({
 
   // O histórico vem antes de abrir (§7): trocar de aba não muda o tamanho do modal
   // por causa de um "Carregando…".
+  // Revelar e histórico exigem a ação "reveal" da tela
+  const canReveal = useCurrentScreen().can('reveal');
   const historyQuery = useQuery({
     queryKey: ['password-history', selected?.id],
     queryFn: () => securityDashboardService.getPasswordHistory(selected!.id),
-    enabled: !!selected,
+    enabled: !!selected && canReveal,
   });
 
   if (!password) return null;
@@ -135,7 +138,7 @@ export function PasswordDetailModal({
 
   return (
     <Dialog
-      open={!!selected && !historyQuery.isPending}
+      open={!!selected && (!canReveal || !historyQuery.isPending)}
       onOpenChange={(open) => !open && onClose()}
     >
       <DialogContent size="md">
@@ -150,10 +153,12 @@ export function PasswordDetailModal({
               <FileText className="h-3.5 w-3.5" />
               {t('common.actions.details')}
             </TabsTrigger>
-            <TabsTrigger value="history" className="gap-xs flex-1">
-              <History className="h-3.5 w-3.5" />
-              {t('pages.passwords.history')}
-            </TabsTrigger>
+            {canReveal && (
+              <TabsTrigger value="history" className="gap-xs flex-1">
+                <History className="h-3.5 w-3.5" />
+                {t('pages.passwords.history')}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="details" className="space-y-md mt-md">
@@ -282,19 +287,21 @@ export function PasswordDetailModal({
         </Tabs>
 
         <DialogCloseFooter>
-          <Button
-            variant="outline"
-            onClick={() => onReveal(password.id)}
-            loading={isRevealing}
-          >
-            {!isRevealing &&
-              (revealedPassword ? (
-                <EyeOff className={ACTION_COLOR.reveal} />
-              ) : (
-                <Eye className={ACTION_COLOR.reveal} />
-              ))}
-            {revealedPassword ? t('common.actions.hide') : t('common.actions.reveal')}
-          </Button>
+          {canReveal && (
+            <Button
+              variant="outline"
+              onClick={() => onReveal(password.id)}
+              loading={isRevealing}
+            >
+              {!isRevealing &&
+                (revealedPassword ? (
+                  <EyeOff className={ACTION_COLOR.reveal} />
+                ) : (
+                  <Eye className={ACTION_COLOR.reveal} />
+                ))}
+              {revealedPassword ? t('common.actions.hide') : t('common.actions.reveal')}
+            </Button>
+          )}
         </DialogCloseFooter>
       </DialogContent>
     </Dialog>

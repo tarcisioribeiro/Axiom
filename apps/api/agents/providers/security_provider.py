@@ -12,7 +12,17 @@ from typing import Any, cast
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+from agents.providers.access import requires_screen
 
+
+@requires_screen(
+    "security.dashboard",
+    "security.passwords",
+    "security.stored_cards",
+    "security.stored_accounts",
+    "security.archives",
+    empty={},
+)
 def security_counts(user: User) -> dict[str, int]:
     from security.models import (
         Archive,
@@ -49,6 +59,7 @@ def security_counts(user: User) -> dict[str, int]:
     }
 
 
+@requires_screen("security.activity_logs", "security.dashboard", empty=[])
 def recent_activity_logs(user: User, limit: int = 15) -> list[dict[str, Any]]:
     from security.models import ActivityLog
 
@@ -66,6 +77,7 @@ def recent_activity_logs(user: User, limit: int = 15) -> list[dict[str, Any]]:
     return list(rows)
 
 
+@requires_screen("security.passwords", empty=[])
 def password_category_counts(user: User) -> list[dict[str, Any]]:
     from django.db.models import Count
 

@@ -3,28 +3,38 @@ import { Wallet, LayoutGrid, Shield, Brain, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { filterNavModules, getAllModuleItems, navModules } from '@/config/nav-config';
+import { useScreenAccess } from '@/hooks/use-screen-access';
 import { containerVariants, itemVariants } from '@/lib/animations';
+import { screenForPath } from '@/lib/screen-access';
 import { cn } from '@/lib/utils';
 
 interface ModuleCard {
   title: string;
   icon: React.ReactNode;
   href: string;
+  /** id do módulo no nav-config */
+  moduleId: string;
   badgeClass: string;
   features: string[];
 }
 
 export default function Home() {
   const { t } = useTranslation();
+  const { can } = useScreenAccess();
+  const allowed = (href: string) => can(screenForPath(href));
+  const visibleModules = filterNavModules(navModules, (item) => allowed(item.href));
 
   const modules: ModuleCard[] = [
     {
       title: t('pages.home.planning.title'),
       icon: <Calendar className="h-8 w-8" />,
       href: '/planning/dashboard',
+      moduleId: 'planning',
       badgeClass: 'agent-badge-personal',
       features: t('pages.home.planning.features', { returnObjects: true }) as string[],
     },
@@ -32,6 +42,7 @@ export default function Home() {
       title: t('pages.home.finance.title'),
       icon: <Wallet className="h-8 w-8" />,
       href: '/dashboard',
+      moduleId: 'finance',
       badgeClass: 'agent-badge-financial',
       features: t('pages.home.finance.features', { returnObjects: true }) as string[],
     },
@@ -39,6 +50,7 @@ export default function Home() {
       title: t('pages.home.security.title'),
       icon: <Shield className="h-8 w-8" />,
       href: '/security/passwords',
+      moduleId: 'security',
       badgeClass: 'agent-badge-security',
       features: t('pages.home.security.features', { returnObjects: true }) as string[],
     },
@@ -46,23 +58,36 @@ export default function Home() {
       title: t('pages.home.library.title'),
       icon: <Brain className="h-8 w-8" />,
       href: '/library/books',
+      moduleId: 'library',
       badgeClass: 'agent-badge-intellect',
       features: t('pages.home.library.features', { returnObjects: true }) as string[],
     },
   ];
+
+  // Card só de módulo com alguma tela liberada; sem acesso ao destino padrão,
+  // abre a primeira tela liberada do módulo
+  const cards = modules.flatMap((card) => {
+    const module = visibleModules.find((m) => m.id === card.moduleId);
+    if (!module) return [];
+    const href = allowed(card.href) ? card.href : getAllModuleItems(module)[0].href;
+    return [{ ...card, href }];
+  });
 
   return (
     // ponytail: 5rem ≈ altura do Header; ajustar se o Header mudar de altura
     <PageContainer className="flex min-h-[calc(100dvh-5rem)] flex-col">
       <div className="space-y-lg">
         <PageHeader title={t('pages.home.modulesTitle')} icon={<LayoutGrid />} />
+        {cards.length === 0 && (
+          <EmptyState icon={<LayoutGrid />} title={t('pages.home.noModules')} />
+        )}
         <motion.div
           className="gap-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          {modules.map((module) => (
+          {cards.map((module) => (
             <motion.div key={module.href} variants={itemVariants}>
               <Link
                 to={module.href}

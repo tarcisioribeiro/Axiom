@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PlainButton } from '@/components/ui/plain-button';
 import { useCapsLock } from '@/hooks/use-caps-lock';
+import { useRegistrationStatus } from '@/hooks/use-registration-status';
 import { useThemeAssets } from '@/hooks/use-theme-assets';
 import { toast } from '@/hooks/use-toast';
 import { transitions } from '@/lib/animations';
@@ -48,6 +49,7 @@ export default function Login() {
   const { logo } = useThemeAssets();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { data: registration } = useRegistrationStatus();
 
   // A mensagem vem do store (login/verify2FA preenchem `error`)
   const showError = () => {
@@ -267,15 +269,17 @@ export default function Login() {
                   </Link>
                 </div>
 
-                <div className="mt-md text-center text-sm">
-                  <span>{t('auth.login.noAccount')} </span>
-                  <Link
-                    to="/register"
-                    className="text-primary font-medium hover:underline"
-                  >
-                    {t('auth.login.register')}
-                  </Link>
-                </div>
+                {registration?.open && (
+                  <div className="mt-md text-center text-sm">
+                    <span>{t('auth.login.noAccount')} </span>
+                    <Link
+                      to="/register"
+                      className="text-primary font-medium hover:underline"
+                    >
+                      {t('auth.login.register')}
+                    </Link>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

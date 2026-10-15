@@ -13,6 +13,7 @@ import {
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Can } from '@/components/common/Can';
 import { CardActions } from '@/components/common/CardActions';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
@@ -232,16 +233,18 @@ export default function Members() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.members.title')} icon={<Users />}>
-        <Button
-          onClick={() => {
-            setSelectedMember(undefined);
-            setIsDialogOpen(true);
-          }}
-          className="gap-sm"
-        >
-          <Plus className="h-4 w-4" />
-          {t('pages.members.newBtn')}
-        </Button>
+        <Can action="add">
+          <Button
+            onClick={() => {
+              setSelectedMember(undefined);
+              setIsDialogOpen(true);
+            }}
+            className="gap-sm"
+          >
+            <Plus className="h-4 w-4" />
+            {t('pages.members.newBtn')}
+          </Button>
+        </Can>
       </PageHeader>
 
       <FilterBar

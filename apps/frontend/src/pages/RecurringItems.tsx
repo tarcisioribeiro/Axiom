@@ -6,6 +6,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { useTabRoute } from '@/hooks/use-tab-route';
 
 import FixedExpenses from './FixedExpenses';
@@ -15,6 +16,7 @@ const TABS = ['fixed-expenses', 'fixed-revenues'] as const;
 
 export default function RecurringItems() {
   const { t } = useTranslation();
+  const canGenerate = useCurrentScreen().can('generate');
   const [activeTab, setActiveTab] = useTabRoute('/recurring', TABS, 'fixed-expenses');
 
   const newExpenseRef = useRef<() => void>(undefined);
@@ -29,10 +31,12 @@ export default function RecurringItems() {
           title={t('pages.fixedExpenses.title')}
           icon={<CalendarClock className="h-6 w-6" />}
           actions={
-            <Button variant="outline" onClick={() => launchExpensesRef.current?.()}>
-              <TrendingDown className="h-4 w-4" />
-              {t('pages.fixedExpenses.launchBtn')}
-            </Button>
+            canGenerate && (
+              <Button variant="outline" onClick={() => launchExpensesRef.current?.()}>
+                <TrendingDown className="h-4 w-4" />
+                {t('pages.fixedExpenses.launchBtn')}
+              </Button>
+            )
           }
           action={{
             label: t('pages.fixedExpenses.newBtn'),
@@ -47,10 +51,12 @@ export default function RecurringItems() {
           title={t('pages.fixedRevenues.title')}
           icon={<Calendar className="h-6 w-6" />}
           actions={
-            <Button variant="outline" onClick={() => launchRevenuesRef.current?.()}>
-              <TrendingUp className="h-4 w-4" />
-              {t('pages.fixedRevenues.launchBtn')}
-            </Button>
+            canGenerate && (
+              <Button variant="outline" onClick={() => launchRevenuesRef.current?.()}>
+                <TrendingUp className="h-4 w-4" />
+                {t('pages.fixedRevenues.launchBtn')}
+              </Button>
+            )
           }
           action={{
             label: t('pages.fixedRevenues.newBtn'),

@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { ACTION_COLOR } from '@/lib/action-colors';
 import { formatDate } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
@@ -43,6 +44,7 @@ export function StoredCardDetailModal({
   onClose,
 }: Props) {
   const { t } = useTranslation();
+  const canReveal = useCurrentScreen().can('reveal');
   const navigate = useNavigate();
   // Mantém o último cartão para o modal sair inteiro na animação de fechamento.
   const [card, setCard] = useState(selected);
@@ -140,19 +142,21 @@ export function StoredCardDetailModal({
 
         <DialogCloseFooter>
           <div className="gap-sm flex flex-wrap justify-end">
-            <Button
-              variant="outline"
-              onClick={() => onReveal(card.id)}
-              loading={isRevealing}
-            >
-              {!isRevealing &&
-                (revealed ? (
-                  <EyeOff className={ACTION_COLOR.reveal} />
-                ) : (
-                  <Eye className={ACTION_COLOR.reveal} />
-                ))}
-              {revealed ? t('common.actions.hide') : t('common.actions.reveal')}
-            </Button>
+            {canReveal && (
+              <Button
+                variant="outline"
+                onClick={() => onReveal(card.id)}
+                loading={isRevealing}
+              >
+                {!isRevealing &&
+                  (revealed ? (
+                    <EyeOff className={ACTION_COLOR.reveal} />
+                  ) : (
+                    <Eye className={ACTION_COLOR.reveal} />
+                  ))}
+                {revealed ? t('common.actions.hide') : t('common.actions.reveal')}
+              </Button>
+            )}
           </div>
         </DialogCloseFooter>
       </DialogContent>

@@ -379,9 +379,12 @@
       "financialHealth": "Financial Health",
       "emotionalWellness": "Emotional Wellness",
       "intellectToday": "Intellect Today",
-      "flashcards": "Flash Cards"
+      "flashcards": "Flash Cards",
+      "vaultHealth": "Vault Health",
+      "activityLogs": "Activity Logs"
     },
-    "agents": "AI Agents"
+    "agents": "AI Agents",
+    "webhooks": "Webhooks"
   },
   "layout": {
     "skipToContent": "Skip to main content",
@@ -409,7 +412,9 @@
       "overview": "Overview",
       "config": "Settings",
       "integrations": "Integrations",
-      "logs": "Activity Logs"
+      "logs": "Activity Logs",
+      "users": "Team",
+      "permissions": "Permissions"
     },
     "commandPalette": {
       "placeholder": "Search command",
@@ -454,8 +459,6 @@
         "books": "Books",
         "authors": "Authors",
         "publishers": "Publishers",
-        "summaries": "Summaries",
-        "readings": "Readings",
         "new-expense": "New Expense",
         "new-revenue": "New Revenue",
         "theme-light": "Light Mode",
@@ -468,7 +471,10 @@
       "markAllRead": "Mark all as read",
       "empty": "No notifications",
       "ariaLabel": "Notifications"
-    }
+    },
+    "staff": "Staff",
+    "backToApp": "Back to app",
+    "permissionsPanel": "Permissions panel"
   },
   "breadcrumb": {
     "home": "Home",
@@ -623,7 +629,10 @@
       "errorTitle": "Error",
       "successTitle": "Account created!",
       "successDesc": "You can now sign in with your credentials.",
-      "errorDesc": "An error occurred while trying to register. Please try again."
+      "errorDesc": "An error occurred while trying to register. Please try again.",
+      "emailRequired": "E-mail: required field",
+      "closed": "Sign-up unavailable",
+      "backToLogin": "Back to login"
     }
   },
   "agentWidget": {
@@ -680,7 +689,8 @@
       "modulesTitle": "Available Modules",
       "modules": {
         "navigateTo": "Navigate to {{module}}"
-      }
+      },
+      "noModules": "No modules available"
     },
     "accounts": {
       "title": "Bank Accounts",
@@ -698,7 +708,7 @@
       "deleted": "Account deleted",
       "deletedDesc": "The account was deleted successfully.",
       "allTypes": "All Types",
-      "emptyState": "No accounts registered. Click \"New Account\" to get started.",
+      "emptyState": "No accounts registered",
       "searchPlaceholder": "Search account",
       "columns": {
         "name": "Account",
@@ -979,7 +989,7 @@
       "deleted": "Loan deleted",
       "deletedDesc": "The loan was deleted successfully.",
       "emptySearch": "No loans found for the current search.",
-      "emptyState": "No loans registered. Click \"New Loan\" to get started.",
+      "emptyState": "No loans registered",
       "searchPlaceholder": "Search loans",
       "noPrerequisitesMsg": "You need to have {{missing}} registered before creating a loan.",
       "totalValue": "Total Value:",
@@ -1177,7 +1187,7 @@
       "updatedDesc": "The member was updated successfully.",
       "deleted": "Member deleted",
       "deletedDesc": "The member was deleted successfully.",
-      "emptyState": "No members registered. Click \"New Member\" to get started.",
+      "emptyState": "No members registered",
       "columns": {
         "name": "Name",
         "document": "Document",
@@ -1715,7 +1725,7 @@
       "deleted": "Payable deleted",
       "deletedDesc": "The payable was deleted successfully.",
       "emptySearch": "No payables found for the current search.",
-      "emptyState": "No payables registered. Click \"New Payment\" to get started.",
+      "emptyState": "No payables registered",
       "searchPlaceholder": "Search description",
       "totalValue": "Total Value:",
       "paidValue": "Paid Value:",
@@ -1841,7 +1851,7 @@
       "deletedDesc": "The budget was deleted successfully.",
       "createError": "Error creating budget.",
       "emptySearch": "No budgets found for the current search.",
-      "emptyState": "No budgets registered for this period. Click \"New Budget\" to get started.",
+      "emptyState": "No budgets registered for this period",
       "searchPlaceholder": "Search category",
       "allCategories": "All Categories",
       "allMembers": "All Members",
@@ -2551,7 +2561,7 @@
       "requiredFieldsDesc": "Please fill in all required fields.",
       "noMemberMsg": "Could not identify the current user's member.",
       "emptySearch": "No passwords found for the current search.",
-      "emptyState": "No passwords registered. Click \"New Password\" to get started.",
+      "emptyState": "No passwords registered",
       "searchPlaceholder": "Search passwords",
       "generatePassword": "Generate Password",
       "hideGenerator": "Hide Generator",
@@ -2897,7 +2907,7 @@
       "downloadError": "Could not download the file. {{reason}}",
       "decryptedContentDesc": "Decrypted content",
       "emptySearch": "No files found for the current search.",
-      "emptyState": "No files registered. Click \"New File\" to get started.",
+      "emptyState": "No files registered",
       "searchPlaceholder": "Search files",
       "allCategories": "All Categories",
       "allTypes": "All Types",
@@ -3220,7 +3230,7 @@
       "deletedDesc": "The book was deleted successfully.",
       "noPrerequisitesMsg": "You need to have authors and publishers registered before creating a book.",
       "emptySearch": "No books found for the current search.",
-      "emptyState": "No books registered. Click \"New Book\" to get started.",
+      "emptyState": "No books registered",
       "searchPlaceholder": "Search book",
       "tabCatalog": "Catalog",
       "colCover": "Cover",
@@ -3351,7 +3361,7 @@
         "loadingHighlights": "Loading highlights...",
         "loadingReadings": "Loading readings...",
         "loadingSummaries": "Loading summaries...",
-        "noHighlights": "No highlights yet. Click \"Add\" to get started.",
+        "noHighlights": "No highlights yet",
         "noReadings": "No reading sessions registered.",
         "noSummaries": "No summaries registered for this book.",
         "summariesReadOnlyNote": "Summaries can only be added for books with status <strong>Read</strong>.",
@@ -3435,7 +3445,7 @@
       "deleted": "Author deleted",
       "deletedDesc": "The author was deleted successfully.",
       "emptySearch": "No authors found for the current search.",
-      "emptyState": "No authors registered. Click \"New Author\" to get started.",
+      "emptyState": "No authors registered",
       "searchPlaceholder": "Search authors",
       "allNationalities": "All Nationalities",
       "nationalityFilterLabel": "Nationality",
@@ -3529,7 +3539,7 @@
       "deleted": "Publisher deleted",
       "deletedDesc": "The publisher was deleted successfully.",
       "emptySearch": "No publishers found for the current search.",
-      "emptyState": "No publishers registered. Click \"New Publisher\" to get started.",
+      "emptyState": "No publishers registered",
       "searchPlaceholder": "Search publishers",
       "allCountries": "All countries",
       "foundedYear": "Founded in {{year}}",
@@ -3571,7 +3581,7 @@
       "deletedDesc": "The summary was deleted successfully.",
       "noBookMsg": "You need at least one completely read book before creating a summary.",
       "emptySearch": "No summaries found for the current search.",
-      "emptyState": "No summaries registered. Click \"New Summary\" to get started.",
+      "emptyState": "No summaries registered",
       "searchPlaceholder": "Search summaries...",
       "vectorized": "Vectorized",
       "notVectorized": "Not Vectorized",
@@ -3600,7 +3610,7 @@
       "deletedDesc": "The reading was deleted successfully.",
       "noBookMsg": "You need at least one registered book before recording a reading.",
       "emptySearch": "No readings found for the current search.",
-      "emptyState": "No readings recorded. Click \"New Reading\" to get started.",
+      "emptyState": "No readings recorded",
       "searchPlaceholder": "Search readings...",
       "pagesRead": "{{count}} p.",
       "viewSessions": "View sessions",
@@ -3676,7 +3686,7 @@
     "highlights": {
       "title": "Highlights",
       "newBtn": "New Highlight",
-      "emptyState": "No highlights yet. Click \"New Highlight\" to get started.",
+      "emptyState": "No highlights yet",
       "emptySearch": "No highlights found for the current search.",
       "searchPlaceholder": "Search highlights",
       "newTitle": "New Highlight",
@@ -3889,7 +3899,7 @@
       "searchPlaceholder": "Search skills",
       "allStatus": "All statuses",
       "allCategories": "All categories",
-      "emptyState": "No skills registered. Click \"New Skill\" to get started.",
+      "emptyState": "No skills registered",
       "emptySearch": "No skills found for the current search.",
       "newTitle": "New Skill",
       "editTitle": "Edit Skill",
@@ -4411,47 +4421,6 @@
       "title": "Access Denied",
       "message": "You do not have permission to access this page.",
       "backBtn": "Back to Home"
-    },
-    "permissions": {
-      "title": "Permission Management",
-      "membersTitle": "Members",
-      "membersDesc": "Select a member to manage their permissions",
-      "noMembers": "No members registered",
-      "creditor": "Creditor",
-      "beneficiary": "Beneficiary",
-      "permissionsCount": "{{count}} permissions",
-      "permissionsOf": "Permissions for {{name}}",
-      "selectMember": "Select a member",
-      "selectMemberDesc": "Choose a member from the list to manage their permissions",
-      "checkPermissions": "Check or uncheck the permissions this member will have access to",
-      "selectMemberStart": "Select a member to get started",
-      "savePermissions": "Save Permissions",
-      "saved": "Permissions updated",
-      "savedDesc": "Member {{name}}'s permissions were updated successfully.",
-      "loadError": "Could not load the data. {{reason}}",
-      "loadPermissionsError": "Could not load the permissions. {{reason}}",
-      "saveError": "Could not save the permissions. {{reason}}",
-      "saveErrorTitle": "Error",
-      "noUserWarning": "Warning",
-      "noUserDesc": "This member has no associated user and cannot have permissions.",
-      "loadCategoryError": "Error loading expenses by category",
-      "howItWorks": "How it works",
-      "activePermissions": "Active Permissions",
-      "activePermissionsDesc": "Checked permissions are active for the member",
-      "inactivePermissions": "Inactive Permissions",
-      "inactivePermissionsDesc": "Unchecked permissions are not available",
-      "granularity": "Granularity",
-      "granularityDesc": "Fine-grained control of viewing and adding",
-      "apps": {
-        "accounts": "Financial Control - Accounts",
-        "expenses": "Financial Control - Expenses",
-        "revenues": "Financial Control - Revenues",
-        "credit_cards": "Financial Control - Cards",
-        "loans": "Financial Control - Loans",
-        "transfers": "Financial Control - Transfers",
-        "security": "Security",
-        "library": "Reading"
-      }
     },
     "dailyReflections": {
       "title": "Daily Reflections",
@@ -5293,7 +5262,7 @@
       "deleted": "Receivable deleted",
       "deletedDesc": "The receivable was deleted successfully.",
       "emptySearch": "No receivables found for the current search.",
-      "emptyState": "No receivables registered. Click \"New Receivable\" to get started.",
+      "emptyState": "No receivables registered",
       "searchPlaceholder": "Search description",
       "allStatus": "All statuses",
       "allCategories": "All categories",
@@ -6366,6 +6335,146 @@
         "first_skill": "First Skill",
         "skill_collector": "Skill Collector (5 skills)"
       }
+    },
+    "adminUsers": {
+      "title": "Team",
+      "newStaff": "New staff",
+      "empty": "No staff registered",
+      "active": "Active",
+      "inactive": "Inactive",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "deactivateTitle": "Deactivate staff",
+      "deactivateConfirm": "Deactivate {{name}}'s access?",
+      "created": "Staff created",
+      "saveError": "Could not save",
+      "columns": {
+        "username": "Username",
+        "name": "Name",
+        "email": "E-mail",
+        "status": "Status",
+        "createdAt": "Created at"
+      }
+    },
+    "adminPermissions": {
+      "tabs": {
+        "users": "Users",
+        "defaults": "Defaults"
+      },
+      "userTitle": "{{name}}'s permissions",
+      "fullModule": "Grant whole module",
+      "edit": "Permissions",
+      "active": "Active",
+      "inactive": "Inactive",
+      "activePlural": "Active",
+      "inactivePlural": "Inactive",
+      "allStatuses": "All",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "deactivateTitle": "Deactivate user",
+      "deactivateConfirm": "Deactivate {{name}}'s access?",
+      "searchPlaceholder": "Search user",
+      "empty": "No users found",
+      "screenCount": "{{count}} of {{total}}",
+      "saved": "Permissions saved",
+      "saveError": "Could not save",
+      "columns": {
+        "username": "Username",
+        "name": "Name",
+        "email": "E-mail",
+        "status": "Status",
+        "screens": "Screens"
+      },
+      "modules": {
+        "planning": "Personal Planning",
+        "finance": "Financial Control",
+        "security": "Security",
+        "intellect": "Intellect"
+      },
+      "actions": {
+        "view": "View",
+        "add": "Create",
+        "change": "Edit",
+        "delete": "Delete",
+        "import_template": "Import templates",
+        "ai_suggest": "AI suggestion",
+        "ai_generate": "AI generation",
+        "ai_report": "AI report",
+        "ai_summary": "AI summary",
+        "export": "Export",
+        "import": "Import",
+        "reconcile": "Reconcile",
+        "pay_bill": "Pay bill",
+        "reopen_bill": "Reopen bill",
+        "renegotiate_bill": "Renegotiate bill",
+        "generate": "Generate",
+        "apply_rules": "Apply rules",
+        "ocr": "Read receipt",
+        "pay": "Pay",
+        "receive": "Receive",
+        "renegotiate": "Renegotiate",
+        "deposit": "Deposit",
+        "withdraw": "Withdraw",
+        "apply_yield": "Apply yield",
+        "generate_contributions": "Generate contributions",
+        "recalculate": "Recalculate",
+        "apply_plan": "Apply plan",
+        "manage_vault": "Manage vault",
+        "reveal": "Reveal",
+        "share": "Share",
+        "check_breach": "Check breach"
+      },
+      "screens": {
+        "planning": {
+          "dashboard": "Dashboard",
+          "tasks_goals": "Tasks and Goals",
+          "reflections": "Reflections",
+          "weekly": "Weekly Planning",
+          "workout": "Workout",
+          "nutrition": "Nutrition",
+          "body_metrics": "Body Metrics",
+          "wellness": "Emotional Wellness",
+          "journey": "Journey"
+        },
+        "finance": {
+          "dashboard": "Dashboard",
+          "accounts": "Accounts",
+          "credit_cards": "Credit Cards",
+          "members": "Members",
+          "budgets": "Budgets",
+          "financial_goals": "Financial Goals",
+          "recurring": "Recurring",
+          "rules_tags": "Rules and Tags",
+          "transactions": "Transactions",
+          "transfers": "Transfers",
+          "bills": "Bills",
+          "vaults": "Vaults",
+          "loans": "Loans",
+          "agenda": "Agenda",
+          "analytics": "Analytics",
+          "financial_health": "Financial Health"
+        },
+        "security": {
+          "vault": "Vault (module base)",
+          "dashboard": "Dashboard",
+          "passwords": "Passwords",
+          "stored_cards": "Stored Cards",
+          "stored_accounts": "Stored Accounts",
+          "archives": "Files",
+          "activity_logs": "Activity Logs"
+        },
+        "intellect": {
+          "dashboard": "Dashboard",
+          "today": "Today",
+          "books": "Books",
+          "authors": "Authors",
+          "publishers": "Publishers",
+          "courses": "Courses",
+          "skills": "Skills",
+          "flashcards": "Flashcards",
+          "knowledge_graph": "Knowledge Graph"
+        }
+      }
     }
   },
   "userProfile": {
@@ -7063,11 +7172,6 @@
         "title": "Profile",
         "desc": "Your personal data, photo, password and account preferences.",
         "tip": "Keep your email verified so you can recover your account."
-      },
-      "permissions": {
-        "title": "Permissions",
-        "desc": "See which system features you can access.",
-        "tip": "If something is blocked, ask an administrator."
       },
       "notifications": {
         "title": "Notification preferences",

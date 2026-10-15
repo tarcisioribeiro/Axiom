@@ -11,7 +11,10 @@ from typing import Any
 
 from django.contrib.auth.models import User
 
+from agents.providers.access import requires_screen
 
+
+@requires_screen("intellect.books", "intellect.today", empty=[])
 def recent_books(
     user: User, start: date | None, end: date | None, limit: int = 10
 ) -> list[dict[str, Any]]:
@@ -24,6 +27,7 @@ def recent_books(
     return list(rows)
 
 
+@requires_screen("intellect.books", "intellect.today", empty=[])
 def recent_books_detailed(
     user: User, start: date | None, end: date | None, limit: int = 8
 ) -> list[dict[str, Any]]:
@@ -51,6 +55,7 @@ def reading_pages_read(book_id: Any) -> int:
     )
 
 
+@requires_screen("intellect.courses", empty=[])
 def course_progress(user: User, limit: int = 6) -> list[dict[str, Any]]:
     from library.models import Course, CourseSession
 
@@ -68,6 +73,7 @@ def course_progress(user: User, limit: int = 6) -> list[dict[str, Any]]:
     return result
 
 
+@requires_screen("intellect.skills", empty=[])
 def skills(user: User, limit: int = 12) -> list[dict[str, Any]]:
     from library.models import Skill
 
@@ -79,15 +85,7 @@ def skills(user: User, limit: int = 12) -> list[dict[str, Any]]:
     return list(rows)
 
 
-def book_title_by_id(book_id: Any) -> str | None:
-    """Título do livro pelo pk, sem filtro de dono (espelha o comportamento
-    já existente em SuggestContinuationView antes da extração)."""
-    from library.models import Book
-
-    book = Book.objects.filter(pk=book_id, is_deleted=False).first()
-    return book.title if book else None
-
-
+@requires_screen("intellect.books", empty=None)
 def book_title_for_user(book_id: Any, user: User) -> str | None:
     from library.models import Book
 

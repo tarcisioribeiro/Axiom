@@ -53,6 +53,20 @@ def generate_weekly_insight_for_user(self, user_id: int) -> dict:
         if not member:
             return {"status": "skipped", "reason": "no member for user"}
 
+        # Insight combina Finanças e Planejamento: sem nenhum dos dois, pula
+        from admin_panel.access import can_view_any
+        from admin_panel.screens import SCREENS
+
+        if not can_view_any(
+            user,
+            tuple(
+                k
+                for k, v in SCREENS.items()
+                if v["module"] in ("finance", "planning")
+            ),
+        ):
+            return {"status": "skipped", "reason": "no screen access"}
+
         ctx = AgentContext(
             user_id=user_id,
             query="resumo semanal financeiro",
@@ -152,6 +166,11 @@ def _send_intellect_recommendation_for_user(self, user_id: int) -> dict:
         member = Member.objects.filter(user=user, is_deleted=False).first()
         if not member:
             return {"status": "skipped", "reason": "no member"}
+
+        from admin_panel.access import can_view_any
+
+        if not can_view_any(user, ("intellect.books", "intellect.skills")):
+            return {"status": "skipped", "reason": "no screen access"}
 
         from datetime import timedelta
 

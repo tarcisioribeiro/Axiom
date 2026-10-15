@@ -16,6 +16,8 @@ export interface User {
   last_name: string;
   groups: string[];
   is_superuser?: boolean;
+  /** Staff: todas as telas do app + painel de permissões no /admin */
+  is_staff?: boolean;
   profile_photo?: string | null;
 }
 

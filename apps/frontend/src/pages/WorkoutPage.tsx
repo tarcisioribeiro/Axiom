@@ -53,6 +53,7 @@ import React, {
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { Can } from '@/components/common/Can';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
@@ -915,20 +916,20 @@ export default function WorkoutPage() {
           icon={TAB_HEADERS[activeTab].icon}
           actions={
             activeTab === 'sessions' ? (
-              <Button onClick={() => setDialog({ type: 'new-session' })}>
+              <Can action="add"><Button onClick={() => setDialog({ type: 'new-session' })}>
                 <Plus className="h-4 w-4" />
                 {t('pages.workoutSessions.newSessionBtn')}
-              </Button>
+              </Button></Can>
             ) : activeTab === 'plans' ? (
-              <Button onClick={() => setDialog({ type: 'new-plan' })}>
+              <Can action="add"><Button onClick={() => setDialog({ type: 'new-plan' })}>
                 <Plus className="h-4 w-4" />
                 {t('pages.workoutPlans.newPlanBtn')}
-              </Button>
+              </Button></Can>
             ) : activeTab === 'exercises' ? (
-              <Button onClick={() => setDialog({ type: 'new-catalog-exercise' })}>
+              <Can action="add"><Button onClick={() => setDialog({ type: 'new-catalog-exercise' })}>
                 <Plus className="h-4 w-4" />
                 {t('pages.exercises.newBtn')}
-              </Button>
+              </Button></Can>
             ) : undefined
           }
         />
@@ -1414,14 +1415,14 @@ export default function WorkoutPage() {
                   />
                 </div>
                 <DialogCloseFooter>
-                  <Button
+                  <Can action="add"><Button
                     onClick={() =>
                       setDialog({ type: 'new-day', planId: viewedPlan.id })
                     }
                   >
                     <Plus className="h-4 w-4" />
                     {t('pages.workoutPlans.newDayBtn')}
-                  </Button>
+                  </Button></Can>
                 </DialogCloseFooter>
               </>
             )}
@@ -1448,23 +1449,29 @@ export default function WorkoutPage() {
                       </DialogDescription>
                     </div>
                     <div className="gap-xs flex shrink-0">
-                      <Button
-                        aria-label={t('common.actions.edit')}
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDialog({ type: 'edit-day', day: viewedDay })}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        aria-label={t('common.actions.delete')}
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteDay(viewedDay)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <Can action="change">
+                        <Button
+                          aria-label={t('common.actions.edit')}
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            setDialog({ type: 'edit-day', day: viewedDay })
+                          }
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </Can>
+                      <Can action="delete">
+                        <Button
+                          aria-label={t('common.actions.delete')}
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteDay(viewedDay)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </Can>
                     </div>
                   </div>
                 </DialogHeader>
@@ -1490,12 +1497,12 @@ export default function WorkoutPage() {
                   </div>
                 </div>
                 <DialogCloseFooter>
-                  <Button
+                  <Can action="add"><Button
                     onClick={() => setDialog({ type: 'add-exercise', day: viewedDay })}
                   >
                     <Plus className="h-4 w-4" />
                     {t('pages.workoutPlans.addExerciseBtn')}
-                  </Button>
+                  </Button></Can>
                 </DialogCloseFooter>
               </>
             )}
@@ -1706,24 +1713,28 @@ function ExerciseCatalogCard({
           >
             <ImagePlus className="h-3.5 w-3.5" />
           </Button>
-          <Button
-            aria-label={t('common.actions.edit')}
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={onEdit}
-          >
-            <Edit className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            aria-label={t('common.actions.delete')}
-            variant="ghost"
-            size="icon"
-            className="text-destructive hover:text-destructive h-7 w-7"
-            onClick={onDelete}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <Can action="change">
+            <Button
+              aria-label={t('common.actions.edit')}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={onEdit}
+            >
+              <Edit className="h-3.5 w-3.5" />
+            </Button>
+          </Can>
+          <Can action="delete">
+            <Button
+              aria-label={t('common.actions.delete')}
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive h-7 w-7"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </Can>
         </div>
       </div>
       <p className="text-foreground leading-tight font-semibold">{exercise.name}</p>
@@ -2030,24 +2041,28 @@ function SortableExerciseItem({
       {(onEdit || onDelete) && (
         <div className="gap-xs flex shrink-0">
           {onEdit && (
-            <PlainButton
-              aria-label={t('common.actions.edit')}
-              type="button"
-              onClick={() => onEdit(ex)}
-              className="p-xs hover:bg-muted rounded"
-            >
-              <Edit className="h-3 w-3" />
-            </PlainButton>
+            <Can action="change">
+              <PlainButton
+                aria-label={t('common.actions.edit')}
+                type="button"
+                onClick={() => onEdit(ex)}
+                className="p-xs hover:bg-muted rounded"
+              >
+                <Edit className="h-3 w-3" />
+              </PlainButton>
+            </Can>
           )}
           {onDelete && (
-            <PlainButton
-              aria-label={t('common.actions.delete')}
-              type="button"
-              onClick={() => onDelete(ex)}
-              className="p-xs text-destructive hover:bg-destructive/10 rounded"
-            >
-              <Trash2 className="h-3 w-3" />
-            </PlainButton>
+            <Can action="delete">
+              <PlainButton
+                aria-label={t('common.actions.delete')}
+                type="button"
+                onClick={() => onDelete(ex)}
+                className="p-xs text-destructive hover:bg-destructive/10 rounded"
+              >
+                <Trash2 className="h-3 w-3" />
+              </PlainButton>
+            </Can>
           )}
         </div>
       )}
@@ -2181,23 +2196,27 @@ function PlanCard({ plan, onOpen, onEdit, onDelete, t }: PlanCardProps) {
       </button>
       <div className="border-border px-md py-xs flex items-center justify-end border-t">
         <div className="gap-xs flex">
-          <Button
-            aria-label={t('common.actions.edit')}
-            variant="ghost"
-            size="icon"
-            onClick={onEdit}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            aria-label={t('common.actions.delete')}
-            variant="ghost"
-            size="icon"
-            className="text-destructive hover:text-destructive"
-            onClick={onDelete}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <Can action="change">
+            <Button
+              aria-label={t('common.actions.edit')}
+              variant="ghost"
+              size="icon"
+              onClick={onEdit}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          </Can>
+          <Can action="delete">
+            <Button
+              aria-label={t('common.actions.delete')}
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </Can>
         </div>
       </div>
     </div>
@@ -2293,30 +2312,34 @@ function SessionCard({ session, onView, onEdit, onDelete, t }: SessionCardProps)
             )}
           </div>
           <div className="gap-xs flex shrink-0">
-            <Button
-              aria-label={t('common.actions.edit')}
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-            >
-              <Edit className="h-3 w-3" />
-            </Button>
-            <Button
-              aria-label={t('common.actions.delete')}
-              variant="ghost"
-              size="icon"
-              className="text-destructive hover:text-destructive h-7 w-7"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
+            <Can action="change">
+              <Button
+                aria-label={t('common.actions.edit')}
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+            </Can>
+            <Can action="delete">
+              <Button
+                aria-label={t('common.actions.delete')}
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:text-destructive h-7 w-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </Can>
           </div>
         </div>
 
