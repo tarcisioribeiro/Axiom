@@ -22,7 +22,6 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { logger } from '@/lib/logger';
 import { formatLocalDate, parseLocalDate } from '@/lib/utils';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
-import { creditCardExpensesService } from '@/services/credit-card-expenses-service';
 import type { CreditCardBill, CreditCardBillFormData, CreditCard } from '@/types';
 
 const MONTH_KEYS = [
@@ -173,16 +172,9 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
 
     try {
       setIsCalculating(true);
-      // Buscar todas as despesas associadas à esta fatura
-      const expenses = await creditCardExpensesService.getByBill(billId);
-
-      // Calcular total das despesas
-      const totalAmount = expenses.reduce((sum, exp) => sum + parseFloat(exp.value), 0);
-
-      // Calcular valor já pago (despesas marcadas como pagas)
-      const paidAmount = expenses
-        .filter((exp) => exp.payed)
-        .reduce((sum, exp) => sum + parseFloat(exp.value), 0);
+      // Itens da fatura (despesas + parcelas) já totalizados pelo backend
+      const { total_value: totalAmount, total_paid: paidAmount } =
+        await creditCardBillsService.getBillItems(billId);
 
       // Calcular pagamento mínimo (10% do total)
       const minimumPayment = totalAmount * 0.1;

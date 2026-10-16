@@ -64,7 +64,6 @@ export const API_CONFIG = {
     REVENUES: '/api/v1/revenues/',
     CREDIT_CARDS: '/api/v1/credit-cards/',
     CREDIT_CARD_BILLS: '/api/v1/credit-cards-bills/',
-    CREDIT_CARD_EXPENSES: '/api/v1/credit-cards-expenses/',
     CREDIT_CARD_PURCHASES: '/api/v1/credit-cards-purchases/',
     CREDIT_CARD_INSTALLMENTS: '/api/v1/credit-cards-installments/',
     TRANSFERS: '/api/v1/transfers/',
@@ -190,8 +189,6 @@ export const API_CONFIG = {
     FINANCIAL_GOALS: '/api/v1/financial-goals/',
 
     // AI Assistant Module
-    AI_PERGUNTA: '/api/v1/ai/pergunta/',
-    AI_HISTORICO: '/api/v1/ai/historico/',
     AI_HEALTH: '/api/v1/ai/health/',
 
     // Notifications Module

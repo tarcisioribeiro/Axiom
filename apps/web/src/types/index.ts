@@ -48,8 +48,6 @@ export type {
   CreditCardExpensesByCategory,
 } from './credit-cards';
 export type {
-  CreditCardExpense,
-  CreditCardExpenseFormData,
   CreditCardPurchase,
   CreditCardPurchaseFormData,
   CreditCardInstallment,
