@@ -87,6 +87,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     );
     // title nativo duplicaria o tooltip; sem tooltip próprio, mantém o title.
     const nativeTitle = label ? undefined : title;
+    // O title some quando vira tooltip: mantém o nome acessível do botão.
+    const ariaLabel = props['aria-label'] ?? (label && title ? title : undefined);
 
     if (asChild && React.isValidElement(children)) {
       const child = children as React.ReactElement<React.HTMLAttributes<HTMLElement>>;
@@ -96,6 +98,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           ...props,
           ...tipProps,
           title: nativeTitle,
+          'aria-label': ariaLabel,
           className: cn(classes, child.props.className),
         } as React.HTMLAttributes<HTMLElement>,
         child.props.children,
@@ -110,6 +113,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         title={nativeTitle}
         {...props}
+        aria-label={ariaLabel}
         {...tipProps}
       >
         {loading && <Loader2 className="animate-spin" aria-hidden="true" />}
