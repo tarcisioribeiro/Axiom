@@ -11,7 +11,7 @@ from app.models import (
 )
 
 # Tokens de cor do tema (semânticos + categorias) — mesmos nomes das
-# variáveis CSS em apps/frontend/src/index.css, então a cor da tag
+# variáveis CSS em apps/web/src/index.css, então a cor da tag
 # acompanha o tema ativo em vez de ficar congelada num hex.
 TAG_COLOR_CHOICES = [
     ("primary", "Primária"),

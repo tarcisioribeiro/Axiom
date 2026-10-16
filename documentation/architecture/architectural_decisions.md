@@ -931,7 +931,7 @@ reservado; esta decisão define a stack para o scaffolding inicial.
 
 **Quando reconsiderar?**
 - Se o time crescer com forte especialização React Native/TypeScript e pouca familiaridade com Dart
-- Se for necessário reaproveitar código de lógica de negócio diretamente entre frontend web e mobile (Flutter não compartilha nada com o TypeScript do `apps/frontend/`)
+- Se for necessário reaproveitar código de lógica de negócio diretamente entre frontend web e mobile (Flutter não compartilha nada com o TypeScript do `apps/web/`)
 
 ---
 
@@ -939,7 +939,7 @@ reservado; esta decisão define a stack para o scaffolding inicial.
 
 | Decisão | Escolha | Razão Principal |
 |---------|---------|-----------------|
-| Repositório | Monorepo | Sincronia apps/frontend/backend |
+| Repositório | Monorepo | Sincronia apps/web/backend |
 | Backend Framework | Django REST Framework | Ecosystem completo |
 | Frontend Framework | React 18 | Ecosystem e comunidade |
 | Linguagem Frontend | TypeScript | Type safety |

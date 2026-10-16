@@ -111,7 +111,7 @@ Axiom/
 │   │   ├── security/       # Senhas
 │   │   ├── library/        # Biblioteca de livros
 │   │   └── app/            # Configurações centrais
-│   ├── frontend/           # Frontend React + TypeScript
+│   ├── web/                # Frontend React + TypeScript
 │   │   ├── src/
 │   │   │   ├── components/ # Componentes React
 │   │   │   ├── pages/      # Páginas/rotas

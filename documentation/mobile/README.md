@@ -19,7 +19,7 @@ exclusivos do web.
   usa `dio` + `cookie_jar` (`PersistCookieJar`) para persistir a sessão entre
   execuções do app da mesma forma que o navegador faz. Um interceptor faz
   refresh automático em `401` (mirror do interceptor do
-  `apps/frontend/src/services/api-client.ts`) e expõe `onSessionExpired` para
+  `apps/web/src/services/api-client.ts`) e expõe `onSessionExpired` para
   o app redirecionar ao login quando o refresh falha. Como a sessão persiste
   entre execuções, o bootstrap chama `GET /me/` antes de decidir a tela
   inicial — uma sessão válida pula o login e vai direto para o shell.
@@ -31,7 +31,7 @@ exclusivos do web.
   na tela de login.
 - **Seleção de tema**: `theme/app_themes.dart` replica as 16 variantes do
   frontend web (Dracula + 7 variantes escuras, Alucard + 7 variantes claras),
-  com os mesmos tokens HSL de `apps/frontend/src/index.css`. O seletor fica
+  com os mesmos tokens HSL de `apps/web/src/index.css`. O seletor fica
   no ícone de tema da tela de login e no header de cada aba
   (`widgets/header_actions.dart` → `theme/theme_picker_sheet.dart`).
   `theme/app_theme_variant.dart` também expõe `AppSemanticColors` (uma
@@ -132,7 +132,7 @@ exclusivos do web.
 - **Identidade do app**: nome "Axiom" (label do Android, `CFBundleName`/
   `CFBundleDisplayName` do iOS, título de janela do Linux/Windows, manifest/
   título da Web) e ícone gerado a partir de `assets/icon/icon.png` — a
-  marca "A" branca de `apps/frontend/public/icon-light.png` sobre um fundo
+  marca "A" branca de `apps/web/public/icon-light.png` sobre um fundo
   preto sólido (`#000000`, sem o degradê sutil do arquivo original; rode
   `dart run flutter_launcher_icons` de novo se esse arquivo for trocado). O
   identificador interno do pacote Dart (`pubspec.yaml: name`,

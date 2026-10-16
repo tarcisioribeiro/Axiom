@@ -36,7 +36,7 @@ Este documento cataloga funcionalidades que possuem infraestrutura parcial no co
 - ✅ `apps/api/notifications/templates/email/notification_email.html` — template HTML responsivo
 - ✅ `apps/api/notifications/management/commands/send_due_notifications.py` — command para acionar via cron
 - ✅ `apps/api/notifications/models.py` — `Notification` e `NotificationPreference` (canal: in_app / email / both)
-- ✅ `apps/frontend/src/pages/NotificationPreferences.tsx` — UI de preferências completamente funcional
+- ✅ `apps/web/src/pages/NotificationPreferences.tsx` — UI de preferências completamente funcional
 - ✅ `apps/api/app/settings.py` (linhas 437–456) — backend SMTP configurável via variáveis de ambiente
 
 ### O que falta
@@ -180,7 +180,7 @@ docker compose -f infra/docker/docker-compose.yml --project-directory . logs api
 - ✅ Sistema JWT completo em `apps/api/authentication/views.py`
 - ✅ Middleware de autenticação em `apps/api/authentication/middleware.py`
 - ✅ Configuração SMTP em `apps/api/app/settings.py`
-- ✅ Página de login em `apps/frontend/src/pages/Login.tsx`
+- ✅ Página de login em `apps/web/src/pages/Login.tsx`
 - ✅ Serviço de email em `apps/api/notifications/services.py` (pode ser reutilizado)
 
 ### O que falta
@@ -410,7 +410,7 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:39101")
 #### Passo 6 — Criar o serviço no frontend
 
 ```typescript
-// apps/frontend/src/services/auth-service.ts — adicionar métodos
+// apps/web/src/services/auth-service.ts — adicionar métodos
 
 async requestPasswordReset(email: string): Promise<void> {
   await apiClient.post('/auth/password-reset/', { email });
@@ -433,7 +433,7 @@ async confirmPasswordReset(
 
 #### Passo 7 — Criar páginas no frontend
 
-**Arquivo**: `apps/frontend/src/pages/ForgotPassword.tsx`
+**Arquivo**: `apps/web/src/pages/ForgotPassword.tsx`
 
 Deve conter:
 - Formulário com campo de email
@@ -441,7 +441,7 @@ Deve conter:
 - Mensagem de sucesso após envio
 - Link de volta para Login
 
-**Arquivo**: `apps/frontend/src/pages/ResetPassword.tsx`
+**Arquivo**: `apps/web/src/pages/ResetPassword.tsx`
 
 Deve conter:
 - Campos "Nova senha" e "Confirmar senha"
@@ -453,7 +453,7 @@ Deve conter:
 #### Passo 8 — Adicionar rotas no router
 
 ```typescript
-// apps/frontend/src/App.tsx ou router — adicionar rotas públicas
+// apps/web/src/App.tsx ou router — adicionar rotas públicas
 
 { path: '/forgot-password', element: <ForgotPassword /> },
 { path: '/reset-password/:uid/:token', element: <ResetPassword /> },
@@ -462,7 +462,7 @@ Deve conter:
 #### Passo 9 — Adicionar link na página de Login
 
 ```tsx
-// apps/frontend/src/pages/Login.tsx — adicionar abaixo do botão de login
+// apps/web/src/pages/Login.tsx — adicionar abaixo do botão de login
 
 <Link to="/forgot-password" className="text-sm text-muted-foreground hover:underline">
   Esqueci minha senha
@@ -478,7 +478,7 @@ Deve conter:
 - ✅ `apps/api/authentication/views.py` — função `create_user_with_member()` salva o email
 - ✅ `apps/api/members/models.py` — campo `email` no model `Member`
 - ✅ `apps/api/app/settings.py` — SMTP configurável
-- ✅ `apps/frontend/src/pages/Register.tsx` — formulário de cadastro completo
+- ✅ `apps/web/src/pages/Register.tsx` — formulário de cadastro completo
 
 ### O que falta
 
@@ -617,9 +617,9 @@ verification_url = f"{settings.FRONTEND_URL}/verify-email/{token}/"
 
 #### Passo 5 — Frontend
 
-- **Página** `apps/frontend/src/pages/VerifyEmail.tsx`: lê token da URL, chama o endpoint confirm, exibe sucesso/erro
+- **Página** `apps/web/src/pages/VerifyEmail.tsx`: lê token da URL, chama o endpoint confirm, exibe sucesso/erro
 - **Rota pública**: `/verify-email/:token`
-- **Banner opcional**: em `apps/frontend/src/components/common/PageContainer.tsx` ou similar, verificar se `user.member.email_verified === false` e exibir aviso com botão "Reenviar email"
+- **Banner opcional**: em `apps/web/src/components/common/PageContainer.tsx` ou similar, verificar se `user.member.email_verified === false` e exibir aviso com botão "Reenviar email"
 
 ---
 
@@ -766,7 +766,7 @@ urlpatterns = [
 #### Passo 3 — Criar serviço no frontend
 
 ```typescript
-// apps/frontend/src/services/security-service.ts — adicionar método
+// apps/web/src/services/security-service.ts — adicionar método
 
 async exportVaultZip(): Promise<void> {
   const response = await apiClient.get('/security/vault/export/', {
@@ -786,7 +786,7 @@ async exportVaultZip(): Promise<void> {
 
 #### Passo 4 — Adicionar botão na UI
 
-Adicionar um botão "Exportar cofre" em `apps/frontend/src/pages/Passwords.tsx` (ou criar uma página `/security/vault` agregadora), protegido pela verificação de vault desbloqueado.
+Adicionar um botão "Exportar cofre" em `apps/web/src/pages/Passwords.tsx` (ou criar uma página `/security/vault` agregadora), protegido pela verificação de vault desbloqueado.
 
 ---
 
@@ -798,8 +798,8 @@ Adicionar um botão "Exportar cofre" em `apps/frontend/src/pages/Passwords.tsx` 
 - ✅ `apps/api/bank_reconciliation/views.py` — `BankStatementImportCreateView` (upload, preview, confirm)
 - ✅ Detecção de duplicatas por hash SHA-256
 - ✅ Auto-matching de transações com expenses/revenues existentes
-- ✅ `apps/frontend/src/pages/PasswordImport.tsx` — referência de UX completa com 3 etapas (upload → preview → resumo)
-- ✅ Upload básico em `apps/frontend/src/pages/Accounts.tsx`
+- ✅ `apps/web/src/pages/PasswordImport.tsx` — referência de UX completa com 3 etapas (upload → preview → resumo)
+- ✅ Upload básico em `apps/web/src/pages/Accounts.tsx`
 
 ### O que falta
 
@@ -812,7 +812,7 @@ Adicionar um botão "Exportar cofre" em `apps/frontend/src/pages/Passwords.tsx` 
 
 #### Passo 1 — Criar a página BankStatementImport
 
-Criar `apps/frontend/src/pages/BankStatementImport.tsx` seguindo exatamente o mesmo padrão do `PasswordImport.tsx`:
+Criar `apps/web/src/pages/BankStatementImport.tsx` seguindo exatamente o mesmo padrão do `PasswordImport.tsx`:
 
 **Etapa 1 — Upload**
 - Drag-and-drop ou seleção de arquivo (`.ofx`, `.csv`)
@@ -836,14 +836,14 @@ Criar `apps/frontend/src/pages/BankStatementImport.tsx` seguindo exatamente o me
 #### Passo 2 — Adicionar rota
 
 ```typescript
-// apps/frontend/src/App.tsx — adicionar rota protegida
+// apps/web/src/App.tsx — adicionar rota protegida
 
 { path: '/accounts/import', element: <BankStatementImport /> },
 ```
 
 #### Passo 3 — Adicionar botão de acesso
 
-Em `apps/frontend/src/pages/Accounts.tsx`, adicionar botão "Importar extrato" que navega para `/accounts/import`.
+Em `apps/web/src/pages/Accounts.tsx`, adicionar botão "Importar extrato" que navega para `/accounts/import`.
 
 ---
 
@@ -868,7 +868,7 @@ Em `apps/frontend/src/pages/Accounts.tsx`, adicionar botão "Importar extrato" q
 
 #### Passo 1 — Criar a página VaultHealthReport
 
-Criar `apps/frontend/src/pages/VaultHealthReport.tsx`:
+Criar `apps/web/src/pages/VaultHealthReport.tsx`:
 
 **Layout sugerido**:
 - Card de destaque com o **score geral** (0–100) usando um medidor circular ou barra de progresso colorida (verde/amarelo/vermelho)
@@ -878,7 +878,7 @@ Criar `apps/frontend/src/pages/VaultHealthReport.tsx`:
 - Lista de senhas desatualizadas (>90 dias) ordenadas pela mais antiga
 
 ```typescript
-// apps/frontend/src/services/security-service.ts — adicionar método
+// apps/web/src/services/security-service.ts — adicionar método
 
 async getVaultHealthReport(): Promise<VaultHealthReport> {
   const response = await apiClient.get<VaultHealthReport>('/security/vault/health/');
@@ -1112,12 +1112,12 @@ A view de login (`LoginView`) em `apps/api/authentication/views.py` deve ser mod
 
 #### Passo 5 — Frontend
 
-Criar `apps/frontend/src/pages/TwoFactorSetup.tsx`:
+Criar `apps/web/src/pages/TwoFactorSetup.tsx`:
 - Exibe QR code retornado pelo backend
 - Campo para digitar código de confirmação
 - Exibe backup codes após ativação (com aviso para salvar)
 
-Modificar `apps/frontend/src/pages/Login.tsx`:
+Modificar `apps/web/src/pages/Login.tsx`:
 - Após login bem-sucedido, checar se resposta tem `requires_2fa: true`
 - Se sim, exibir campo de código 2FA antes de prosseguir
 

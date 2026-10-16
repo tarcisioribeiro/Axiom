@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Full-stack monorepo: Django REST Framework backend (port 39100) + React/TypeScript frontend (port 39101). UI in Brazilian Portuguese; API keys translated via `apps/frontend/src/config/constants.ts`.
+Full-stack monorepo: Django REST Framework backend (port 39100) + React/TypeScript frontend (port 39101). UI in Brazilian Portuguese; API keys translated via `apps/web/src/config/constants.ts`.
 
 ## Architecture
 
@@ -11,7 +11,7 @@ Full-stack monorepo: Django REST Framework backend (port 39100) + React/TypeScri
 Axiom/
 ├── apps/
 │   ├── api/       # Django backend (port 39100)
-│   ├── frontend/  # React frontend (port 39101)
+│   ├── web/       # React frontend (port 39101)
 │   └── mobile/    # Flutter app
 ├── infra/
 │   ├── k8s/       # Kubernetes manifests (kustomize)
@@ -102,7 +102,7 @@ Depois, usando a extensão claude-in-chrome, abra `localhost:39101` e faça logi
 
 **Routing**: `ProtectedRoute` HOC; all protected pages lazy-loaded. Public routes redirect home if authenticated.
 
-**Import alias**: `@/` → `apps/frontend/src/`
+**Import alias**: `@/` → `apps/web/src/`
 
 **Pre-commit**: `pre-commit` runs black/isort/flake8/mypy (backend); `husky` + `lint-staged` runs ESLint + Prettier (frontend).
 
@@ -155,7 +155,7 @@ $DC exec api python manage.py import_exercise_dataset      # one-time per env
 
 ### Frontend
 ```bash
-cd apps/frontend
+cd apps/web
 npm run dev / build / lint / lint:fix / format / format:check / typecheck
 npm run test -- --run                  # All tests
 npm run test -- --run -t "test name"   # Single test
@@ -183,7 +183,7 @@ Simulates MR lint checks (black/isort/flake8, migrations, bandit, pip-audit, esl
 ```bash
 source .venv/bin/activate
 cd apps/api && python manage.py migrate && python manage.py runserver 0.0.0.0:39100
-cd apps/frontend && npm install && npm run dev
+cd apps/web && npm install && npm run dev
 ```
 
 ### Database
@@ -319,7 +319,7 @@ Format: `<type>(<optional scope>): <description>`
 
 Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `ci`, `perf`, `revert`, `style`
 
-Config: `apps/frontend/commitlint.config.cjs`.
+Config: `apps/web/commitlint.config.cjs`.
 
 ## Dependencies
 

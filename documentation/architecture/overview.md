@@ -131,7 +131,7 @@ Axiom/
 │   │   ├── authentication/     # JWT, 2FA, verificação de e-mail
 │   │   ├── members/            # Sistema unificado de pessoas/membros
 │   │   └── app/                # Configuração central, BaseModel, criptografia
-│   ├── frontend/                # Frontend React (porta 39101)
+│   ├── web/                     # Frontend React (porta 39101)
 │   │   ├── src/
 │   │   │   ├── components/     # common/ e ui/ (Radix + Tailwind)
 │   │   │   ├── pages/          # Páginas/rotas (lazy-loaded)

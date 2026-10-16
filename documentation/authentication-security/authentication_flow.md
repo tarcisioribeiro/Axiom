@@ -283,7 +283,7 @@ def logout_view(request):
 ### Frontend
 
 #### ApiClient (api-client.ts)
-**Arquivo**: `apps/frontend/src/services/api-client.ts`
+**Arquivo**: `apps/web/src/services/api-client.ts`
 
 ```typescript
 class ApiClient {

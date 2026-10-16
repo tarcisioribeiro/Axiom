@@ -30,15 +30,15 @@ Documentação do Django REST Framework.
 - **[Comandos de Management](backend/management_commands.md)** - Comandos personalizados Django
 - **[Sistema de Agentes (IA)](backend/agents.md)** - 6 agentes especializados, providers LLM, RAG, endpoints e configuração
 
-### [4. Frontend](apps/frontend/README.md)
+### [4. Frontend](apps/web/README.md)
 Documentação do React + TypeScript.
 
-- **[Estrutura do Projeto](apps/frontend/project_structure.md)** - Organização de diretórios e arquivos
-- **[Componentes UI](apps/frontend/ui_components.md)** - shadcn/ui, Radix e componentes customizados
-- **[Roteamento](apps/frontend/routing.md)** - React Router e proteção de rotas
-- **[Gerenciamento de Estado](apps/frontend/state_management.md)** - Zustand stores
-- **[API Client](apps/frontend/api_client.md)** - Axios, interceptores e serviços
-- **[Estilização](apps/frontend/stylization.md)** - TailwindCSS e tema Dracula
+- **[Estrutura do Projeto](apps/web/project_structure.md)** - Organização de diretórios e arquivos
+- **[Componentes UI](apps/web/ui_components.md)** - shadcn/ui, Radix e componentes customizados
+- **[Roteamento](apps/web/routing.md)** - React Router e proteção de rotas
+- **[Gerenciamento de Estado](apps/web/state_management.md)** - Zustand stores
+- **[API Client](apps/web/api_client.md)** - Axios, interceptores e serviços
+- **[Estilização](apps/web/stylization.md)** - TailwindCSS e tema Dracula
 
 ### [5. API](apps/api/README.md)
 Documentação dos endpoints RESTful.
@@ -123,10 +123,10 @@ App mobile em Flutter — estado atual, stack e como rodar.
    - [Migrations](database/migrations.md) - Criar migrations
 
 3. **Frontend**
-   - [Estrutura do Projeto](apps/frontend/project_structure.md) - Onde colocar arquivos
-   - [API Client](apps/frontend/api_client.md) - Chamar APIs
-   - [Componentes UI](apps/frontend/ui_components.md) - Interface
-   - [Gerenciamento de Estado](apps/frontend/state_management.md) - Estado global
+   - [Estrutura do Projeto](apps/web/project_structure.md) - Onde colocar arquivos
+   - [API Client](apps/web/api_client.md) - Chamar APIs
+   - [Componentes UI](apps/web/ui_components.md) - Interface
+   - [Gerenciamento de Estado](apps/web/state_management.md) - Estado global
 
 4. **Testes e Deploy**
    - [Workflow de Desenvolvimento](development/development_workflow.md) - Testes
@@ -157,8 +157,8 @@ App mobile em Flutter — estado atual, stack e como rodar.
    - [ViewSets e Views](backend/viewsets_views.md) - Otimizações de queries
 
 3. **Frontend**
-   - [API Client](apps/frontend/api_client.md) - Caching e interceptores
-   - [Componentes UI](apps/frontend/ui_components.md) - Lazy loading
+   - [API Client](apps/web/api_client.md) - Caching e interceptores
+   - [Componentes UI](apps/web/ui_components.md) - Lazy loading
 
 4. **Banco de Dados**
    - [Schema](database/schema.md) - Índices adequados

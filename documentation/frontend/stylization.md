@@ -15,7 +15,7 @@ O Axiom utiliza **TailwindCSS** como framework CSS principal, com tema customiza
 ## Estrutura de Estilos
 
 ```
-apps/frontend/
+apps/web/
 ├── src/
 │   ├── styles/
 │   │   └── globals.css        # Estilos globais + variáveis CSS

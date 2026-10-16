@@ -235,7 +235,7 @@ O Axiom é um monorepo organizado em `apps/` (backend, frontend e mobile) e `inf
 Axiom/
 ├── apps/
 │   ├── api/          # Backend Django REST Framework (porta 39100)
-│   ├── frontend/     # Frontend React + TypeScript (porta 39101)
+│   ├── web/          # Frontend React + TypeScript (porta 39101)
 │   └── mobile/       # App Flutter (scaffolding — ver documentation/mobile/README.md)
 ├── infra/
 │   ├── k8s/          # Manifests Kubernetes (kustomize base + overlays)
