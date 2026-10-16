@@ -836,7 +836,7 @@ class VaultTransaction(BaseModel):
         max_length=200, verbose_name="Descrição", null=True, blank=True
     )
     transaction_date = models.DateField(
-        verbose_name="Data da Transação", default=timezone.now
+        verbose_name="Data da Transação", default=timezone.localdate
     )
     recurring_contribution = models.ForeignKey(
         "VaultRecurringContribution",

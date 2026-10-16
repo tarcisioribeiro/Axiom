@@ -483,7 +483,7 @@ class Reading(BaseModel):
     reading_date = models.DateField(
         null=False,
         blank=False,
-        default=timezone.now,
+        default=timezone.localdate,
         verbose_name="Data da Leitura",
     )
     reading_time = models.PositiveIntegerField(
@@ -951,7 +951,7 @@ class CourseSession(BaseModel):
         verbose_name="Curso",
     )
     session_date = models.DateField(
-        default=timezone.now, verbose_name="Data da Sessão"
+        default=timezone.localdate, verbose_name="Data da Sessão"
     )
     duration_minutes = models.PositiveIntegerField(
         verbose_name="Duração (minutos)", default=60
@@ -1262,7 +1262,7 @@ class FlashCard(BaseModel):
         verbose_name="Repetições bem-sucedidas",
     )
     next_review = models.DateField(
-        default=timezone.now,
+        default=timezone.localdate,
         verbose_name="Próxima revisão",
     )
     last_reviewed = models.DateTimeField(

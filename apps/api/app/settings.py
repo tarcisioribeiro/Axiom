@@ -288,6 +288,7 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
+    "EXCEPTION_HANDLER": "app.exceptions.custom_exception_handler",
     "DEFAULT_PAGINATION_CLASS": "app.pagination.StandardResultsSetPagination",
     "PAGE_SIZE": 50,
     "DEFAULT_THROTTLE_CLASSES": [

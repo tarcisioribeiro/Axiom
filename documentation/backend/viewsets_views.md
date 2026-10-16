@@ -685,22 +685,12 @@ class TransferViewSet(viewsets.ModelViewSet):
 
 ```python
 # app/exceptions.py
-from rest_framework.views import exception_handler
-from rest_framework.response import Response
-
 def custom_exception_handler(exc, context):
-    # Chama handler padrão do DRF
-    response = exception_handler(exc, context)
-
-    if response is not None:
-        # Customiza formato de erro
-        response.data = {
-            'error': True,
-            'message': str(exc),
-            'details': response.data
-        }
-
-    return response
+    """Converte ValidationError do Django (full_clean() no save()) em 400."""
+    if isinstance(exc, DjangoValidationError):
+        detail = exc.message_dict if hasattr(exc, "error_dict") else exc.messages
+        exc = ValidationError(detail=detail)
+    return exception_handler(exc, context)
 ```
 
 **Registrar em settings.py**:

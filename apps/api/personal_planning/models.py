@@ -796,7 +796,7 @@ class Goal(BaseModel):
     start_date = models.DateField(
         null=False,
         blank=False,
-        default=timezone.now,
+        default=timezone.localdate,
         verbose_name="Data de Inicio",
     )
     end_date = models.DateField(
