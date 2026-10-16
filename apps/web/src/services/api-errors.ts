@@ -69,7 +69,9 @@ function formatErrorMessage(data: unknown): string {
     }
 
     if (typeof errorData.error === 'string') {
-      return errorData.error;
+      // `{error, details: [...]}`: o motivo real está em details
+      const details = Array.isArray(errorData.details) ? errorData.details : [];
+      return details.length ? details.join('\n') : errorData.error;
     }
 
     const errorMessages: string[] = [];
