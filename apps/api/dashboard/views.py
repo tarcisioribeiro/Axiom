@@ -259,7 +259,7 @@ class DashboardStatsView(APIView):
             return Response(cached_result)
 
         # Apenas dados do usuário autenticado
-        today = timezone.now().date()
+        today = timezone.localdate()
         accounts_qs = Account.objects.filter(created_by=request.user)
         expenses_qs = Expense.objects.filter(
             created_by=request.user,
@@ -1315,13 +1315,6 @@ class DebtPayoffPlanView(APIView):
             0,
         )
 
-    def _determine_horizon_months(self, today: date, debts: list) -> int:
-        months_to_furthest = self._months_to_furthest_due_date(today, debts)
-        return min(
-            months_to_furthest + self.HORIZON_BUFFER_MONTHS,
-            self.MAX_HORIZON_MONTHS,
-        )
-
     @staticmethod
     def _add_months(d: date, months: int) -> date:
         total_month = d.month - 1 + months
@@ -1797,7 +1790,7 @@ class FinancialAlertsView(APIView):
         return self.CATEGORY_LABELS.get(category, category)
 
     def get(self, request):
-        today = timezone.now().date()
+        today = timezone.localdate()
         user = request.user
         member = Member.objects.filter(user=user).first()
         alerts = []
@@ -2135,7 +2128,7 @@ class AnomalyDetectionView(APIView):
         from math import sqrt
 
         user = request.user
-        today = timezone.now().date()
+        today = timezone.localdate()
         current_month = today.month
         current_year = today.year
         enrich = (
@@ -2244,7 +2237,7 @@ class SpendingInsightsView(APIView):
 
     def get(self, request):
         user = request.user
-        today = timezone.now().date()
+        today = timezone.localdate()
         try:
             base = date(
                 int(request.query_params.get("year", today.year)),
@@ -2590,7 +2583,7 @@ class FinancialHealthScoreView(APIView):
 
     def get(self, request):
         user = request.user
-        today = timezone.now().date()
+        today = timezone.localdate()
         three_months_ago = today.replace(day=1) - timedelta(days=90)
         year_start = date(today.year, 1, 1)
 

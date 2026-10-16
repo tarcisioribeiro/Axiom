@@ -20,7 +20,7 @@ def current_date(request: Request) -> Response:
     This ensures frontend and backend use the same date reference.
     No authentication required - this is a public utility endpoint.
     """
-    today = timezone.now().date()
+    today = timezone.localdate()
     return Response({"date": today.isoformat()})
 
 

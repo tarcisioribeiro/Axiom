@@ -1418,7 +1418,7 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
 
         # Analyse stored credit cards
         card_issues: list[dict] = []
-        today = timezone.now().date()
+        today = timezone.localdate()
         cards_qs = StoredCreditCard.objects.filter(
             owner=member, is_deleted=False
         ).only(

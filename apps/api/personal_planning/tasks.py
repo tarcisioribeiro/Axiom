@@ -106,7 +106,7 @@ def _notify_goal_risk(goal, actual_pct: float, expected_pct: float) -> None:
 
         from notifications.models import Notification
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         already_notified = Notification.objects.filter(
             owner=goal.owner,
             notification_type="financial_goal_approaching",

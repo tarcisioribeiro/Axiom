@@ -876,7 +876,7 @@ class Goal(BaseModel):
         dias, evitar hábito), o valor é travado em `target_value` — a
         contagem não deve continuar subindo depois que a meta é atingida.
         """
-        today = timezone.now().date()
+        today = timezone.localdate()
 
         if self.goal_source == "workout_sessions":
             return self._calculate_from_workout_sessions(today, timedelta)
@@ -1031,7 +1031,7 @@ class Goal(BaseModel):
         """
         if self.status != "active" and self.end_date:
             return max(0, (self.end_date - self.start_date).days)
-        return max(0, (timezone.now().date() - self.start_date).days)
+        return max(0, (timezone.localdate() - self.start_date).days)
 
     def evaluate_completion(self) -> bool:
         """
@@ -1055,7 +1055,7 @@ class Goal(BaseModel):
 
         if current >= self.target_value:
             self.status = "completed"
-            self.end_date = timezone.now().date()
+            self.end_date = timezone.localdate()
             self.best_streak = max(self.best_streak, current)
             self.save(
                 update_fields=[
@@ -1317,7 +1317,7 @@ class TaskInstance(BaseModel):
         """Verifica se a tarefa está atrasada."""
         if self.status in ("completed", "skipped", "cancelled"):
             return False
-        today = timezone.now().date()
+        today = timezone.localdate()
         if self.scheduled_date < today:
             return True
         if self.scheduled_date == today and self.scheduled_time:
@@ -1452,7 +1452,7 @@ class GamificationProfile(BaseModel):
     def update_streak(self, activity_date=None):
         from django.utils import timezone
 
-        today = activity_date or timezone.now().date()
+        today = activity_date or timezone.localdate()
         if self.last_activity_date is None:
             self.current_streak = 1
         elif (today - self.last_activity_date).days == 1:

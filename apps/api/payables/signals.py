@@ -65,7 +65,7 @@ def generate_payable_installments(
         first_due_date = default_first_due_date(
             payable.date.day,
             payable.payment_frequency,
-            today=timezone.now().date(),
+            today=timezone.localdate(),
         )
 
     remaining_value = payable.value - payable.paid_value

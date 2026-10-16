@@ -91,7 +91,7 @@ BADGE_RULES: list[dict[str, Any]] = [
 def _compute_reading_streak(member):
     from library.models import Reading
 
-    today = timezone.now().date()
+    today = timezone.localdate()
     readings = (
         Reading.objects.filter(owner=member, deleted_at__isnull=True)
         .values_list("reading_date", flat=True)

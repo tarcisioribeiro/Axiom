@@ -168,7 +168,7 @@ class Vault(BaseModel):
             Valor do rendimento calculado
         """
         if as_of_date is None:
-            as_of_date = timezone.now().date()
+            as_of_date = timezone.localdate()
 
         if not self.last_yield_date or self.daily_yield_rate <= 0:
             return Decimal("0.00")
@@ -225,7 +225,7 @@ class Vault(BaseModel):
         estiver indisponível.
         """
         if as_of_date is None:
-            as_of_date = timezone.now().date()
+            as_of_date = timezone.localdate()
 
         index_type = index_type or self.yield_index_type
         percentage = (
@@ -299,7 +299,7 @@ class Vault(BaseModel):
             Valor do rendimento aplicado
         """
         if as_of_date is None:
-            as_of_date = timezone.now().date()
+            as_of_date = timezone.localdate()
 
         yield_value = (
             Decimal(amount_override)
@@ -524,7 +524,7 @@ class Vault(BaseModel):
         # Reinicia o "relógio" de rendimento quando o cofre estava zerado, para
         # não acumular rendimento retroativo sobre um período sem saldo.
         if was_empty or not self.last_yield_date:
-            self.last_yield_date = timezone.now().date()
+            self.last_yield_date = timezone.localdate()
 
         self.save()
 
@@ -763,7 +763,7 @@ class Vault(BaseModel):
 
         diff = self.accumulated_yield - total_income
         if diff > 0:
-            self._materialize_yield_revenue(diff, timezone.now().date(), user)
+            self._materialize_yield_revenue(diff, timezone.localdate(), user)
         elif diff < 0:
             self._reduce_yield_revenues(-diff, user, recalc=False)
 
@@ -944,7 +944,7 @@ class VaultRecurringContribution(BaseModel):
     @property
     def next_contribution_date(self):
         """Retorna a data da próxima contribuição agendada."""
-        today = timezone.now().date()
+        today = timezone.localdate()
         year, month = today.year, today.month
 
         last_day = monthrange(year, month)[1]
@@ -1108,7 +1108,7 @@ class FinancialGoal(BaseModel):
         """
         if not self.target_date:
             return None
-        today = timezone.now().date()
+        today = timezone.localdate()
         delta = self.target_date - today
         return delta.days
 

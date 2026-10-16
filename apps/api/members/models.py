@@ -22,14 +22,6 @@ ACTIVITY_LEVEL_CHOICES = (
     ),
 )
 
-ACTIVITY_LEVEL_TDEE_MULTIPLIER = {
-    "sedentary": 1.2,
-    "lightly_active": 1.375,
-    "moderately_active": 1.55,
-    "very_active": 1.725,
-    "extremely_active": 1.9,
-}
-
 
 def compute_document_hash(document: str) -> str:
     """
@@ -205,10 +197,6 @@ class Member(BaseModel):
         self.emergency_contact = None
         self.occupation = None
         self.notes = None
-
-    @property
-    def is_user(self):
-        return self.user is not None
 
     @property
     def age(self):

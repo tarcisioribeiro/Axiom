@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         dry_run = options["dry_run"]
-        today = timezone.now().date()
+        today = timezone.localdate()
 
         # Busca faturas abertas com data de vencimento passada
         overdue_bills = CreditCardBill.objects.filter(

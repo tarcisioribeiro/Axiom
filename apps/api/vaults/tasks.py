@@ -9,7 +9,7 @@ def calculate_daily_yields(self) -> dict:
 
         from vaults.models import Vault
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         vaults = Vault.objects.filter(
             is_deleted=False,
         ).exclude(last_yield_date=today)

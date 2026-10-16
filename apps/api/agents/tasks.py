@@ -34,7 +34,7 @@ def generate_weekly_insight_for_user(self, user_id: int) -> dict:
         logger = logging.getLogger("axiom")
         user = User.objects.get(pk=user_id)
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         week_start = today - timedelta(days=today.weekday())
 
         already_exists = Notification.objects.filter(
@@ -174,7 +174,7 @@ def _send_intellect_recommendation_for_user(self, user_id: int) -> dict:
 
         from datetime import timedelta
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         already_exists = Notification.objects.filter(
             owner=member,
             notification_type="agent_insight",
@@ -246,56 +246,3 @@ def _build_intellect_recommendation(to_read: list, skills: list) -> str:
             "Que tal escolher um novo livro para ler esta semana? "
             "Adicione títulos à sua fila e comece agora! 📚"
         )
-
-
-@shared_task(bind=True, max_retries=1, default_retry_delay=5)
-def persist_agent_conversation(
-    self,
-    user_id: int,
-    session_id: str,
-    query: str,
-    answer: str,
-    agent_name: str,
-    query_id: str,
-) -> dict:
-    """
-    Persiste uma conversa de agente de forma assíncrona via Celery.
-
-    Usado como alternativa ao daemon thread quando Celery está disponível.
-    A view usa daemon thread diretamente — esta task é mantida para uso
-    explícito em fluxos que já operam dentro de um worker Celery.
-    """
-    try:
-        from django.contrib.auth.models import User
-
-        from agents.core.memory import ConversationMemory
-        from agents.models import AgentConversation
-
-        user = User.objects.get(pk=user_id)
-        ConversationMemory.append(user_id, session_id, query, answer)
-        AgentConversation.objects.bulk_create(
-            [
-                AgentConversation(
-                    user=user,
-                    session_id=session_id,
-                    role="user",
-                    content=query,
-                    query_id=query_id,
-                    created_by=user,
-                    updated_by=user,
-                ),
-                AgentConversation(
-                    user=user,
-                    session_id=session_id,
-                    role="assistant",
-                    content=answer,
-                    agent_name=agent_name,
-                    query_id=query_id,
-                    created_by=user,
-                    updated_by=user,
-                ),
-            ]
-        )
-        return {"status": "ok"}
-    except Exception as exc:
-        raise self.retry(exc=exc)

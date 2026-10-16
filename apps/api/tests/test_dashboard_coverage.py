@@ -1040,7 +1040,7 @@ class AnomalyDetectionViewTest(_DashboardCoverageBaseTestCase):
         return year, month
 
     def _seed_history(self, category, history_values, current_value):
-        today = timezone.now().date()
+        today = timezone.localdate()
         for offset, value in enumerate(history_values, start=1):
             year, month = self._months_ago(today, offset)
             day = min(today.day, 28)
@@ -1150,7 +1150,7 @@ class AnomalyDetectionViewTest(_DashboardCoverageBaseTestCase):
 
 class SpendingInsightsViewTest(_DashboardCoverageBaseTestCase):
     def test_spending_insights_with_growing_category(self):
-        today = timezone.now().date()
+        today = timezone.localdate()
 
         def months_ago(offset):
             month = today.month - offset
@@ -1416,7 +1416,7 @@ class FinancialHealthScoreViewTest(_DashboardCoverageBaseTestCase):
         self.assertIn("dimensions", response.data)
 
     def test_health_score_with_rich_data(self):
-        today = timezone.now().date()
+        today = timezone.localdate()
         year_start = date(today.year, 1, 1)
 
         # Liquidity: recent months expenses

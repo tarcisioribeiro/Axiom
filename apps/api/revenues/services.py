@@ -193,7 +193,7 @@ def get_fully_generated_months(months_ahead=6):
     from collections import defaultdict
 
     months_ahead = max(0, min(int(months_ahead), 24))
-    today = timezone.now().date()
+    today = timezone.localdate()
     start = today.replace(day=1)
     end_year = start.year + (start.month - 1 + months_ahead) // 12
     end_month = (start.month - 1 + months_ahead) % 12 + 1

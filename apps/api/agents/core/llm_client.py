@@ -803,12 +803,3 @@ class LLMClient:
             return [m["name"] for m in data.get("models", [])]
         except Exception:
             return []
-
-    @classmethod
-    def serialize_embedding(cls, embedding: list[float]) -> str:
-        return json.dumps(embedding)
-
-    @classmethod
-    def deserialize_embedding(cls, raw: str) -> list[float]:
-        result: list[float] = json.loads(raw)
-        return result

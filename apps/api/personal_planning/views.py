@@ -783,7 +783,7 @@ class GoalRestartView(APIView):
             )
 
         goal.current_value = 0
-        goal.start_date = timezone.now().date() + timedelta(days=1)
+        goal.start_date = timezone.localdate() + timedelta(days=1)
         goal.end_date = None
         goal.status = "active"
         goal.save(
@@ -847,7 +847,7 @@ class GoalRegisterFailureView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         if failure_date > today:
             return Response(
                 {"detail": "A data da falha não pode ser no futuro."},
@@ -1013,7 +1013,7 @@ class PersonalPlanningDashboardStatsView(APIView):
 
     def get(self, request):
         user = request.user
-        today = timezone.now().date()
+        today = timezone.localdate()
 
         # Querysets filtrados
         tasks_qs = RoutineTask.objects.filter(
@@ -1608,7 +1608,7 @@ class RoutineTaskHeatmapView(APIView):
         task_id = request.query_params.get("task_id")
         year_param = request.query_params.get("year")
         category = request.query_params.get("category")
-        today = timezone.now().date()
+        today = timezone.localdate()
 
         try:
             year = int(year_param) if year_param else today.year
@@ -1750,7 +1750,7 @@ class PersonalPlanningAnalyticsView(APIView):
         from collections import defaultdict
 
         user = request.user
-        today = timezone.now().date()
+        today = timezone.localdate()
         window_start = today - timedelta(days=180)
 
         instances = TaskInstance.objects.filter(
@@ -3473,7 +3473,7 @@ class DailyCaloricSummaryView(APIView):
             target_date = (
                 date.fromisoformat(date_str)
                 if date_str
-                else timezone.now().date()
+                else timezone.localdate()
             )
         except ValueError:
             return Response(

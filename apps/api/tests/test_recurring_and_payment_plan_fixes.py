@@ -90,7 +90,7 @@ class PayablePaymentPlanFutureDatesTest(TestCase):
         self.account = _account()
 
     def test_installments_never_land_in_the_past(self):
-        old = timezone.now().date() - timedelta(days=65)
+        old = timezone.localdate() - timedelta(days=65)
         payable = Payable.objects.create(
             description="Livro comprado em junho",
             value=Decimal("300.00"),
@@ -102,7 +102,7 @@ class PayablePaymentPlanFutureDatesTest(TestCase):
 
         installments = PayableInstallment.objects.filter(payable=payable)
         self.assertEqual(installments.count(), 3)
-        today = timezone.now().date()
+        today = timezone.localdate()
         for inst in installments:
             self.assertGreaterEqual(inst.due_date, today)
 
@@ -110,11 +110,11 @@ class PayablePaymentPlanFutureDatesTest(TestCase):
         payable = Payable.objects.create(
             description="Dívida",
             value=Decimal("300.00"),
-            date=timezone.now().date() - timedelta(days=200),
+            date=timezone.localdate() - timedelta(days=200),
             category="others",
             status="active",
         )
-        anchor = timezone.now().date() + timedelta(days=40)
+        anchor = timezone.localdate() + timedelta(days=40)
         generate_payable_installments(
             payable, 3, None, self.account, first_due_date=anchor
         )
@@ -139,7 +139,7 @@ class PayablePaymentPlanFutureDatesTest(TestCase):
         payable = Payable.objects.create(
             description="D",
             value=Decimal("300.00"),
-            date=timezone.now().date(),
+            date=timezone.localdate(),
             category="others",
             status="active",
             created_by=user,
@@ -182,7 +182,7 @@ class LoanRecalculateInstallmentsTest(TestCase):
             description="Empréstimo",
             value=Decimal("900.00"),
             payed_value=Decimal("0.00"),
-            date=timezone.now().date(),
+            date=timezone.localdate(),
             horary=timezone.now().time(),
             category="loans",
             account=self.account,
@@ -197,7 +197,7 @@ class LoanRecalculateInstallmentsTest(TestCase):
 
     def test_loan_payment_plan_first_installment_in_future(self):
         loan = self._loan(installments=1)
-        loan.date = timezone.now().date() - timedelta(days=90)
+        loan.date = timezone.localdate() - timedelta(days=90)
         loan.save(update_fields=["date"])
 
         resp = self.client.post(
@@ -206,7 +206,7 @@ class LoanRecalculateInstallmentsTest(TestCase):
             format="json",
         )
         self.assertEqual(resp.status_code, 201, resp.data)
-        today = timezone.now().date()
+        today = timezone.localdate()
         for inst in LoanInstallment.objects.filter(loan=loan):
             self.assertGreaterEqual(inst.due_date, today)
 

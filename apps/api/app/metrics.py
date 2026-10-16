@@ -4,7 +4,6 @@ Métricas Prometheus de negócio, LLM e roteamento de agentes para o Axiom.
 
 from prometheus_client import (  # type: ignore[import-not-found]
     Counter,
-    Gauge,
     Histogram,
 )
 
@@ -24,15 +23,6 @@ revenues_created_total = Counter(
     ["category"],
 )
 
-health_score_average = Gauge(
-    "axiom_health_score_average",
-    "Score médio de saúde financeira dos usuários ativos",
-)
-
-active_users_gauge = Gauge(
-    "axiom_active_users_total",
-    "Total de usuários ativos (com atividade nos últimos 30 dias)",
-)
 
 webhooks_delivered_total = Counter(
     "axiom_webhooks_delivered_total",
@@ -125,10 +115,6 @@ agent_session_context_turns = Histogram(
     buckets=[0, 2, 4, 6, 8, 10, 14, 20],
 )
 
-ollama_circuit_breaker_open_total = Counter(
-    "axiom_ollama_circuit_breaker_open_total",
-    "Total de vezes que o circuit breaker do Ollama abriu",
-)
 
 embedding_cache_hits_total = Counter(
     "axiom_embedding_cache_hits_total",

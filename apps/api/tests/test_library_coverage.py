@@ -248,7 +248,7 @@ class LibraryDashboardStatsFullTest(BaseLibraryCoverageTestCase):
             owner=self.member,
         )
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         yesterday = today - timedelta(days=1)
         now = timezone.now()
         curr_month_date = now.replace(day=1).date()
@@ -339,7 +339,7 @@ class UnifiedStreakViewTest(BaseLibraryCoverageTestCase):
         super().setUp()
         from library.models import Course, CourseSession, Reading
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         yesterday = today - timedelta(days=1)
         Reading.objects.create(
             book=self.book,

@@ -1852,7 +1852,7 @@ class LibraryDashboardStatsView(APIView):
         reading_dates = set(
             readings_qs.values_list("reading_date", flat=True).distinct()
         )
-        today = timezone.now().date()
+        today = timezone.localdate()
         current_streak = 0
         check_date = today
         while check_date in reading_dates:
@@ -1990,7 +1990,7 @@ class UnifiedStreakView(APIView):
         )
         all_dates = reading_dates | session_dates
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         today_completed = today in all_dates
 
         current_streak = 0

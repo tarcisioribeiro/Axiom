@@ -550,32 +550,6 @@ class ExpenseSplit(BaseModel):
         return f"{self.description} - R$ {self.value}"
 
 
-AUTOMATION_CONDITION_FIELDS = (
-    ("merchant", "Estabelecimento"),
-    ("description", "Descrição"),
-    ("category", "Categoria"),
-    ("value", "Valor"),
-    ("account", "Conta"),
-    ("payment_method", "Forma de pagamento"),
-)
-
-AUTOMATION_OPERATORS = (
-    ("contains", "contém"),
-    ("not_contains", "não contém"),
-    ("eq", "igual a"),
-    ("neq", "diferente de"),
-    ("gt", "maior que"),
-    ("gte", "maior ou igual a"),
-    ("lt", "menor que"),
-    ("lte", "menor ou igual a"),
-)
-
-AUTOMATION_ACTION_TYPES = (
-    ("set_category", "Definir categoria"),
-    ("add_tag", "Adicionar tag"),
-    ("create_alert", "Criar alerta"),
-)
-
 AUTOMATION_LOGIC_CHOICES = (
     ("all", "Todas as condições (AND)"),
     ("any", "Qualquer condição (OR)"),

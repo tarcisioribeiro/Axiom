@@ -55,7 +55,7 @@ class PlanningAgent(BaseAgent):
         )
 
         user = User.objects.get(pk=ctx.user_id)
-        now = timezone.now().date()
+        now = timezone.localdate()
 
         temporal = (
             parse_temporal_intent(ctx.query, now)

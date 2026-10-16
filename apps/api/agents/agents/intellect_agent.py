@@ -213,7 +213,7 @@ class IntellectAgent(BaseAgent):
         from agents.tools.rag_tools import search_library_chunks
 
         user = User.objects.get(pk=ctx.user_id)
-        now = timezone.now().date()
+        now = timezone.localdate()
 
         temporal = (
             parse_temporal_intent(ctx.query, now)

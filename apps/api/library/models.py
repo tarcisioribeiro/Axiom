@@ -1220,15 +1220,6 @@ FLASHCARD_STATUS_CHOICES = (
     ("mastered", "Dominado"),
 )
 
-FLASHCARD_RATING_CHOICES = (
-    (0, "Não lembrei (resetar)"),
-    (1, "Difícil (reaprender)"),
-    (2, "Com esforço (reduzir intervalo)"),
-    (3, "Bom (manter)"),
-    (4, "Fácil (aumentar intervalo)"),
-    (5, "Muito fácil (boost)"),
-)
-
 
 class FlashCard(BaseModel):
     """Flash card para revisão espaçada (SM-2 algorithm)."""

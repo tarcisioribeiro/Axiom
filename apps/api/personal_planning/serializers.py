@@ -125,7 +125,7 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
 
         from django.utils import timezone
 
-        thirty_days_ago = timezone.now().date() - timedelta(days=30)
+        thirty_days_ago = timezone.localdate() - timedelta(days=30)
         instances = obj.instances.filter(
             scheduled_date__gte=thirty_days_ago, deleted_at__isnull=True
         )

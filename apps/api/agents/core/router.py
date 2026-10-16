@@ -377,9 +377,6 @@ class SemanticRouter:
             for agent_name, exemplars in self._embeddings.items()
         }
 
-    def is_ready(self) -> bool:
-        return self._ready
-
 
 # ── AgentRouter principal
 # ──────────────────────────────────────────────────────

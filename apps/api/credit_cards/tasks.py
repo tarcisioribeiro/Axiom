@@ -12,7 +12,7 @@ def close_overdue_bills(self) -> dict:
 
         from credit_cards.models import CreditCardBill
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         updated = CreditCardBill.objects.filter(
             status="open",
             due_date__lt=today,

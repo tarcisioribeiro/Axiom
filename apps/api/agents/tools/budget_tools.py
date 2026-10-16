@@ -83,7 +83,7 @@ def get_budget_status(
 
 
 def get_days_remaining_in_month() -> int:
-    now = timezone.now().date()
+    now = timezone.localdate()
     last_day = calendar.monthrange(now.year, now.month)[1]
     return last_day - now.day
 

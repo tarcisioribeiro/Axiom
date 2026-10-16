@@ -636,7 +636,7 @@ class RenegotiateBillView(APIView):
         bill.paid_amount = bill.total_amount
         bill.status = "paid"
         bill.closed = True
-        bill.payment_date = timezone.now().date()
+        bill.payment_date = timezone.localdate()
         CreditCardInstallment.objects.filter(bill=bill, payed=False).update(
             payed=True
         )

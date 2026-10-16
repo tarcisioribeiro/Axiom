@@ -41,7 +41,7 @@ class Command(BaseCommand):
             except (ValueError, AttributeError):
                 raise CommandError("Formato de mês inválido. Use YYYY-MM.")
         else:
-            today = timezone.now().date()
+            today = timezone.localdate()
             year_int, month_int = today.year, today.month
             month_str = f"{year_int:04d}-{month_int:02d}"
 
