@@ -107,7 +107,7 @@ class Loan(BaseModel):
         verbose_name="Multa por Atraso",
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal("0.00"),
     )
     guarantor = models.ForeignKey(
         Member,

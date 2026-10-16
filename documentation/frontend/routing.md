@@ -2,14 +2,14 @@
 
 ## Visão Geral
 
-O Axiom utiliza **React Router v6** para gerenciamento de rotas, com suporte a lazy loading, proteção de rotas autenticadas e animações de transição.
+O Axiom utiliza **React Router v8** para gerenciamento de rotas, com suporte a lazy loading, proteção de rotas autenticadas e animações de transição.
 
 ## Estrutura de Rotas
 
 ### App.tsx - Configuração Principal
 
 ```tsx
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { AnimatePresence } from 'framer-motion';
 import { lazy, Suspense } from 'react';
 
@@ -75,7 +75,7 @@ Componente HOC (Higher-Order Component) que protege rotas privadas.
 
 ```tsx
 // components/common/ProtectedRoute.tsx
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router';
 import { useAuthStore } from '@/stores/auth-store';
 
 interface ProtectedRouteProps {
@@ -150,7 +150,7 @@ As rotas protegidas usam um layout compartilhado (Sidebar + Header):
 
 ```tsx
 // components/layout/Layout.tsx
-import { Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router';
 
 export function Layout() {
   return (
@@ -215,7 +215,7 @@ Usa **Framer Motion** com **AnimatePresence** para transições suaves entre rot
 
 ```tsx
 import { AnimatePresence } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -252,69 +252,84 @@ function Dashboard() {
 
 ## Mapa Completo de Rotas
 
-### Rotas Públicas
+### Mapa de Rotas
 
-| Rota | Componente | Descrição |
-|------|-----------|-----------|
-| `/login` | Login | Página de login |
-| `/register` | Register | Registro de novos usuários |
-| `/unauthorized` | Unauthorized | Página de acesso negado |
+Gerado a partir de `src/App.tsx`. Todas as rotas exceto as públicas (`/login`, `/register`, `/unauthorized`, `/share/:token`, `/forgot-password`, `/reset-password/...`, `/verify-email`) exigem autenticação; as de `/admin/*` exigem staff. Rotas com `:tab` exibem abas, e cada aba tem sua própria URL.
 
-### Rotas Protegidas - Financeiro
+| Rota | Página |
+|------|--------|
+| `/login` | Login (redireciona para `/` se autenticado) |
+| `/register` | Register |
+| `/unauthorized` | Unauthorized |
+| `/share/:token` | ShareCredential |
+| `/forgot-password` | ForgotPassword |
+| `/reset-password/:uid/:token` | ResetPassword |
+| `/verify-email` | VerifyEmail |
+| `/` | Home |
+| `/dashboard` | Dashboard |
+| `/accounts` | Accounts |
+| `/transactions/:tab` | Transactions |
+| `/recurring/:tab` | RecurringItems |
+| `/finance/rules-tags/:tab` | RulesAndTagsPage |
+| `/credit-cards/:tab` | CreditCardManagement |
+| `/transfers` | Transfers |
+| `/loans` | Loans |
+| `/bills/:tab` | PayablesReceivables |
+| `/members` | Members |
+| `/security/dashboard` | SecurityDashboard |
+| `/security/passwords` | Passwords |
+| `/security/stored-cards` | StoredCards |
+| `/security/stored-accounts` | StoredAccounts |
+| `/security/archives` | Archives |
+| `/security/activity-logs` | ActivityLogs |
+| `/security/health` | VaultHealthReport |
+| `/library/dashboard` | LibraryDashboard |
+| `/library/books/:tab` | Books |
+| `/library/authors` | Authors |
+| `/library/publishers` | Publishers |
+| `/library/courses` | Courses |
+| `/library/skills` | Skills |
+| `/library/knowledge-graph` | KnowledgeGraphPage |
+| `/library/intellect-today` | IntellectToday |
+| `/library/flashcards` | Flashcards |
+| `/planning` | PlanningLayout (layout das rotas `/planning/*`) |
+| `/planning/dashboard` | PersonalPlanningDashboard |
+| `/planning/tasks-goals/:tab` | TasksAndGoals |
+| `/planning/tasks-goals/:tab/:subtab` | TasksAndGoals |
+| `/planning/reflections` | DailyReflections |
+| `/planning/workout/:tab` | WorkoutPage |
+| `/planning/nutrition/:tab` | NutritionPage |
+| `/planning/journey` | Journey |
+| `/planning/body-metrics` | BodyMetrics |
+| `/planning/weekly-planning` | WeeklyPlanning |
+| `/planning/emotional-wellness/:tab` | EmotionalWellness |
+| `/budgets` | Budgets |
+| `/webhooks` | Webhooks |
+| `/bank-reconciliation/:importId` | BankReconciliationDetail |
+| `/vaults` | Vaults |
+| `/financial-goals` | FinancialGoals |
+| `/vaults/simulator` | VaultSimulator |
+| `/finance/agenda/:tab` | FinanceAgendaPage |
+| `/finance/analytics/:tab` | FinanceAnalyticsPage |
+| `/finance/financial-health/:tab` | FinancialHealthPage |
+| `/agents` | Agents |
+| `/settings/profile` | UserProfile |
+| `/admin` | AdminOverview |
+| `/admin/config` | AdminConfig |
+| `/admin/integrations` | AdminIntegrations |
+| `/admin/logs` | AdminLogs |
+| `/admin/users` | AdminUsers |
+| `/admin/permissions/:tab` | AdminPermissions |
 
-| Rota | Componente | Descrição |
-|------|-----------|-----------|
-| `/` | Home | Dashboard inicial |
-| `/dashboard` | Dashboard | Dashboard financeiro |
-| `/accounts` | Accounts | Gerenciar contas |
-| `/expenses` | Expenses | Gerenciar despesas |
-| `/fixed-expenses` | FixedExpenses | Despesas fixas |
-| `/revenues` | Revenues | Gerenciar receitas |
-| `/credit-cards` | CreditCards | Gerenciar cartões |
-| `/credit-card-bills` | CreditCardBills | Faturas de cartões |
-| `/credit-card-expenses` | CreditCardExpenses | Despesas do cartão |
-| `/transfers` | Transfers | Transferências |
-| `/loans` | Loans | Empréstimos |
-| `/members` | Members | Gerenciar membros |
+**Aliases** (redirecionam para a rota canônica): `/transactions` → `/transactions/expenses`, `/expenses` → `/transactions/expenses`, `/revenues` → `/transactions/revenues`, `/recurring` → `/recurring/fixed-expenses`, `/fixed-expenses` → `/recurring/fixed-expenses`, `/fixed-revenues` → `/recurring/fixed-revenues`, `/finance/rules-tags` → `/finance/rules-tags/automation-rules`, `/categorization-rules` → `/finance/rules-tags/automation-rules`, `/automation-rules` → `/finance/rules-tags/automation-rules`, `/tags` → `/finance/rules-tags/tags`, `/credit-cards` → `/credit-cards/cards`, `/credit-card-bills` → `/credit-cards/bills`, `/credit-card-expenses` → `/transactions/credit-card-expenses`, `/bills` → `/bills/payables`, `/payables` → `/bills/payables`, `/receivables` → `/bills/receivables`, `/planning/today` → `/planning/tasks-goals/daily`, `/planning/tasks-goals` → `/planning/tasks-goals/daily`, `/planning/routine-tasks` → `/planning/tasks-goals/routine`, `/planning/goals` → `/planning/tasks-goals/goals`, `/planning/daily` → `/planning/tasks-goals/daily`, `/planning/today-tasks` → `/planning/tasks-goals/daily`, `/planning/daily-checklist` → `/planning/tasks-goals/daily`, `/planning/workout` → `/planning/workout/today`, `/planning/nutrition` → `/planning/nutrition/log`, `/planning/week` → `/planning/weekly-planning`, `/planning/emotional-wellness` → `/planning/emotional-wellness/dashboard`, `/finance/agenda` → `/finance/agenda/calendar`, `/finance/analytics` → `/finance/analytics/spending-insights`, `/finance/financial-health` → `/finance/financial-health/net-worth`, `/finance/calendar` → `/finance/agenda/calendar`, `/finance/monthly-planner` → `/finance/agenda/monthly-planner`, `/finance/spending-insights` → `/finance/analytics/spending-insights`, `/finance/month-comparison` → `/finance/analytics/month-comparison`, `/finance/net-worth` → `/finance/financial-health/net-worth`, `/finance/debt-payoff` → `/finance/financial-health/debt-payoff`, `/finance/subscriptions` → `/recurring/fixed-expenses`, `/admin/permissions` → `/admin/permissions/users`, `*` → `/`
 
-### Rotas Protegidas - Security
-
-| Rota | Componente | Descrição |
-|------|-----------|-----------|
-| `/security/dashboard` | SecurityDashboard | Dashboard de segurança |
-| `/security/passwords` | Passwords | Gerenciar senhas |
-| `/security/stored-cards` | StoredCards | Cartões armazenados |
-| `/security/stored-accounts` | StoredAccounts | Contas armazenadas |
-| `/security/archives` | Archives | Arquivos seguros |
-| `/security/activity-logs` | ActivityLogs | Logs de atividade |
-
-### Rotas Protegidas - Library
-
-| Rota | Componente | Descrição |
-|------|-----------|-----------|
-| `/library/dashboard` | LibraryDashboard | Dashboard da biblioteca |
-| `/library/books` | Books | Gerenciar livros |
-| `/library/authors` | Authors | Gerenciar autores |
-| `/library/publishers` | Publishers | Gerenciar editoras |
-| `/library/summaries` | Summaries | Resumos de livros |
-| `/library/readings` | Readings | Leituras |
-
-### Rotas Protegidas - AI e Planning
-
-| Rota | Componente | Descrição |
-|------|-----------|-----------|
-| `/ai-assistant` | AIAssistant | Assistente de IA |
-| `/planning/dashboard` | PersonalPlanningDashboard | Dashboard de planejamento |
-| `/planning/routine-tasks` | RoutineTasks | Tarefas de rotina |
-| `/planning/goals` | Goals | Metas |
-| `/planning/daily` | DailyChecklist | Checklist diário |
 
 ## Navegação Programática
 
 ### useNavigate Hook
 
 ```tsx
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 function MyComponent() {
   const navigate = useNavigate();
@@ -343,7 +358,7 @@ function MyComponent() {
 ### Link Component
 
 ```tsx
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 <Link to="/dashboard" className="text-primary hover:underline">
   Dashboard
@@ -358,7 +373,7 @@ import { Link } from 'react-router-dom';
 ### NavLink (com active state)
 
 ```tsx
-import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router';
 
 <NavLink
   to="/dashboard"
@@ -379,7 +394,7 @@ import { NavLink } from 'react-router-dom';
 <Route path="/accounts/:id" element={<AccountDetails />} />
 
 // Leitura dos params
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 
 function AccountDetails() {
   const { id } = useParams<{ id: string }>();
@@ -395,7 +410,7 @@ function AccountDetails() {
 ### Query Params
 
 ```tsx
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 
 function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -509,7 +524,7 @@ navigate(ROUTES.DASHBOARD);
 ### Ver rota atual
 
 ```tsx
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 function MyComponent() {
   const location = useLocation();
@@ -528,5 +543,5 @@ Instale a extensão para Chrome/Firefox para visualizar rotas em desenvolvimento
 
 ## Próximos Passos
 
-- **Estado Global:** Veja [gerenciamento-estado.md](./gerenciamento-estado.md) para integração com Zustand
-- **API Client:** Veja [api-client.md](./api-client.md) para chamadas HTTP nas páginas
+- **Estado Global:** Veja [gerenciamento-estado.md](./state_management.md) para integração com Zustand
+- **API Client:** Veja [api-client.md](./api_client.md) para chamadas HTTP nas páginas

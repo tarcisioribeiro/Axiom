@@ -47,7 +47,7 @@ def create_initial_revenue_on_account_creation(
     if not created:
         return
 
-    entry_date = instance.opening_date or timezone.now().date()
+    entry_date = instance.opening_date or timezone.localdate()
     entry_time = timezone.now().time()
 
     if instance.current_balance > Decimal("0.00"):

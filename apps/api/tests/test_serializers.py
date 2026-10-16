@@ -314,14 +314,13 @@ class MemberSerializerTest(TestCase):
         self.assertEqual(member.document, "12345678901")  # type: ignore
 
     def test_validate_email_format(self):
-        """Testa que email é CharField — MemberSerializer não valida formato"""
+        """MemberSerializer rejeita email com formato inválido"""
         invalid_data = self.member_data.copy()
         invalid_data["email"] = "email_inválido"
 
         serializer = MemberSerializer(data=invalid_data)
-        # email é CharField no modelo, MemberSerializer não valida formato de
-        # email
-        self.assertTrue(serializer.is_valid())
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("email", serializer.errors)
 
     def test_validate_sex_choice(self):
         """Testa validação da escolha de sexo"""

@@ -80,30 +80,6 @@ class VaultLockedSecurityViewTest(BaseFinalPushTestCase):
 
 
 # ---------------------------------------------------------------------------
-# Member permissions
-# ---------------------------------------------------------------------------
-
-
-class MemberPermissionsViewTest(BaseFinalPushTestCase):
-    def test_member_permissions_update(self):
-        url = reverse("member-permissions-update", args=[self.member.pk])
-        response = self.client.put(
-            url, {"permission_codenames": []}, format="json"
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("message", response.data)  # type: ignore
-        self.assertIn("permissions", response.data)  # type: ignore
-
-    def test_available_permissions(self):
-        url = reverse("available-permissions")
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Response is a dict keyed by app name
-        self.assertIsInstance(response.data, dict)
-        self.assertIn("accounts", response.data)  # type: ignore
-
-
-# ---------------------------------------------------------------------------
 # Loan update and delete
 # ---------------------------------------------------------------------------
 

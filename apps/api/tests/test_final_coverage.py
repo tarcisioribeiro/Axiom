@@ -52,26 +52,6 @@ class BaseFinalTestCase(APITestCase):
 
 
 class MemberPermissionsViewTest(BaseFinalTestCase):
-    def test_get_member_permissions(self):
-        url = reverse("member-permissions-get", args=[self.member.pk])
-        response = self.client.get(url)
-        self.assertIn(
-            response.status_code,
-            [
-                status.HTTP_200_OK,
-                status.HTTP_403_FORBIDDEN,
-                status.HTTP_404_NOT_FOUND,
-            ],
-        )
-
-    def test_get_available_permissions(self):
-        url = reverse("available-permissions")
-        response = self.client.get(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_403_FORBIDDEN],
-        )
-
     def test_user_permissions(self):
         # Need non-superuser for this endpoint
         regular_user = User.objects.create_user(

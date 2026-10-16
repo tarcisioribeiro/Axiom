@@ -1052,7 +1052,7 @@ def chat(request):
     """
     Endpoint de chat com RAG.
 
-    POST /api/v1/ai-assistant/chat/
+    POST /api/v1/agents/ask/
     Body: {
         "query": "Quanto gastei com comida este mês?",
         "tipo": "financeiro",  // opcional
@@ -1343,7 +1343,7 @@ SET ivfflat.probes = 20;  -- Default é 1
 ## Próximos Passos
 
 - [Schema Completo](./schema.md)
-- [Índices e Otimização](./indices-otimizacao.md)
+- [Índices e Otimização](./index_otimization.md)
 - [Guia de Migrations](./migrations.md)
 
 ---

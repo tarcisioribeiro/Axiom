@@ -133,7 +133,7 @@ class BulkGenerateFixedExpensesAccountTest(BaseExpenseServiceTestCase):
         payable = Payable.objects.create(
             description="Dívida parcelada",
             value=Decimal("300.00"),
-            date=timezone.now().date(),
+            date=timezone.localdate(),
             category="others",
             status="active",
             created_by=self.user,

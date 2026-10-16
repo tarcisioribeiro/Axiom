@@ -1040,7 +1040,7 @@ class AnomalyDetectionViewTest(_DashboardCoverageBaseTestCase):
         return year, month
 
     def _seed_history(self, category, history_values, current_value):
-        today = timezone.now().date()
+        today = timezone.localdate()
         for offset, value in enumerate(history_values, start=1):
             year, month = self._months_ago(today, offset)
             day = min(today.day, 28)
@@ -1150,7 +1150,7 @@ class AnomalyDetectionViewTest(_DashboardCoverageBaseTestCase):
 
 class SpendingInsightsViewTest(_DashboardCoverageBaseTestCase):
     def test_spending_insights_with_growing_category(self):
-        today = timezone.now().date()
+        today = timezone.localdate()
 
         def months_ago(offset):
             month = today.month - offset
@@ -1403,59 +1403,6 @@ class AlertsStreamViewTest(_DashboardCoverageBaseTestCase):
 
 
 # ---------------------------------------------------------------------------
-# AuditLogView
-# ---------------------------------------------------------------------------
-
-
-class AuditLogViewTest(_DashboardCoverageBaseTestCase):
-    def setUp(self):
-        super().setUp()
-        from django.contrib.contenttypes.models import ContentType
-
-        from app.audit import ChangeLog
-
-        expense = self._make_expense(100)
-        self.expense_ct = ContentType.objects.get_for_model(Expense)
-        self.log_entry = ChangeLog.objects.create(
-            user=self.user,
-            content_type=self.expense_ct,
-            object_id=str(expense.uuid),
-            action="create",
-            changes={"value": ["0", "100"]},
-        )
-
-    def test_audit_log_no_filters(self):
-        url = reverse("audit-log")
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 1)
-
-    def test_audit_log_filter_by_object_type(self):
-        url = reverse("audit-log")
-        response = self.client.get(url, {"object_type": self.expense_ct.model})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 1)
-
-    def test_audit_log_filter_by_unknown_object_type(self):
-        url = reverse("audit-log")
-        response = self.client.get(
-            url, {"object_type": "not_a_real_model_xyz"}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # unknown content type -> filter is skipped, not an error
-        self.assertEqual(response.data["count"], 1)
-
-    def test_audit_log_filter_by_object_id(self):
-        url = reverse("audit-log")
-        response = self.client.get(
-            url, {"object_id": self.log_entry.object_id}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 1)
-        self.assertEqual(response.data["results"][0]["action"], "create")
-
-
-# ---------------------------------------------------------------------------
 # FinancialHealthScoreView
 # ---------------------------------------------------------------------------
 
@@ -1469,7 +1416,7 @@ class FinancialHealthScoreViewTest(_DashboardCoverageBaseTestCase):
         self.assertIn("dimensions", response.data)
 
     def test_health_score_with_rich_data(self):
-        today = timezone.now().date()
+        today = timezone.localdate()
         year_start = date(today.year, 1, 1)
 
         # Liquidity: recent months expenses

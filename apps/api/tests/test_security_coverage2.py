@@ -1119,35 +1119,6 @@ class VaultAlertConfigTest(BaseSecurityCoverageTestCase):
 # ---------------------------------------------------------------------------
 
 
-class SecuritySearchTest(BaseSecurityCoverageTestCase):
-    def test_query_too_short(self):
-        url = reverse("security-search") + "?q=a"
-        resp = self.client.get(url)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["total"], 0)
-
-    def test_search_no_member(self):
-        self.member.delete()
-        url = reverse("security-search") + "?q=gmail"
-        resp = self.client.get(url)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["total"], 0)
-
-    def test_search_finds_all_types(self):
-        self._make_password("SearchGmail", username="findme@gmail.com")
-        self._make_card("SearchCard")
-        self._make_account("SearchBank")
-        self._make_archive("SearchArchive")
-        url = reverse("security-search") + "?q=Search"
-        resp = self.client.get(url)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["total"], 4)
-        self.assertEqual(len(resp.data["passwords"]), 1)
-        self.assertEqual(len(resp.data["stored_cards"]), 1)
-        self.assertEqual(len(resp.data["stored_accounts"]), 1)
-        self.assertEqual(len(resp.data["archives"]), 1)
-
-
 # ---------------------------------------------------------------------------
 # Vault config: setup / unlock error branches, mixin, recovery key
 # ---------------------------------------------------------------------------

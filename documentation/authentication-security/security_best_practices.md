@@ -364,7 +364,7 @@ graph TB
 
 ### SecurityHeadersMiddleware
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/app/middleware.py`
+**Arquivo**: `apps/api/app/middleware.py`
 
 ```python
 class SecurityHeadersMiddleware(MiddlewareMixin):
@@ -537,7 +537,7 @@ Permissions-Policy: geolocation=(), microphone=(), camera=()
 
 ### CORS (Cross-Origin Resource Sharing)
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/app/settings.py`
+**Arquivo**: `apps/api/app/settings.py`
 
 ```python
 # CORS Configuration
@@ -717,7 +717,7 @@ cursor.execute('SELECT * FROM accounts WHERE balance > %s', [min_balance])
 
 ### AuditLoggingMiddleware
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/app/middleware.py`
+**Arquivo**: `apps/api/app/middleware.py`
 
 ```python
 class AuditLoggingMiddleware(MiddlewareMixin):

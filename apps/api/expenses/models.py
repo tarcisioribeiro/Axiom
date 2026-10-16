@@ -11,7 +11,7 @@ from app.models import (
 )
 
 # Tokens de cor do tema (semânticos + categorias) — mesmos nomes das
-# variáveis CSS em apps/frontend/src/index.css, então a cor da tag
+# variáveis CSS em apps/web/src/index.css, então a cor da tag
 # acompanha o tema ativo em vez de ficar congelada num hex.
 TAG_COLOR_CHOICES = [
     ("primary", "Primária"),
@@ -549,32 +549,6 @@ class ExpenseSplit(BaseModel):
     def __str__(self):
         return f"{self.description} - R$ {self.value}"
 
-
-AUTOMATION_CONDITION_FIELDS = (
-    ("merchant", "Estabelecimento"),
-    ("description", "Descrição"),
-    ("category", "Categoria"),
-    ("value", "Valor"),
-    ("account", "Conta"),
-    ("payment_method", "Forma de pagamento"),
-)
-
-AUTOMATION_OPERATORS = (
-    ("contains", "contém"),
-    ("not_contains", "não contém"),
-    ("eq", "igual a"),
-    ("neq", "diferente de"),
-    ("gt", "maior que"),
-    ("gte", "maior ou igual a"),
-    ("lt", "menor que"),
-    ("lte", "menor ou igual a"),
-)
-
-AUTOMATION_ACTION_TYPES = (
-    ("set_category", "Definir categoria"),
-    ("add_tag", "Adicionar tag"),
-    ("create_alert", "Criar alerta"),
-)
 
 AUTOMATION_LOGIC_CHOICES = (
     ("all", "Todas as condições (AND)"),

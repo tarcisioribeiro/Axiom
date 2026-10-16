@@ -68,7 +68,7 @@ def get_monthly_trend(user: User, months: int = 3) -> list[dict[str, Any]]:
     if cached is not None:
         return cached
 
-    cutoff = timezone.now().date() - timedelta(days=months * 31)
+    cutoff = timezone.localdate() - timedelta(days=months * 31)
     result = financial_provider.monthly_expense_trend(user, cutoff)
     cache.set(key, result, _TTL_TREND)
     return result
@@ -97,7 +97,7 @@ def get_current_month_totals(
     start: date | None = None,
     end: date | None = None,
 ) -> dict[str, Any]:
-    now = timezone.now().date()
+    now = timezone.localdate()
     period_start = start if start is not None else now.replace(day=1)
     period_end = end if end is not None else now
 

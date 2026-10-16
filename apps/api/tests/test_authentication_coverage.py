@@ -397,6 +397,12 @@ class CreateUserWithMemberSuccessPathTest(APITestCase):
     the members-group-missing warning branch and email-verification token
     generation/send."""
 
+    def setUp(self):
+        # Cadastro só abre com um staff ativo
+        User.objects.create_user(
+            "staffreg", "staffreg@test.com", "pw", is_staff=True
+        )
+
     def test_register_without_members_group_logs_warning(self):
         # Ensure no "members" group exists so the DoesNotExist branch runs.
         from django.contrib.auth.models import Group

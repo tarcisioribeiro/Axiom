@@ -779,7 +779,10 @@ class AutoCategorizeExpenseSignalTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            username="cattest", password="pass123", is_superuser=True
+            username="cattest",
+            email="cattest@test.com",
+            password="pass123",
+            is_superuser=True,
         )
         self.account = _make_account()
 

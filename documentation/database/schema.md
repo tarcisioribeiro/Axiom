@@ -158,7 +158,7 @@ Choices compartilhadas em `app/models.py`: `PAYMENT_METHOD_CHOICES`, `PAYMENT_FR
 
 ### 13. Members — `members_member`
 
-**`Member(BaseModel)`**: `name`, `_document` (Fernet-encrypted CPF) + `document_hash` (HMAC-SHA256, unique — permite lookup de unicidade sem descriptografar), `phone`, `email`/`email_verified`/`email_verification_token`, `sex`, `user → User (OneToOne, nullable)`, `is_creditor`/`is_benefited`, `active`, `birth_date`, `address`, `profile_photo`, `emergency_contact`, `monthly_income`, `occupation`, `activity_level` (choices `ACTIVITY_LEVEL_CHOICES` — usado para TDEE no módulo de nutrição). Descriptor `document` (get/set transparente, mantém `document_hash` em sincronia). Método `anonymize()` (pré-requisito LGPD antes de hard-delete). Properties: `is_user`, `age`.
+**`Member(BaseModel)`**: `name`, `_document` (Fernet-encrypted CPF) + `document_hash` (HMAC-SHA256, unique — permite lookup de unicidade sem descriptografar), `phone`, `email`/`email_verified`/`email_verification_token`, `sex`, `user → User (OneToOne, nullable)`, `is_creditor`/`is_benefited`, `active`, `birth_date`, `address`, `profile_photo`, `emergency_contact`, `monthly_income`, `occupation`, `activity_level` (choices `ACTIVITY_LEVEL_CHOICES` — usado para TDEE no módulo de nutrição). Descriptor `document` (get/set transparente, mantém `document_hash` em sincronia). Método `anonymize()` (pré-requisito LGPD antes de hard-delete). Property: `age`.
 
 ---
 

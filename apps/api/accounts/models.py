@@ -86,19 +86,19 @@ class Account(BaseModel):
         verbose_name="Saldo Atual",
         max_digits=15,
         decimal_places=2,
-        default=0.00,  # type: ignore
+        default=Decimal("0.00"),
     )
     minimum_balance = models.DecimalField(
         verbose_name="Saldo Mínimo",
         max_digits=15,
         decimal_places=2,
-        default=0.00,  # type: ignore
+        default=Decimal("0.00"),
     )
     overdraft_limit = models.DecimalField(
         verbose_name="Limite de Cheque Especial",
         max_digits=15,
         decimal_places=2,
-        default=0.00,  # type: ignore
+        default=Decimal("0.00"),
         help_text="Limite máximo de débito negativo permitido na conta",
     )
     opening_date = models.DateField(

@@ -29,7 +29,7 @@ def _get_budget_suggestions(user: User, month: int, year: int) -> list:
     """Average of last 3 months × 1.10, no LLM."""
     from datetime import timedelta
 
-    today = timezone.now().date().replace(day=1)
+    today = timezone.localdate().replace(day=1)
     three_months_ago = (today - timedelta(days=1)).replace(day=1)
     three_months_ago = (three_months_ago - timedelta(days=1)).replace(
         day=1

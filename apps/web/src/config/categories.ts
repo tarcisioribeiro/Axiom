@@ -1,0 +1,47 @@
+// Categorias canônicas de despesas (sem duplicação - exatamente as do backend)
+export const EXPENSE_CATEGORIES_CANONICAL = [
+  { key: 'food and drink', label: 'Comida e Bebida' },
+  { key: 'bills and services', label: 'Contas e Serviços' },
+  { key: 'electronics', label: 'Eletrônicos' },
+  { key: 'family and friends', label: 'Amizades e Família' },
+  { key: 'pets', label: 'Animais de Estimação' },
+  { key: 'digital signs', label: 'Assinaturas Digitais' },
+  { key: 'house', label: 'Casa' },
+  { key: 'purchases', label: 'Compras' },
+  { key: 'donate', label: 'Doações' },
+  { key: 'education', label: 'Educação' },
+  { key: 'loans', label: 'Empréstimos' },
+  { key: 'entertainment', label: 'Entretenimento' },
+  { key: 'taxes', label: 'Impostos' },
+  { key: 'investments', label: 'Investimentos' },
+  { key: 'others', label: 'Outros' },
+  { key: 'vestuary', label: 'Roupas' },
+  { key: 'health and care', label: 'Saúde e Cuidados Pessoais' },
+  { key: 'professional services', label: 'Serviços Profissionais' },
+  { key: 'supermarket', label: 'Supermercado' },
+  { key: 'rates', label: 'Taxas' },
+  { key: 'transport', label: 'Transporte' },
+  { key: 'travels', label: 'Viagens' },
+] as const;
+
+// Receitas na Carteira Móvel (CM) não aceitam estas categorias — espelha o backend.
+const WALLET_FORBIDDEN_REVENUE_CATEGORIES = ['ticket', 'income', 'cashback'];
+
+export const isRevenueCategoryAllowed = (
+  key: string,
+  accountType: string | undefined
+): boolean =>
+  accountType !== 'CM' || !WALLET_FORBIDDEN_REVENUE_CATEGORIES.includes(key);
+
+export const REVENUE_CATEGORIES_CANONICAL = [
+  { key: 'deposit', label: 'Depósito' },
+  { key: 'award', label: 'Prêmio' },
+  { key: 'salary', label: 'Salário' },
+  { key: 'ticket', label: 'Vale' },
+  { key: 'income', label: 'Rendimentos' },
+  { key: 'refund', label: 'Reembolso' },
+  { key: 'cashback', label: 'Cashback' },
+  { key: 'transfer', label: 'Transferência Recebida' },
+  { key: 'received_loan', label: 'Empréstimo Recebido' },
+  { key: 'loan_devolution', label: 'Devolução de Empréstimo' },
+] as const;

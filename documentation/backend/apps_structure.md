@@ -73,11 +73,11 @@ authentication/
 ```
 
 **Endpoints principais**:
-- `POST /api/v1/login/` - Login e geração de tokens
-- `POST /api/v1/logout/` - Logout
+- `POST /api/v1/authentication/token/` - Login e geração de tokens
+- `POST /api/v1/authentication/logout/` - Logout
 - `GET /api/v1/me/` - Dados do usuário autenticado
-- `GET /api/v1/permissions/` - Permissões do usuário
-- `POST /api/v1/register/` - Registro de novos usuários
+- `GET /api/v1/user/permissions/` - Permissões do usuário
+- `POST /api/v1/users/register/` - Registro de novos usuários
 
 **Fluxo de autenticação**:
 ```mermaid
@@ -258,10 +258,14 @@ class Transfer(BaseModel):
 **Responsabilidade**: Estatísticas e visualizações.
 
 **Endpoints**:
-- `GET /api/v1/dashboard/summary/` - Resumo financeiro
-- `GET /api/v1/dashboard/expenses-by-category/` - Despesas por categoria
-- `GET /api/v1/dashboard/monthly-comparison/` - Comparação mensal
+- `GET /api/v1/dashboard/summary/` / `stats/` - Resumo e estatísticas financeiras
 - `GET /api/v1/dashboard/account-balances/` - Saldos das contas
+- `GET /api/v1/dashboard/credit-card-expenses-by-category/` - Gastos de cartão por categoria
+- `GET /api/v1/dashboard/balance-forecast/` / `cash-flow-forecast/` - Projeções de saldo e fluxo de caixa
+- `GET /api/v1/dashboard/monthly-statement/` - Extrato mensal
+- `GET /api/v1/dashboard/financial-alerts/` / `alerts/stream/` - Alertas (lista e SSE)
+- `GET /api/v1/dashboard/health-score/`, `spending-insights/`, `anomalies/`, `debt-payoff-plan/`
+- `GET /api/v1/dashboard/ir-report/`, `lgpd-export/` - Relatório de IR e exportação LGPD
 
 ## Módulo de Segurança
 
@@ -606,9 +610,9 @@ graph TD
 
 ## Próximos Passos
 
-- [Modelos de Dados](./modelos-dados.md) - Documentação detalhada dos modelos
+- [Modelos de Dados](./data_models.md) - Documentação detalhada dos modelos
 - [Serializers](./serializers.md) - Padrões de serialização
-- [ViewSets e Views](./viewsets-views.md) - Lógica de API
-- [Middleware e Signals](./middleware-signals.md) - Interceptadores e eventos
-- [Criptografia](./criptografia.md) - Sistema de criptografia
-- [Comandos Management](./comandos-management.md) - Comandos customizados
+- [ViewSets e Views](./viewsets_views.md) - Lógica de API
+- [Middleware e Signals](./middleware_signals.md) - Interceptadores e eventos
+- [Criptografia](./criptography.md) - Sistema de criptografia
+- [Comandos Management](./management_commands.md) - Comandos customizados

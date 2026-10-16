@@ -532,11 +532,11 @@ export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:39100',
   ENDPOINTS: {
     // Auth
-    LOGIN: '/api/v1/authentication/login/',
+    LOGIN: '/api/v1/authentication/token/',
     LOGOUT: '/api/v1/authentication/logout/',
     REFRESH_TOKEN: '/api/v1/authentication/token/refresh/',
     VERIFY_TOKEN: '/api/v1/authentication/token/verify/',
-    USER_PERMISSIONS: '/api/v1/authentication/user-permissions/',
+    USER_PERMISSIONS: '/api/v1/user/permissions/',
 
     // Financial
     ACCOUNTS: '/api/v1/accounts/',
@@ -555,8 +555,8 @@ export const API_CONFIG = {
     AUTHORS: '/api/v1/library/authors/',
 
     // AI
-    AI_QUERY: '/api/v1/ai-assistant/query/',
-    AI_STREAM: '/api/v1/ai-assistant/stream/',
+    AI_QUERY: '/api/v1/agents/ask/',
+    AI_STREAM: '/api/v1/agents/stream/',
   },
 };
 ```
@@ -654,5 +654,5 @@ const account = await apiClient.get('/api/v1/accounts/1/');
 
 ## Próximos Passos
 
-- **Estado Global:** Veja [gerenciamento-estado.md](./gerenciamento-estado.md)
-- **API Endpoints:** Veja [../05-apps/api/endpoints.md](../05-apps/api/endpoints.md)
+- **Estado Global:** Veja [gerenciamento-estado.md](./state_management.md)
+- **API Endpoints:** Veja [../api/endpoints.md](../api/endpoints.md)

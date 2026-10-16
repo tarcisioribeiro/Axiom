@@ -48,8 +48,17 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         except TokenError as e:
             raise InvalidToken(e.args[0])
 
-        # Verificar se o usuário tem 2FA ativo
         user = serializer.user  # type: ignore[attr-defined]
+        # Senhas criadas antes do campo existir ganham score no próximo login
+        from .views import record_password_strength
+
+        record_password_strength(
+            user,
+            request_data(request).get("password", ""),
+            only_if_missing=True,
+        )
+
+        # Verificar se o usuário tem 2FA ativo
         try:
             from .models import TOTPDevice
 

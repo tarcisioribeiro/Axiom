@@ -22,7 +22,7 @@ def check_stored_card_expiry() -> dict:
     Usa (owner, notification_type, content_type, object_id) como chave
     natural de deduplicação — um registro por cartão.
 
-    Roda diariamente às 09h via beat_schedule em app/celery.py.
+    Roda diariamente às 09h via CELERY_BEAT_SCHEDULE (app/settings.py).
     """
     from notifications.models import Notification
     from security.models import StoredCreditCard

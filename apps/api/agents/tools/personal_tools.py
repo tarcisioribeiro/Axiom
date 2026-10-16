@@ -20,7 +20,7 @@ def get_workout_summary(
 ) -> dict[str, Any]:
     """Resumo das sessões de treino num período."""
     try:
-        today = timezone.now().date()
+        today = timezone.localdate()
         if start is not None and end is not None:
             period_start, period_end = start, end
         else:
@@ -75,7 +75,7 @@ def get_nutrition_summary(
 ) -> dict[str, Any]:
     """Resumo do diário alimentar num período."""
     try:
-        today = timezone.now().date()
+        today = timezone.localdate()
         if start is not None and end is not None:
             period_start, period_end = start, end
         else:

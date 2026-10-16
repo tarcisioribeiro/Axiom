@@ -483,7 +483,7 @@ class PasswordViewSet(viewsets.ModelViewSet):
     def reveal(self, request, pk=None):
         """
         Revela a senha real. Requer confirmação adicional.
-        POST /api/v1/passwords/{id}/reveal/
+        POST /api/v1/security/passwords/{id}/reveal/
         """
         password_obj = self.get_object()
 
@@ -618,13 +618,13 @@ class BookHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
 **Resposta**:
 ```json
 {
-  "url": "http://localhost:39100/api/v1/books/1/",
+  "url": "http://localhost:39100/api/v1/library/books/1/",
   "id": 1,
   "title": "Clean Code",
   "authors": [
-    "http://localhost:39100/api/v1/authors/1/"
+    "http://localhost:39100/api/v1/library/authors/1/"
   ],
-  "publisher": "http://localhost:39100/api/v1/publishers/1/",
+  "publisher": "http://localhost:39100/api/v1/library/publishers/1/",
   "pages": 464
 }
 ```
@@ -735,6 +735,6 @@ class AccountSerializer(serializers.ModelSerializer):
 
 ## Próximos Passos
 
-- [ViewSets e Views](./viewsets-views.md) - Lógica de API e endpoints
-- [Middleware e Signals](./middleware-signals.md) - Interceptadores e eventos
-- [Criptografia](./criptografia.md) - Sistema de criptografia Fernet
+- [ViewSets e Views](./viewsets_views.md) - Lógica de API e endpoints
+- [Middleware e Signals](./middleware_signals.md) - Interceptadores e eventos
+- [Criptografia](./criptography.md) - Sistema de criptografia Fernet

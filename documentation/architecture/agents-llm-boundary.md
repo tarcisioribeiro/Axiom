@@ -78,6 +78,23 @@ diretamente. Não fazem parte do caminho de request interativo (`ask/`,
 ao Django (jobs em batch/management commands, não endpoints). Estender a
 regra a eles não traria benefício de isolamento real.
 
+
+## Controle de acesso por tela
+
+Os agentes respeitam as telas liberadas para o usuário (`admin_panel/screens.py`):
+
+- **Providers:** toda função que recebe `user` usa `@requires_screen(...)`
+  (`providers/access.py`) e devolve vazio sem nenhuma das telas exigidas.
+  Staff e superuser passam direto. `tests/test_agent_screen_access.py` falha
+  se uma função nova de provider com `user` ficar sem o decorador.
+- **RAG:** `search_embeddings` não busca em domínio sem tela
+  (`DOMAIN_SCREENS`).
+- **Roteador:** só disputam agentes de módulos com alguma tela
+  (`AGENT_MODULES`); agente pedido sem acesso vira `NoAccessAgent`
+  (resposta fixa, sem LLM).
+- **Tarefas semanais** (insight, recomendação de leitura, síntese de
+  planejamento) pulam usuários sem as telas correspondentes.
+
 ## Por que isso importa
 
 1. **Auditoria de acoplamento**: para saber tudo que `agents/` lê do resto

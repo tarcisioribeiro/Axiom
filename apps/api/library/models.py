@@ -483,7 +483,7 @@ class Reading(BaseModel):
     reading_date = models.DateField(
         null=False,
         blank=False,
-        default=timezone.now,
+        default=timezone.localdate,
         verbose_name="Data da Leitura",
     )
     reading_time = models.PositiveIntegerField(
@@ -951,7 +951,7 @@ class CourseSession(BaseModel):
         verbose_name="Curso",
     )
     session_date = models.DateField(
-        default=timezone.now, verbose_name="Data da Sessão"
+        default=timezone.localdate, verbose_name="Data da Sessão"
     )
     duration_minutes = models.PositiveIntegerField(
         verbose_name="Duração (minutos)", default=60
@@ -1220,15 +1220,6 @@ FLASHCARD_STATUS_CHOICES = (
     ("mastered", "Dominado"),
 )
 
-FLASHCARD_RATING_CHOICES = (
-    (0, "Não lembrei (resetar)"),
-    (1, "Difícil (reaprender)"),
-    (2, "Com esforço (reduzir intervalo)"),
-    (3, "Bom (manter)"),
-    (4, "Fácil (aumentar intervalo)"),
-    (5, "Muito fácil (boost)"),
-)
-
 
 class FlashCard(BaseModel):
     """Flash card para revisão espaçada (SM-2 algorithm)."""
@@ -1271,7 +1262,7 @@ class FlashCard(BaseModel):
         verbose_name="Repetições bem-sucedidas",
     )
     next_review = models.DateField(
-        default=timezone.now,
+        default=timezone.localdate,
         verbose_name="Próxima revisão",
     )
     last_reviewed = models.DateTimeField(

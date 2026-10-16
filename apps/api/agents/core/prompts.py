@@ -28,7 +28,3 @@ def get_system_prompt(language: str = "pt-BR") -> str:
     prefix = language.split("-")[0].lower()
     lang_instruction = _LANG_INSTRUCTIONS.get(prefix, _LANG_INSTRUCTIONS["pt"])
     return _SYSTEM_PROMPT_TEMPLATE.format(lang_instruction=lang_instruction)
-
-
-# Backwards-compatible alias.
-BASE_SYSTEM_PROMPT = get_system_prompt("pt-BR")

@@ -10,7 +10,7 @@ Tests for personal_planning improvements:
 from datetime import timedelta
 
 from django.contrib.auth.models import User
-from django.utils.timezone import now
+from django.utils.timezone import localdate, now
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
@@ -58,7 +58,7 @@ class GoalAvoidHabitTest(BasePlanningImprovementsTestCase):
             goal_type="avoid_habit",
             related_task=self.task,
             target_value=30,
-            start_date=now().date() - timedelta(days=5),
+            start_date=localdate() - timedelta(days=5),
             owner=self.member,
         )
 
@@ -71,7 +71,7 @@ class GoalAvoidHabitTest(BasePlanningImprovementsTestCase):
             template=self.task,
             task_name=self.task.name,
             category=self.task.category,
-            scheduled_date=now().date(),
+            scheduled_date=localdate(),
             occurrence_index=0,
             status="completed",
             owner=self.member,
@@ -84,7 +84,7 @@ class GoalAvoidHabitTest(BasePlanningImprovementsTestCase):
             template=self.task,
             task_name=self.task.name,
             category=self.task.category,
-            scheduled_date=now().date(),
+            scheduled_date=localdate(),
             occurrence_index=0,
             status="pending",
             owner=self.member,
@@ -103,7 +103,7 @@ class GoalNoDeadlineFieldTest(BasePlanningImprovementsTestCase):
             "title": "Goal Without Deadline",
             "goal_type": "total_days",
             "target_value": 30,
-            "start_date": now().date().isoformat(),
+            "start_date": localdate().isoformat(),
             "status": "active",
             "owner": self.member.id,
         }
@@ -117,7 +117,7 @@ class GoalNoDeadlineFieldTest(BasePlanningImprovementsTestCase):
             title="Test Goal",
             goal_type="total_days",
             target_value=10,
-            start_date=now().date(),
+            start_date=localdate(),
             owner=self.member,
         )
         response = self.client.get("/api/v1/personal-planning/goals/")
@@ -187,7 +187,7 @@ class TaskInstancePrioritySnapshotTest(BasePlanningImprovementsTestCase):
         )
 
         instances = InstanceGenerator.generate_for_date(
-            self.member, now().date()
+            self.member, localdate()
         )
         task_instances = [i for i in instances if i.template_id == task.id]
         self.assertTrue(len(task_instances) > 0)
@@ -205,7 +205,7 @@ class AnalyticsEndpointTest(BasePlanningImprovementsTestCase):
         self.assertIn("period_days", data)
         self.assertIn("completion_by_weekday", data)
         self.assertIn("insights", data)
-        self.assertEqual(data["period_days"], 90)
+        self.assertEqual(data["period_days"], 180)
 
     def test_analytics_completion_by_weekday_has_7_entries(self):
         response = self.client.get("/api/v1/personal-planning/analytics/")
@@ -244,7 +244,7 @@ class GoalRecalculateImprovedTest(BasePlanningImprovementsTestCase):
             goal_type="total_days",
             related_task=self.task,
             target_value=10,
-            start_date=now().date(),
+            start_date=localdate(),
             owner=self.member,
         )
         response = self.client.post(
@@ -258,7 +258,7 @@ class GoalRecalculateImprovedTest(BasePlanningImprovementsTestCase):
             goal_type="avoid_habit",
             related_task=self.task,
             target_value=10,
-            start_date=now().date(),
+            start_date=localdate(),
             owner=self.member,
         )
         response = self.client.post(
@@ -271,7 +271,7 @@ class GoalRecalculateImprovedTest(BasePlanningImprovementsTestCase):
             title="Custom Goal",
             goal_type="custom",
             target_value=10,
-            start_date=now().date(),
+            start_date=localdate(),
             owner=self.member,
         )
         response = self.client.post(
@@ -287,7 +287,7 @@ class GoalRestartViewTest(BasePlanningImprovementsTestCase):
             title="Restart Test Goal",
             goal_type="consecutive_days",
             target_value=30,
-            start_date=now().date() - timedelta(days=10),
+            start_date=localdate() - timedelta(days=10),
             owner=self.member,
         )
 
@@ -322,7 +322,7 @@ class GoalRestartViewTest(BasePlanningImprovementsTestCase):
             f"/api/v1/personal-planning/goals/{self.goal.id}/restart/"
         )
         self.goal.refresh_from_db()
-        tomorrow = now().date() + timedelta(days=1)
+        tomorrow = localdate() + timedelta(days=1)
         self.assertEqual(self.goal.start_date, tomorrow)
         self.assertEqual(
             self.goal.end_date,
@@ -358,7 +358,7 @@ class GoalRestartViewTest(BasePlanningImprovementsTestCase):
             title="Other Goal",
             goal_type="consecutive_days",
             target_value=10,
-            start_date=now().date(),
+            start_date=localdate(),
             owner=other_member,
         )
         response = self.client.post(
@@ -374,7 +374,7 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
             title="Failure Test Goal",
             goal_type="consecutive_days",
             target_value=30,
-            start_date=now().date() - timedelta(days=15),
+            start_date=localdate() - timedelta(days=15),
             owner=self.member,
         )
         self.failure_url = (
@@ -383,7 +383,7 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
         )
 
     def test_register_failure_returns_200(self):
-        failure_date = (now().date() - timedelta(days=5)).isoformat()
+        failure_date = (localdate() - timedelta(days=5)).isoformat()
         response = self.client.post(
             self.failure_url,
             {"failure_date": failure_date},
@@ -395,18 +395,18 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
         # (start_date + target_value) — o objetivo sempre tem um prazo.
         # Registrar uma falha reinicia a contagem a partir de hoje, nao
         # da data da falha, recalculando a meta para os dias restantes.
-        failure_date = now().date() - timedelta(days=5)
+        failure_date = localdate() - timedelta(days=5)
         self.client.post(
             self.failure_url,
             {"failure_date": failure_date.isoformat()},
         )
         self.goal.refresh_from_db()
-        self.assertEqual(self.goal.start_date, now().date())
+        self.assertEqual(self.goal.start_date, localdate())
 
     def test_register_failure_resets_current_value(self):
         self.goal.current_value = 100
         self.goal.save()
-        failure_date = (now().date() - timedelta(days=3)).isoformat()
+        failure_date = (localdate() - timedelta(days=3)).isoformat()
         self.client.post(
             self.failure_url,
             {"failure_date": failure_date},
@@ -415,7 +415,7 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
         self.assertEqual(self.goal.current_value, 0)
 
     def test_register_failure_rejects_future_date(self):
-        future_date = (now().date() + timedelta(days=1)).isoformat()
+        future_date = (localdate() + timedelta(days=1)).isoformat()
         response = self.client.post(
             self.failure_url,
             {"failure_date": future_date},
@@ -438,9 +438,9 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
 
     def test_register_failure_reactivates_completed_goal(self):
         self.goal.status = "completed"
-        self.goal.end_date = now().date()
+        self.goal.end_date = localdate()
         self.goal.save()
-        failure_date = now().date() - timedelta(days=2)
+        failure_date = localdate() - timedelta(days=2)
         self.client.post(
             self.failure_url,
             {"failure_date": failure_date.isoformat()},
@@ -459,12 +459,12 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
         self.client.credentials()
         response = self.client.post(
             self.failure_url,
-            {"failure_date": now().date().isoformat()},
+            {"failure_date": localdate().isoformat()},
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_register_failure_creates_failure_record(self):
-        failure_date = now().date() - timedelta(days=4)
+        failure_date = localdate() - timedelta(days=4)
         self.client.post(
             self.failure_url,
             {"failure_date": failure_date.isoformat()},
@@ -475,7 +475,7 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
     def test_register_failure_updates_best_streak(self):
         # start_date is 15 days ago, sem tarefa relacionada -> streak =
         # min(days_active, target_value) = 15
-        failure_date = now().date() - timedelta(days=2)
+        failure_date = localdate() - timedelta(days=2)
         self.client.post(
             self.failure_url,
             {"failure_date": failure_date.isoformat()},
@@ -486,7 +486,7 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
     def test_register_failure_best_streak_keeps_higher_previous_record(self):
         self.goal.best_streak = 50
         self.goal.save(update_fields=["best_streak"])
-        failure_date = now().date() - timedelta(days=2)
+        failure_date = localdate() - timedelta(days=2)
         self.client.post(
             self.failure_url,
             {"failure_date": failure_date.isoformat()},
@@ -504,7 +504,7 @@ class GoalRegisterFailureDeadlineTest(BasePlanningImprovementsTestCase):
 
     def setUp(self):
         super().setUp()
-        self.today = now().date()
+        self.today = localdate()
         self.deadline = self.today + timedelta(days=29)
         self.goal = Goal.objects.create(
             title="Deadline Goal",
@@ -579,7 +579,7 @@ class GoalRegisterFailureCustomTypeTest(BasePlanningImprovementsTestCase):
             goal_type="custom",
             target_value=100,
             current_value=40,
-            start_date=now().date() - timedelta(days=15),
+            start_date=localdate() - timedelta(days=15),
             owner=self.member,
         )
         self.failure_url = (
@@ -588,7 +588,7 @@ class GoalRegisterFailureCustomTypeTest(BasePlanningImprovementsTestCase):
         )
 
     def test_register_failure_uses_failure_date_as_start_date(self):
-        failure_date = now().date() - timedelta(days=5)
+        failure_date = localdate() - timedelta(days=5)
         self.client.post(
             self.failure_url,
             {"failure_date": failure_date.isoformat()},
@@ -604,7 +604,7 @@ class GoalEvaluateCompletionTest(BasePlanningImprovementsTestCase):
             title="No Related Task Goal",
             goal_type="consecutive_days",
             target_value=5,
-            start_date=now().date() - timedelta(days=30),
+            start_date=localdate() - timedelta(days=30),
             owner=self.member,
         )
         # days_active (30) ultrapassa target_value (5) de longe.
@@ -615,14 +615,14 @@ class GoalEvaluateCompletionTest(BasePlanningImprovementsTestCase):
             title="Auto Complete Goal",
             goal_type="consecutive_days",
             target_value=5,
-            start_date=now().date() - timedelta(days=10),
+            start_date=localdate() - timedelta(days=10),
             owner=self.member,
         )
         completed = goal.evaluate_completion()
         goal.refresh_from_db()
         self.assertTrue(completed)
         self.assertEqual(goal.status, "completed")
-        self.assertEqual(goal.end_date, now().date())
+        self.assertEqual(goal.end_date, localdate())
         self.assertEqual(goal.best_streak, 5)
 
     def test_evaluate_completion_updates_best_streak_without_completing(self):
@@ -630,7 +630,7 @@ class GoalEvaluateCompletionTest(BasePlanningImprovementsTestCase):
             title="In Progress Goal",
             goal_type="consecutive_days",
             target_value=20,
-            start_date=now().date() - timedelta(days=7),
+            start_date=localdate() - timedelta(days=7),
             owner=self.member,
         )
         completed = goal.evaluate_completion()
@@ -645,7 +645,7 @@ class GoalEvaluateCompletionTest(BasePlanningImprovementsTestCase):
             goal_type="custom",
             target_value=5,
             current_value=5,
-            start_date=now().date() - timedelta(days=10),
+            start_date=localdate() - timedelta(days=10),
             owner=self.member,
         )
         completed = goal.evaluate_completion()
@@ -663,7 +663,7 @@ class GoalAutoEndDateTest(BasePlanningImprovementsTestCase):
     """
 
     def test_end_date_computed_on_create(self):
-        start = now().date()
+        start = localdate()
         goal = Goal.objects.create(
             title="Auto End Date",
             goal_type="consecutive_days",
@@ -674,7 +674,7 @@ class GoalAutoEndDateTest(BasePlanningImprovementsTestCase):
         self.assertEqual(goal.end_date, start + timedelta(days=21))
 
     def test_end_date_subtracts_progress_in_manual_mode(self):
-        start = now().date()
+        start = localdate()
         goal = Goal.objects.create(
             title="Avoid Habit Manual",
             goal_type="avoid_habit",
@@ -695,7 +695,7 @@ class GoalAutoEndDateTest(BasePlanningImprovementsTestCase):
             title="Auto End Date Target Change",
             goal_type="total_days",
             target_value=10,
-            start_date=now().date(),
+            start_date=localdate(),
             owner=self.member,
         )
         goal.target_value = 40
@@ -707,16 +707,16 @@ class GoalAutoEndDateTest(BasePlanningImprovementsTestCase):
             title="Auto End Date Start Change",
             goal_type="avoid_habit",
             target_value=15,
-            start_date=now().date(),
+            start_date=localdate(),
             owner=self.member,
         )
-        new_start = now().date() + timedelta(days=3)
+        new_start = localdate() + timedelta(days=3)
         goal.start_date = new_start
         goal.save()
         self.assertEqual(goal.end_date, new_start + timedelta(days=15))
 
     def test_end_date_ignores_manually_supplied_value(self):
-        start = now().date()
+        start = localdate()
         goal = Goal.objects.create(
             title="Auto End Date Manual Override Attempt",
             goal_type="consecutive_days",
@@ -732,7 +732,7 @@ class GoalAutoEndDateTest(BasePlanningImprovementsTestCase):
             title="Custom Type No Auto End Date",
             goal_type="custom",
             target_value=100,
-            start_date=now().date(),
+            start_date=localdate(),
             owner=self.member,
         )
         self.assertIsNone(goal.end_date)
@@ -742,13 +742,13 @@ class GoalAutoEndDateTest(BasePlanningImprovementsTestCase):
             title="Freeze End Date On Complete",
             goal_type="consecutive_days",
             target_value=3,
-            start_date=now().date() - timedelta(days=5),
+            start_date=localdate() - timedelta(days=5),
             owner=self.member,
         )
         goal.evaluate_completion()
         goal.refresh_from_db()
         self.assertEqual(goal.status, "completed")
-        self.assertEqual(goal.end_date, now().date())
+        self.assertEqual(goal.end_date, localdate())
 
 
 class GoalStartDateProgressTest(BasePlanningImprovementsTestCase):
@@ -763,7 +763,7 @@ class GoalStartDateProgressTest(BasePlanningImprovementsTestCase):
             title="Future Start",
             goal_type="total_days",
             target_value=10,
-            start_date=now().date() + timedelta(days=5),
+            start_date=localdate() + timedelta(days=5),
             owner=self.member,
         )
         self.assertEqual(goal.calculated_current_value, 0)
@@ -773,7 +773,7 @@ class GoalStartDateProgressTest(BasePlanningImprovementsTestCase):
             title="Retroactive Start",
             goal_type="total_days",
             target_value=30,
-            start_date=now().date() - timedelta(days=12),
+            start_date=localdate() - timedelta(days=12),
             owner=self.member,
         )
         self.assertEqual(goal.calculated_current_value, 12)
@@ -788,7 +788,7 @@ class GoalStartDateProgressTest(BasePlanningImprovementsTestCase):
             title="No Instant Full Progress",
             goal_type="total_days",
             target_value=10,
-            start_date=now().date(),
+            start_date=localdate(),
             owner=self.member,
         )
         self.assertEqual(goal.calculated_current_value, 0)
@@ -802,7 +802,7 @@ class CheckGoalCompletionsTaskTest(BasePlanningImprovementsTestCase):
             title="Periodic Task Goal",
             goal_type="consecutive_days",
             target_value=5,
-            start_date=now().date() - timedelta(days=10),
+            start_date=localdate() - timedelta(days=10),
             owner=self.member,
         )
         result = check_goal_completions.run()
@@ -817,7 +817,7 @@ class CheckGoalCompletionsTaskTest(BasePlanningImprovementsTestCase):
             title="Not Ready Goal",
             goal_type="consecutive_days",
             target_value=30,
-            start_date=now().date() - timedelta(days=5),
+            start_date=localdate() - timedelta(days=5),
             owner=self.member,
         )
         check_goal_completions.run()

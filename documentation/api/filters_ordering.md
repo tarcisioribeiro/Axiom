@@ -118,7 +118,7 @@ GET /api/v1/credit-cards/?flag=VSA
 
 ### Credit Card Bills (Faturas)
 
-**Endpoint:** `/api/v1/credit-card-bills/`
+**Endpoint:** `/api/v1/credit-cards-bills/`
 
 | Parâmetro | Tipo | Descrição | Exemplo |
 |-----------|------|-----------|---------|
@@ -132,13 +132,13 @@ GET /api/v1/credit-cards/?flag=VSA
 
 ```bash
 # Faturas abertas
-GET /api/v1/credit-card-bills/?closed=false
+GET /api/v1/credit-cards-bills/?closed=false
 
 # Faturas de janeiro de 2024
-GET /api/v1/credit-card-bills/?year=2024&month=Jan
+GET /api/v1/credit-cards-bills/?year=2024&month=Jan
 
 # Faturas de um cartão específico
-GET /api/v1/credit-card-bills/?credit_card=1
+GET /api/v1/credit-cards-bills/?credit_card=1
 ```
 
 ### Transfers (Transferências)
@@ -490,4 +490,4 @@ function useExpenses(filters: ExpenseFilters) {
 ## Próximos Passos
 
 - **Endpoints:** Veja [endpoints.md](./endpoints.md)
-- **Tratamento de Erros:** Veja [tratamento-erros.md](./tratamento-erros.md)
+- **Tratamento de Erros:** Veja [tratamento-erros.md](./error_treatments.md)

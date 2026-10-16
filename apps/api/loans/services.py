@@ -40,7 +40,7 @@ def _apply_new_value_to_fixed_expense(loan, new_value_per_installment, user):
         update_fields=["default_value", "updated_by", "updated_at"]
     )
 
-    today = timezone.now().date()
+    today = timezone.localdate()
     current_expense = Expense.objects.filter(
         fixed_expense_template=fixed_expense,
         date__year=today.year,
@@ -123,7 +123,7 @@ def recalculate_loan_installments(
         schedule = build_equal_installment_schedule(
             remaining_value,
             new_installment_count,
-            timezone.now().date(),
+            timezone.localdate(),
             loan.payment_frequency,
         )
         installments_preview = [

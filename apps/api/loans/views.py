@@ -377,7 +377,7 @@ class LoanPaymentPlanView(APIView):
             first_due_date = default_first_due_date(
                 loan.date.day,
                 loan.payment_frequency,
-                today=timezone.now().date(),
+                today=timezone.localdate(),
             )
 
         remaining_value = loan.value - loan.payed_value

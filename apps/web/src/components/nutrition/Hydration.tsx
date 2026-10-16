@@ -1,0 +1,341 @@
+/* eslint-disable max-lines */
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Droplets, Link2, Plus, Save, Sparkles, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { Can } from '@/components/common/Can';
+import { EmptyState } from '@/components/common/EmptyState';
+import { Button } from '@/components/ui/button';
+import { DecimalInput } from '@/components/ui/decimal-input';
+import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import { STALE_TIMES } from '@/lib/query-client';
+import { formatLocalDate } from '@/lib/utils';
+import { hydrationGoalService, waterLogService } from '@/services/nutrition-service';
+import { getErrorMessage } from '@/utils/error-utils';
+
+const QUICK_AMOUNTS_ML = [200, 250, 500];
+
+const formatLiters = (ml: number) =>
+  (ml / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+
+function useHydrationDay(date: string) {
+  const { data: goal } = useQuery({
+    queryKey: ['hydration-goal'],
+    queryFn: () => hydrationGoalService.get(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const { data: logs = [], isLoading } = useQuery({
+    queryKey: ['water-logs', 'date', date],
+    queryFn: () => waterLogService.getByDate(date),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const goalMl = goal?.daily_target_ml ?? null;
+  const totalMl = logs.reduce((acc, log) => acc + log.amount_ml, 0);
+  return { goalMl, totalMl, logs, isLoading };
+}
+
+/** "💧 1,8 / 3 L" — exibido ao lado do total de kcal. */
+export function WaterTotal({ date }: { date: string }) {
+  const { goalMl, totalMl } = useHydrationDay(date);
+  return (
+    <div className="text-right">
+      <span className="text-info inline-flex items-center gap-0.5 text-2xl font-bold tabular-nums">
+        <Droplets className="h-5 w-5" />
+        {formatLiters(totalMl)}
+      </span>
+      <p className="text-muted-foreground text-xs">
+        {goalMl ? `/ ${formatLiters(goalMl)} L` : 'L'}
+      </p>
+    </div>
+  );
+}
+
+/** Registro de água do dia (aba Diário). */
+export function WaterLogPanel({ date }: { date: string }) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { goalMl, totalMl, logs, isLoading } = useHydrationDay(date);
+  const [customMl, setCustomMl] = useState('');
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ['water-logs'] });
+    // tarefas vinculadas à meta são concluídas/reabertas pelo backend
+    void queryClient.invalidateQueries({ queryKey: ['task-instances'] });
+  };
+
+  const addMutation = useMutation({
+    mutationFn: (amount_ml: number) => {
+      const now = new Date();
+      const isToday = date === formatLocalDate(now);
+      return waterLogService.create({
+        date,
+        amount_ml,
+        time: isToday ? now.toTimeString().slice(0, 5) : null,
+      });
+    },
+    onSuccess: () => {
+      invalidate();
+      setCustomMl('');
+      toast({ title: t('pages.nutritionHydration.logAdded') });
+    },
+    onError: (err: unknown) =>
+      toast({ title: getErrorMessage(err), variant: 'destructive' }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => waterLogService.delete(id),
+    onSuccess: () => {
+      invalidate();
+      toast({ title: t('pages.nutritionHydration.logDeleted') });
+    },
+  });
+
+  const pct = goalMl ? Math.min(100, Math.round((totalMl / goalMl) * 100)) : 0;
+  const custom = parseInt(customMl, 10);
+
+  return (
+    <div className="border-border bg-card p-md space-y-md rounded-lg border">
+      <div className="gap-sm flex items-center justify-between">
+        <div className="gap-xs flex items-center">
+          <Droplets className="text-info h-5 w-5" />
+          <span className="text-sm font-medium">
+            {t('pages.nutritionHydration.dayWater')}
+          </span>
+        </div>
+        <span className="text-info text-sm tabular-nums">
+          {formatLiters(totalMl)} L
+          {goalMl ? ` / ${formatLiters(goalMl)} L (${pct}%)` : ''}
+        </span>
+      </div>
+
+      {goalMl ? (
+        <Progress value={pct} className="h-2" indicatorClassName="bg-info" />
+      ) : (
+        <p className="text-muted-foreground text-xs">
+          {t('pages.nutritionHydration.setGoalHint')}
+        </p>
+      )}
+
+      <div className="gap-sm flex flex-wrap items-center">
+        {QUICK_AMOUNTS_ML.map((ml) => (
+          <Button
+            key={ml}
+            size="sm"
+            variant="outline"
+            disabled={addMutation.isPending}
+            onClick={() => addMutation.mutate(ml)}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {ml} ml
+          </Button>
+        ))}
+        <form
+          className="gap-xs flex items-center"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (custom > 0) addMutation.mutate(custom);
+            else
+              toast({
+                title: t('common.fieldRequired', {
+                  field: t('pages.nutritionHydration.customAmount'),
+                }),
+                variant: 'destructive',
+              });
+          }}
+        >
+          <NumberStepper
+            min={1}
+            max={5000}
+            optional
+            placeholder="Ex.: 250"
+            value={customMl === '' ? null : Number(customMl)}
+            onChange={(v) => setCustomMl(v === null ? '' : String(v))}
+            className="h-8"
+            aria-label={t('pages.nutritionHydration.customAmount')}
+          />
+          <Can action="add">
+            <Button size="sm" type="submit" loading={addMutation.isPending}>
+              {!addMutation.isPending && <Plus className="h-3.5 w-3.5" />}
+              {t('pages.nutritionHydration.add')}
+            </Button>
+          </Can>
+        </form>
+      </div>
+
+      {!isLoading && logs.length === 0 ? (
+        <EmptyState title={t('pages.nutritionHydration.noLogs')} />
+      ) : (
+        <ul className="divide-border divide-y">
+          {logs.map((log) => (
+            <li
+              key={log.id}
+              className="py-xs flex items-center justify-between text-sm"
+            >
+              <span className="gap-sm flex items-center">
+                <span className="text-muted-foreground w-12 tabular-nums">
+                  {log.time?.slice(0, 5) ?? '--:--'}
+                </span>
+                <span className="font-medium tabular-nums">{log.amount_ml} ml</span>
+                {log.from_task && (
+                  <span className="text-muted-foreground inline-flex items-center gap-0.5 text-xs">
+                    <Link2 className="h-3 w-3" />
+                    {t('pages.nutritionHydration.fromTask')}
+                  </span>
+                )}
+              </span>
+              <Can action="delete">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive h-7 w-7 p-0"
+                  aria-label={t('common.actions.delete')}
+                  onClick={() => deleteMutation.mutate(log.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </Can>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** Aba Hidratação: meta atual + sugestão por medidas corporais e treinos. */
+export function HydrationGoalCard() {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [liters, setLiters] = useState<string | null>(null);
+
+  const { data: goal, isLoading } = useQuery({
+    queryKey: ['hydration-goal'],
+    queryFn: () => hydrationGoalService.get(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const { data: suggestion } = useQuery({
+    queryKey: ['hydration-goal', 'suggestion'],
+    queryFn: () => hydrationGoalService.getSuggestion(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: (ml: number) => hydrationGoalService.save(ml),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['hydration-goal'] });
+      setLiters(null);
+      toast({ title: t('pages.nutritionHydration.goalSaved') });
+    },
+    onError: (err: unknown) =>
+      toast({ title: getErrorMessage(err), variant: 'destructive' }),
+  });
+
+  const currentMl = goal?.daily_target_ml ?? null;
+  const value = liters ?? (currentMl ? String(currentMl / 1000) : '');
+  const ml = Math.round(parseFloat(value.replace(',', '.')) * 1000);
+
+  if (isLoading) return null;
+
+  return (
+    <div className="border-border bg-card p-lg space-y-md rounded-lg border">
+      <div className="space-y-md">
+        <div className="gap-sm flex items-center">
+          <Droplets className="text-info h-6 w-6" />
+          <div>
+            <p className="font-semibold">{t('pages.nutritionHydration.goalTitle')}</p>
+            <p className="text-muted-foreground text-sm">
+              {currentMl
+                ? t('pages.nutritionHydration.currentGoal', {
+                    liters: formatLiters(currentMl),
+                  })
+                : t('pages.nutritionHydration.noGoal')}
+            </p>
+          </div>
+        </div>
+
+        <form
+          className="gap-sm flex items-end"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (ml > 0) saveMutation.mutate(ml);
+            else
+              toast({
+                title: t('common.fieldRequired', {
+                  field: t('pages.nutritionHydration.litersLabel'),
+                }),
+                variant: 'destructive',
+              });
+          }}
+        >
+          <div className="space-y-xs flex-1">
+            <Label className="gap-xs flex items-center" htmlFor="hydration-liters">
+              <Droplets className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.nutritionHydration.litersLabel')}
+            </Label>
+            <DecimalInput
+              id="hydration-liters"
+              min={0.5}
+              max={10}
+              step={0.25}
+              unit="L"
+              value={value}
+              onChange={(v) => setLiters(v === null ? '' : String(v))}
+            />
+          </div>
+          <Button type="submit" loading={saveMutation.isPending}>
+            {!saveMutation.isPending && <Save className="h-4 w-4" />}
+            {t('pages.nutritionHydration.saveGoal')}
+          </Button>
+        </form>
+      </div>
+
+      <div className="border-border pt-md space-y-sm border-t">
+        <p className="gap-xs flex items-center font-semibold">
+          <Sparkles className="text-primary h-4 w-4" />
+          {t('pages.nutritionHydration.suggestionTitle')}
+        </p>
+        {suggestion?.suggested_ml ? (
+          <>
+            <p className="text-info text-3xl font-bold tabular-nums">
+              {formatLiters(suggestion.suggested_ml)} L
+            </p>
+            <ul className="text-muted-foreground space-y-xs text-sm">
+              <li>
+                {t('pages.nutritionHydration.suggestionWeight', {
+                  weight: suggestion.weight_kg,
+                  perKg: suggestion.ml_per_kg,
+                  base: suggestion.base_ml,
+                })}
+              </li>
+              <li>
+                {t('pages.nutritionHydration.suggestionExercise', {
+                  days: suggestion.training_days_per_week,
+                  minutes: suggestion.training_minutes_per_week,
+                  exercise: suggestion.exercise_ml,
+                })}
+              </li>
+            </ul>
+            <Button
+              variant="outline"
+              className="gap-sm"
+              onClick={() => setLiters(String(suggestion.suggested_ml! / 1000))}
+            >
+              <Sparkles className="h-4 w-4" />
+              {t('pages.nutritionHydration.useSuggestion')}
+            </Button>
+          </>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            {t('pages.nutritionHydration.noWeight')}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}

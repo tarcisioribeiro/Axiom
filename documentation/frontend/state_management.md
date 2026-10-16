@@ -584,5 +584,5 @@ login: async (credentials) => {
 
 ## Próximos Passos
 
-- **API Client:** Veja [api-client.md](./api-client.md) para integração com serviços
-- **Roteamento:** Veja [roteamento.md](./roteamento.md) para proteção de rotas
+- **API Client:** Veja [api-client.md](./api_client.md) para integração com serviços
+- **Roteamento:** Veja [roteamento.md](./routing.md) para proteção de rotas

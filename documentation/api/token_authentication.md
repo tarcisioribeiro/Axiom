@@ -73,7 +73,7 @@ sequenceDiagram
 ### 1. Requisição de Login
 
 ```http
-POST /api/v1/authentication/login/
+POST /api/v1/authentication/token/
 Content-Type: application/json
 
 {
@@ -439,4 +439,4 @@ SIMPLE_JWT = {
 ## Próximos Passos
 
 - **Endpoints:** Veja [endpoints.md](./endpoints.md)
-- **Tratamento de Erros:** Veja [tratamento-erros.md](./tratamento-erros.md)
+- **Tratamento de Erros:** Veja [tratamento-erros.md](./error_treatments.md)

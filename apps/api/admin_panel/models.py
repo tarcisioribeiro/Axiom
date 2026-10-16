@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 
 from app.encryption import DecryptionError, FieldEncryption
+from app.models import BaseModel
 
 CATEGORY_CHOICES = (
     ("llm", "LLM / Agentes"),
@@ -82,3 +83,43 @@ class SystemConfig(models.Model):
     @property
     def is_configured(self) -> bool:
         return bool(self._value)
+
+
+class UserScreenAccess(BaseModel):
+    """Ações que um usuário comum tem em uma tela (chaves de
+    `admin_panel.screens.SCREENS`). Ausência de linha = sem acesso."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="screen_accesses",
+        verbose_name="Usuário",
+    )
+    screen = models.CharField(max_length=64, verbose_name="Tela")
+    actions = models.JSONField(default=list, verbose_name="Ações")
+
+    class Meta:
+        verbose_name = "Acesso a tela"
+        verbose_name_plural = "Acessos a telas"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "screen"], name="unique_user_screen_access"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user}:{self.screen}"
+
+
+class ScreenDefault(BaseModel):
+    """Ações concedidas a cada novo usuário comum ao se cadastrar."""
+
+    screen = models.CharField(max_length=64, unique=True, verbose_name="Tela")
+    actions = models.JSONField(default=list, verbose_name="Ações")
+
+    class Meta:
+        verbose_name = "Padrão de tela"
+        verbose_name_plural = "Padrões de telas"
+
+    def __str__(self) -> str:
+        return self.screen

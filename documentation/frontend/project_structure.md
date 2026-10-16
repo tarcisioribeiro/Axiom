@@ -7,294 +7,94 @@ O frontend do Axiom é uma aplicação React + TypeScript moderna, utilizando Vi
 ## Estrutura de Diretórios
 
 ```
-apps/frontend/
+apps/web/
 ├── src/
 │   ├── assets/              # Recursos estáticos (imagens, ícones)
-│   ├── components/          # Componentes React
-│   │   ├── ui/              # Componentes UI reutilizáveis (shadcn/ui + Radix)
-│   │   ├── layout/          # Componentes de layout (Header, Sidebar, Footer)
-│   │   ├── common/          # Componentes comuns (ProtectedRoute, DataTable)
+│   ├── components/
+│   │   ├── ui/              # Primitivos (Radix + Tailwind): button, dialog, select, currency-input, number-stepper…
+│   │   ├── common/          # Compartilhados: PageContainer, PageHeader, DataTable, EmptyState, PaginatedSlide, ProtectedRoute…
+│   │   ├── layout/          # Layout, AdminLayout, PlanningLayout, Header, Sidebar, Breadcrumb, CommandPalette
 │   │   ├── providers/       # Context providers
-│   │   ├── accounts/        # Componentes específicos de Contas
-│   │   ├── expenses/        # Componentes específicos de Despesas
-│   │   ├── revenues/        # Componentes específicos de Receitas
-│   │   ├── credit-cards/    # Componentes de Cartões de Crédito
-│   │   ├── transfers/       # Componentes de Transferências
-│   │   ├── members/         # Componentes de Membros
-│   │   ├── security/        # Componentes do módulo Security
-│   │   ├── library/         # Componentes do módulo Library
-│   │   ├── ai/              # Componentes do AI Assistant
-│   │   ├── personal-planning/ # Componentes de Planejamento Pessoal
-│   │   └── charts/          # Componentes de gráficos
-│   ├── config/              # Configurações da aplicação
-│   │   └── constants.ts     # Constantes (API URLs, endpoints)
-│   ├── hooks/               # Custom React Hooks
-│   ├── lib/                 # Utilitários e helpers
-│   │   ├── utils.ts         # Funções utilitárias gerais
-│   │   └── animations/      # Configurações de animação
-│   ├── pages/               # Páginas da aplicação (rotas)
-│   │   ├── Login.tsx
-│   │   ├── Register.tsx
-│   │   ├── Home.tsx
-│   │   ├── Dashboard.tsx
-│   │   ├── Accounts.tsx
-│   │   ├── Expenses.tsx
-│   │   ├── Revenues.tsx
-│   │   ├── CreditCards.tsx
-│   │   ├── SecurityDashboard.tsx
-│   │   ├── LibraryDashboard.tsx
-│   │   └── AIAssistant.tsx
-│   ├── services/            # Camada de serviços (API clients)
-│   │   ├── api-client.ts    # Cliente HTTP base (axios + interceptors)
-│   │   ├── auth-service.ts
-│   │   ├── accounts-service.ts
-│   │   ├── expenses-service.ts
-│   │   └── ...
-│   ├── stores/              # Gerenciamento de estado global (Zustand)
-│   │   └── auth-store.ts    # Store de autenticação
-│   ├── styles/              # Estilos globais
-│   │   └── globals.css      # CSS global com variáveis do tema
-│   ├── types/               # Definições de tipos TypeScript
-│   │   └── index.ts         # Interfaces e tipos da aplicação
-│   ├── App.tsx              # Componente raiz com rotas
-│   └── main.tsx             # Entry point da aplicação
+│   │   ├── charts/          # Gráficos (Recharts)
+│   │   └── <módulo>/        # Componentes por domínio: accounts, expenses, revenues, credit-cards, transfers,
+│   │                        # loans, payables, receivables, vaults, budgets, members, security, library,
+│   │                        # personal-planning, workout, nutrition, today-tasks, receipts, tags, notifications…
+│   ├── config/              # api-config.ts (endpoints), constants.ts, translations.ts, categories.ts, nav-config.ts…
+│   ├── hooks/               # Custom hooks (use-*.ts)
+│   ├── i18n/                # react-i18next (locales/pt-BR.json, en-US.json)
+│   ├── lib/                 # Utilitários: query-client.ts, form-errors.ts, formatters.ts, validations.ts, animations/…
+│   ├── pages/               # Uma página por rota (lazy-loaded); pages/admin/ para o painel admin
+│   ├── services/            # Camada de API: api-client.ts, base-service.ts e um *-service.ts por recurso
+│   ├── stores/              # Zustand: auth-store, notifications-store, command-palette-store…
+│   ├── styles/              # CSS auxiliar (flatpickr)
+│   ├── test/                # Setup do Vitest
+│   ├── types/               # Tipos TypeScript (index.ts reexporta os arquivos por domínio)
+│   ├── utils/               # Utilitários diversos
+│   ├── index.css            # Tokens de design, tema e animações
+│   ├── App.tsx              # Rotas
+│   └── main.tsx             # Entry point
 ├── public/                  # Arquivos públicos servidos diretamente
-├── index.html               # HTML base
-├── tailwind.config.js       # Configuração do TailwindCSS
-├── tsconfig.json            # Configuração do TypeScript
-├── vite.config.ts           # Configuração do Vite
-└── package.json             # Dependências e scripts
+├── .storybook/              # Storybook
+├── index.html
+├── tailwind.config.js
+├── vite.config.ts / vitest.config.ts
+└── package.json
 ```
 
 ## Organização de Componentes
 
-### Hierarquia de Componentes
-
-```
-App.tsx (Raiz)
-├── BrowserRouter
-│   ├── AnimatedRoutes
-│   │   ├── Routes Públicas
-│   │   │   ├── /login → Login
-│   │   │   ├── /register → Register
-│   │   │   └── /unauthorized → Unauthorized
-│   │   └── Routes Protegidas (ProtectedRoute + Layout)
-│   │       ├── / → Home
-│   │       ├── /dashboard → Dashboard
-│   │       ├── /accounts → Accounts
-│   │       ├── /expenses → Expenses
-│   │       ├── /revenues → Revenues
-│   │       ├── /credit-cards → CreditCards
-│   │       ├── /security/* → Security Module
-│   │       ├── /library/* → Library Module
-│   │       └── /ai-assistant → AIAssistant
-│   ├── Toaster (Notificações)
-│   └── AlertDialogProvider (Dialogs globais)
-```
-
-### Componentes por Categoria
-
-#### 1. **components/ui/** - Componentes Básicos UI
-
-Componentes de baixo nível baseados em Radix UI e estilizados com TailwindCSS:
-
-- `button.tsx` - Botões com variantes
-- `input.tsx` - Campos de entrada
-- `select.tsx` - Dropdowns
-- `dialog.tsx` - Modais
-- `card.tsx` - Cards
-- `table.tsx` - Tabelas
-- `badge.tsx` - Badges
-- `checkbox.tsx` - Checkboxes
-- `toast.tsx` - Notificações
-- `date-picker.tsx` - Seletor de datas
-- `skeleton.tsx` - Loading skeletons
-
-#### 2. **components/layout/** - Componentes de Layout
-
-Estrutura geral da aplicação:
-
-- `Layout.tsx` - Container principal com Sidebar + Outlet
-- `Header.tsx` - Cabeçalho com navegação
-- `Sidebar.tsx` - Menu lateral com navegação
-- `Footer.tsx` - Rodapé
-
-#### 3. **components/common/** - Componentes Comuns
-
-Componentes reutilizáveis compartilhados:
-
-- `ProtectedRoute.tsx` - HOC para proteção de rotas
-- `DataTable/` - Tabela de dados com paginação, ordenação e filtros
-- `LoadingSpinner.tsx` - Indicador de carregamento
-- `ErrorBoundary.tsx` - Tratamento de erros
-
-#### 4. **components/[feature]/** - Componentes por Módulo
-
-Cada módulo tem sua pasta com componentes específicos:
-
-**Estrutura típica de um módulo:**
-```
-components/accounts/
-├── AccountsList.tsx         # Lista de contas
-├── AccountCard.tsx          # Card individual de conta
-├── AccountForm.tsx          # Formulário de criação/edição
-├── AccountDetails.tsx       # Detalhes da conta
-└── AccountFilters.tsx       # Filtros de pesquisa
-```
+- **`components/ui/`** — primitivos de baixo nível. Ver [ui_components.md](./ui_components.md). Nunca use `<input type="number|range|color|checkbox">` cru: use `number-stepper`, `decimal-input`, `slider`, `color-picker`, `checkbox`.
+- **`components/common/`** — blocos reutilizáveis entre módulos; verifique aqui antes de criar um componente novo.
+- **`components/layout/`** — esqueleto da aplicação (sidebar, header, breadcrumb, command palette).
+- **`components/<módulo>/`** — formulários, modais e cards específicos de cada domínio (ex.: `components/accounts/AccountForm.tsx`, `AccountDetailModal.tsx`).
 
 ## Pages (Rotas)
 
-Cada página é um componente lazy-loaded que representa uma rota da aplicação:
+Todas as páginas protegidas são lazy-loaded em `App.tsx` e envolvidas por `ProtectedRoute`. A lista completa e as regras de acesso estão em [routing.md](./routing.md). Resumo por módulo:
 
-```typescript
-// Lazy loading para performance
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Accounts = lazy(() => import('./pages/Accounts'));
-```
-
-### Páginas Públicas (não autenticadas)
-- `/login` - Login.tsx
-- `/register` - Register.tsx
-- `/unauthorized` - Unauthorized.tsx
-
-### Páginas Protegidas (requerem autenticação)
-
-**Módulo Financeiro:**
-- `/` - Home.tsx (Dashboard inicial)
-- `/dashboard` - Dashboard.tsx (Dashboard financeiro)
-- `/accounts` - Accounts.tsx
-- `/expenses` - Expenses.tsx
-- `/fixed-expenses` - FixedExpenses.tsx
-- `/revenues` - Revenues.tsx
-- `/credit-cards` - CreditCards.tsx
-- `/credit-card-bills` - CreditCardBills.tsx
-- `/credit-card-expenses` - CreditCardExpenses.tsx
-- `/transfers` - Transfers.tsx
-- `/loans` - Loans.tsx
-- `/members` - Members.tsx
-
-**Módulo Security:**
-- `/security/dashboard` - SecurityDashboard.tsx
-- `/security/passwords` - Passwords.tsx
-- `/security/stored-cards` - StoredCards.tsx
-- `/security/stored-accounts` - StoredAccounts.tsx
-- `/security/archives` - Archives.tsx
-- `/security/activity-logs` - ActivityLogs.tsx
-
-**Módulo Library:**
-- `/library/dashboard` - LibraryDashboard.tsx
-- `/library/books` - Books.tsx
-- `/library/authors` - Authors.tsx
-- `/library/publishers` - Publishers.tsx
-- `/library/summaries` - Summaries.tsx
-- `/library/readings` - Readings.tsx
-
-**Módulo AI Assistant:**
-- `/ai-assistant` - AIAssistant.tsx
-
-**Módulo Personal Planning:**
-- `/planning/dashboard` - PersonalPlanningDashboard.tsx
-- `/planning/routine-tasks` - RoutineTasks.tsx
-- `/planning/goals` - Goals.tsx
-- `/planning/daily` - DailyChecklist.tsx
+- **Públicas:** `/login`, `/register`, `/forgot-password`, `/reset-password/:uid/:token`, `/verify-email`, `/share/:token`, `/unauthorized`
+- **Finanças:** `/`, `/dashboard`, `/accounts`, `/transactions/:tab`, `/expenses`, `/revenues`, `/recurring/:tab`, `/credit-cards/:tab`, `/transfers`, `/loans`, `/bills/:tab`, `/members`, `/budgets`, `/vaults`, `/financial-goals`, `/vaults/simulator`, `/bank-reconciliation/:importId`, `/finance/*` (agenda, analytics, financial-health, calendar, monthly-planner, spending-insights, month-comparison, net-worth, debt-payoff, subscriptions, rules-tags)
+- **Segurança:** `/security/dashboard`, `/security/passwords`, `/security/stored-cards`, `/security/stored-accounts`, `/security/archives`, `/security/activity-logs`, `/security/health`
+- **Biblioteca / Intellect:** `/library/dashboard`, `/library/books/:tab`, `/library/authors`, `/library/publishers`, `/library/courses`, `/library/skills`, `/library/knowledge-graph`, `/library/intellect-today`, `/library/flashcards`
+- **Planejamento** (`/planning/*`, `PlanningLayout`): `today`, `dashboard`, `tasks-goals/:tab`, `daily`, `reflections`, `workout/:tab`, `nutrition/:tab`, `journey`, `week`, `body-metrics`, `weekly-planning`, `emotional-wellness/:tab`
+- **Outros:** `/agents`, `/webhooks`, `/settings/profile`, `/admin/*` (config, integrations, logs, users, permissions)
 
 ## Services (Camada de API)
 
-Cada service encapsula as chamadas HTTP para um recurso específico:
+Cada service estende `BaseService<T, CreateData, UpdateData>` (`services/base-service.ts`), usa o endpoint de `config/api-config.ts` e é exportado como singleton:
 
 ```typescript
-// Padrão de um service
-export class AccountsService {
-  async getAll(): Promise<Account[]>
-  async getById(id: number): Promise<Account>
-  async create(data: AccountFormData): Promise<Account>
-  async update(id: number, data: Partial<AccountFormData>): Promise<Account>
-  async delete(id: number): Promise<void>
+class AccountsService extends BaseService<Account, AccountFormData> {
+  constructor() {
+    super(API_CONFIG.ENDPOINTS.ACCOUNTS);
+  }
 }
 
 export const accountsService = new AccountsService();
 ```
 
-**Services disponíveis:**
-- `api-client.ts` - Cliente HTTP base (singleton)
-- `auth-service.ts` - Autenticação e tokens
-- `accounts-service.ts` - Contas bancárias
-- `expenses-service.ts` - Despesas
-- `revenues-service.ts` - Receitas
-- `credit-cards-service.ts` - Cartões de crédito
-- `credit-card-bills-service.ts` - Faturas
-- `credit-card-expenses-service.ts` - Despesas do cartão
-- `transfers-service.ts` - Transferências
-- `loans-service.ts` - Empréstimos
-- `members-service.ts` - Membros
-- `passwords-service.ts` - Senhas (Security)
-- `books-service.ts` - Livros (Library)
-- `ai-service.ts` - AI Assistant
+Nos componentes, os services são consumidos via TanStack Query (`useQuery` / `useMutation`), nunca chamados diretamente em `useEffect`.
 
 ## Types (TypeScript)
 
-Definições de tipos centralizadas em `/src/types/index.ts`:
+Tipos por domínio em `src/types/*.ts` (ex.: `accounts.ts`, `planning.ts`), reexportados por `src/types/index.ts`:
 
 ```typescript
-// Exemplo de tipos
-export interface Account {
-  id: number;
-  name: string;
-  account_type: string;
-  current_balance: string;
-  is_active: boolean;
-  // ...
-}
-
-export interface AccountFormData {
-  name: string;
-  account_type: string;
-  is_active?: boolean;
-  // ...
-}
-
-export interface PaginatedResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-}
+import type { Account, PaginatedResponse } from '@/types';
 ```
 
 ## Config
 
-Configurações centralizadas da aplicação:
-
-### constants.ts
-```typescript
-export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:39100',
-  ENDPOINTS: {
-    LOGIN: '/api/v1/authentication/login/',
-    LOGOUT: '/api/v1/authentication/logout/',
-    REFRESH_TOKEN: '/api/v1/authentication/token/refresh/',
-    ACCOUNTS: '/api/v1/accounts/',
-    EXPENSES: '/api/v1/expenses/',
-    // ...
-  }
-};
-```
+- `config/api-config.ts` — `API_CONFIG.ENDPOINTS` com todas as rotas da API.
+- `config/constants.ts` — ponto de importação de traduções/categorias (`translate`, `autoTranslate`, categorias canônicas).
+- `config/nav-config.ts` — itens da sidebar; `config/commands.ts` — command palette.
 
 ## Convenções de Nomenclatura
 
-### Arquivos
-- **Componentes:** PascalCase (ex: `AccountCard.tsx`)
-- **Services:** kebab-case (ex: `accounts-service.ts`)
-- **Types:** kebab-case (ex: `index.ts`)
-- **Hooks:** camelCase com prefixo `use` (ex: `useAuth.ts`)
-
-### Pastas
-- **kebab-case** para todas as pastas (ex: `credit-cards/`)
-
-### Variáveis e Funções
-- **camelCase** para variáveis e funções (ex: `getUserData`)
-- **PascalCase** para componentes React (ex: `AccountCard`)
-- **UPPER_SNAKE_CASE** para constantes (ex: `API_BASE_URL`)
+- **Componentes e páginas:** PascalCase (`AccountForm.tsx`)
+- **Primitivos UI, services, hooks, libs:** kebab-case (`currency-input.tsx`, `accounts-service.ts`, `use-theme.ts`)
+- **Pastas:** kebab-case (`credit-cards/`)
+- **Variáveis/funções:** camelCase; **constantes:** UPPER_SNAKE_CASE
 
 ## Fluxo de Dados
 
@@ -336,11 +136,11 @@ import { Button } from '../../../components/ui/button';
 ```typescript
 // 1. React e bibliotecas
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 // 2. Componentes
 import { Button } from '@/components/ui/button';
-import { AccountCard } from '@/components/accounts/AccountCard';
+import { AccountForm } from '@/components/accounts/AccountForm';
 
 // 3. Services e stores
 import { accountsService } from '@/services/accounts-service';
@@ -376,8 +176,8 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 
 Para mais detalhes sobre aspectos específicos do frontend:
 
-- **Componentes UI:** Veja [componentes-ui.md](./componentes-ui.md)
-- **Roteamento:** Veja [roteamento.md](./roteamento.md)
-- **Estado Global:** Veja [gerenciamento-estado.md](./gerenciamento-estado.md)
-- **API Client:** Veja [api-client.md](./api-client.md)
-- **Estilização:** Veja [estilizacao.md](./estilizacao.md)
+- **Componentes UI:** [ui_components.md](./ui_components.md)
+- **Roteamento:** [routing.md](./routing.md)
+- **Estado Global:** [state_management.md](./state_management.md)
+- **API Client:** [api_client.md](./api_client.md)
+- **Estilização:** [stylization.md](./stylization.md)

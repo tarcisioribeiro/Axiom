@@ -31,6 +31,11 @@ def search_embeddings(
     Usa pgvector no Postgres e similaridade Python no SQLite (testes).
     """
     from agents.core.llm_client import LLMClient
+    from agents.providers.access import domain_allowed
+
+    # Conteúdo de módulo sem tela liberada não entra no contexto do agente
+    if not domain_allowed(user, domain):
+        return []
 
     query_embedding = LLMClient.embed(query)
     if not query_embedding:

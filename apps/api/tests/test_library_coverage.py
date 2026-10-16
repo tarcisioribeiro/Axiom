@@ -248,7 +248,7 @@ class LibraryDashboardStatsFullTest(BaseLibraryCoverageTestCase):
             owner=self.member,
         )
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         yesterday = today - timedelta(days=1)
         now = timezone.now()
         curr_month_date = now.replace(day=1).date()
@@ -339,7 +339,7 @@ class UnifiedStreakViewTest(BaseLibraryCoverageTestCase):
         super().setUp()
         from library.models import Course, CourseSession, Reading
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         yesterday = today - timedelta(days=1)
         Reading.objects.create(
             book=self.book,
@@ -853,128 +853,3 @@ class GoodreadsImportViewTest(BaseLibraryCoverageTestCase):
         )
         self.assertEqual(brave_new_world.read_status, "to_read")
         self.assertIsNone(brave_new_world.rating)
-
-
-# ---------------------------------------------------------------------------
-# MentorPlanView
-# ---------------------------------------------------------------------------
-
-
-class MentorPlanViewTest(BaseLibraryCoverageTestCase):
-    def test_missing_objective_returns_400(self):
-        url = reverse("mentor-plan")
-        response = self.client.post(url, {}, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_successful_plan_generation(self):
-        from library.models import Skill
-
-        Skill.objects.create(
-            name="Python", proficiency="advanced", owner=self.member
-        )
-        url = reverse("mentor-plan")
-        plan_json = (
-            '{"summary": "Plano gerado", "weekly_plan": [], '
-            '"key_milestones": [], "success_metrics": []}'
-        )
-        with patch("agents.core.llm_client.LLMClient") as mock_llm:
-            mock_llm.get_instance.return_value.chat.return_value = plan_json
-            response = self.client.post(
-                url,
-                {
-                    "objective": "Aprender arquitetura de software",
-                    "focus_skills": ["Python"],
-                    "weeks": 4,
-                },
-                format="json",
-            )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["plan"]["summary"], "Plano gerado")
-        self.assertEqual(response.data["weeks"], 4)
-
-    def test_plan_with_non_json_response_falls_back_to_summary(self):
-        url = reverse("mentor-plan")
-        with patch("agents.core.llm_client.LLMClient") as mock_llm:
-            mock_llm.get_instance.return_value.chat.return_value = (
-                "Texto livre sem chaves JSON."
-            )
-            response = self.client.post(
-                url, {"objective": "Ler mais"}, format="json"
-            )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            response.data["plan"]["summary"], "Texto livre sem chaves JSON."
-        )
-
-    def test_llm_error_returns_503(self):
-        url = reverse("mentor-plan")
-        with patch("agents.core.llm_client.LLMClient") as mock_llm:
-            mock_llm.get_instance.side_effect = RuntimeError("unavailable")
-            response = self.client.post(
-                url, {"objective": "Ler mais"}, format="json"
-            )
-        self.assertEqual(
-            response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE
-        )
-
-
-# ---------------------------------------------------------------------------
-# MonthlyLearningReportView
-# ---------------------------------------------------------------------------
-
-
-class MonthlyLearningReportViewTest(BaseLibraryCoverageTestCase):
-    def setUp(self):
-        super().setUp()
-        from library.models import Course, CourseSession, Reading, Skill
-
-        self.today = timezone.now().date()
-        Reading.objects.create(
-            book=self.book,
-            reading_date=self.today,
-            reading_time=40,
-            pages_read=15,
-            owner=self.member,
-        )
-        course = Course.objects.create(title="Curso X", owner=self.member)
-        CourseSession.objects.create(
-            course=course,
-            session_date=self.today,
-            duration_minutes=50,
-            owner=self.member,
-        )
-        Skill.objects.create(name="Design", owner=self.member)
-
-    def test_invalid_params_returns_400(self):
-        url = reverse("monthly-learning-report")
-        response = self.client.get(url, {"month": "abc", "year": "2026"})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_report_without_llm_returns_null_summary(self):
-        url = reverse("monthly-learning-report")
-        response = self.client.get(
-            url,
-            {"month": self.today.month, "year": self.today.year},
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["reading"]["sessions"], 1)
-        self.assertEqual(response.data["courses"]["sessions"], 1)
-        self.assertIsNone(response.data["summary"])
-
-    def test_report_with_llm_summary(self):
-        url = reverse("monthly-learning-report")
-        with patch("agents.core.llm_client.LLMClient") as mock_llm:
-            mock_llm.get_instance.return_value.chat.return_value = (
-                "Ótimo desempenho este mês!"
-            )
-            response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            response.data["summary"], "Ótimo desempenho este mês!"
-        )
-
-    def test_report_defaults_to_current_month(self):
-        url = reverse("monthly-learning-report")
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["period"]["month"], self.today.month)

@@ -115,7 +115,7 @@ class VaultBalanceSeparationTest(APITestCase):
 
     def _age_yield_clock(self, days):
         self.vault.refresh_from_db()
-        self.vault.last_yield_date = timezone.now().date() - timedelta(
+        self.vault.last_yield_date = timezone.localdate() - timedelta(
             days=days
         )
         self.vault.save()
@@ -197,7 +197,7 @@ class VaultBalanceSeparationTest(APITestCase):
 
     def test_empty_vault_deposit_resets_yield_clock(self):
         # Backdate the clock as if the vault had held money long ago.
-        stale = timezone.now().date() - timedelta(days=120)
+        stale = timezone.localdate() - timedelta(days=120)
         self.vault.last_yield_date = stale
         self.vault.current_balance = Decimal("0.00")
         self.vault.save()
@@ -207,7 +207,7 @@ class VaultBalanceSeparationTest(APITestCase):
         self._deposit("400.00")
 
         self.vault.refresh_from_db()
-        self.assertEqual(self.vault.last_yield_date, timezone.now().date())
+        self.assertEqual(self.vault.last_yield_date, timezone.localdate())
         # No retroactive yield was accrued over the stale period.
         yields = VaultTransaction.objects.filter(
             vault=self.vault, transaction_type="yield", is_deleted=False

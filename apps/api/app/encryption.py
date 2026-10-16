@@ -215,20 +215,6 @@ class FieldEncryption:
             raise EncryptionError("Erro ao criptografar dados binários")
 
     @staticmethod
-    def decrypt_bytes_with_key(encrypted_data: bytes, key: bytes) -> bytes:
-        """Descriptografa dados binários com uma chave Fernet fornecida."""
-        try:
-            fernet = Fernet(key)
-            return fernet.decrypt(encrypted_data)
-        except InvalidToken:
-            raise DecryptionError("Chave incorreta ou dados corrompidos")
-        except (ValueError, TypeError) as e:
-            logger.error(
-                f"Erro ao descriptografar bytes com chave fornecida: {e}"
-            )
-            raise DecryptionError("Erro ao descriptografar dados binários")
-
-    @staticmethod
     def decrypt_bytes(encrypted_data: bytes) -> bytes:
         """Descriptografa dados binários com a app key."""
         try:

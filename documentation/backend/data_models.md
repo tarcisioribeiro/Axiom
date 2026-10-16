@@ -1183,5 +1183,5 @@ queryset = Account.objects.filter(is_deleted=False)
 ## Próximos Passos
 
 - [Serializers](./serializers.md) - Padrões de serialização DRF
-- [ViewSets e Views](./viewsets-views.md) - Lógica de API
-- [Criptografia](./criptografia.md) - Sistema de criptografia Fernet
+- [ViewSets e Views](./viewsets_views.md) - Lógica de API
+- [Criptografia](./criptography.md) - Sistema de criptografia Fernet
