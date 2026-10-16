@@ -98,7 +98,10 @@ class NotificationPreferenceListCreateTest(BasePreferenceTestCase):
     def test_list_only_own_preferences(self):
         self._create_preference()
         other_user = User.objects.create_user(
-            username="other_pref_user", password="pass", is_superuser=True
+            username="other_pref_user",
+            email="other_pref_user@test.com",
+            password="pass",
+            is_superuser=True,
         )
         other_member = _make_member(other_user, name="Other Pref Member")
         NotificationPreference.objects.create(
@@ -157,7 +160,10 @@ class NotificationPreferenceDetailTest(BasePreferenceTestCase):
 
     def test_cannot_access_other_users_preference(self):
         other_user = User.objects.create_user(
-            username="other_pref_user2", password="pass", is_superuser=True
+            username="other_pref_user2",
+            email="other_pref_user2@test.com",
+            password="pass",
+            is_superuser=True,
         )
         other_member = _make_member(other_user, name="Other Pref Member 2")
         other_pref = NotificationPreference.objects.create(

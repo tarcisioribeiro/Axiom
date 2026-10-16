@@ -234,7 +234,7 @@ class RecalculateInstallmentsTest(TestCase):
         self.assertEqual(self.fixed_expense.default_value, Decimal("150.00"))
 
     def test_recalculate_updates_current_month_expense(self):
-        today = timezone.now().date()
+        today = timezone.localdate()
         current_expense = Expense.objects.create(
             description=self.fixed_expense.description,
             value=self.fixed_expense.default_value,

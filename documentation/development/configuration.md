@@ -16,7 +16,7 @@ Este guia detalha todas as configurações necessárias para executar o Axiom.
 O Axiom utiliza variáveis de ambiente para configuração. Existem dois níveis:
 
 1. **Raiz do projeto** (`.env`): Configurações compartilhadas (backend, banco de dados, portas)
-2. **Frontend** (`apps/frontend/.env`): Configurações específicas do frontend
+2. **Frontend** (`apps/web/.env`): Configurações específicas do frontend
 
 ## Variáveis de Ambiente
 
@@ -140,7 +140,7 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:39101
 VITE_API_BASE_URL=http://localhost:39100
 ```
 
-### Arquivo apps/frontend/.env (Frontend)
+### Arquivo apps/web/.env (Frontend)
 
 ```bash
 # URL base da API backend
@@ -235,7 +235,7 @@ REDIS_PORT=6380
 **Importante**: Se mudar `API_PORT`, também mude `VITE_API_BASE_URL` no frontend:
 
 ```bash
-# apps/frontend/.env
+# apps/web/.env
 VITE_API_BASE_URL=http://localhost:8000
 ```
 

@@ -19,6 +19,12 @@ from app.health import (
 )
 from app.views import PurgeDeletedView, current_date
 
+# Django Admin só para superuser: is_staff aqui é o papel "staff" do app
+# (painel de permissões), e o admin do Django não filtra registros por dono.
+admin.site.has_permission = (  # type: ignore[method-assign]
+    lambda request: request.user.is_active and request.user.is_superuser
+)
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     # Prometheus metrics endpoint (scraped by Prometheus in k8s)

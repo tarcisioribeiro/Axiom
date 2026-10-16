@@ -41,8 +41,6 @@ from library.views import (
     LibraryDashboardStatsView,
     LiteraryTypeGoalDetailView,
     LiteraryTypeGoalListCreateView,
-    MentorPlanView,
-    MonthlyLearningReportView,
     PublisherDetailView,
     PublisherListCreateView,
     ReadingDetailView,
@@ -311,15 +309,5 @@ urlpatterns = [
         name="goodreads-import",
     ),
     # Mentor Plan
-    path(
-        "mentor-plan/",
-        MentorPlanView.as_view(),
-        name="mentor-plan",
-    ),
     # Monthly Learning Report
-    path(
-        "monthly-report/",
-        MonthlyLearningReportView.as_view(),
-        name="monthly-learning-report",
-    ),
 ]

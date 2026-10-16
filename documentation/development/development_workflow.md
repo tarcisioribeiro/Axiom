@@ -610,7 +610,7 @@ npx prettier --write "src/**/*.{ts,tsx}"
 **Configuração do ESLint:**
 
 ```javascript
-// apps/frontend/eslint.config.js
+// apps/web/eslint.config.js
 export default {
   extends: [
     'eslint:recommended',

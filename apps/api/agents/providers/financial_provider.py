@@ -14,7 +14,12 @@ from django.contrib.auth.models import User
 from django.db.models import Avg, Count, Sum
 from django.db.models.functions import TruncMonth
 
+from agents.providers.access import requires_screen
 
+
+@requires_screen(
+    "finance.transactions", "finance.dashboard", "finance.analytics", empty=[]
+)
 def expense_category_summary(
     user: User, start: date, end: date
 ) -> list[dict[str, Any]]:
@@ -34,6 +39,9 @@ def expense_category_summary(
     return list(qs)
 
 
+@requires_screen(
+    "finance.transactions", "finance.dashboard", "finance.analytics", empty=[]
+)
 def revenue_category_summary(
     user: User, start: date, end: date
 ) -> list[dict[str, Any]]:
@@ -53,6 +61,9 @@ def revenue_category_summary(
     return list(qs)
 
 
+@requires_screen(
+    "finance.transactions", "finance.dashboard", "finance.analytics", empty=[]
+)
 def top_merchants(
     user: User, start: date, end: date, limit: int = 5
 ) -> list[dict[str, Any]]:
@@ -74,6 +85,9 @@ def top_merchants(
     return list(qs)
 
 
+@requires_screen(
+    "finance.transactions", "finance.dashboard", "finance.analytics", empty=[]
+)
 def monthly_expense_trend(user: User, cutoff: date) -> list[dict[str, Any]]:
     from expenses.models import Expense
 
@@ -92,6 +106,7 @@ def monthly_expense_trend(user: User, cutoff: date) -> list[dict[str, Any]]:
     return list(qs)
 
 
+@requires_screen("finance.accounts", "finance.dashboard", empty=[])
 def account_balances(user: User) -> list[dict[str, Any]]:
     """Saldos de contas ativas — `account_name`, `institution_name`,
     `current_balance`, `minimum_balance`."""
@@ -110,6 +125,9 @@ def account_balances(user: User) -> list[dict[str, Any]]:
     return [dict(r) for r in rows]
 
 
+@requires_screen(
+    "finance.transactions", "finance.dashboard", "finance.analytics", empty=0.0
+)
 def expense_total(user: User, start: date, end: date) -> float:
     from expenses.models import Expense
 
@@ -125,6 +143,9 @@ def expense_total(user: User, start: date, end: date) -> float:
     return float(total)
 
 
+@requires_screen(
+    "finance.transactions", "finance.dashboard", "finance.analytics", empty=0.0
+)
 def revenue_total(user: User, start: date, end: date) -> float:
     from revenues.models import Revenue
 
@@ -140,6 +161,7 @@ def revenue_total(user: User, start: date, end: date) -> float:
     return float(total)
 
 
+@requires_screen("finance.recurring", empty=[])
 def fixed_expenses_active(user: User) -> list[dict[str, Any]]:
     from expenses.models import FixedExpense
 
@@ -151,6 +173,7 @@ def fixed_expenses_active(user: User) -> list[dict[str, Any]]:
     return [dict(r) for r in rows]
 
 
+@requires_screen("finance.recurring", empty=[])
 def recurring_revenues_avg(user: User, cutoff: date) -> list[dict[str, Any]]:
     from revenues.models import Revenue
 
@@ -168,6 +191,7 @@ def recurring_revenues_avg(user: User, cutoff: date) -> list[dict[str, Any]]:
     return list(qs)
 
 
+@requires_screen("finance.budgets", empty=[])
 def budgets_for_period(
     user: User, year: int, month: int
 ) -> list[dict[str, Any]]:
@@ -182,6 +206,9 @@ def budgets_for_period(
     return list(rows)
 
 
+@requires_screen(
+    "finance.transactions", "finance.dashboard", "finance.analytics", empty=0.0
+)
 def expense_total_for_category(
     user: User, category: str, start: date, end: date
 ) -> float:

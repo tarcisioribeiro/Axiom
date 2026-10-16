@@ -5,10 +5,12 @@ from typing import Any
 from django.utils import timezone
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from app.permissions import IsSuperuser
 
 
 @api_view(["GET"])
@@ -18,7 +20,7 @@ def current_date(request: Request) -> Response:
     This ensures frontend and backend use the same date reference.
     No authentication required - this is a public utility endpoint.
     """
-    today = timezone.now().date()
+    today = timezone.localdate()
     return Response({"date": today.isoformat()})
 
 
@@ -62,7 +64,7 @@ class PurgeDeletedView(APIView):
     }
     """
 
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, IsSuperuser]
 
     def post(self, request: Request) -> Response:
         serializer = PurgeDeletedSerializer(data=request.data)

@@ -342,7 +342,7 @@ Em um **novo terminal**:
 
 ```bash
 # Entre no diretório do frontend
-cd apps/frontend
+cd apps/web
 
 # Instale as dependências
 npm install
@@ -350,7 +350,7 @@ npm install
 
 ### Passo 9: Configurar Variáveis de Ambiente do Frontend
 
-Crie um arquivo `.env` em `apps/frontend/`:
+Crie um arquivo `.env` em `apps/web/`:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:39100
@@ -359,7 +359,7 @@ VITE_API_BASE_URL=http://localhost:39100
 ### Passo 10: Iniciar Frontend
 
 ```bash
-# Ainda dentro de apps/frontend/
+# Ainda dentro de apps/web/
 npm run dev
 ```
 
@@ -475,7 +475,7 @@ python manage.py test
 pytest
 
 # Frontend
-cd apps/frontend
+cd apps/web
 npm run test
 npm run lint
 npm run build  # Verifica erros de TypeScript
@@ -522,7 +522,7 @@ brew services list  # macOS
 ### Erro ao instalar dependências Python
 
 ```bash
-# Certifique-se de usar Python 3.11+
+# Certifique-se de usar Python 3.12+
 python --version
 
 # Atualize pip
@@ -536,7 +536,7 @@ sudo apt install python3-dev libpq-dev
 
 ```bash
 # Limpe o cache e reinstale
-cd apps/frontend
+cd apps/web
 rm -rf node_modules package-lock.json
 npm cache clean --force
 npm install

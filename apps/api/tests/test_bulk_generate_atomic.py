@@ -19,7 +19,10 @@ from expenses.services import bulk_generate_fixed_expenses
 class BulkGenerateAtomicTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="bulkatomic", password="testpass123", is_superuser=True
+            username="bulkatomic",
+            email="bulkatomic@test.com",
+            password="testpass123",
+            is_superuser=True,
         )
         account = Account.objects.create(
             account_name="AtomicAcc",

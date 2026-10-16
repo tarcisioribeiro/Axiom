@@ -109,7 +109,7 @@ workflow:
   cache:
     key:
       files:
-        - apps/frontend/package-lock.json
+        - apps/web/package-lock.json
     paths:
       # Only npm's own download cache (compressed tarballs, ~500MB) plus the
       # small lint caches. Deliberately NOT caching node_modules/ itself
@@ -122,8 +122,8 @@ workflow:
       # tools content-hash individual files internally, so an incrementally
       # updated cache stays valid across commits even though the scope key
       # itself only changes when the lockfile does.
-      - apps/frontend/.eslintcache
-      - apps/frontend/.prettiercache
+      - apps/web/.eslintcache
+      - apps/web/.prettiercache
   before_script:
     # Redirect SSH GitHub URLs to HTTPS so transitive git deps (e.g. aframe →
     # three-bmfont-text) are fetched over port 443 instead of SSH port 22,
@@ -132,7 +132,7 @@ workflow:
     - apk add --no-cache git
     - git config --global url."https://github.com/".insteadOf "git@github.com:"
     - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-    - cd apps/frontend
+    - cd apps/web
     # --no-audit/--no-fund: audit runs separately in lint:npm-audit; skipping
     # it here avoids a redundant network round-trip on every node job.
     - npm ci --prefer-offline --legacy-peer-deps --no-audit --no-fund
@@ -180,12 +180,12 @@ workflow:
         - apps/api/**/*
         - .gitlab-ci.yml
 
-# Same as above, scoped to apps/frontend/.
+# Same as above, scoped to apps/web/.
 .rules_verify_frontend:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
-        - apps/frontend/**/*
+        - apps/web/**/*
         - .gitlab-ci.yml
 
 # ==============================================================================
@@ -279,7 +279,7 @@ lint:npm-audit:
   # restored/installed the full ~1.1GB, 64k-file node_modules just to run a
   # lockfile audit that needs none of it.
   script:
-    - cd apps/frontend
+    - cd apps/web
     - npm audit --audit-level=high
 
 lint:commits:
@@ -292,7 +292,7 @@ lint:commits:
   cache:
     key:
       files:
-        - apps/frontend/package.json
+        - apps/web/package.json
     paths:
       - .npm/
   variables:
@@ -307,7 +307,7 @@ lint:commits:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != "main"
   before_script:
     - apk add --no-cache git
-    - cd apps/frontend
+    - cd apps/web
     # Versions read from package.json (not hardcoded) so they can't drift from
     # the project's pinned-exact-version policy.
     - |
@@ -316,11 +316,11 @@ lint:commits:
       npm install --no-save --prefer-offline --no-audit --no-fund \
         "@commitlint/cli@$CLI_VERSION" "@commitlint/config-conventional@$CONV_VERSION"
   script:
-    # commitlint.config.cjs lives in apps/frontend/ alongside the commitlint
+    # commitlint.config.cjs lives in apps/web/ alongside the commitlint
     # packages installed above, so @commitlint/config-conventional resolves
-    # correctly. before_script already cd's into apps/frontend/, so npx finds
+    # correctly. before_script already cd's into apps/web/, so npx finds
     # the config here.
-    # .cjs extension is required because apps/frontend/package.json has "type":"module".
+    # .cjs extension is required because apps/web/package.json has "type":"module".
     #
     # CI_MERGE_REQUEST_DIFF_BASE_SHA can go stale on long-lived branches that
     # weren't rebased onto the target branch before the last push — it then
@@ -593,7 +593,7 @@ build:frontend:assets:
     - npm run build
   artifacts:
     paths:
-      - apps/frontend/dist/
+      - apps/web/dist/
     expire_in: 1 hour
 
 build:frontend:
@@ -608,9 +608,9 @@ build:frontend:
   script:
     - |
       docker build --network=host \
-        -f ./apps/frontend/Dockerfile.ci \
+        -f ./apps/web/Dockerfile.ci \
         --build-arg APK_CACHE_BUST="$(date +%Y%m%d)" \
-        -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./apps/frontend
+        -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./apps/web
       docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
       if [ "$CI_COMMIT_BRANCH" = "develop" ]; then
         docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:develop"

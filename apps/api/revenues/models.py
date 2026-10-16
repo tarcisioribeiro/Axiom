@@ -56,7 +56,7 @@ class Revenue(BaseModel):
         verbose_name="Valor de Impostos",
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal("0.00"),
     )
     net_amount = models.DecimalField(
         verbose_name="Valor Líquido",

@@ -1,0 +1,373 @@
+/* eslint-disable max-lines */
+import {
+  Calculator,
+  Check,
+  Hash,
+  ListOrdered,
+  Loader2,
+  Pencil,
+  Save,
+  X,
+} from 'lucide-react';
+import { type ReactNode, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { MaskedCurrencyInput } from '@/components/ui/currency-input';
+import { DatePicker } from '@/components/ui/date-picker';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
+import { useCurrentScreen } from '@/hooks/use-screen-access';
+import { useToast } from '@/hooks/use-toast';
+import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatLocalDate } from '@/lib/utils';
+import { getErrorMessage } from '@/utils/error-utils';
+
+export interface InstallmentRow {
+  id: number;
+  installment_number: number;
+  value: string;
+  due_date: string;
+  payed: boolean;
+}
+
+export interface RecalcPreviewRow {
+  number: number;
+  new_value: string;
+  due_date: string;
+}
+
+interface Props {
+  open: boolean;
+  title: string;
+  description?: string;
+  installments: InstallmentRow[];
+  /** Namespace i18n: `pages.payables.installments` | `pages.loans.installments` */
+  i18nBase: string;
+  onClose: () => void;
+  saveInstallment: (
+    installmentNumber: number,
+    data: { value?: number; due_date?: string }
+  ) => Promise<void>;
+  recalculate: (
+    count: number,
+    dryRun: boolean
+  ) => Promise<{ installments_preview: RecalcPreviewRow[] }>;
+  /** Ação da tela que libera o recálculo (Empréstimos: recalculate; Contas a Pagar: renegotiate). */
+  recalcPermission: string;
+  onChanged: () => void;
+  /** Conteúdo extra exibido acima da tabela (ex.: ações da dívida). */
+  extra?: ReactNode;
+}
+
+type Draft = { value: string; due_date: string };
+
+export function InstallmentsPlanDialog({
+  open,
+  title,
+  description,
+  installments,
+  i18nBase,
+  onClose,
+  saveInstallment,
+  recalculate,
+  recalcPermission,
+  onChanged,
+  extra,
+}: Props) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [drafts, setDrafts] = useState<Record<number, Draft>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const { can } = useCurrentScreen();
+  const [recalcCount, setRecalcCount] = useState('');
+  const [recalcPreview, setRecalcPreview] = useState<RecalcPreviewRow[] | null>(null);
+  const [isRecalculating, setIsRecalculating] = useState(false);
+
+  const openInstallments = useMemo(
+    () => installments.filter((i) => !i.payed),
+    [installments]
+  );
+
+  // Reinicia o estado de edição quando o dialog abre/fecha.
+  const [lastOpen, setLastOpen] = useState(open);
+  if (open !== lastOpen) {
+    setLastOpen(open);
+    setIsEditing(false);
+    setDrafts({});
+    setRecalcCount(String(openInstallments.length || ''));
+    setRecalcPreview(null);
+  }
+
+  const tr = (key: string) => t(`${i18nBase}.${key}`);
+
+  const draftFor = (inst: InstallmentRow): Draft =>
+    drafts[inst.installment_number] ?? {
+      value: inst.value,
+      due_date: inst.due_date,
+    };
+
+  const setDraft = (num: number, patch: Partial<Draft>) =>
+    setDrafts((prev) => ({
+      ...prev,
+      [num]: { ...(prev[num] ?? { value: '', due_date: '' }), ...patch },
+    }));
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const changed = openInstallments.filter((inst) => {
+        const d = drafts[inst.installment_number];
+        return (
+          d &&
+          (parseFloat(d.value) !== parseFloat(inst.value) ||
+            d.due_date !== inst.due_date)
+        );
+      });
+      for (const inst of changed) {
+        const d = drafts[inst.installment_number];
+        await saveInstallment(inst.installment_number, {
+          value: parseFloat(d.value),
+          due_date: d.due_date,
+        });
+      }
+      toast({ title: tr('planUpdated') });
+      setIsEditing(false);
+      setDrafts({});
+      onChanged();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRecalcPreview = async () => {
+    const count = parseInt(recalcCount, 10);
+    if (!count || count < 1) return;
+    setIsRecalculating(true);
+    try {
+      const res = await recalculate(count, true);
+      setRecalcPreview(res.installments_preview);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
+
+  const handleRecalcApply = async () => {
+    const count = parseInt(recalcCount, 10);
+    if (!count || count < 1) return;
+    setIsRecalculating(true);
+    try {
+      await recalculate(count, false);
+      toast({ title: tr('planUpdated') });
+      setRecalcPreview(null);
+      setIsEditing(false);
+      onChanged();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
+
+  const canEdit = openInstallments.length > 0;
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle icon={ListOrdered}>{title}</DialogTitle>
+          {description && <DialogDescription>{description}</DialogDescription>}
+        </DialogHeader>
+
+        {extra}
+
+        {installments.length === 0 ? (
+          <div className="py-xl text-muted-foreground text-center text-sm">
+            {tr('emptyState')}
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground border-b text-left">
+                    <th className="pb-sm pr-md">{tr('number')}</th>
+                    <th className="pb-sm pr-md">{tr('dueDate')}</th>
+                    <th className="pb-sm pr-md text-right">{tr('value')}</th>
+                    <th className="pb-sm">{tr('status')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {installments.map((inst) => {
+                    const editable = isEditing && !inst.payed;
+                    const d = draftFor(inst);
+                    return (
+                      <tr key={inst.id} className="border-b last:border-0">
+                        <td className="py-sm pr-md align-middle">
+                          {inst.installment_number}
+                        </td>
+                        <td className="py-sm pr-md align-middle">
+                          {editable ? (
+                            <div className="w-44">
+                              <DatePicker
+                                value={d.due_date}
+                                onChange={(date) =>
+                                  setDraft(inst.installment_number, {
+                                    due_date: date ? formatLocalDate(date) : '',
+                                  })
+                                }
+                              />
+                            </div>
+                          ) : (
+                            formatDate(inst.due_date, 'dd/MM/yyyy')
+                          )}
+                        </td>
+                        <td className="py-sm pr-md text-right align-middle">
+                          {editable ? (
+                            <div className="ml-auto w-40">
+                              <MaskedCurrencyInput
+                                className="text-right"
+                                value={parseFloat(d.value) || 0}
+                                onValueChange={(value) =>
+                                  setDraft(inst.installment_number, {
+                                    value: value.toFixed(2),
+                                  })
+                                }
+                              />
+                            </div>
+                          ) : (
+                            formatCurrency(inst.value)
+                          )}
+                        </td>
+                        <td className="py-sm align-middle">
+                          <Badge variant={inst.payed ? 'secondary' : 'outline'}>
+                            {inst.payed ? tr('paid') : tr('pending')}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {isEditing && can(recalcPermission) && (
+              <div className="space-y-sm pt-md border-t">
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Hash className="text-muted-foreground h-3.5 w-3.5" />
+                    {tr('recalcCountLabel')}
+                  </Label>
+                  <div className="gap-sm flex items-center">
+                    <NumberStepper
+                      min={1}
+                      optional
+                      aria-label={tr('recalcCountLabel')}
+                      value={recalcCount === '' ? null : Number(recalcCount)}
+                      onChange={(v) => {
+                        setRecalcCount(v === null ? '' : String(v));
+                        setRecalcPreview(null);
+                      }}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void handleRecalcPreview()}
+                      disabled={isRecalculating}
+                    >
+                      <Calculator aria-hidden="true" />
+                      {tr('recalcApply')}
+                    </Button>
+                  </div>
+                </div>
+
+                {recalcPreview && (
+                  <div className="bg-muted/50 space-y-xs rounded-md p-3">
+                    {recalcPreview.map((row) => (
+                      <div key={row.number} className="flex justify-between text-xs">
+                        <span>
+                          {tr('number')} {row.number} —{' '}
+                          {formatDate(row.due_date, 'dd/MM/yyyy')}
+                        </span>
+                        <span className="font-medium">
+                          {formatCurrency(row.new_value)}
+                        </span>
+                      </div>
+                    ))}
+                    <Button
+                      size="sm"
+                      className="mt-sm w-full"
+                      onClick={() => void handleRecalcApply()}
+                      disabled={isRecalculating}
+                    >
+                      <Check aria-hidden="true" />
+                      {t('common.actions.confirm')}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <DialogFooter>
+              {isEditing ? (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setDrafts({});
+                      setRecalcPreview(null);
+                    }}
+                    disabled={isSaving}
+                  >
+                    <X className="h-4 w-4" />
+                    {t('common.actions.cancel')}
+                  </Button>
+                  <Button onClick={() => void handleSave()} disabled={isSaving}>
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    {isSaving ? t('common.actions.saving') : t('common.actions.save')}
+                  </Button>
+                </>
+              ) : (
+                canEdit &&
+                can('change') && (
+                  <Button variant="outline" onClick={() => setIsEditing(true)}>
+                    <Pencil className="h-4 w-4" />
+                    {tr('editPlan')}
+                  </Button>
+                )
+              )}
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

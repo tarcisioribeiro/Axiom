@@ -161,9 +161,23 @@ class TestLLMClientAvailability(TestCase):
         with patch("requests.get", side_effect=_fake_get(["other"], [])):
             self.assertFalse(LLMClient.is_available())
             warnings = LLMClient.diagnostics()
-        self.assertTrue(any("retired-model" in w for w in warnings))
-        self.assertTrue(
-            any(w.startswith("Fallback 'ollama'") for w in warnings)
+        self.assertIn(
+            {
+                "role": "primary",
+                "provider": "groq",
+                "code": "retired_model",
+                "model": "retired-model",
+            },
+            warnings,
+        )
+        self.assertIn(
+            {
+                "role": "fallback",
+                "provider": "ollama",
+                "code": "model_not_pulled",
+                "model": "mistral:7b-instruct",
+            },
+            warnings,
         )
 
     def test_retired_model_falls_back_to_default(
@@ -189,7 +203,27 @@ class TestLLMClientAvailability(TestCase):
         self.assertEqual(
             mock_post.call_args.kwargs["json"]["model"], GROQ_DEFAULT_MODEL
         )
-        self.assertTrue(any("retired-model" in w for w in warnings))
+        self.assertIn(
+            {
+                "code": "model_replaced",
+                "model": "retired-model",
+                "fallback": GROQ_DEFAULT_MODEL,
+            },
+            warnings,
+        )
+
+    def test_unreachable_ollama_is_summarized(self, _cfg: MagicMock) -> None:
+        import requests
+
+        from agents.core.llm_client import LLMClient
+
+        dns = requests.ConnectionError("Failed to resolve 'ollama-service'")
+        with patch("requests.get", side_effect=dns):
+            warnings = LLMClient.diagnostics()
+        embed = [w for w in warnings if w.get("role") == "embeddings"]
+        self.assertEqual(embed[0]["code"], "ollama_unreachable")
+        self.assertEqual(embed[0]["reason"], "dns")
+        self.assertNotIn("Failed to resolve", str(warnings))
 
     def test_up_when_fallback_is_healthy(self, _cfg: MagicMock) -> None:
         from agents.core.llm_client import LLMClient

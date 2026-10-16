@@ -3,7 +3,7 @@ import colorsys
 from django.db import migrations, models
 
 # HSL (h en graus 0-360, s/l em %) dos tokens de cor no tema padrão
-# (apps/frontend/src/index.css :root) — usado só para achar, por
+# (apps/web/src/index.css :root) — usado só para achar, por
 # aproximação de RGB, o token mais parecido com cada hex antigo.
 TOKEN_HSL = {
     "primary": (252, 54, 54),

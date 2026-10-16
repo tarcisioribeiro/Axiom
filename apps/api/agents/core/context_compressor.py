@@ -88,8 +88,3 @@ def compress(
         result["projections"] = result["projections"][:max_rows]
 
     return result
-
-
-def should_compress(prompt: str, threshold_tokens: int = 1500) -> bool:
-    """Retorna True se o prompt excede o limite de tokens estimado."""
-    return estimate_tokens(prompt) > threshold_tokens

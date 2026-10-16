@@ -47,6 +47,10 @@ class BaseAuthTestCase(APITestCase):
 class AuthenticationViewTest(APITestCase):
     def setUp(self):
         self.client = APIClient()
+        # Cadastro só abre com um staff ativo
+        User.objects.create_user(
+            "staffreg", "staffreg@test.com", "pw", is_staff=True
+        )
 
     def test_token_obtain_success(self):
         User.objects.create_user("logintest", "login@test.com", "password123")

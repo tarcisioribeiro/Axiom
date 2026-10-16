@@ -43,6 +43,7 @@ apps = [
     "budgets",
     "bank_reconciliation",
     "monthly_planning",
+    "webhooks",
 ]
 
 # Buscar e adicionar permissões

@@ -95,8 +95,8 @@ Assistente de IA especializado em domínios financeiros e pessoais:
 ![JWT](https://img.shields.io/badge/JWT-HttpOnly_Cookies-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
 ![Fernet](https://img.shields.io/badge/Fernet-Field_Encryption-FFD43B?style=flat-square&logo=python&logoColor=black)
 
-- **Django 5.2.12** - Framework web principal
-- **Django REST Framework 3.16.1** - API RESTful
+- **Django 6.0** - Framework web principal
+- **Django REST Framework 3.17** - API RESTful
 - **PostgreSQL 16** com **pgvector** - Banco de dados
 - **Ollama** - LLM local (padrão: `mistral:7b-instruct`, embeddings: `nomic-embed-text` 768 dims)
 - **Groq / Anthropic** - Providers cloud alternativos via `LLM_PROVIDER`
@@ -117,12 +117,12 @@ Assistente de IA especializado em domínios financeiros e pessoais:
 ![Zod](https://img.shields.io/badge/Zod-validation-3E67B1?style=flat-square)
 
 - **React 19** - Biblioteca UI
-- **TypeScript 5.9** - Tipagem estática
-- **Vite 7** - Build tool e dev server
-- **TailwindCSS 3** - Framework CSS
+- **TypeScript 6** - Tipagem estática
+- **Vite 8** - Build tool e dev server
+- **TailwindCSS 4** - Framework CSS
 - **Radix UI** - Componentes primitivos acessíveis
 - **Zustand** - Gerenciamento de estado global
-- **React Router v7** - Roteamento
+- **React Router v8** - Roteamento
 - **Framer Motion** - Animações
 - **Recharts** - Visualização de dados
 - **TanStack Query v5** - Cache e sincronização de dados do servidor

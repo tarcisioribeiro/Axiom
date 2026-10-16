@@ -1,0 +1,89 @@
+import { Plus, Tag, Zap } from 'lucide-react';
+import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { Can } from '@/components/common/Can';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTabRoute } from '@/hooks/use-tab-route';
+
+import AutomationRules from './AutomationRules';
+import Tags from './Tags';
+
+const TABS = ['automation-rules', 'tags'] as const;
+
+export default function RulesAndTagsPage() {
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useTabRoute(
+    '/finance/rules-tags',
+    TABS,
+    'automation-rules'
+  );
+
+  const newRuleRef = useRef<() => void>(undefined);
+  const applyAllRef = useRef<() => void>(undefined);
+  const newTagRef = useRef<() => void>(undefined);
+
+  return (
+    <PageContainer className="flex flex-1 flex-col">
+      {activeTab === 'automation-rules' && (
+        <PageHeader
+          title={t('pages.automationRules.title')}
+          icon={<Zap />}
+          actions={
+            <Can action="apply_rules">
+              <Button variant="outline" onClick={() => applyAllRef.current?.()}>
+                <Zap className="h-4 w-4" />
+                {t('pages.automationRules.applyAll')}
+              </Button>
+            </Can>
+          }
+          action={{
+            label: t('pages.automationRules.newRule'),
+            icon: <Plus className="h-4 w-4" />,
+            onClick: () => newRuleRef.current?.(),
+          }}
+        />
+      )}
+
+      {activeTab === 'tags' && (
+        <PageHeader
+          title={t('pages.tags.title')}
+          icon={<Tag className="h-5 w-5" />}
+          action={{
+            label: t('pages.tags.newBtn'),
+            icon: <Plus className="h-4 w-4" />,
+            onClick: () => newTagRef.current?.(),
+          }}
+        />
+      )}
+
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
+        className="flex flex-1 flex-col"
+      >
+        <TabsList className="mb-lg w-full">
+          <TabsTrigger value="automation-rules" className="gap-xs flex-1">
+            <Zap className="h-4 w-4" />
+            {t('nav.items.automationRules')}
+          </TabsTrigger>
+          <TabsTrigger value="tags" className="gap-xs flex-1">
+            <Tag className="h-4 w-4" />
+            {t('nav.items.tags')}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="automation-rules" className="mt-0 flex-1">
+          <AutomationRules embedded newRuleRef={newRuleRef} applyAllRef={applyAllRef} />
+        </TabsContent>
+
+        <TabsContent value="tags" className="mt-0 flex-1">
+          <Tags embedded newTagRef={newTagRef} />
+        </TabsContent>
+      </Tabs>
+    </PageContainer>
+  );
+}

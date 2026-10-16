@@ -20,7 +20,7 @@ def get_routine_summary(
     if start is not None and end is not None:
         period_start, period_end = start, end
     else:
-        period_end = timezone.now().date()
+        period_end = timezone.localdate()
         period_start = period_end - timedelta(days=days - 1)
 
     instances = personal_provider.task_instances_status(
@@ -56,7 +56,7 @@ def get_top_missed_routines(
     if start is not None and end is not None:
         period_start, period_end = start, end
     else:
-        period_end = timezone.now().date()
+        period_end = timezone.localdate()
         period_start = period_end - timedelta(days=days - 1)
 
     missed = personal_provider.missed_task_instances_by_template(
@@ -100,7 +100,7 @@ def get_active_goals(user: User) -> list[dict[str, Any]]:
 
 
 def get_today_pending_tasks(user: User) -> list[dict[str, Any]]:
-    today = timezone.now().date()
+    today = timezone.localdate()
     pending = personal_provider.today_pending_task_instances(
         user, today, limit=10
     )

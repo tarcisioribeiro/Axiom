@@ -450,7 +450,7 @@ docker-compose exec api python manage.py migrate --fake-initial
 ### Loop infinito de refresh
 
 **Sintomas:**
-- Requisições infinitas para `/api/v1/auth/refresh/`
+- Requisições infinitas para `/api/v1/authentication/token/refresh/`
 - Console cheio de erros 401
 
 **Solução:**
@@ -633,7 +633,7 @@ print(settings.CORS_ALLOW_CREDENTIALS)
 
 1. **Verificar withCredentials no axios**
    ```typescript
-   // apps/frontend/src/services/api-client.ts
+   // apps/web/src/services/api-client.ts
    const apiClient = axios.create({
      baseURL: import.meta.env.VITE_API_BASE_URL,
      withCredentials: true,  // ✅ Deve estar true
@@ -924,7 +924,7 @@ npm ERR! ERESOLVE could not resolve
    .git
    venv
 
-   # apps/frontend/.dockerignore
+   # apps/web/.dockerignore
    node_modules
    dist
    .git

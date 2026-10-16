@@ -17,6 +17,7 @@ Decisões técnicas e estrutura do sistema.
 - **[Fluxo de Dados](architecture/data_flow.md)** - Como os dados fluem entre frontend, backend e banco de dados
 - **[Decisões Arquiteturais](architecture/architectural_decisions.md)** - Decisões técnicas importantes e suas justificativas
 - **[Diagramas UML](architecture/diagrams.md)** - ERD, componentes, implantação e classes
+- **[Fronteiras do módulo LLM](architecture/agents-llm-boundary.md)** - Regras de dependência de `agents/` e acesso via providers
 
 ### [3. Backend](backend/README.md)
 Documentação do Django REST Framework.
@@ -30,23 +31,26 @@ Documentação do Django REST Framework.
 - **[Comandos de Management](backend/management_commands.md)** - Comandos personalizados Django
 - **[Sistema de Agentes (IA)](backend/agents.md)** - 6 agentes especializados, providers LLM, RAG, endpoints e configuração
 
-### [4. Frontend](apps/frontend/README.md)
+### [4. Frontend](frontend/README.md)
 Documentação do React + TypeScript.
 
-- **[Estrutura do Projeto](apps/frontend/project_structure.md)** - Organização de diretórios e arquivos
-- **[Componentes UI](apps/frontend/ui_components.md)** - shadcn/ui, Radix e componentes customizados
-- **[Roteamento](apps/frontend/routing.md)** - React Router e proteção de rotas
-- **[Gerenciamento de Estado](apps/frontend/state_management.md)** - Zustand stores
-- **[API Client](apps/frontend/api_client.md)** - Axios, interceptores e serviços
-- **[Estilização](apps/frontend/stylization.md)** - TailwindCSS e tema Dracula
+- **[Estrutura do Projeto](frontend/project_structure.md)** - Organização de diretórios e arquivos
+- **[Componentes UI](frontend/ui_components.md)** - shadcn/ui, Radix e componentes customizados
+- **[Roteamento](frontend/routing.md)** - React Router e proteção de rotas
+- **[Gerenciamento de Estado](frontend/state_management.md)** - Zustand stores
+- **[API Client](frontend/api_client.md)** - Axios, interceptores e serviços
+- **[Estilização](frontend/stylization.md)** - TailwindCSS e tema Dracula
+- **[Padrões de Design](frontend/design-patterns.md)** - Regras visuais obrigatórias (dialogs, tabelas, listas, validação)
+- **[Paletas de Cores](frontend/palettes.md)** - Temas e tokens de cor
+- **[Auditoria de Viewport](frontend/frontend-viewport-audit.md)** - Rolagem por tela em 1920×880
 
-### [5. API](apps/api/README.md)
+### [5. API](api/README.md)
 Documentação dos endpoints RESTful.
 
-- **[Endpoints](apps/api/endpoints.md)** - Lista completa de endpoints por módulo
-- **[Autenticação e Tokens](apps/api/token_authentication.md)** - Login, refresh e logout
-- **[Tratamento de Erros](apps/api/error_treatments.md)** - Status codes e mensagens de erro
-- **[Filtros e Ordenação](apps/api/filters_ordering.md)** - Query parameters suportados
+- **[Endpoints](api/endpoints.md)** - Lista completa de endpoints por módulo
+- **[Autenticação e Tokens](api/token_authentication.md)** - Login, refresh e logout
+- **[Tratamento de Erros](api/error_treatments.md)** - Status codes e mensagens de erro
+- **[Filtros e Ordenação](api/filters_ordering.md)** - Query parameters suportados
 
 ### [6. Banco de Dados](database/README.md)
 PostgreSQL com pgvector.
@@ -55,6 +59,7 @@ PostgreSQL com pgvector.
 - **[Índices e Otimização](database/index_otimization.md)** - Estratégias de performance
 - **[pgvector](database/pgvector.md)** - Busca vetorial e embeddings
 - **[Migrations](database/migrations.md)** - Guia de migrations Django
+- **[Infraestrutura](database/infrastructure.md)** - PostgreSQL externo, backups e restauração
 
 ### [7. Autenticação e Segurança](authentication-security/README.md)
 Segurança, permissões e criptografia.
@@ -74,7 +79,9 @@ Guias para desenvolvedores.
 - **[Deploy e CI/CD](development/deploy.md)** - Variáveis GitLab, k3s e pipeline completo
 - **[Rollback](development/rollback.md)** - Procedimentos de reversão
 - **[Troubleshooting](development/troubleshooting.md)** - Solução de problemas comuns
-- **[Funcionalidades Pendentes](development/pending_features.md)** - O que está parcialmente implementado e como completar (email, reset de senha, 2FA, export ZIP, etc.)
+- **[Convenção de Commits](development/commit_convention.md)** - Formato e tipos aceitos pelo commitlint
+- **[Referência kubectl](development/kubectl_reference.md)** - Comandos de operação do cluster
+- **[Infraestrutura DNS](development/dns_infrastructure.md)** - DNS e TLS de staging e produção
 
 ### [9. Painel de Administração](admin-panel/README.md)
 Configuração do sistema via painel admin (sem editar `.env` nem reconstruir containers).
@@ -84,10 +91,19 @@ Configuração do sistema via painel admin (sem editar `.env` nem reconstruir co
 - **[Configuração LLM / Ollama](admin-panel/llm_ollama_configuration.md)** - Ollama local, Anthropic Claude, modelos e monitoramento de agentes
 - **[Referência de Variáveis](admin-panel/environment_variables.md)** - Tabela completa de todas as chaves, valores padrão, segredos e efeitos
 
-### [10. Mobile](mobile/README.md)
-App mobile em Flutter — estado atual, stack e como rodar.
+### [10. Storage](storage/README.md)
 
-- **[Visão Geral](mobile/README.md)** - Stack, estrutura de diretórios, comandos de desenvolvimento e integração com CI/CD
+- **[Infraestrutura de Storage](storage/infrastructure.md)** - MinIO, buckets e TLS
+
+### 11. LLM
+
+- **[Infraestrutura de LLM](llm/infrastructure.md)** - Ollama externo e providers
+
+### [12. Backups e Observabilidade](observability/README.md)
+
+- **[Estratégia de Backup](observability/backup-strategy.md)** - Rotina, retenção e restauração
+- **[Monitoramento](observability/monitoring.md)** - Métricas, dashboards e alertas
+- **[Incidente: MinIO no CI](observability/incident-ci-minio-firewall.md)** - Post-mortem do timeout em `test:backup-restore`
 
 ## 🚀 Início Rápido
 
@@ -123,10 +139,10 @@ App mobile em Flutter — estado atual, stack e como rodar.
    - [Migrations](database/migrations.md) - Criar migrations
 
 3. **Frontend**
-   - [Estrutura do Projeto](apps/frontend/project_structure.md) - Onde colocar arquivos
-   - [API Client](apps/frontend/api_client.md) - Chamar APIs
-   - [Componentes UI](apps/frontend/ui_components.md) - Interface
-   - [Gerenciamento de Estado](apps/frontend/state_management.md) - Estado global
+   - [Estrutura do Projeto](frontend/project_structure.md) - Onde colocar arquivos
+   - [API Client](frontend/api_client.md) - Chamar APIs
+   - [Componentes UI](frontend/ui_components.md) - Interface
+   - [Gerenciamento de Estado](frontend/state_management.md) - Estado global
 
 4. **Testes e Deploy**
    - [Workflow de Desenvolvimento](development/development_workflow.md) - Testes
@@ -143,7 +159,7 @@ App mobile em Flutter — estado atual, stack e como rodar.
    - [Sistema de Permissões](authentication-security/permissions_system.md) - Controle de acesso
 
 3. **Validação**
-   - [Tratamento de Erros](apps/api/error_treatments.md) - Mensagens seguras
+   - [Tratamento de Erros](api/error_treatments.md) - Mensagens seguras
    - [Troubleshooting](development/troubleshooting.md) - Testes de segurança
 
 ### Otimizar Performance
@@ -157,8 +173,8 @@ App mobile em Flutter — estado atual, stack e como rodar.
    - [ViewSets e Views](backend/viewsets_views.md) - Otimizações de queries
 
 3. **Frontend**
-   - [API Client](apps/frontend/api_client.md) - Caching e interceptores
-   - [Componentes UI](apps/frontend/ui_components.md) - Lazy loading
+   - [API Client](frontend/api_client.md) - Caching e interceptores
+   - [Componentes UI](frontend/ui_components.md) - Lazy loading
 
 4. **Banco de Dados**
    - [Schema](database/schema.md) - Índices adequados

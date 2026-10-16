@@ -1,5 +1,6 @@
 import os
 import sys
+import tempfile
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -133,6 +134,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "authentication.middleware.JWTCookieMiddleware",  # JWT via cookies
     "app.middleware.AuditLoggingMiddleware",
+    "admin_panel.middleware.ScreenAccessMiddleware",  # acesso por tela
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "app.middleware.SecurityHeadersMiddleware",
@@ -225,6 +227,10 @@ SIMPLE_JWT = {
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
+# Testes gravam uploads fora do projeto: não dependem da permissão da pasta
+# media/ (criada pelo container como root) nem deixam arquivos nela.
+if _TESTING:
+    MEDIA_ROOT = os.path.join(tempfile.gettempdir(), "axiom-test-media")
 
 # MinIO / S3 Object Storage
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "")
@@ -282,6 +288,7 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
+    "EXCEPTION_HANDLER": "app.exceptions.custom_exception_handler",
     "DEFAULT_PAGINATION_CLASS": "app.pagination.StandardResultsSetPagination",
     "PAGE_SIZE": 50,
     "DEFAULT_THROTTLE_CLASSES": [
@@ -312,7 +319,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API para gerenciamento financeiro pessoal",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAdminUser"],
+    "SERVE_PERMISSIONS": ["app.permissions.IsSuperuser"],
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": "/api/v1",
     "TAGS": [
@@ -567,6 +574,83 @@ CELERY_BEAT_SCHEDULE = {
         "task": "security.tasks.check_vault_alert_rules",
         "schedule": crontab(minute="*/15"),
         "options": {"expires": 900},
+    },
+    # Gera notificações para todos os membros ativos a cada hora.
+    "generate-all-notifications-hourly": {
+        "task": "notifications.tasks.generate_all_notifications",
+        "schedule": crontab(minute=0),
+    },
+    # Calcula rendimentos diários de vaults com taxa configurada.
+    "calculate-vault-yields-daily": {
+        "task": "vaults.tasks.calculate_daily_yields",
+        "schedule": crontab(hour=1, minute=0),
+    },
+    # Gera instâncias de despesas/receitas fixas no 1º dia de cada mês.
+    "generate-fixed-expenses-monthly": {
+        "task": "expenses.tasks.generate_fixed_expenses_for_month",
+        "schedule": crontab(hour=0, minute=30, day_of_month=1),
+    },
+    # Gera instâncias de receitas fixas no 1º dia de cada mês.
+    "generate-fixed-revenues-monthly": {
+        "task": "revenues.tasks.generate_fixed_revenues_for_month",
+        "schedule": crontab(hour=0, minute=45, day_of_month=1),
+    },
+    # Fecha faturas vencidas diariamente (substitui cron externo).
+    "close-overdue-bills-daily": {
+        "task": "credit_cards.tasks.close_overdue_bills",
+        "schedule": crontab(hour=2, minute=0),
+    },
+    # Busca cotações PTAX do BCB em dias úteis às 14h
+    # (após fechamento PTAX das 13h).
+    "fetch-ptax-rates-weekdays": {
+        "task": "exchange_rates.fetch_ptax_rates",
+        "schedule": crontab(hour=14, minute=0, day_of_week="1-5"),
+    },
+    # Verifica cartões armazenados vencendo em 30/60 dias (diário às 09h).
+    "check-stored-card-expiry-daily": {
+        "task": "security.tasks.check_stored_card_expiry",
+        "schedule": crontab(hour=9, minute=0),
+    },
+    # Notifica senhas comprometidas (HIBP) — semanal, domingo às 08h.
+    "notify-compromised-passwords-weekly": {
+        "task": "security.tasks.notify_compromised_passwords",
+        "schedule": crontab(hour=8, minute=0, day_of_week=0),
+    },
+    # Resumo semanal de segurança do cofre — segunda às 09h.
+    "send-weekly-security-summary-monday": {
+        "task": "security.tasks.send_weekly_security_summary",
+        "schedule": crontab(hour=9, minute=0, day_of_week=1),
+    },
+    # Detecta anomalias no ActivityLog diariamente às 06h.
+    "detect-activity-anomalies-daily": {
+        "task": "security.tasks.detect_activity_anomalies",
+        "schedule": crontab(hour=6, minute=0),
+    },
+    # Concede conquistas (IntellectBadge) do Intelecto diariamente às 03h.
+    "award-intellect-badges-daily": {
+        "task": "library.tasks.award_intellect_badges_all",
+        "schedule": crontab(hour=3, minute=0),
+    },
+    # Recomendações semanais de aprendizado — segunda às 10h.
+    "send-weekly-learning-recommendations-monday": {
+        "task": "library.tasks.send_weekly_learning_recommendations",
+        "schedule": crontab(hour=10, minute=0, day_of_week=1),
+    },
+    # Marca objetivos ativos concluídos diariamente às 00h10 (rede de
+    # segurança para objetivos sem tarefa vinculada).
+    "check-goal-completions-daily": {
+        "task": "personal_planning.tasks.check_goal_completions",
+        "schedule": crontab(hour=0, minute=10),
+    },
+    # Detecta metas em risco (pace atrasado) diariamente às 07h.
+    "detect-goal-risk-daily": {
+        "task": "personal_planning.tasks.detect_goal_risk",
+        "schedule": crontab(hour=7, minute=0),
+    },
+    # Síntese semanal de planejamento pessoal — segunda às 08h.
+    "generate-weekly-planning-synthesis-monday": {
+        "task": "personal_planning.tasks.generate_weekly_planning_synthesis",
+        "schedule": crontab(hour=8, minute=0, day_of_week=1),
     },
 }
 # Tasks retry policy

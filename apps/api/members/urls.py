@@ -29,19 +29,4 @@ urlpatterns = [
         views.MemberRetrieveUpdateDestroyView.as_view(),
         name="member-detail-view",
     ),
-    path(
-        "members/<int:pk>/permissions/",
-        views.get_member_permissions,
-        name="member-permissions-get",
-    ),
-    path(
-        "members/<int:pk>/permissions/update/",
-        views.update_member_permissions,
-        name="member-permissions-update",
-    ),
-    path(
-        "permissions/available/",
-        views.get_available_permissions,
-        name="available-permissions",
-    ),
 ]

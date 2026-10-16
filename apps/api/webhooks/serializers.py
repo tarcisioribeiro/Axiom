@@ -32,7 +32,32 @@ class WebhookSerializer(serializers.ModelSerializer):
             "delivery_count",
             "last_delivery_status",
         ]
-        extra_kwargs = {"secret": {"write_only": True}}
+        extra_kwargs = {
+            "secret": {
+                "write_only": True,
+                "required": False,
+                "allow_blank": True,
+            }
+        }
+
+    def validate_secret(self, value: str) -> str:
+        if self.instance is None and not value:
+            raise serializers.ValidationError("Este campo é obrigatório.")
+        return value
+
+    def validate(self, attrs: dict) -> dict:
+        if self.instance is None and not attrs.get("secret"):
+            raise serializers.ValidationError(
+                {"secret": ["Este campo é obrigatório."]}
+            )
+        return attrs
+
+    def update(self, instance: Webhook, validated_data: dict) -> Webhook:
+        # O secret não volta da API: em branco na edição mantém o atual.
+        if not validated_data.get("secret"):
+            validated_data.pop("secret", None)
+        updated: Webhook = super().update(instance, validated_data)
+        return updated
 
     def validate_events(self, value: list[str]) -> list[str]:
         valid = {choice[0] for choice in WEBHOOK_EVENT_CHOICES}

@@ -180,7 +180,7 @@ class ExpenseEmbeddingSignalTest(TestCase):
             Expense.objects.create(
                 description="Almoço",
                 value=Decimal("35.00"),
-                date=timezone.now().date(),
+                date=timezone.localdate(),
                 category="food and drink",
                 account=self.account,
                 payed=False,
@@ -207,7 +207,7 @@ class ExpenseEmbeddingSignalTest(TestCase):
             Expense.objects.create(
                 description="Deletada",
                 value=Decimal("10.00"),
-                date=timezone.now().date(),
+                date=timezone.localdate(),
                 category="food and drink",
                 account=self.account,
                 payed=False,

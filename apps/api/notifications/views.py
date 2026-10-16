@@ -25,7 +25,7 @@ def _generate_notifications(member):
     (unique_together) e revalidar notificações soft-deletadas sem colidir
     com a constraint. Limpa notificações de itens já resolvidos.
     """
-    today = timezone.now().date()
+    today = timezone.localdate()
     soon = today + timedelta(days=3)
 
     # --- TaskInstance ---

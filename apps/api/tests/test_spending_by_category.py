@@ -20,7 +20,7 @@ from tests.test_dashboard_coverage import _DashboardCoverageBaseTestCase
 class SpendingByCategoryTest(_DashboardCoverageBaseTestCase):
     def setUp(self):
         super().setUp()
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
         card = self._make_credit_card()
         bill = self._make_bill(
             card,

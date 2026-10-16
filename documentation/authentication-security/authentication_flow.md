@@ -165,7 +165,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         return response
 ```
 
-**Endpoint**: `POST /api/v1/authentication/login/`
+**Endpoint**: `POST /api/v1/authentication/token/`
 
 **Request**:
 ```json
@@ -241,7 +241,7 @@ class CookieTokenRefreshView(TokenRefreshView):
         return response
 ```
 
-**Endpoint**: `POST /api/v1/authentication/refresh/`
+**Endpoint**: `POST /api/v1/authentication/token/refresh/`
 
 **Request**: Não requer body (lê do cookie)
 
@@ -283,7 +283,7 @@ def logout_view(request):
 ### Frontend
 
 #### ApiClient (api-client.ts)
-**Arquivo**: `apps/frontend/src/services/api-client.ts`
+**Arquivo**: `apps/web/src/services/api-client.ts`
 
 ```typescript
 class ApiClient {
@@ -411,7 +411,7 @@ sequenceDiagram
     participant DB as Database
 
     U->>F: Digita username/password
-    F->>B: POST /api/v1/authentication/login/
+    F->>B: POST /api/v1/authentication/token/
     B->>DB: Valida credenciais
     DB-->>B: Usuário válido
     B->>B: Gera access_token (15min)
@@ -445,7 +445,7 @@ export const authService = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     // Backend define cookies HttpOnly automaticamente
     const response = await apiClient.post<LoginResponse>(
-      '/api/v1/authentication/login/',
+      '/api/v1/authentication/token/',
       data
     );
 
@@ -689,7 +689,7 @@ const client = axios.create({
 
 ```typescript
 // components/ProtectedRoute.tsx
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 import { useAuthStore } from '@/stores/auth-store';
 
 interface ProtectedRouteProps {
@@ -837,12 +837,12 @@ X_FRAME_OPTIONS = 'DENY'
 export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:39100',
   ENDPOINTS: {
-    LOGIN: '/api/v1/authentication/login/',
+    LOGIN: '/api/v1/authentication/token/',
     LOGOUT: '/api/v1/authentication/logout/',
-    REFRESH_TOKEN: '/api/v1/authentication/refresh/',
-    VERIFY_TOKEN: '/api/v1/authentication/verify/',
+    REFRESH_TOKEN: '/api/v1/authentication/token/refresh/',
+    VERIFY_TOKEN: '/api/v1/authentication/token/verify/',
     ME: '/api/v1/me/',
-    REGISTER: '/api/v1/authentication/register/',
+    REGISTER: '/api/v1/users/register/',
   },
 };
 ```
