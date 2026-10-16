@@ -69,3 +69,25 @@ class Api500RegressionsTest(APITestCase):
         )
         self.assertEqual(r.status_code, 400)
         self.assertIn("destiny_account", r.data)
+
+    def test_webhook_edit_with_blank_secret_keeps_current(self) -> None:
+        payload = {"name": "W", "url": "https://example.com", "events": []}
+        r = self.client.post(
+            reverse("webhook-list-create"), payload, format="json"
+        )
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("secret", r.data)
+        r = self.client.post(
+            reverse("webhook-list-create"),
+            {**payload, "secret": "s3cret"},
+            format="json",
+        )
+        self.assertEqual(r.status_code, 201, r.data)
+        detail = reverse("webhook-detail", args=[r.data["id"]])
+        r = self.client.patch(
+            detail, {"name": "W2", "secret": ""}, format="json"
+        )
+        self.assertEqual(r.status_code, 200, r.data)
+        from webhooks.models import Webhook
+
+        self.assertEqual(Webhook.objects.get(name="W2").secret, "s3cret")
