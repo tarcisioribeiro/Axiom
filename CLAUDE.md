@@ -49,7 +49,7 @@ Axiom/
 
 **Agents / LLM** (`apps/api/agents/`): Six domain agents selected by `core/router.py`. Endpoints: `/api/v1/agents/` (ask/, stream/, history/, sessions/, status/). **Rule**: `providers/` is the **only** place in `agents/` allowed to import models from other apps — tools, domain agents, and views consume data through it. Provider functions taking `user` must be decorated with `@requires_screen(...)` (`providers/access.py`) so agents respect screen access. See `documentation/architecture/agents-llm-boundary.md`.
 
-**Async Tasks**: Worker `axiom-worker`, beat `axiom-queue` (`DatabaseScheduler`). Tests: `CELERY_TASK_ALWAYS_EAGER=True`.
+**Async Tasks**: Worker `axiom-worker`, beat `axiom-queue` (`DatabaseScheduler`). Periodic tasks live only in `CELERY_BEAT_SCHEDULE` (`app/settings.py`); `app.conf.beat_schedule` in `celery.py` is silently overridden. Tests: `CELERY_TASK_ALWAYS_EAGER=True`.
 
 **Webhooks**: `dispatch_event(event, payload, user=user)` from `webhooks.dispatch`. Signed with HMAC-SHA256 (`X-Axiom-Signature`).
 

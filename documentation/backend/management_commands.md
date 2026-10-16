@@ -746,21 +746,14 @@ crontab -e
 
 ### Celery Beat (Recomendado)
 
+Todas as tarefas periódicas ficam em `CELERY_BEAT_SCHEDULE`, em `app/settings.py` (fonte única). Não use `app.conf.beat_schedule` em `app/celery.py`: as settings sobrescrevem esse valor, e as entradas somem sem aviso. O `tests/test_beat_schedule.py` verifica que toda entrada aponta para uma task registrada.
+
 ```python
-# app/celery.py
-from celery import Celery
-from celery.schedules import crontab
-
-app = Celery('axiom')
-
-app.conf.beat_schedule = {
-    'clean-old-logs-daily': {
-        'task': 'app.tasks.clean_old_logs',
-        'schedule': crontab(hour=2, minute=0),  # 2h da manhã
-    },
-    'update-balances-weekly': {
-        'task': 'app.tasks.update_balances',
-        'schedule': crontab(day_of_week=1, hour=3, minute=0),  # Segunda 3h
+# app/settings.py
+CELERY_BEAT_SCHEDULE = {
+    "close-overdue-bills-daily": {
+        "task": "credit_cards.tasks.close_overdue_bills",
+        "schedule": crontab(hour=2, minute=0),  # 2h da manhã
     },
 }
 ```
