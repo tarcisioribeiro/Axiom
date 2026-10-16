@@ -481,90 +481,39 @@ class Command(BaseCommand):
 - Se transferências antigas não têm despesas/receitas vinculadas
 - Como verificação de integridade
 
-### 4. populate_embeddings
+### 4. vectorize_existing / index_library
 
-**Arquivo**: `ai_assistant/management/commands/populate_embeddings.py`
+**Arquivos**: `agents/management/commands/vectorize_existing.py`, `agents/management/commands/index_library.py`
 
-**Objetivo**: Popula embeddings para conteúdo existente, permitindo busca semântica.
+**Objetivo**: gerar embeddings (pgvector) para registros já existentes, permitindo busca semântica pelos agentes.
 
-**Uso**:
 ```bash
-# Indexar tudo
-python manage.py populate_embeddings --module=all
+# Embeddings de AgentEmbedding por domínio (finance, budget, planning, library, all)
+python manage.py vectorize_existing --domain=all [--reset] [--batch-size=50] [--user=<username>] [--force]
 
-# Indexar apenas financeiro
-python manage.py populate_embeddings --module=finance
-
-# Limpar e re-indexar
-python manage.py populate_embeddings --clear --module=all
-
-# Indexar para um usuário específico
-python manage.py populate_embeddings --owner-id=1
-
-# Modo dry-run
-python manage.py populate_embeddings --dry-run --module=all
-
-# Batch customizado
-python manage.py populate_embeddings --batch-size=100
+# Resumos, notas de leitura e destaques da biblioteca (chunks)
+python manage.py index_library [--user=<username>] [--force] [--dry-run] [--chunk-size=500]
 ```
 
-**Argumentos**:
-- `--module`: Módulo a indexar (`finance`, `security`, `library`, `planning`, `all`)
-- `--batch-size`: Tamanho do batch (padrão: 50)
-- `--owner-id`: Indexar apenas para um usuário
-- `--clear`: Limpar embeddings existentes antes
-- `--dry-run`: Mostrar o que seria indexado sem indexar
+### 5. Demais comandos
 
-**Estrutura simplificada**:
-```python
-class Command(BaseCommand):
-    help = 'Populate embeddings for existing content in the database'
-
-    def add_arguments(self, parser):
-        parser.add_argument('--module', type=str, choices=['finance', 'security', 'library', 'planning', 'all'], default='all')
-        parser.add_argument('--batch-size', type=int, default=50)
-        parser.add_argument('--owner-id', type=int, default=None)
-        parser.add_argument('--clear', action='store_true')
-        parser.add_argument('--dry-run', action='store_true')
-
-    def handle(self, *args, **options):
-        module = options['module']
-        batch_size = options['batch_size']
-        owner_id = options['owner_id']
-        clear = options['clear']
-        dry_run = options['dry_run']
-
-        # Verificar serviço de embedding
-        embedding_service = get_embedding_service()
-        if not embedding_service.health_check():
-            raise CommandError("Embedding service not available")
-
-        indexer = EmbeddingIndexer(batch_size=batch_size)
-
-        # Limpar se solicitado
-        if clear and not dry_run:
-            count = indexer.clear_embeddings(owner_id=owner_id)
-            self.stdout.write(f"Cleared {count} embeddings")
-
-        # Indexar por módulo
-        if module == 'all' or module == 'finance':
-            self._index_finance(indexer, owner_id, dry_run)
-        if module == 'all' or module == 'security':
-            self._index_security(indexer, owner_id, dry_run)
-        if module == 'all' or module == 'library':
-            self._index_library(indexer, owner_id, dry_run)
-        if module == 'all' or module == 'planning':
-            self._index_planning(indexer, owner_id, dry_run)
-
-        # Resumo
-        self.stdout.write(self.style.SUCCESS('Indexing complete!'))
-```
-
-**Quando usar**:
-- Após adicionar novos registros em massa
-- Após atualizar modelo de embedding
-- Para popular índice inicial
-- Como manutenção periódica
+| Comando | App | Objetivo | Argumentos |
+|---|---|---|---|
+| `check_backup_health` | app | Sai com erro se não houver backup bem-sucedido nas últimas N horas | `--max-age-hours` (26), `--backup-dir` |
+| `purge_deleted_records` | app | LGPD: hard-delete de registros soft-deleted com mais de N dias | `--days` (90), `--dry-run` |
+| `rotate_encryption_key` | app | Re-criptografa campos com a nova `ENCRYPTION_KEY` (transação única) | `--old-key`, `--new-key`, `--dry-run` |
+| `vault_recovery` | app | Diagnostica, reseta ou restaura o cofre de senhas de um usuário | `--username`, `--test-password`, `--reset --confirm`, `--restore-snapshot`, `--force-restore` |
+| `issue_theme_sync_token` | authentication | Gera/regenera o token de sync de tema (impresso uma vez) | `username` |
+| `close_overdue_bills` | credit_cards | Fecha faturas com vencimento passado | `--dry-run` |
+| `fix_installments_paid_status` | credit_cards | Corrige status das parcelas pelas faturas pagas e reseta `credit_limit` | `--dry-run` |
+| `send_due_notifications` | notifications | Gera e envia notificações de vencimento/atraso | `--dry-run`, `--member-id` |
+| `import_exercise_dataset` | personal_planning | Importação única do catálogo de exercícios (mídia no MinIO); idempotente | `--dry-run`, `--limit` |
+| `seed_wellness_interventions` | personal_planning | Popula o catálogo de intervenções de bem-estar | — |
+| `fix_storage_config_for_local` | storage | Sobrescreve as chaves MinIO do `SystemConfig` com as do ambiente (após restaurar dump de outro ambiente) | `--dry-run` |
+| `migrate_media_to_minio` | storage | Migra mídia do filesystem local para MinIO/S3 | `--dry-run` |
+| `check_vault_yield_health` | vaults | Sai com erro se `accumulated_yield` divergir de Σ receitas de rendimento | `--tolerance` |
+| `generate_vault_contributions` | vaults | Processa contribuições recorrentes agendadas do mês | `--month`, `--dry-run` |
+| `reconcile_vault_yield` | vaults | Reconcilia `accumulated_yield` e recalcula o saldo da conta associada | `--vault`, `--dry-run` |
 
 ## Criando Novos Comandos
 

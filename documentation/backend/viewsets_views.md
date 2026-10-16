@@ -109,7 +109,7 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        """POST /api/v1/logout/ - Faz logout do usuário."""
+        """POST /api/v1/authentication/logout/ - Faz logout do usuário."""
         request.user.auth_token.delete()
         return Response(
             {'detail': 'Logout efetuado com sucesso.'},
@@ -180,6 +180,8 @@ class DashboardStatsView(APIView):
 
 ### 3. ViewSets
 
+> **No Axiom:** o projeto não usa ViewSets nem routers — todas as rotas são views genéricas (`BaseListCreateView` / `BaseRetrieveUpdateDestroyView` de `app/base_views.py`) ou `APIView`, registradas explicitamente em cada `urls.py`. Esta seção e a de Custom Actions ficam como referência do DRF; ações extras são views dedicadas com rota própria (ex.: `security/passwords/<int:pk>/reveal/`).
+
 ViewSets combinam múltiplas views relacionadas em uma classe. Ideal para APIs RESTful completas.
 
 #### ModelViewSet
@@ -192,12 +194,12 @@ from rest_framework import viewsets
 class BookViewSet(viewsets.ModelViewSet):
     """
     ViewSet completo para livros:
-    - GET /api/v1/books/ - Lista todos
-    - POST /api/v1/books/ - Cria novo
-    - GET /api/v1/books/{id}/ - Detalhes
-    - PUT /api/v1/books/{id}/ - Atualiza completo
-    - PATCH /api/v1/books/{id}/ - Atualiza parcial
-    - DELETE /api/v1/books/{id}/ - Remove
+    - GET /api/v1/library/books/ - Lista todos
+    - POST /api/v1/library/books/ - Cria novo
+    - GET /api/v1/library/books/{id}/ - Detalhes
+    - PUT /api/v1/library/books/{id}/ - Atualiza completo
+    - PATCH /api/v1/library/books/{id}/ - Atualiza parcial
+    - DELETE /api/v1/library/books/{id}/ - Remove
     """
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = Book.objects.filter(deleted_at__isnull=True)
@@ -238,7 +240,7 @@ router = DefaultRouter()
 router.register(r'books', BookViewSet, basename='book')
 
 urlpatterns = [
-    path('apps/api/v1/', include(router.urls)),
+    path('api/v1/', include(router.urls)),
 ]
 ```
 
@@ -250,8 +252,8 @@ Para recursos somente leitura:
 class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet somente leitura para logs de atividade:
-    - GET /api/v1/activity-logs/ - Lista todos
-    - GET /api/v1/activity-logs/{id}/ - Detalhes
+    - GET /api/v1/security/activity-logs/ - Lista todos
+    - GET /api/v1/security/activity-logs/{id}/ - Detalhes
     """
     permission_classes = [IsAuthenticated]
     serializer_class = ActivityLogSerializer
@@ -275,7 +277,7 @@ class PasswordViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def reveal(self, request, pk=None):
         """
-        POST /api/v1/passwords/{id}/reveal/
+        POST /api/v1/security/passwords/{id}/reveal/
 
         Revela senha descriptografada (com log de auditoria).
         """
@@ -320,7 +322,7 @@ class PasswordViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def generate_password(self, request):
         """
-        POST /api/v1/passwords/generate_password/
+        POST /api/v1/security/passwords/generate/
         Body: { "length": 16, "include_symbols": true }
 
         Gera senha aleatória segura.
@@ -928,6 +930,6 @@ return Response(error, status=status.HTTP_404_NOT_FOUND)
 
 ## Próximos Passos
 
-- [Middleware e Signals](./middleware-signals.md) - Interceptadores e eventos
-- [Criptografia](./criptografia.md) - Sistema de criptografia Fernet
-- [Comandos Management](./comandos-management.md) - Comandos customizados
+- [Middleware e Signals](./middleware_signals.md) - Interceptadores e eventos
+- [Criptografia](./criptography.md) - Sistema de criptografia Fernet
+- [Comandos Management](./management_commands.md) - Comandos customizados

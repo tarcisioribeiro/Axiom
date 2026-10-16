@@ -6,7 +6,7 @@ O Axiom utiliza **TailwindCSS** como framework CSS principal, com tema customiza
 
 ## Stack de Estilização
 
-- **TailwindCSS 3.x** - Utility-first CSS framework
+- **TailwindCSS 4** - Utility-first CSS framework
 - **Dracula Theme** - Paleta de cores oficial
 - **CSS Variables** - Tema dinâmico e customizável
 - **PostCSS** - Processamento CSS
@@ -85,7 +85,7 @@ apps/web/
 ### Estrutura
 
 ```css
-/* src/styles/globals.css */
+/* src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -638,5 +638,5 @@ function PageHeader({ title, children }) {
 
 ## Próximos Passos
 
-- **Componentes UI:** Veja [componentes-ui.md](./componentes-ui.md) para componentes prontos
-- **Layout:** Veja [estrutura-projeto.md](./estrutura-projeto.md) para organização geral
+- **Componentes UI:** Veja [componentes-ui.md](./ui_components.md) para componentes prontos
+- **Layout:** Veja [estrutura-projeto.md](./project_structure.md) para organização geral

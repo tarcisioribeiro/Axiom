@@ -131,21 +131,19 @@ Axiom/
 │   │   ├── authentication/     # JWT, 2FA, verificação de e-mail
 │   │   ├── members/            # Sistema unificado de pessoas/membros
 │   │   └── app/                # Configuração central, BaseModel, criptografia
-│   ├── web/                     # Frontend React (porta 39101)
-│   │   ├── src/
-│   │   │   ├── components/     # common/ e ui/ (Radix + Tailwind)
-│   │   │   ├── pages/          # Páginas/rotas (lazy-loaded)
-│   │   │   ├── services/       # Camada de serviços (BaseService + Axios)
-│   │   │   ├── stores/         # Estado global (Zustand)
-│   │   │   ├── hooks/          # Hooks compartilhados
-│   │   │   ├── lib/            # Utilitários (formatters, animations, etc.)
-│   │   │   ├── config/         # Constantes, traduções de dados, endpoints
-│   │   │   ├── i18n/           # Localização de UI (react-i18next)
-│   │   │   ├── types/          # Definições TypeScript
-│   │   │   └── test/           # Setup de testes (Vitest)
-│   │   └── public/             # Arquivos estáticos
-│   └── mobile/                  # App Flutter (scaffolding — login screen
-│                                 # estático, sem integração de API ainda)
+│   └── web/                     # Frontend React (porta 39101)
+│       ├── src/
+│       │   ├── components/     # common/ e ui/ (Radix + Tailwind)
+│       │   ├── pages/          # Páginas/rotas (lazy-loaded)
+│       │   ├── services/       # Camada de serviços (BaseService + Axios)
+│       │   ├── stores/         # Estado global (Zustand)
+│       │   ├── hooks/          # Hooks compartilhados
+│       │   ├── lib/            # Utilitários (formatters, animations, etc.)
+│       │   ├── config/         # Constantes, traduções de dados, endpoints
+│       │   ├── i18n/           # Localização de UI (react-i18next)
+│       │   ├── types/          # Definições TypeScript
+│       │   └── test/           # Setup de testes (Vitest)
+│       └── public/             # Arquivos estáticos
 ├── infra/
 │   ├── k8s/                     # Manifests Kubernetes (kustomize base + overlays)
 │   ├── docker/                   # docker-compose.yml + Dockerfiles auxiliares (db-backup)
@@ -166,7 +164,7 @@ Axiom/
 
 ### 1. Camada de Apresentação (Frontend)
 
-**Tecnologias**: React 19, Vite 7, TypeScript 5.9, TailwindCSS 3, Radix UI, React Router v7, Recharts, Framer Motion
+**Tecnologias**: React 19, Vite 8, TypeScript 6, TailwindCSS 4, Radix UI, React Router v8, Recharts, Framer Motion
 
 A camada de apresentação é responsável pela interface do usuário e interações. Utiliza componentes React funcionais com hooks e TypeScript para tipagem forte.
 
@@ -214,7 +212,7 @@ export const accountsService = {
 
 ### 3. Camada de Backend (Django)
 
-**Tecnologias**: Django 5.2.16, Django REST Framework 3.16.1
+**Tecnologias**: Django 6.0, Django REST Framework 3.17
 
 O backend é organizado em apps Django independentes, cada um com responsabilidade específica. Usa views genéricas do DRF (não ViewSets) através dos mixins `BaseListCreateView` / `BaseRetrieveUpdateDestroyView`.
 
@@ -533,7 +531,7 @@ sequenceDiagram
 - **Models**: PascalCase (ex: `BankAccount`)
 - **Variáveis/funções**: snake_case (ex: `get_balance`)
 - **Constantes**: UPPER_SNAKE_CASE (ex: `DEFAULT_CURRENCY`)
-- **URLs**: kebab-case (ex: `/api/v1/bank-accounts/`)
+- **URLs**: kebab-case (ex: `/api/v1/bank-reconciliation/imports/`)
 
 ### Frontend (TypeScript/React)
 

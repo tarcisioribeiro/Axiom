@@ -409,7 +409,7 @@ Consulte [`backend/agents.md`](../backend/agents.md) para pipeline completo (dia
 ### Funcionalidades
 - Cadastro único para todas as pessoas relacionadas
 - Flags configuráveis:
-  - `is_user` - Usuário do sistema
+  - `user` (vínculo opcional com o usuário do sistema)
   - `is_creditor` - Pode ser credor em empréstimos
   - `is_benefited` - Pode ser beneficiário
 - Documento único (CPF/CNPJ)
@@ -466,21 +466,8 @@ Consulte [`backend/agents.md`](../backend/agents.md) para pipeline completo (dia
 - Cache estratégico (Redis) com TTLs alinhados ao frontend (TanStack Query)
 - Paginação `PAGE_SIZE=50` com `PageNumberPagination`
 
-## Funcionalidades Pendentes de Implementação
-
-Consulte [`development/pending_features.md`](../development/pending_features.md) para guias detalhados de como implementar cada item.
-
-| Funcionalidade | Status |
-|---|---|
-| Notificações por email | ✅ Backend pronto — só falta configurar SMTP no `.env` |
-| Import de extrato bancário (frontend) | 🚧 Backend pronto — falta UI de 3 etapas |
-| Export ZIP do cofre (Security) | 📋 Planejado |
-| Reset de senha | 📋 Planejado |
-| Confirmação de email | 📋 Planejado |
-| 2FA / TOTP | 📋 Planejado |
-
 ## Links Relacionados
 
-- [Arquitetura do Sistema](../02-architecture/visao-geral.md)
-- [Documentação da API](../05-apps/api/endpoints.md)
-- [Guia de Desenvolvimento](../08-development/guia-desenvolvimento.md)
+- [Arquitetura do Sistema](../architecture/overview.md)
+- [Documentação da API](../api/endpoints.md)
+- [Guia de Desenvolvimento](../development/development_workflow.md)

@@ -6,7 +6,7 @@ Padrões de UI/UX definidos pelo product owner desde 25/08/2026. Toda mudança v
 
 ## 1. Escopo e convenções
 
-- **Escopo:** todas as regras valem **apenas para o app web, usado em navegadores** (`apps/web`). O app mobile (Flutter, `apps/mobile`) não segue este documento.
+- **Escopo:** todas as regras valem para o app web, usado em navegadores (`apps/web`).
 - **Resolução de referência:** monitor 1920×1080 (ou maior) com a barra de tarefas do sistema e o navegador **não maximizado**, com abas, barra de endereço e barra de favoritos. Isso deixa uma **viewport útil de ~1920×900 px**. As regras marcadas com **[desktop]** são medidas com a viewport em **880 px de altura** (margem de segurança). Em viewports menores, modais e listas podem ter barra de rolagem.
 - **Legenda:**
   - **[regra]**: padrão global, vale para todas as telas e módulos.

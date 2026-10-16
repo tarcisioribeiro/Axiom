@@ -11,8 +11,7 @@ Full-stack monorepo: Django REST Framework backend (port 39100) + React/TypeScri
 Axiom/
 ├── apps/
 │   ├── api/       # Django backend (port 39100)
-│   ├── web/       # React frontend (port 39101)
-│   └── mobile/    # Flutter app
+│   └── web/       # React frontend (port 39101)
 ├── infra/
 │   ├── k8s/       # Kubernetes manifests (kustomize)
 │   ├── docker/    # docker-compose.yml
@@ -23,14 +22,14 @@ Axiom/
 
 ### Backend (Django)
 
-**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, receivables, vaults, dashboard, authentication, members, app (core), security, library, personal_planning, notifications, budgets, bank_reconciliation, monthly_planning, agents, exchange_rates, webhooks, admin_panel
+**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, receivables, vaults, dashboard, authentication, members, app (core), security, library, personal_planning, notifications, budgets, bank_reconciliation, monthly_planning, agents, exchange_rates, webhooks, admin_panel, storage
 
 **Large flat apps** — `library`, `security`, `personal_planning` are each a **single flat app** (one `models.py`/`views.py`), not sub-packages. Don't create sub-directories.
 - `library`: books/authors/readings, Intellect extension (courses, skills, flashcards SM-2, knowledge graph, `IntellectBadge`)
 - `security`: password vault (passwords, cards, accounts, archives), vault config/session keys, credential-sharing tokens
 - `personal_planning`: habits/goals (`TaskInstance` lazily generated from `RoutineTask`), gamification (XP/badges — unrelated to `library`'s `IntellectBadge`), wellness center, workout/nutrition tracking. Exercise images come only from `ExerciseDatasetEntry` (via `Exercise.dataset_entry` FK); no free-form upload.
 
-**Base Model** (`app/models.py`): uuid PK, timestamps, audit fields (`created_by`, `updated_by`, `deleted_by`, `deleted_at`), `is_deleted`. All models extend this. Also defines shared choices: `PAYMENT_FREQUENCY_CHOICES`, `PAYMENT_METHOD_CHOICES`, `LOAN_STATUS_CHOICES`, `BILL_STATUS_CHOICES`.
+**Base Model** (`app/models.py`): integer PK + unique `uuid` field, timestamps, audit fields (`created_by`, `updated_by`, `deleted_by`, `deleted_at`), `is_deleted`. All models extend this. Also defines shared choices: `PAYMENT_FREQUENCY_CHOICES`, `PAYMENT_METHOD_CHOICES`, `LOAN_STATUS_CHOICES`, `BILL_STATUS_CHOICES`.
 
 **View Pattern**: DRF generic views (not ViewSets). Extend `BaseListCreateView` / `BaseRetrieveUpdateDestroyView` (`app/base_views.py`) — `IsAuthenticated` + `GlobalDefaultPermission` already included.
 
@@ -40,7 +39,7 @@ Axiom/
 
 **Soft Delete**: filter `is_deleted=False` in querysets.
 
-**Signals**: accounts, credit_cards, loans, payables, receivables, personal_planning, transfers — registered via `apps.py:ready()`.
+**Signals**: accounts, admin_panel, authentication, budgets, credit_cards, expenses, library, loans, payables, personal_planning, receivables, revenues, security, transfers, vaults — registered via `apps.py:ready()`.
 
 **Encryption** (`app/encryption.py:FieldEncryption`, Fernet): encrypted fields use `_` prefix. Decryption cache per-request via `DecryptionCacheMiddleware`. Use `defer('_field')` in list querysets.
 
@@ -54,7 +53,7 @@ Axiom/
 
 **Webhooks**: `dispatch_event(event, payload, user=user)` from `webhooks.dispatch`. Signed with HMAC-SHA256 (`X-Axiom-Signature`).
 
-**Misc**: All endpoints `/api/v1/`. `PageNumberPagination` PAGE_SIZE=50. `DjangoFilterBackend`. Timezone `America/Sao_Paulo` — always `timezone.now()`. PostgreSQL 16; tests use SQLite in-memory. Redis cache prefix `axiom`. TTLs: `CACHE_TTL_DASHBOARD_STATS` 60s, `CACHE_TTL_ACCOUNT_BALANCES` 30s, `CACHE_TTL_CATEGORY_BREAKDOWN` 300s, `CACHE_TTL_BALANCE_FORECAST` 120s.
+**Misc**: All endpoints `/api/v1/`. `PageNumberPagination` PAGE_SIZE=50. `DjangoFilterBackend`. Timezone `America/Sao_Paulo` — always `timezone.now()`; for dates use `timezone.localdate()` (never `timezone.now().date()`, which is the UTC date). PostgreSQL 16; tests use SQLite in-memory. Redis cache prefix `axiom`. TTLs: `CACHE_TTL_DASHBOARD_STATS` 60s, `CACHE_TTL_ACCOUNT_BALANCES` 30s, `CACHE_TTL_CATEGORY_BREAKDOWN` 300s, `CACHE_TTL_BALANCE_FORECAST` 120s.
 
 **Key models**:
 - `Receivable`: mirror of `payables`; recording receipt (`received_value`) triggers revenue, not creation. Statuses: `active`, `received`, `overdue`, `cancelled`.
@@ -72,7 +71,7 @@ docker compose -f infra/docker/docker-compose.yml --project-directory . up front
 ```
 Depois, usando a extensão claude-in-chrome, abra `localhost:39101` e faça login como usuário comum usando os valores de `AXIOM_LOCAL_USERNAME` e `AXIOM_LOCAL_USER_PASSWORD` do `.env`.
 
-**Stack**: React 19, Vite 7, TypeScript 5.9, TailwindCSS 3, Radix UI, Zustand, React Router v7, Recharts, Framer Motion, React Hook Form + Zod, TanStack Query v5
+**Stack**: React 19, Vite 8, TypeScript 6, TailwindCSS 4, Radix UI, Zustand, React Router v8, Recharts, Framer Motion, React Hook Form + Zod, TanStack Query v5
 
 **Data fetching**: use `useQuery` + `useMutation` (TanStack Query) — not the older `use-crud-page.ts`. Client in `src/lib/query-client.ts`.
 
@@ -105,14 +104,6 @@ Depois, usando a extensão claude-in-chrome, abra `localhost:39101` e faça logi
 **Import alias**: `@/` → `apps/web/src/`
 
 **Pre-commit**: `pre-commit` runs black/isort/flake8/mypy (backend); `husky` + `lint-staged` runs ESLint + Prettier (frontend).
-
-### Mobile (Flutter)
-
-**Stack**: Flutter 3.27.x / Dart 3.6.x, Material 3. Auth via `dio` + `PersistCookieJar` (same httpOnly-cookie model as web). State via `flutter_riverpod`. Navigation via `go_router` (4 bottom-nav tabs). Portuguese enum labels in `utils/choice_labels.dart`.
-
-**Scope**: daily-use subset (finance, planning, library, wellness, vault, AI chat). Reports/config/admin stay web-only. LLM source is always `agents/` — mobile calls existing endpoints only.
-
-**Dependencies**: pinned exact versions in `pubspec.yaml`; `pubspec.lock` committed.
 
 ## Development Commands
 
@@ -164,14 +155,6 @@ npm run storybook
 ```
 
 **Testing stack**: Vitest 4 + @testing-library/react v16 + happy-dom. `globals: false` — import `{ describe, it, expect, vi }` explicitly. Pre-push hook runs `test:coverage` automatically.
-
-### Mobile
-```bash
-cd apps/mobile
-flutter pub get && flutter run
-flutter analyze && flutter test --coverage
-dart format --set-exit-if-changed .
-```
 
 ### CI/CD Validation
 ```bash

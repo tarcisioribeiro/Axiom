@@ -37,9 +37,6 @@
 #                      uma MR só existe dentro de uma pipeline de MR real)
 #   lint:secrets       gitleaks (opcional local — obrigatório no GitLab CI)
 #
-# Mobile não tem jobs no GitLab CI (removidos — ver CLAUDE.md) — rode os
-# comandos Flutter diretamente para lint/test/build local.
-#
 # Pré-requisitos:
 #   - Docker + docker compose com o serviço 'api' rodando (só para lint:migrations)
 #   - Node.js 20+ com apps/web/node_modules instalado no host

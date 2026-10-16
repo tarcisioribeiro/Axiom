@@ -450,7 +450,7 @@ docker-compose exec api python manage.py migrate --fake-initial
 ### Loop infinito de refresh
 
 **Sintomas:**
-- Requisições infinitas para `/api/v1/auth/refresh/`
+- Requisições infinitas para `/api/v1/authentication/token/refresh/`
 - Console cheio de erros 401
 
 **Solução:**

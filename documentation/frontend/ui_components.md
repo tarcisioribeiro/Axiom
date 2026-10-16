@@ -15,37 +15,47 @@ O Axiom utiliza **shadcn/ui** como base para seus componentes de interface, cons
 
 ```
 src/components/ui/
-├── alert-dialog.tsx      # Diálogos de confirmação
-├── badge.tsx             # Badges de status
-├── button.tsx            # Botões com variantes
-├── card.tsx              # Cards de conteúdo
-├── checkbox.tsx          # Checkboxes
-├── circular-progress.tsx # Indicador circular de progresso
-├── currency-input.tsx    # Input BRL (R$) com variantes de cor
-├── date-picker.tsx       # Seletor de datas
-├── dialog.tsx            # Modais
-├── dropdown-menu.tsx     # Menus dropdown
-├── file-input.tsx        # Upload de arquivos
-├── form-field.tsx        # Campo de formulário com label e erro
-├── form-section.tsx      # Agrupador visual de campos com título+ícone
-├── icon-picker.tsx       # Seletor de ícones Lucide
-├── input.tsx             # Campos de texto
-├── label.tsx             # Labels de formulário
-├── popover.tsx           # Popovers
-├── progress.tsx          # Barras de progresso
-├── scroll-area.tsx       # Área com scroll customizado
-├── select.tsx            # Dropdowns/selects
-├── skeleton-variants.tsx # Variantes de skeleton pré-definidas
-├── skeleton.tsx          # Loading skeleton base
-├── star-rating.tsx       # Avaliação por estrelas (1-5)
-├── status-toggle.tsx     # Toggle binário de status (pill)
-├── success-animation.tsx # Animação de sucesso (checkmark)
-├── table.tsx             # Tabelas
-├── textarea.tsx          # Campos de texto multi-linha
-├── toast.tsx             # Notificações toast
-├── toaster.tsx           # Container de toasts
-├── tooltip.tsx           # Tooltips
-└── visually-hidden.tsx   # Texto acessível oculto visualmente
+├── alert-dialog.tsx        # Diálogos de confirmação
+├── badge.tsx               # Badges de status
+├── button-tooltip.tsx      # Tooltip padrão para botões de ícone
+├── button.tsx              # Botões com variantes
+├── card.tsx                # Cards de conteúdo
+├── checkbox.tsx            # Checkboxes
+├── circular-progress.tsx   # Indicador circular de progresso
+├── collapsible-section.tsx # `Collapse` (expandir/recolher com animação)
+├── color-picker.tsx        # Swatch + paleta em popover + hex
+├── currency-input.tsx      # Input BRL (R$) com variantes de cor
+├── date-picker.tsx         # Seletor de datas
+├── decimal-input.tsx       # Decimal pt-BR (vírgula), sufixo `unit`, `step` opcional
+├── dialog.tsx              # Modais
+├── dropdown-menu.tsx       # Menus dropdown
+├── file-input.tsx          # Upload de arquivos
+├── form-field.tsx          # Campo de formulário com label e erro
+├── form-section.tsx        # Agrupador visual de campos com título+ícone
+├── icon-picker.tsx         # Seletor de ícones Lucide
+├── input.tsx               # Campos de texto
+├── label.tsx               # Labels de formulário
+├── number-stepper.tsx      # Inteiro com − / + e ↑/↓ (`optional` aceita vazio)
+├── plain-button.tsx        # Botão sem estilo (base acessível)
+├── popover.tsx             # Popovers
+├── progress.tsx            # Barras de progresso
+├── scroll-area.tsx         # Área com scroll customizado
+├── select.tsx              # Dropdowns/selects
+├── skeleton-variants.tsx   # Variantes de skeleton pré-definidas
+├── skeleton.tsx            # Loading skeleton base
+├── slider.tsx              # Range nativo estilizado (`tone`, `floor`)
+├── star-rating.tsx         # Avaliação por estrelas (1-5)
+├── status-toggle.tsx       # Toggle binário de status (pill)
+├── success-animation.tsx   # Animação de sucesso (checkmark)
+├── table.tsx               # Tabelas
+├── tabs.tsx                # Abas
+├── textarea.tsx            # Campos de texto multi-linha
+├── time-picker.tsx         # Seletor de horário
+├── toast.tsx               # Notificações toast
+├── toaster.tsx             # Container de toasts
+├── tooltip-bubble.tsx      # Balão de tooltip
+├── tooltip.tsx             # Tooltips
+└── visually-hidden.tsx     # Texto acessível oculto visualmente
 ```
 
 ## Componentes Principais
@@ -151,63 +161,42 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 
+// Sempre controlado (open/onOpenChange); o botão que abre fica na página.
 <Dialog open={isOpen} onOpenChange={setIsOpen}>
-  <DialogTrigger asChild>
-    <Button>Abrir Modal</Button>
-  </DialogTrigger>
   <DialogContent>
     <DialogHeader>
-      <DialogTitle>Título do Modal</DialogTitle>
-      <DialogDescription>
-        Descrição do conteúdo do modal
-      </DialogDescription>
+      <DialogTitle mode={editing ? 'edit' : 'create'}>Conta</DialogTitle>
+      <DialogDescription>Formulário de conta</DialogDescription>
     </DialogHeader>
-    {/* Conteúdo do modal */}
+    {/* Conteúdo */}
+    <DialogFooter>{/* Cancelar (outline + X) · Salvar (default + Save) */}</DialogFooter>
   </DialogContent>
 </Dialog>
 ```
+
+Regras de header/footer/descrição: ver [design-patterns.md](./design-patterns.md) §2.
 
 ### 5. Alert Dialog
 
 Dialog de confirmação para ações críticas.
 
-```tsx
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+Use o hook `useAlertDialog` (renderizado globalmente pelo `AlertDialogProvider`) em vez de montar o `AlertDialog` manualmente:
 
-<AlertDialog>
-  <AlertDialogTrigger asChild>
-    <Button variant="destructive">Excluir</Button>
-  </AlertDialogTrigger>
-  <AlertDialogContent>
-    <AlertDialogHeader>
-      <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-      <AlertDialogDescription>
-        Esta ação não pode ser desfeita. O registro será permanentemente excluído.
-      </AlertDialogDescription>
-    </AlertDialogHeader>
-    <AlertDialogFooter>
-      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-      <AlertDialogAction onClick={handleDelete}>
-        Confirmar
-      </AlertDialogAction>
-    </AlertDialogFooter>
-  </AlertDialogContent>
-</AlertDialog>
+```tsx
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+
+const { showDelete, showConfirm } = useAlertDialog();
+
+const handleDelete = async () => {
+  if (await showDelete('esta conta')) {
+    deleteMutation.mutate(account.id);
+  }
+};
 ```
 
 ### 6. Card
@@ -492,8 +481,7 @@ Todos os componentes são construídos sobre Radix UI primitives, garantindo:
 ### Composição
 ```tsx
 // Radix permite composição flexível
-<Dialog>
-  <DialogTrigger />
+<Dialog open={open} onOpenChange={setOpen}>
   <DialogContent>
     <DialogHeader>
       <DialogTitle />
@@ -511,7 +499,7 @@ Componentes como Dialog, Popover e Toast usam **Portals** do React para renderiz
 
 ### Variáveis CSS
 
-O tema é definido em `src/styles/globals.css` usando CSS variables:
+O tema é definido em `src/index.css` usando CSS variables:
 
 ```css
 :root {
@@ -602,28 +590,11 @@ animation: {
 
 ```tsx
 // ✅ Bom - componente customizado reutilizável
-function DeleteButton({ onDelete, itemName }) {
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="destructive">Excluir</Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-          <AlertDialogDescription>
-            Deseja excluir "{itemName}"?
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onDelete}>
-            Excluir
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
+function useDeleteAction(onDelete: () => void, itemName: string) {
+  const { showDelete } = useAlertDialog();
+  return async () => {
+    if (await showDelete(`"${itemName}"`)) onDelete();
+  };
 }
 ```
 
@@ -664,5 +635,5 @@ function DeleteButton({ onDelete, itemName }) {
 
 ## Próximos Passos
 
-- **Estilização:** Veja [estilizacao.md](./estilizacao.md) para detalhes sobre o tema Dracula
-- **Roteamento:** Veja [roteamento.md](./roteamento.md) para integração com rotas
+- **Estilização:** Veja [estilizacao.md](./stylization.md) para detalhes sobre o tema Dracula
+- **Roteamento:** Veja [roteamento.md](./routing.md) para integração com rotas

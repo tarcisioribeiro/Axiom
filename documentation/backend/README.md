@@ -2,7 +2,7 @@
 
 Documentação técnica do backend Django REST Framework do Axiom.
 
-**Stack**: Django 5.x + DRF · PostgreSQL 16 · Redis · MinIO · JWT HttpOnly cookies · Fernet encryption
+**Stack**: Django 6.x + DRF · PostgreSQL 16 · Redis · MinIO · JWT HttpOnly cookies · Fernet encryption
 
 ## Conteúdo
 

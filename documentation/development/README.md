@@ -75,16 +75,6 @@ Diagnóstico e resolução de problemas comuns:
 - Erros de criptografia
 - Problemas de CORS
 
-### 10. [Funcionalidades Pendentes](./pending_features.md)
-Funcionalidades com infraestrutura parcial que precisam de implementação ou configuração:
-- Notificações por email (configuração SMTP)
-- Reset de senha
-- Confirmação de email no cadastro
-- Export ZIP do módulo Security
-- Import de extrato bancário (fluxo frontend)
-- Vault Health Report (página frontend)
-- 2FA / Autenticação de dois fatores
-
 ## Início Rápido
 
 Se você está começando agora, siga esta sequência:
@@ -111,14 +101,13 @@ Axiom/
 │   │   ├── security/       # Senhas
 │   │   ├── library/        # Biblioteca de livros
 │   │   └── app/            # Configurações centrais
-│   ├── web/                # Frontend React + TypeScript
-│   │   ├── src/
-│   │   │   ├── components/ # Componentes React
-│   │   │   ├── pages/      # Páginas/rotas
-│   │   │   ├── services/   # API clients
-│   │   │   └── stores/     # Estado global (Zustand)
-│   │   └── public/         # Assets estáticos
-│   └── mobile/              # Reservado para o futuro app mobile
+│   └── web/                # Frontend React + TypeScript
+│       ├── src/
+│       │   ├── components/ # Componentes React
+│       │   ├── pages/      # Páginas/rotas
+│       │   ├── services/   # API clients
+│       │   └── stores/     # Estado global (Zustand)
+│       └── public/         # Assets estáticos
 ├── infra/
 │   ├── k8s/                  # Manifests Kubernetes
 │   ├── docker/                # docker-compose.yml + Dockerfiles auxiliares
@@ -129,8 +118,8 @@ Axiom/
 ## Tecnologias Principais
 
 ### Backend
-- **Django 5.2** - Framework web
-- **Django REST Framework 3.16** - API REST
+- **Django 6.0** - Framework web
+- **Django REST Framework 3.17** - API REST
 - **PostgreSQL 16** - Banco de dados
 - **pgvector** - Extensão para embeddings vetoriais
 - **Redis 7** - Cache semântico
@@ -138,9 +127,9 @@ Axiom/
 - **Fernet** - Criptografia de dados sensíveis
 ### Frontend
 - **React 19** - Biblioteca UI
-- **TypeScript 5.9** - Tipagem estática
-- **Vite 7** - Build tool
-- **TailwindCSS 3.4** - Framework CSS
+- **TypeScript 6** - Tipagem estática
+- **Vite 8** - Build tool
+- **TailwindCSS 4** - Framework CSS
 - **Radix UI** - Componentes acessíveis
 - **Zustand 5** - Gerenciamento de estado
 - **React Hook Form** - Formulários

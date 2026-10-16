@@ -79,7 +79,7 @@ Visão de alto nível das camadas e responsabilidades.
 ```mermaid
 graph TB
     subgraph Frontend["Frontend (React + TypeScript)"]
-        Pages["Pages\n(React Router v7, ~90 rotas lazy-loaded)"]
+        Pages["Pages\n(React Router v8, ~90 rotas lazy-loaded)"]
         Components["Components\n(Radix UI + Tailwind)"]
         Stores["Stores\n(Zustand)"]
         TQ["Server State\n(TanStack Query v5)"]

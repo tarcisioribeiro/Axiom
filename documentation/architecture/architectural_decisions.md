@@ -121,7 +121,7 @@ Necessidade de um framework backend Python robusto para API REST com ORM, admin 
 
 ### Decisão
 
-**Escolhido**: React 18
+**Escolhido**: React 19
 
 ### Contexto
 
@@ -142,7 +142,7 @@ Necessidade de framework frontend moderno para construir SPA responsiva.
 - Flexibilidade para escolher bibliotecas complementares
 - Excelente integração com TypeScript
 - Hooks modernos para lógica reutilizável
-- React Router v7 é robusto
+- React Router v8 é robusto
 - Mercado de trabalho valoriza React
 
 **Por que não Vue?**
@@ -762,7 +762,7 @@ Como versionar a API para permitir evolução sem quebrar clientes existentes.
 ```python
 # urls.py
 urlpatterns = [
-    path('apps/api/v1/', include('myapp.urls')),
+    path('api/v1/', include('myapp.urls')),
     # Futuro: path('apps/api/v2/', include('myapp.urls_v2')),
 ]
 ```
@@ -889,6 +889,8 @@ O módulo de Agentes precisa de LLM para chat e embeddings. Diferentes usuários
 
 ## 16. Flutter vs. React Native vs. Nativo
 
+> **Status: revogada.** O app Flutter (`apps/mobile/`) foi removido do monorepo; o Axiom é atendido apenas pelo app web (`apps/web/`). Registro mantido por histórico.
+
 ### Decisão
 
 **Escolhido**: Flutter (Dart)
@@ -941,7 +943,7 @@ reservado; esta decisão define a stack para o scaffolding inicial.
 |---------|---------|-----------------|
 | Repositório | Monorepo | Sincronia apps/web/backend |
 | Backend Framework | Django REST Framework | Ecosystem completo |
-| Frontend Framework | React 18 | Ecosystem e comunidade |
+| Frontend Framework | React 19 | Ecosystem e comunidade |
 | Linguagem Frontend | TypeScript | Type safety |
 | Banco de Dados | PostgreSQL + pgvector | Relacional + vetorial |
 | Auth Token Storage | Cookies HttpOnly | Segurança contra XSS |
@@ -954,7 +956,6 @@ reservado; esta decisão define a stack para o scaffolding inicial.
 | API Versioning | URL path | Clareza |
 | Backend Structure | Apps modulares | Separação de responsabilidades |
 | LLM | Multi-provider (Ollama/Groq/Anthropic) | Flexibilidade privacidade vs. qualidade |
-| Mobile | Flutter (Dart) | Codebase único Android/iOS, UI consistente |
 
 ## Princípios Orientadores
 
@@ -981,6 +982,6 @@ Para decisões arquiteturais futuras:
 
 ## Links Relacionados
 
-- [Visão Geral da Arquitetura](./visao-geral.md)
-- [Fluxo de Dados](./fluxo-dados.md)
-- [Guia de Desenvolvimento](../08-development/guia-desenvolvimento.md)
+- [Visão Geral da Arquitetura](./overview.md)
+- [Fluxo de Dados](./data_flow.md)
+- [Guia de Desenvolvimento](../development/development_workflow.md)

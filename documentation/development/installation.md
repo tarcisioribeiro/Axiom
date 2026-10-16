@@ -522,7 +522,7 @@ brew services list  # macOS
 ### Erro ao instalar dependências Python
 
 ```bash
-# Certifique-se de usar Python 3.11+
+# Certifique-se de usar Python 3.12+
 python --version
 
 # Atualize pip

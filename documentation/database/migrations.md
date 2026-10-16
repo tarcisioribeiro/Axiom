@@ -1250,7 +1250,7 @@ Antes de fazer deploy com migrations:
 ## Próximos Passos
 
 - [Schema Completo](./schema.md)
-- [Índices e Otimização](./indices-otimizacao.md)
+- [Índices e Otimização](./index_otimization.md)
 - [Extensão pgvector](./pgvector.md)
 
 ---
