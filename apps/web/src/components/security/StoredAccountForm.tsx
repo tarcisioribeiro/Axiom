@@ -143,7 +143,11 @@ export function StoredAccountForm({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       <div className="gap-lg grid lg:grid-cols-2">
         <div className="space-y-lg">
           <FormSection

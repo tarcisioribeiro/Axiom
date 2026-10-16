@@ -177,7 +177,7 @@ export function ConfigEditDialog({
   return (
     <Dialog open={!!config} onOpenChange={(o) => !o && close()}>
       <DialogContent size="sm">
-        <form onSubmit={handleSubmit}>
+        <form noValidate onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle mode="edit">{config?.label}</DialogTitle>
             <DialogDescription>{config?.key}</DialogDescription>

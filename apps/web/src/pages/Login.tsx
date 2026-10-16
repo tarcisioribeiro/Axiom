@@ -108,7 +108,7 @@ export default function Login() {
         </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleVerify2FA} className="space-y-md">
+        <form noValidate onSubmit={handleVerify2FA} className="space-y-md">
           <div className="space-y-sm">
             <Label className="gap-xs flex items-center" htmlFor="twoFactorCode">
               <ShieldCheck className="text-muted-foreground h-3.5 w-3.5" />
@@ -186,7 +186,7 @@ export default function Login() {
                 </div>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-md">
+                <form noValidate onSubmit={handleSubmit} className="space-y-md">
                   <div className="space-y-sm">
                     <Label className="gap-xs flex items-center" htmlFor="username">
                       <AtSign className="text-muted-foreground h-3.5 w-3.5" />

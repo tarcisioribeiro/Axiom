@@ -116,7 +116,7 @@ export const FixedExpenseForm = ({
   const watchedAllowValueEdit = watch('allow_value_edit');
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">

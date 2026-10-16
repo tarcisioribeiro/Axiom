@@ -32,6 +32,7 @@ export function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
 
   return (
     <form
+      noValidate
       onSubmit={(e) => {
         e.preventDefault();
         mutation.mutate(password);

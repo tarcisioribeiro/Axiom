@@ -106,7 +106,7 @@ export function HighlightForm({
   };
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
+    <form noValidate onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
       {!fixedBookId && (
         <div className="space-y-sm">
           <Label className="gap-xs flex items-center" htmlFor="hl-book">

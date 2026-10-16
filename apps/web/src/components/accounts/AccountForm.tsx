@@ -120,7 +120,11 @@ export const AccountForm: React.FC<AccountFormProps> = ({
     balanceVal > 0 ? 'success' : balanceVal < 0 ? 'destructive' : 'default';
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       {/* Mini preview da conta */}
       <div className="border-border/60 from-muted/40 to-muted/10 p-md relative overflow-hidden rounded-lg border bg-gradient-to-br">
         <div className="gap-sm flex items-center">

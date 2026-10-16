@@ -1826,7 +1826,11 @@ function ExerciseCatalogForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="gap-md flex min-h-0 flex-1 flex-col">
+    <form
+      noValidate
+      onSubmit={handleSubmit}
+      className="gap-md flex min-h-0 flex-1 flex-col"
+    >
       {/* Só os campos rolam; título (DialogHeader) e rodapé ficam fixos */}
       <div className="space-y-lg px-xs">
         {/* Nome */}

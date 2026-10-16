@@ -83,7 +83,11 @@ export function DailyReflectionForm({
   }, [reflection, setValue]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       <FormSection
         title={t('pages.dailyReflections.form.sectionReflection')}
         icon={MessageSquare}

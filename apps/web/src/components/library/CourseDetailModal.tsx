@@ -333,7 +333,7 @@ function TitleFormDialog({
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-md">
-        <form onSubmit={submit}>
+        <form noValidate onSubmit={submit}>
           <DialogHeader>
             <DialogTitle mode={mode}>{dialogTitle}</DialogTitle>
             <VisuallyHidden>
@@ -842,7 +842,11 @@ export function AddSessionForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-md">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit, notifyFormErrors)}
+      className="space-y-md"
+    >
       <div className="gap-md grid grid-cols-2">
         <div className="space-y-xs">
           <Label className="gap-xs flex items-center">

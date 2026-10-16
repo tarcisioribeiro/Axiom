@@ -462,6 +462,21 @@ class RoutineTask(BaseModel):
                 }
             )
 
+        if (
+            self.closing_time
+            and self.default_time
+            and (self.daily_occurrences or 1) == 1
+            and self.closing_time < self.default_time
+        ):
+            raise ValidationError(
+                {
+                    "closing_time": (
+                        "Horário de encerramento deve ser igual ou posterior"
+                        " ao horário padrão"
+                    )
+                }
+            )
+
         if self.interval_hours and not self.default_time:
             raise ValidationError(
                 {

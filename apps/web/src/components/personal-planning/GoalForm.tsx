@@ -139,7 +139,11 @@ export function GoalForm({
   ]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       <FormSection title={t('pages.goals.form.sectionIdentification')} icon={Trophy}>
         <div className="gap-md grid grid-cols-1">
           <div className="space-y-sm">

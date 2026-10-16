@@ -205,7 +205,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
     (watchedValue ?? 0) > 0 ? formatCurrency(watchedValue ?? 0) : null;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Seção: Informações */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={FileText}>
         <div className="space-y-sm">

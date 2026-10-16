@@ -64,7 +64,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
   const watchedIsBenefited = watch('is_benefited');
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Seção: Identificação Pessoal */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={User}>
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">

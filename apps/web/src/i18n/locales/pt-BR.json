@@ -60,6 +60,8 @@
     },
     "required": "Campo obrigatório",
     "fieldRequired": "{{field}}: campo obrigatório",
+    "fieldMinLength": "{{field}}: mínimo de {{count}} caracteres",
+    "fieldInvalidFormat": "{{field}}: formato inválido",
     "messages": {
       "loadError": "Não foi possível carregar os dados. {{reason}}",
       "saveError": "Não foi possível salvar. {{reason}}",

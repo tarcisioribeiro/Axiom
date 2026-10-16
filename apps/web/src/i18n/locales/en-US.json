@@ -60,6 +60,8 @@
     },
     "required": "Required field",
     "fieldRequired": "{{field}}: required field",
+    "fieldMinLength": "{{field}}: at least {{count}} characters",
+    "fieldInvalidFormat": "{{field}}: invalid format",
     "messages": {
       "loadError": "Could not load the data. {{reason}}",
       "saveError": "Could not save. {{reason}}",

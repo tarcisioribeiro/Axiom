@@ -238,7 +238,11 @@ export function BookForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(submit, notifyFormErrors)} className="space-y-lg">
+    <form
+      noValidate
+      onSubmit={handleSubmit(submit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       <div className="gap-lg grid lg:grid-cols-2 lg:items-start">
         <div className="space-y-lg">
           {/* Capa + Identificação lado a lado (sem rolagem no modal, §2.5) */}

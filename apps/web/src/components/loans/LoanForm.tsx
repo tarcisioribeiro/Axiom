@@ -204,7 +204,7 @@ export function LoanForm({
   ];
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="space-y-lg">
+    <form noValidate ref={formRef} onSubmit={handleSubmit} className="space-y-lg">
       {/* Barra de progresso do wizard (apenas na criação) */}
       {!isEditing && (
         <div className="space-y-sm">

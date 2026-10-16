@@ -178,6 +178,7 @@ export function WorkoutDayForm({
 
   return (
     <form
+      noValidate
       onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
       className="gap-md flex min-h-0 flex-1 flex-col"
     >

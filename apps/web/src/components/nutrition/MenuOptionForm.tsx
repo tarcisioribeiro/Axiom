@@ -275,6 +275,7 @@ export function MenuOptionForm({
 
   return (
     <form
+      noValidate
       onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
       className="space-y-lg"
     >

@@ -520,7 +520,11 @@ export default function FixedRevenues({
               </DialogDescription>
             </VisuallyHidden>
           </DialogHeader>
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-lg">
+          <form
+            noValidate
+            onSubmit={(e) => void handleSubmit(e)}
+            className="space-y-lg"
+          >
             {/* Seção: Informações Básicas */}
             <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
               <div className="space-y-sm">

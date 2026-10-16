@@ -72,6 +72,7 @@ export function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
 
   return (
     <form
+      noValidate
       onSubmit={(e) => {
         e.preventDefault();
         activateMutation.mutate(code);

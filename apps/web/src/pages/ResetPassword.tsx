@@ -95,7 +95,11 @@ export default function ResetPassword() {
               </Link>
             </div>
           ) : (
-            <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
+            <form
+              noValidate
+              onSubmit={(e) => void handleSubmit(e)}
+              className="space-y-md"
+            >
               <p className="text-muted-foreground text-center text-sm">
                 {t('auth.resetPassword.description')}
               </p>
