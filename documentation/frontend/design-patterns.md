@@ -44,6 +44,7 @@ Há três tipos de modal:
 - **[regra]** Erros de validação não aparecem abaixo do campo. Ver [Validação de formulários](#3-validação-de-formulários).
 - **[regra]** Seção condicional não aparece quando não se aplica (em vez de aparecer vazia).
 - **[regra]** Campos de data não têm opção de limpar. A data atual é o valor padrão. Status: `clearable` removido do `DatePicker`.
+- **[regra]** O calendário do `DatePicker`/`TimePicker` sempre flutua por cima de tudo (anexado ao `body`, `position: fixed`; `lib/flatpickr-floating.ts`): abre abaixo do campo, ou acima se não couber. O modal não muda de tamanho ao abrir/fechar o calendário e não leva altura mínima/fixa para "caber" o calendário. Animação: entrada `pop-in` (normal), saída `pop-out` (fast), em `styles/flatpickr-custom.css`. Status: modo `static`/prop `floating` removidos (15/10/2026).
 - **[regra]** Campos de observação/notas usam `Textarea` com `rows={1}` e ocupam a linha inteira, para o texto não quebrar em coluna estreita.
 - **[pontual]** Campos relacionados alinhados lado a lado.
 - **[pontual]** Ação que revela campos (ex.: alterar senha) abre um modal em vez de expandir a tela.

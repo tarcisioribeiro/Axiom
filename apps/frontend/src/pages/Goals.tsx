@@ -814,7 +814,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
               {t('pages.goals.registerFailureTitle')}
             </DialogTitle>
           </DialogHeader>
-          <div className="py-sm min-h-[340px]">
+          <div className="space-y-xs">
             <Label className="gap-xs flex items-center">
               <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.goals.failureDateLabel')}

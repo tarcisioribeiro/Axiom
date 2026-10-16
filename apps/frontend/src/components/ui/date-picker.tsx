@@ -20,12 +20,6 @@ interface DatePickerProps {
   'aria-invalid'?: boolean;
   minDate?: Date | string;
   maxDate?: Date | string;
-  /**
-   * Calendário flutuante: anexado ao dialog e posicionado de forma absoluta,
-   * sem entrar no fluxo do layout (o modo `static` empurra/estica o container,
-   * o que quebra cards dentro de listas com scroll).
-   */
-  floating?: boolean;
 }
 
 // Parser customizado para formato DD/MM/YYYY
@@ -86,7 +80,6 @@ export function DatePicker({
   disabled = false,
   className,
   'aria-invalid': ariaInvalid,
-  floating = true,
   minDate,
   maxDate,
 }: DatePickerProps) {
@@ -119,7 +112,7 @@ export function DatePicker({
       // abre também no focus, e o autofocus dos dialogs abria o calendário.
       clickOpens: false,
       disableMobile: true,
-      ...(floating ? floatingOptions(inputRef.current) : { static: true }),
+      ...floatingOptions(inputRef.current),
       // Strings ('YYYY-MM-DD') passariam pelo parseDate DD/MM/YYYY abaixo e
       // virariam data inválida — o limite era ignorado silenciosamente.
       minDate: toLocalDate(minDate),

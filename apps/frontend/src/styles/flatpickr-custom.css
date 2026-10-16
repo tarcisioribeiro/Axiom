@@ -20,13 +20,18 @@
   width: 280px;
   padding: 0;
   opacity: 0;
-  visibility: hidden;
   position: absolute;
+  /* Saída (pop-out): fast + ease-in. `display` discreto mantém o calendário
+     visível até a transição terminar. */
+  transform: scale(0.95);
+  transform-origin: top left;
   transition:
-    opacity var(--duration-medium) var(--ease-out),
-    transform var(--duration-medium) var(--ease-out);
-  transform: translateY(-8px) scale(0.95);
-  transform-origin: top center;
+    opacity var(--duration-fast) ease-in,
+    transform var(--duration-fast) ease-in,
+    display var(--duration-fast) allow-discrete;
+  /* Anexado ao body: com um Dialog do Radix aberto o body fica com
+     pointer-events: none, herdado pelo calendário. */
+  pointer-events: auto;
   /* Garante posicionamento acima de outros elementos */
   z-index: 9999 !important;
   margin-top: 4px;
@@ -39,21 +44,19 @@
   display: none;
 }
 
-/* Modo static - calendário no fluxo normal do documento, logo abaixo do
-   input. Fica com "position: relative" (não "static") para continuar sendo
-   o contexto de posicionamento das setas (::before/::after); em fluxo
-   normal ele empurra o restante do formulário para baixo em vez de flutuar
-   por cima, permitindo que o Dialog (overflow-y-auto) cresça para caber o
-   calendário inteiro em vez de cortá-lo. */
-.flatpickr-calendar.static.open {
-  position: relative !important;
-  margin-bottom: 4px;
-}
-
+/* Entrada (pop-in): normal + ease-out, partindo do estado de @starting-style. */
 .flatpickr-calendar.open {
   opacity: 1;
-  visibility: visible;
-  transform: translateY(0) scale(1);
+  transform: none;
+  transition-duration: var(--duration-normal);
+  transition-timing-function: var(--ease-out);
+}
+
+@starting-style {
+  .flatpickr-calendar.open {
+    opacity: 0;
+    transform: scale(0.95);
+  }
 }
 
 /* Quando o calendário abre para cima (espaço insuficiente embaixo) */
