@@ -22,6 +22,8 @@ export interface Course {
   status_display: string;
   start_date?: string | null;
   end_date?: string | null;
+  /** Dias de estudo agendados (0 = segunda … 6 = domingo). */
+  study_weekdays: number[];
   completion_certificate?: string | null;
   total_lessons: number;
   completed_lessons: number;
@@ -43,6 +45,7 @@ export interface CourseFormData {
   status: CourseStatus;
   start_date?: string | null;
   end_date?: string | null;
+  study_weekdays?: number[];
   owner: number;
 }
 

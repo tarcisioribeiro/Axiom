@@ -121,6 +121,8 @@ INSTALLED_APPS = [
     "webhooks",
     # Exchange Rates (multi-currency)
     "exchange_rates",
+    # Revisão diária (pendências do dia anterior)
+    "daily_review",
 ]
 
 MIDDLEWARE = [

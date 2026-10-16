@@ -1,7 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  ArrowLeft,
-  ArrowRight,
   Check,
   CheckCircle2,
   Compass,
@@ -14,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 
+import { StepNav } from '@/components/common/StepNav';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -28,6 +27,7 @@ import {
   OPEN_TOUR_EVENT,
   setTourHidden,
 } from '@/config/page-tour';
+import { useReviewPending, useUserPreferences } from '@/hooks/use-daily-review';
 
 const VAULT_WIZARD_KEY = 'vault_onboarding_completed';
 
@@ -41,12 +41,18 @@ const slideVariants = {
 };
 
 // Tour guiado por tela: aparece sempre ao entrar, exceto se o usuário marcou
-// "não mostrar mais". O botão do header reabre via OPEN_TOUR_EVENT.
+// "não mostrar mais" (na tela ou, para todas, em Preferências do app). Espera a
+// revisão diária terminar. O botão do header reabre via OPEN_TOUR_EVENT.
 export function PageTour() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const tourKey = getTourKey(pathname);
   const [open, setOpen] = useState(false);
+  // Aberto pelo botão do header: ignora a preferência "nunca exibir".
+  const [manual, setManual] = useState(false);
+  const reviewPending = useReviewPending();
+  const { data: prefs } = useUserPreferences();
+  const toursDisabled = prefs?.tours_disabled ?? true;
   const [step, setStep] = useState(0);
   const [dontShow, setDontShow] = useState(false);
   // Direção derivada do passo anterior, para o slide ir ‹ ou › conforme o
@@ -58,6 +64,7 @@ export function PageTour() {
   const [lastPath, setLastPath] = useState<string | null>(null);
   if (lastPath !== pathname) {
     setLastPath(pathname);
+    setManual(false);
     setStep(0);
     setDontShow(tourKey ? isTourHidden(tourKey) : false);
     // O assistente de configuração do cofre tem prioridade na primeira visita.
@@ -70,6 +77,7 @@ export function PageTour() {
   useEffect(() => {
     const show = () => {
       setStep(0);
+      setManual(true);
       setOpen(true);
     };
     window.addEventListener(OPEN_TOUR_EVENT, show);
@@ -89,10 +97,24 @@ export function PageTour() {
     { title: t('pageTour.tipTitle'), desc: t(`${p}.tip`) },
     { title: t('pageTour.navTitle'), desc: t('pageTour.navDesc') },
   ];
-  const Icon = ICONS[step];
+  const renderStep = (i: number) => {
+    const Icon = ICONS[i];
+    return (
+      <div className="gap-md flex flex-col items-center text-center">
+        <Icon className="text-primary h-16 w-16" />
+        <div className="space-y-xs">
+          <h3 className="text-lg font-semibold">{steps[i].title}</h3>
+          <p className="text-muted-foreground text-sm">{steps[i].desc}</p>
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && close()}>
+    <Dialog
+      open={open && (manual || (!reviewPending && !toursDisabled))}
+      onOpenChange={(o) => !o && close()}
+    >
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
@@ -122,8 +144,14 @@ export function PageTour() {
           ))}
         </div>
 
-        {/* Altura fixa: o modal não muda de tamanho entre passos. */}
-        <div className="py-md h-60 overflow-hidden">
+        {/* Altura reservada: todos os passos ficam empilhados invisíveis na
+            mesma célula, então o modal tem a altura do maior, sem altura fixa. */}
+        <div className="py-md grid overflow-hidden">
+          {steps.map((_, i) => (
+            <div key={i} className="invisible [grid-area:1/1]" aria-hidden inert>
+              {renderStep(i)}
+            </div>
+          ))}
           <AnimatePresence mode="wait" initial={false} custom={last.direction}>
             <motion.div
               key={step}
@@ -132,16 +160,19 @@ export function PageTour() {
               initial="enter"
               animate="center"
               exit="exit"
-              className="gap-md flex h-full flex-col items-center overflow-y-auto text-center"
+              className="self-center [grid-area:1/1]"
             >
-              <Icon className="text-primary h-16 w-16" />
-              <div className="space-y-xs">
-                <h3 className="text-lg font-semibold">{steps[step].title}</h3>
-                <p className="text-muted-foreground text-sm">{steps[step].desc}</p>
-              </div>
+              {renderStep(step)}
             </motion.div>
           </AnimatePresence>
         </div>
+
+        <StepNav
+          onBack={() => setStep((s) => s - 1)}
+          onNext={() => setStep((s) => s + 1)}
+          isFirst={step === 0}
+          isLast={step === steps.length - 1}
+        />
 
         <label className="gap-sm text-muted-foreground flex cursor-pointer items-center text-sm">
           <Checkbox
@@ -154,29 +185,15 @@ export function PageTour() {
           </span>
         </label>
 
-        <div className="dialog-footer gap-sm flex justify-between">
-          {step > 0 ? (
-            <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
-              <ArrowLeft className="h-4 w-4" />
-              {t('pageTour.back')}
-            </Button>
-          ) : (
-            <Button variant="ghost" onClick={close}>
-              <SkipForward className="h-4 w-4" />
-              {t('pageTour.skip')}
-            </Button>
-          )}
-          {step < steps.length - 1 ? (
-            <Button onClick={() => setStep((s) => s + 1)}>
-              <ArrowRight className="h-4 w-4" />
-              {t('pageTour.next')}
-            </Button>
-          ) : (
-            <Button onClick={close}>
-              <Check className="h-4 w-4" />
-              {t('pageTour.finish')}
-            </Button>
-          )}
+        <div className="dialog-footer gap-sm flex justify-end">
+          <Button variant="outline" onClick={close}>
+            <SkipForward className="h-4 w-4" />
+            {t('pageTour.skip')}
+          </Button>
+          <Button onClick={close}>
+            <Check className="h-4 w-4" />
+            {t('pageTour.finish')}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

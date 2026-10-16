@@ -3,6 +3,7 @@ import logging
 from datetime import date, timedelta
 from pathlib import Path
 
+from django.db import transaction
 from django.db.models import Count, Prefetch
 from django.http import HttpResponseRedirect
 from django.utils import timezone
@@ -209,6 +210,7 @@ class RoutineTaskDetailView(BaseRetrieveUpdateDestroyView):
 
     def perform_destroy(self, instance):
         instance.deleted_at = timezone.now()
+        instance.is_deleted = True
         instance.save()
         log_activity(
             self.request,
@@ -303,10 +305,11 @@ class FocusBlockDetailView(BaseRetrieveUpdateDestroyView):
 
     def perform_destroy(self, instance):
         instance.deleted_at = timezone.now()
+        instance.is_deleted = True
         instance.save()
         # Libera as tarefas do bloco para serem usadas em outro bloco.
         instance.block_tasks.filter(deleted_at__isnull=True).update(
-            deleted_at=instance.deleted_at
+            deleted_at=instance.deleted_at, is_deleted=True
         )
         log_activity(
             self.request,
@@ -364,6 +367,7 @@ class FocusBlockTaskDetailView(BaseRetrieveUpdateDestroyView):
 
     def perform_destroy(self, instance):
         instance.deleted_at = timezone.now()
+        instance.is_deleted = True
         instance.save()
 
 
@@ -559,6 +563,7 @@ class UserRoutineTemplateDetailView(BaseRetrieveUpdateDestroyView):
 
     def perform_destroy(self, instance):
         instance.deleted_at = timezone.now()
+        instance.is_deleted = True
         instance.save()
 
 
@@ -700,6 +705,7 @@ class GoalDetailView(BaseRetrieveUpdateDestroyView):
 
     def perform_destroy(self, instance):
         instance.deleted_at = timezone.now()
+        instance.is_deleted = True
         instance.save()
         log_activity(
             self.request,
@@ -847,8 +853,26 @@ class GoalRegisterFailureView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        today = timezone.localdate()
-        if failure_date > today:
+        failure_time = None
+        failure_time_str = request.data.get("failure_time")
+        if failure_time_str:
+            try:
+                from datetime import time
+
+                failure_time = time.fromisoformat(failure_time_str)
+            except ValueError:
+                return Response(
+                    {"detail": "Formato de hora inválido. Use HH:MM."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        now = timezone.localtime()
+        today = now.date()
+        if failure_date > today or (
+            failure_date == today
+            and failure_time
+            and failure_time > now.time()
+        ):
             return Response(
                 {"detail": "A data da falha não pode ser no futuro."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -859,6 +883,7 @@ class GoalRegisterFailureView(APIView):
         GoalFailure.objects.create(
             goal=goal,
             failure_date=failure_date,
+            failure_time=failure_time,
             streak_at_failure=streak_before_failure,
             created_by=request.user,
             updated_by=request.user,
@@ -985,6 +1010,7 @@ class DailyReflectionDetailView(BaseRetrieveUpdateDestroyView):
 
     def perform_destroy(self, instance):
         instance.deleted_at = timezone.now()
+        instance.is_deleted = True
         instance.save()
         log_activity(
             self.request,
@@ -1442,6 +1468,7 @@ class TaskInstanceDetailView(BaseRetrieveUpdateDestroyView):
 
     def perform_destroy(self, instance):
         instance.deleted_at = timezone.now()
+        instance.is_deleted = True
         instance.save()
         log_activity(
             self.request,
@@ -3698,11 +3725,13 @@ class SelfEsteemAssessmentListCreateView(BaseListCreateView):
         create_ser.is_valid(raise_exception=True)
         instance = create_ser.save()
 
-        # Gera análise da IA de forma assíncrona/best-effort
-        try:
-            _generate_self_esteem_ai(request.user, instance)
-        except Exception:
-            pass
+        # Análise da IA no worker: o LLM pode levar minutos e o pedido
+        # estourava o timeout do frontend (30 s) com o registro já salvo.
+        from personal_planning.tasks import generate_self_esteem_analysis
+
+        transaction.on_commit(
+            lambda: generate_self_esteem_analysis.delay(instance.pk)
+        )
 
         out = SelfEsteemAssessmentSerializer(instance)
         return Response(out.data, status=status.HTTP_201_CREATED)
@@ -3718,11 +3747,11 @@ class SelfEsteemAssessmentDetailView(BaseRetrieveUpdateDestroyView):
         )
 
 
-def _generate_self_esteem_ai(user, instance: SelfEsteemAssessment):
+def _generate_self_esteem_ai(instance: SelfEsteemAssessment):
     """Chama o LLM e salva a análise no registro."""
     from agents.core.llm_client import LLMClient
 
-    member = _get_member(user)
+    member = instance.owner
     recent = SelfEsteemAssessment.objects.filter(
         owner=member, is_deleted=False
     ).order_by("-assessed_at")[:5]
@@ -3842,11 +3871,12 @@ class CrisisImpulseLogListCreateView(BaseListCreateView):
         create_ser.is_valid(raise_exception=True)
         instance = create_ser.save()
 
-        # Gera resposta da IA
-        try:
-            _generate_crisis_ai(instance)
-        except Exception:
-            pass
+        # Resposta da IA no worker (ver SelfEsteemAssessmentListCreateView)
+        from personal_planning.tasks import generate_crisis_response
+
+        transaction.on_commit(
+            lambda: generate_crisis_response.delay(instance.pk)
+        )
 
         out = CrisisImpulseLogSerializer(instance)
         return Response(out.data, status=status.HTTP_201_CREATED)

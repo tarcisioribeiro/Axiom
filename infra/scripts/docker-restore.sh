@@ -6,8 +6,10 @@
 # Fonte    : arquivo gerado pelo k8s-backup.sh
 #
 # Dependências: docker (MinIO Client executado via imagem pgsty/mc)
-# Uso: ./infra/scripts/docker-restore.sh <backup.tar.gz>
-#      ./infra/scripts/docker-restore.sh <diretório_backup>
+# Uso: ./infra/scripts/docker-restore.sh <backup.tar.gz> [-y|--yes]
+#      ./infra/scripts/docker-restore.sh <diretório_backup> [-y|--yes]
+#
+# -y, --yes: confirma a restauração automaticamente, sem prompt interativo.
 # =============================================================================
 
 set -euo pipefail
@@ -45,7 +47,8 @@ mc_cmd() {
     docker run --rm \
         --network host \
         --user "$(id -u):$(id -g)" \
-        -v "${MC_CONFIG_DIR}:/root/.mc" \
+        -e HOME=/tmp \
+        -v "${MC_CONFIG_DIR}:/tmp/.mc" \
         pgsty/mc:RELEASE.2026-09-16T00-00-00Z "$@"
 }
 
@@ -54,21 +57,31 @@ mc_mirror() {
     docker run --rm \
         --network host \
         --user "$(id -u):$(id -g)" \
-        -v "${MC_CONFIG_DIR}:/root/.mc" \
+        -e HOME=/tmp \
+        -v "${MC_CONFIG_DIR}:/tmp/.mc" \
         -v "${src_dir}:/mnt/backup:ro" \
         pgsty/mc:RELEASE.2026-09-16T00-00-00Z "$@"
 }
 
-# ── Argumento obrigatório ─────────────────────────────────────────────────────
-if [[ $# -lt 1 ]]; then
-    echo "Uso: $0 <backup.tar.gz | diretório_backup>"
+# ── Argumentos ────────────────────────────────────────────────────────────────
+AUTO_CONFIRM=0
+ARGS=()
+for arg in "$@"; do
+    case "$arg" in
+        -y|--yes) AUTO_CONFIRM=1 ;;
+        *) ARGS+=("$arg") ;;
+    esac
+done
+
+if [[ ${#ARGS[@]} -lt 1 ]]; then
+    echo "Uso: $0 <backup.tar.gz | diretório_backup> [-y|--yes]"
     echo ""
     echo "Exemplos:"
     echo "  $0 backups/backup_20260101_120000.tar.gz"
-    echo "  $0 backups/backup_20260101_120000/"
+    echo "  $0 backups/backup_20260101_120000/ -y"
     exit 1
 fi
-INPUT="$1"
+INPUT="${ARGS[0]}"
 
 # ── Verificação de dependências ───────────────────────────────────────────────
 command -v docker &>/dev/null || err "Dependência não encontrada: 'docker'. Instale antes de continuar."
@@ -132,8 +145,12 @@ echo "   • Bucket '${MINIO_BUCKET}' no container '${CONTAINER_MINIO}'"
 echo ""
 echo "   Dados locais existentes serão perdidos."
 echo ""
-read -rp "Confirma a restauração? [s/N] " CONFIRM
-[[ "${CONFIRM,,}" == "s" ]] || { log "Operação cancelada pelo usuário."; exit 0; }
+if [[ $AUTO_CONFIRM -eq 1 ]]; then
+    log "Restauração confirmada automaticamente (--yes)."
+else
+    read -rp "Confirma a restauração? [s/N] " CONFIRM
+    [[ "${CONFIRM,,}" == "s" ]] || { log "Operação cancelada pelo usuário."; exit 0; }
+fi
 echo ""
 
 # ── Verificar containers de infraestrutura ────────────────────────────────────

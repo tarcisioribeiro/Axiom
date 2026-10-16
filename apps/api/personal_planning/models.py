@@ -1114,6 +1114,9 @@ class GoalFailure(BaseModel):
         verbose_name="Objetivo",
     )
     failure_date = models.DateField(verbose_name="Data da Falha")
+    failure_time = models.TimeField(
+        null=True, blank=True, verbose_name="Hora da Falha"
+    )
     streak_at_failure = models.PositiveIntegerField(
         default=0,
         verbose_name="Sequência Alcançada",
@@ -1123,7 +1126,7 @@ class GoalFailure(BaseModel):
     class Meta:
         verbose_name = "Falha de Objetivo"
         verbose_name_plural = "Falhas de Objetivos"
-        ordering = ["-failure_date"]
+        ordering = ["-failure_date", "-failure_time"]
         indexes = [models.Index(fields=["goal", "-failure_date"])]
 
     def __str__(self):

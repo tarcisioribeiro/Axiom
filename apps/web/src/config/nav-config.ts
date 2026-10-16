@@ -209,6 +209,13 @@ export const navModules: NavModule[] = [
           },
           { titleKey: 'nav.items.vaults', href: '/vaults', icon: Vault },
           { titleKey: 'nav.items.loans', href: '/loans', icon: HandCoins },
+        ],
+      },
+      {
+        id: 'finance-insights',
+        titleKey: 'nav.submodules.insights',
+        icon: BarChart3,
+        items: [
           {
             titleKey: 'nav.items.financeAgenda',
             href: '/finance/agenda',

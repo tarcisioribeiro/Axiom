@@ -10,6 +10,7 @@ from .views import (
     ChangePasswordView,
     EmailVerificationConfirmView,
     EmailVerificationSendView,
+    MyPreferencesView,
     MyThemeView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
@@ -47,6 +48,9 @@ urlpatterns = [
     path("authentication/logout/", logout_view, name="logout"),
     path("me/", get_current_user, name="current-user"),
     path("me/theme/", MyThemeView.as_view(), name="my-theme"),
+    path(
+        "me/preferences/", MyPreferencesView.as_view(), name="my-preferences"
+    ),
     path(
         "me/theme/sync-token/",
         ThemeSyncTokenView.as_view(),

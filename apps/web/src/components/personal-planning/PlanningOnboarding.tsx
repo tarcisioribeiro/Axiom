@@ -5,7 +5,6 @@ import {
   BookOpen,
   Calendar,
   CheckCircle2,
-  ChevronLeft,
   Dumbbell,
   Sparkles,
   Target,
@@ -15,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
+import { StepNav } from '@/components/common/StepNav';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -244,22 +244,19 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
         {importSuccess ? (
           <DialogCloseFooter />
         ) : (
-          <DialogFooter className="gap-sm">
-            <Button variant="outline" onClick={handleSkip}>
-              <X className="h-4 w-4" />
-              {t('common.actions.cancel')}
-            </Button>
-            {step > 0 && (
-              <Button
-                variant="outline"
-                onClick={() => goToStep(step - 1)}
-                disabled={isImporting}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                {t('common.actions.back')}
+          <>
+            <StepNav
+              onBack={() => goToStep(step - 1)}
+              onNext={() => goToStep(step + 1)}
+              isFirst={step === 0}
+              isLast={isLastStep}
+              disabled={isImporting}
+            />
+            <DialogFooter className="gap-sm">
+              <Button variant="outline" onClick={handleSkip}>
+                <X className="h-4 w-4" />
+                {t('common.actions.cancel')}
               </Button>
-            )}
-            {isLastStep ? (
               <Button
                 onClick={() => void handleImportAndFinish()}
                 loading={isImporting}
@@ -269,13 +266,8 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                   ? t('pages.planningOnboarding.importing')
                   : t('pages.planningOnboarding.start')}
               </Button>
-            ) : (
-              <Button onClick={() => goToStep(step + 1)}>
-                <ArrowRight className="h-4 w-4" />
-                {t('pages.planningOnboarding.next')}
-              </Button>
-            )}
-          </DialogFooter>
+            </DialogFooter>
+          </>
         )}
       </DialogContent>
     </Dialog>

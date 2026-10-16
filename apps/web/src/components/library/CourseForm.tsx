@@ -4,6 +4,7 @@ import {
   Atom,
   Briefcase,
   CalendarDays,
+  CalendarRange,
   CheckCircle2,
   Clock,
   Code2,
@@ -40,7 +41,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { notifyFormErrors } from '@/lib/form-errors';
-import { formatLocalDate, parseLocalDate } from '@/lib/utils';
+import { cn, formatLocalDate, parseLocalDate } from '@/lib/utils';
 import type {
   Course,
   CourseFormData,
@@ -60,6 +61,7 @@ const courseSchema = z.object({
   status: z.string().min(1),
   start_date: z.string().optional().nullable(),
   end_date: z.string().optional().nullable(),
+  study_weekdays: z.array(z.number()),
   owner: z.number(),
 });
 
@@ -102,6 +104,16 @@ const CATEGORY_ICONS: Record<IntellectCategory, IconComponent> = {
   other: MoreHorizontal,
 };
 const STATUSES: CourseStatus[] = ['not_started', 'in_progress', 'completed', 'paused'];
+// 0 = segunda … 6 = domingo (mesma convenção do backend)
+const WEEKDAYS = [
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+];
 
 export function CourseForm({
   course,
@@ -132,6 +144,7 @@ export function CourseForm({
       status: 'not_started',
       start_date: course ? null : formatLocalDate(new Date()),
       end_date: null,
+      study_weekdays: [],
       owner: ownerId,
     },
   });
@@ -148,6 +161,7 @@ export function CourseForm({
         status: course.status,
         start_date: course.start_date ?? null,
         end_date: course.end_date ?? null,
+        study_weekdays: course.study_weekdays ?? [],
         owner: course.owner,
       });
     } else {
@@ -166,12 +180,14 @@ export function CourseForm({
       status: values.status as CourseStatus,
       start_date: values.start_date || null,
       end_date: values.end_date || null,
+      study_weekdays: values.study_weekdays,
       owner: values.owner,
     });
   };
 
   const startDate = watch('start_date');
   const endDate = watch('end_date');
+  const studyDays = watch('study_weekdays');
 
   return (
     <form
@@ -341,6 +357,41 @@ export function CourseForm({
               value={endDate ? parseLocalDate(endDate) : undefined}
               onChange={(d) => setValue('end_date', d ? formatLocalDate(d) : null)}
             />
+          </div>
+        </div>
+
+        <div className="space-y-sm">
+          <Label className="gap-xs flex items-center">
+            <CalendarRange className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.courses.form.studyWeekdaysLabel')}
+          </Label>
+          <div className="gap-xs flex flex-wrap justify-center">
+            {WEEKDAYS.map((wd, i) => {
+              const selected = studyDays.includes(i);
+              return (
+                <button
+                  key={wd}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() =>
+                    setValue(
+                      'study_weekdays',
+                      selected
+                        ? studyDays.filter((d) => d !== i)
+                        : [...studyDays, i].sort()
+                    )
+                  }
+                  className={cn(
+                    'px-sm py-xs rounded-full border text-xs font-medium transition',
+                    selected
+                      ? 'border-primary bg-primary/15 text-primary'
+                      : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary'
+                  )}
+                >
+                  {t(`pages.workoutPlans.weekdays.${wd}`)}
+                </button>
+              );
+            })}
           </div>
         </div>
       </FormSection>

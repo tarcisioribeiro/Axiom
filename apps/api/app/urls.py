@@ -83,6 +83,8 @@ urlpatterns = [
     path("api/v1/", include("webhooks.urls")),
     # Exchange Rates (multi-currency)
     path("api/v1/", include("exchange_rates.urls")),
+    # Revisão diária (pendências do dia anterior)
+    path("api/v1/", include("daily_review.urls")),
 ]
 
 if settings.DEBUG:

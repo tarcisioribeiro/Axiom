@@ -17,9 +17,14 @@ class GoalsService extends BaseService<Goal, GoalFormData> {
     return apiClient.post<Goal>(`${this.endpoint}${id}/restart/`);
   }
 
-  async registerFailure(id: number, failureDate: string): Promise<Goal> {
+  async registerFailure(
+    id: number,
+    failureDate: string,
+    failureTime: string
+  ): Promise<Goal> {
     return apiClient.post<Goal>(`${this.endpoint}${id}/register-failure/`, {
       failure_date: failureDate,
+      failure_time: failureTime,
     });
   }
 }

@@ -769,11 +769,13 @@ export function CourseModulesModal({ course, open, onClose }: CourseModalProps) 
 export function AddSessionForm({
   course,
   defaultMinutes = 60,
+  defaultDate,
   onSaved,
   onCancel,
 }: {
   course: Course;
   defaultMinutes?: number;
+  defaultDate?: string;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -787,7 +789,7 @@ export function AddSessionForm({
     notes: string;
   }>({
     defaultValues: {
-      session_date: formatLocalDate(new Date()),
+      session_date: defaultDate ?? formatLocalDate(new Date()),
       duration_minutes: defaultMinutes,
       notes: '',
     },

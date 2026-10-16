@@ -1,4 +1,8 @@
+import logging
+
 from celery import shared_task
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task(
@@ -201,3 +205,33 @@ def _generate_synthesis_for_member(member) -> None:
             )
     except Exception:
         pass
+
+
+@shared_task(ignore_result=True)
+def generate_self_esteem_analysis(assessment_id: int) -> None:
+    """Análise da IA de uma avaliação de autoestima (best-effort)."""
+    from personal_planning.models import SelfEsteemAssessment
+    from personal_planning.views import _generate_self_esteem_ai
+
+    instance = SelfEsteemAssessment.objects.filter(pk=assessment_id).first()
+    if instance:
+        try:
+            _generate_self_esteem_ai(instance)
+        except Exception:
+            logger.exception(
+                "Falha na análise de autoestima %s", assessment_id
+            )
+
+
+@shared_task(ignore_result=True)
+def generate_crisis_response(log_id: int) -> None:
+    """Resposta da IA a um registro de impulso (best-effort)."""
+    from personal_planning.models import CrisisImpulseLog
+    from personal_planning.views import _generate_crisis_ai
+
+    instance = CrisisImpulseLog.objects.filter(pk=log_id).first()
+    if instance:
+        try:
+            _generate_crisis_ai(instance)
+        except Exception:
+            logger.exception("Falha na resposta de crise %s", log_id)

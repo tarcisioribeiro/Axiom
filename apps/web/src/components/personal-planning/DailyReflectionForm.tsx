@@ -30,6 +30,8 @@ type DailyReflectionFormData = z.infer<typeof dailyReflectionSchema>;
 
 interface DailyReflectionFormProps {
   reflection?: DailyReflection;
+  /** Data inicial ao incluir (padrão: hoje). */
+  defaultDate?: string;
   onSubmit: (data: DailyReflectionFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -37,6 +39,7 @@ interface DailyReflectionFormProps {
 
 export function DailyReflectionForm({
   reflection,
+  defaultDate,
   onSubmit,
   onCancel,
   isLoading = false,
@@ -58,7 +61,7 @@ export function DailyReflectionForm({
           owner: reflection.owner,
         }
       : {
-          date: formatLocalDate(new Date()),
+          date: defaultDate ?? formatLocalDate(new Date()),
           reflection: '',
           mood: '',
           owner: 0,

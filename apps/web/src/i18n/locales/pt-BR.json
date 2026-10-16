@@ -55,7 +55,8 @@
       "decrease": "Diminuir",
       "zoomIn": "Aproximar",
       "zoomOut": "Afastar",
-      "fitView": "Ajustar à tela"
+      "fitView": "Ajustar à tela",
+      "ok": "OK"
     },
     "required": "Campo obrigatório",
     "fieldRequired": "{{field}}: campo obrigatório",
@@ -290,6 +291,10 @@
       "flashcardBack": "Ex.: Paris",
       "tagName": "Ex.: Viagem",
       "password": "••••••••"
+    },
+    "timePicker": {
+      "hours": "Horas",
+      "minutes": "Minutos"
     }
   },
   "nav": {
@@ -305,6 +310,7 @@
     "submodules": {
       "registrations": "Cadastros",
       "records": "Registros",
+      "insights": "Visão Geral",
       "books": "Acervo",
       "intellect": "Aprendizado",
       "daily": "Rotina Diária",
@@ -1102,7 +1108,8 @@
         "step2": "Partes & Conta",
         "step3": "Condições & Extras",
         "next": "Próximo",
-        "stepOf": "Etapa {{current}} de {{total}}"
+        "stepOf": "Etapa {{current}} de {{total}}",
+        "finishSteps": "Preencha as próximas etapas antes de salvar"
       },
       "frequencies": {
         "daily": "Diário",
@@ -3880,7 +3887,8 @@
         "estimatedHoursLabel": "Carga Horária Estimada (h)",
         "statusLabel": "Status",
         "startDateLabel": "Data de Início",
-        "endDateLabel": "Data de Conclusão"
+        "endDateLabel": "Data de Conclusão",
+        "studyWeekdaysLabel": "Dias de estudo"
       },
       "modules": {
         "title": "Módulos",
@@ -4407,6 +4415,7 @@
       "registerFailureTitle": "Registrar Falha",
       "registerFailureDesc": "Selecione a data da falha para \"{{name}}\". O progresso será recalculado a partir desta data.",
       "failureDateLabel": "Data da Falha",
+      "failureTimeLabel": "Hora da Falha",
       "failureDatePlaceholder": "dd/mm/aaaa",
       "registerFailureConfirmBtn": "Registrar",
       "failureRegistered": "Falha registrada",
@@ -6269,7 +6278,8 @@
         "viewHistoryBtn": "Ver histórico",
         "emptyTitle": "Nenhuma avaliação ainda",
         "saveError": "Erro ao salvar",
-        "savedToast": "Avaliação registrada com pontuação {{score}}/30."
+        "savedToast": "Avaliação registrada com pontuação {{score}}/30.",
+        "answerAll": "Responda todas as perguntas"
       },
       "checkin": {
         "registerBtn": "Registrar",
@@ -6337,7 +6347,9 @@
         "emptyTitle": "Nenhum registro ainda",
         "emptyFilteredTitle": "Nenhum registro no período",
         "resolvedBadge": "Superado",
-        "registeredBadge": "Registrado"
+        "registeredBadge": "Registrado",
+        "missingEmotion": "Escolha o que você está sentindo",
+        "missingImpulse": "Escolha o tipo de impulso"
       },
       "library": {
         "categories": {
@@ -6622,6 +6634,23 @@
       "deleteError": "Erro ao remover foto.",
       "invalidFile": "Selecione um arquivo de imagem válido.",
       "fileTooLarge": "A imagem deve ter no máximo 5 MB."
+    },
+    "preferences": {
+      "title": "Preferências"
+    },
+    "appPreferences": {
+      "title": "Preferências do app",
+      "weekends": "Exibir revisão diária nos fins de semana",
+      "selfEsteemFrequency": "Frequência da autoestima",
+      "frequency": {
+        "1": "Diária",
+        "7": "Semanal",
+        "14": "Quinzenal"
+      },
+      "toursDisabled": "Nunca exibir tours",
+      "resetTours": "Resetar tours",
+      "toursReset": "Tours voltarão a aparecer",
+      "saved": "Preferências salvas"
     }
   },
   "activityDescriptions": {
@@ -7574,6 +7603,152 @@
       "completed": "Concluída",
       "pending": "Pendente",
       "missed": "Perdida"
+    }
+  },
+  "dailyReview": {
+    "title": "Revisão de {{date}}",
+    "position": "Dia {{day}} de {{days}} · Etapa {{step}} de {{steps}}",
+    "stepDone": "Etapa concluída",
+    "pendingItems_one": "Resolva {{count}} item pendente",
+    "pendingItems_other": "Resolva os {{count}} itens pendentes",
+    "dayDone": "Revisão de {{date}} concluída",
+    "completeDay": "Concluir dia",
+    "justify": "Justificar",
+    "at": "às {{time}}",
+    "hydrationDetail": "{{total}} L de {{target}} L",
+    "register": {
+      "action": "Registrar",
+      "complete": "Concluir",
+      "failure": "Registrar falha",
+      "intervention": "Intervenção",
+      "wellnessTitle": "Registrar intervenção",
+      "weighInTitle": "Registrar pesagem",
+      "weight": "Peso",
+      "weighInSaved": "Pesagem registrada"
+    },
+    "backlog": {
+      "title": "Dias anteriores",
+      "range_one": "{{range}} · {{count}} dia",
+      "range_other": "{{range}} · {{count}} dias"
+    },
+    "steps": {
+      "reflection": {
+        "title": "Reflexão diária",
+        "item": "Reflexão de {{date}}"
+      },
+      "tasks": {
+        "title": "Tarefas"
+      },
+      "goals": {
+        "title": "Metas de evitar hábito"
+      },
+      "workout": {
+        "title": "Treinos"
+      },
+      "meals": {
+        "title": "Refeições"
+      },
+      "hydration": {
+        "title": "Hidratação",
+        "item": "Meta de água de {{date}}"
+      },
+      "checkin": {
+        "title": "Check-in emocional",
+        "item": "Check-in de {{date}}"
+      },
+      "self_esteem": {
+        "title": "Autoestima",
+        "item": "Avaliação de {{date}}"
+      },
+      "self_esteem_periodic": {
+        "title": "Autoestima",
+        "item": "Avaliação do período"
+      },
+      "wellness": {
+        "title": "Bem-estar",
+        "item": "Nenhuma intervenção nos últimos 7 dias"
+      },
+      "weigh_in": {
+        "title": "Pesagem",
+        "item": "Nenhuma pesagem nos últimos 7 dias"
+      },
+      "study": {
+        "title": "Estudos"
+      },
+      "flashcards": {
+        "title": "Flashcards",
+        "item_one": "{{count}} flashcard para revisar",
+        "item_other": "{{count}} flashcards para revisar"
+      }
+    },
+    "justifications": {
+      "reflection": {
+        "forgot": "Esqueci",
+        "no_time": "Sem tempo",
+        "nothing_to_add": "Nada a registrar"
+      },
+      "tasks": {
+        "no_time": "Sem tempo",
+        "not_needed": "Não foi necessária",
+        "health": "Problema de saúde",
+        "postponed": "Adiada (manter pendente)"
+      },
+      "goals": {
+        "avoided": "Evitei o hábito",
+        "not_applicable": "Não se aplica"
+      },
+      "workout": {
+        "rest": "Descanso",
+        "no_time": "Sem tempo",
+        "health": "Problema de saúde ou lesão",
+        "other_activity": "Fiz outra atividade"
+      },
+      "meals": {
+        "skipped_meal": "Pulei a refeição",
+        "forgot_to_log": "Esqueci de registrar",
+        "fasting": "Jejum"
+      },
+      "hydration": {
+        "forgot_to_log": "Esqueci de registrar",
+        "below_goal": "Bebi menos que a meta",
+        "health": "Problema de saúde"
+      },
+      "checkin": {
+        "forgot": "Esqueci",
+        "no_time": "Sem tempo",
+        "prefer_not": "Prefiro não responder"
+      },
+      "self_esteem": {
+        "forgot": "Esqueci",
+        "no_time": "Sem tempo",
+        "prefer_not": "Prefiro não responder"
+      },
+      "self_esteem_periodic": {
+        "forgot": "Esqueci",
+        "no_time": "Sem tempo",
+        "prefer_not": "Prefiro não responder"
+      },
+      "wellness": {
+        "no_time": "Sem tempo",
+        "feeling_well": "Estou bem",
+        "will_do_soon": "Farei em breve"
+      },
+      "weigh_in": {
+        "no_scale": "Sem balança",
+        "away": "Fora de casa",
+        "will_measure_soon": "Vou me pesar em breve"
+      },
+      "study": {
+        "no_time": "Sem tempo",
+        "rest": "Descanso",
+        "health": "Problema de saúde",
+        "rescheduled": "Reagendei"
+      },
+      "flashcards": {
+        "review_later": "Revisar mais tarde",
+        "no_time": "Sem tempo",
+        "paused_studies": "Estudos pausados"
+      }
     }
   }
 }

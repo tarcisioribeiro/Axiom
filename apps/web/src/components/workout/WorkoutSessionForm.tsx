@@ -90,7 +90,7 @@ interface SessionExerciseValues {
   sets: SessionSetValues[];
 }
 
-interface WorkoutSessionFormValues {
+export interface WorkoutSessionFormValues {
   workout_day: string;
   date: string;
   started_at: string;
@@ -108,6 +108,8 @@ interface WorkoutSessionFormProps {
   isLoading?: boolean;
   /** Último peso registrado em Medidas Corporais (kg). */
   bodyWeightKg?: string | null;
+  /** Nova sessão já com data e divisão escolhidas (revisão diária). */
+  prefill?: { date: string; workoutDayId: number };
 }
 
 function newSet(
@@ -146,6 +148,7 @@ export function WorkoutSessionForm({
   onCancel,
   isLoading = false,
   bodyWeightKg,
+  prefill,
 }: WorkoutSessionFormProps) {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
@@ -206,8 +209,8 @@ export function WorkoutSessionForm({
             })),
         }
       : {
-          workout_day: '',
-          date: today,
+          workout_day: prefill ? String(prefill.workoutDayId) : '',
+          date: prefill?.date ?? today,
           started_at: defaultStart,
           finished_at: addMinutesToTimeStr(
             defaultStart,
@@ -267,10 +270,10 @@ export function WorkoutSessionForm({
       t('common.fieldRequired', { field: t('pages.workoutSessions.workoutDay') }),
   });
 
-  // Skip on initial mount so editing a session doesn't get its loaded
-  // sets/reps clobbered by the workout day's template — this effect should
-  // only react to the user explicitly changing the day dropdown afterwards.
-  const didMountRef = useRef(false);
+  // Ao editar, pula a montagem para não sobrescrever as séries salvas com o
+  // modelo da divisão; numa sessão nova (inclusive com divisão pré-preenchida)
+  // roda já na montagem e carrega os exercícios.
+  const didMountRef = useRef(!session);
   useEffect(() => {
     if (!didMountRef.current) {
       didMountRef.current = true;
@@ -487,22 +490,31 @@ export function WorkoutSessionForm({
             onClick={() => goTo(-1)}
           >
             <ChevronLeft className="h-4 w-4" />
-            {atEnd && exerciseFields.length > 0
-              ? t('pages.workoutSessions.backToSequence')
-              : t('common.actions.previous')}
+            {t('common.actions.back')}
           </Button>
-          {!atEnd && (
-            <div className="gap-sm flex">
-              <Button type="button" variant="outline" size="sm" onClick={handleSkip}>
-                <SkipForward className="h-4 w-4" />
-                {t('pages.workoutSessions.skip')}
-              </Button>
-              <Button type="button" variant="outline" size="sm" onClick={() => goTo(1)}>
-                <ChevronRight className="h-4 w-4" />
-                {t('common.actions.next')}
-              </Button>
-            </div>
-          )}
+          {/* Mesmo padrão do StepNav: no fim, os botões ficam desabilitados no lugar */}
+          <div className="gap-sm flex">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={atEnd}
+              onClick={handleSkip}
+            >
+              <SkipForward className="h-4 w-4" />
+              {t('pages.workoutSessions.skip')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={atEnd}
+              onClick={() => goTo(1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+              {t('common.actions.next')}
+            </Button>
+          </div>
         </div>
       </div>
 
