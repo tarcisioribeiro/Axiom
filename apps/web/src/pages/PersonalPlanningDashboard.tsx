@@ -237,7 +237,7 @@ export default function PersonalPlanningDashboard() {
 
   const todayRingColor =
     todayRate >= 80
-      ? 'hsl(var(--chart-2))'
+      ? 'hsl(var(--success))'
       : todayRate >= 40
         ? 'hsl(var(--warning))'
         : 'hsl(var(--primary))';
@@ -810,7 +810,7 @@ export default function PersonalPlanningDashboard() {
                             const pct = goal.progress_percentage;
                             const ringColor =
                               pct >= 80
-                                ? 'hsl(var(--chart-2))'
+                                ? 'hsl(var(--success))'
                                 : pct >= 40
                                   ? 'hsl(var(--warning))'
                                   : 'hsl(var(--primary))';

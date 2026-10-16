@@ -650,7 +650,7 @@ export default function Books() {
           {isLoading ? (
             <LoadingState />
           ) : (
-            <>
+            <div className="space-y-lg">
               <FilterBar
                 hasActiveFilters={!!(searchTerm || filterStatus || filterGenre)}
                 onClear={() => {
@@ -787,7 +787,7 @@ export default function Books() {
                   )}
                 />
               )}
-            </>
+            </div>
           )}
         </TabsContent>
 

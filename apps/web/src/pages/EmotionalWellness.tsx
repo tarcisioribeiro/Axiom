@@ -1598,7 +1598,7 @@ function LibraryTab() {
   };
 
   return (
-    <div className="space-y-md">
+    <div className="space-y-lg">
       <FilterBar
         hasActiveFilters={selectedCategory !== 'all'}
         onClear={() => setSelectedCategory('all')}

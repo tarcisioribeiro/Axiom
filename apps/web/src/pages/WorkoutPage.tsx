@@ -985,7 +985,7 @@ export default function WorkoutPage() {
             ) : (
               <>
                 <FilterBar
-                  className="mb-md"
+                  className="mb-lg"
                   hasActiveFilters={hasSessionFilters}
                   onClear={clearSessionFilters}
                   activeFilters={[
@@ -1073,7 +1073,7 @@ export default function WorkoutPage() {
             ) : (
               <>
                 <FilterBar
-                  className="mb-md"
+                  className="mb-lg"
                   hasActiveFilters={hasPlanFilters}
                   onClear={clearPlanFilters}
                   activeFilters={[
@@ -1214,7 +1214,7 @@ export default function WorkoutPage() {
             ) : (
               <>
                 <FilterBar
-                  className="mb-md"
+                  className="mb-lg"
                   hasActiveFilters={
                     !!exerciseSearch ||
                     exerciseTypeFilter !== 'all' ||

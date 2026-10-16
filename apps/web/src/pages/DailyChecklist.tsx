@@ -170,7 +170,7 @@ function PomodoroBar() {
     mode === 'focus'
       ? 'hsl(var(--primary))'
       : mode === 'shortBreak'
-        ? 'hsl(var(--chart-2))'
+        ? 'hsl(var(--success))'
         : 'hsl(var(--warning))';
 
   return (
@@ -341,7 +341,7 @@ export default function DailyChecklist({
     requiredCards.length > 0 ? (requiredDone / requiredCards.length) * 100 : 0;
   const dayRingColor =
     dayRate >= 80
-      ? 'hsl(var(--chart-2))'
+      ? 'hsl(var(--success))'
       : dayRate >= 40
         ? 'hsl(var(--warning))'
         : 'hsl(var(--primary))';

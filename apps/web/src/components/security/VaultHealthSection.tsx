@@ -44,7 +44,7 @@ function CircularScore({ score }: CircularScoreProps) {
 
   const color =
     score >= 75
-      ? 'hsl(var(--chart-2))'
+      ? 'hsl(var(--success))'
       : score >= 45
         ? 'hsl(var(--warning))'
         : 'hsl(var(--destructive))';
@@ -201,8 +201,8 @@ function ScoreHistoryChart({ data }: { data: VaultHealthSnapshot[] }) {
         <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
+              <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
             </linearGradient>
           </defs>
           <XAxis
@@ -229,7 +229,7 @@ function ScoreHistoryChart({ data }: { data: VaultHealthSnapshot[] }) {
           <Area
             type="monotone"
             dataKey="score"
-            stroke="hsl(var(--chart-2))"
+            stroke="hsl(var(--success))"
             strokeWidth={2}
             fill="url(#scoreGrad)"
           />
@@ -373,7 +373,7 @@ export function VaultHealthSection({ children }: { children?: React.ReactNode })
             </PaginatedSlide>
           ) : total_passwords > 0 ? (
             <div className="gap-sm flex flex-1 flex-col items-center justify-center">
-              <CheckCircle2 className="text-chart-2 h-10 w-10" />
+              <CheckCircle2 className="text-success h-10 w-10" />
               <p className="text-sm font-medium">{t('pages.vaultHealth.allGood')}</p>
             </div>
           ) : (

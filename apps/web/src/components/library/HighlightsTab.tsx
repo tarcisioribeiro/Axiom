@@ -144,7 +144,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
   if (isLoading) return <LoadingState />;
 
   return (
-    <div className="space-y-md">
+    <div className="space-y-lg">
       <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput

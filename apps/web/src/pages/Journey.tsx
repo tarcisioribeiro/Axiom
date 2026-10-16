@@ -182,7 +182,7 @@ export default function Journey() {
               ) : (
                 <>
                   <FilterBar
-                    className="mb-md"
+                    className="mb-lg"
                     hasActiveFilters={hasActiveFilters}
                     onClear={clearFilters}
                     activeFilters={[

@@ -747,7 +747,7 @@ export default function NutritionPage() {
               <HydrationGoalCard />
               <div>
                 <FilterBar
-                  className="mb-md"
+                  className="mb-lg"
                   hasActiveFilters={hasMealTypeFilters}
                   onClear={() => {
                     setMealTypeSearch('');
@@ -856,7 +856,7 @@ export default function NutritionPage() {
           {/* ── Alimentos ────────────────────────────────────────────────── */}
           <TabsContent value="foods" className="mt-0 flex-1">
             <FilterBar
-              className="mb-md"
+              className="mb-lg"
               hasActiveFilters={!!foodSearch}
               onClear={() => setFoodSearch('')}
             >

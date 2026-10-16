@@ -611,7 +611,7 @@ export default function BankReconciliationDetail() {
       </div>
 
       <FilterBar
-        className="mb-md"
+        className="mb-lg"
         hasActiveFilters={hasActiveFilters}
         onClear={clearFilters}
         activeFilters={[

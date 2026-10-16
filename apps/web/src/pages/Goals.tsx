@@ -282,9 +282,9 @@ function GoalCard({
   const StatusIcon = GOAL_STATUS_ICONS[goal.status];
 
   const ringColor = isCompleted
-    ? 'hsl(var(--chart-2))'
+    ? 'hsl(var(--success))'
     : pct >= 80
-      ? 'hsl(var(--chart-2))'
+      ? 'hsl(var(--success))'
       : 'hsl(var(--primary))';
 
   return (

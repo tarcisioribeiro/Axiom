@@ -109,14 +109,14 @@ export function PageTour() {
                   step === i
                     ? 'bg-primary text-primary-foreground'
                     : step > i
-                      ? 'bg-chart-2 text-white'
+                      ? 'bg-success text-success-foreground'
                       : 'bg-muted text-muted-foreground'
                 }`}
               >
                 {step > i ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
               </div>
               {i < steps.length - 1 && (
-                <div className={`h-px w-8 ${step > i ? 'bg-chart-2' : 'bg-muted'}`} />
+                <div className={`h-px w-8 ${step > i ? 'bg-success' : 'bg-muted'}`} />
               )}
             </div>
           ))}
