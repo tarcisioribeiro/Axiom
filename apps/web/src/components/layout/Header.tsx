@@ -2,6 +2,7 @@ import { Command, Compass, Grid2x2, Menu, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 
+import { EmailVerificationBanner } from '@/components/common/EmailVerificationBanner';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { Breadcrumb } from '@/components/layout/Breadcrumb';
@@ -56,6 +57,7 @@ export const Header = () => {
 
         {/* Right-side actions */}
         <div className="gap-xs flex shrink-0 items-center">
+          <EmailVerificationBanner />
           {/* Command palette trigger — styled as a search bar on desktop */}
           <button
             onClick={openCommandPalette}

@@ -170,7 +170,7 @@ export const AdminLayout = () => {
           />
         </header>
 
-        <main className="p-lg flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto p-0">
           <AnimatePresence mode="wait" initial={false}>
             <AnimatedPage key={location.pathname}>{outlet}</AnimatedPage>
           </AnimatePresence>

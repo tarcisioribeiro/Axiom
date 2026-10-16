@@ -418,7 +418,7 @@ export default function Authors() {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle mode={selectedAuthor ? 'edit' : 'create'}>
               {selectedAuthor

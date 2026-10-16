@@ -125,7 +125,8 @@ export default function IntellectToday() {
           />
         </div>
 
-        <div className="gap-md grid lg:grid-cols-2">
+        {/* Empty states compactos: os 4 cards cabem em 880 px sem rolagem */}
+        <div className="gap-md [&_[data-empty-state]>div]:py-lg grid lg:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="gap-sm flex items-center text-sm font-semibold">

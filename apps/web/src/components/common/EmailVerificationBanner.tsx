@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/services/api-client';
 import { authService } from '@/services/auth-service';
@@ -65,32 +64,34 @@ export function EmailVerificationBanner() {
     }
   };
 
+  // Pílula na barra superior (Header): não ocupa altura da página (§6, sem rolagem).
   return (
-    <div className="border-warning/40 bg-warning/10 px-md flex items-center gap-3 rounded-lg border py-3 text-sm">
-      <MailWarning className="text-warning h-4 w-4 shrink-0" />
-      <span className="text-foreground flex-1">
-        {t('common.emailVerificationBanner.message')}
+    <div className="gap-xs border-warning/40 bg-warning/10 py-xs pl-sm flex shrink-0 items-center rounded-full border pr-0.5 text-xs">
+      <MailWarning className="text-warning h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <span className="text-foreground hidden font-medium whitespace-nowrap lg:inline">
+        {t('common.emailVerificationBanner.short')}
       </span>
       <Button
-        variant="outline"
-        size="sm"
+        variant="ghost"
+        size="icon"
         onClick={handleResend}
         loading={isSending}
-        className="border-warning/40 hover:bg-warning/10 shrink-0 text-xs"
+        title={t('common.emailVerificationBanner.resend')}
+        tooltipSide="bottom"
+        className="h-6 w-6"
       >
-        {!isSending && <Send aria-hidden="true" />}
-        {isSending
-          ? t('common.emailVerificationBanner.sending')
-          : t('common.emailVerificationBanner.resend')}
+        {!isSending && <Send className="h-3.5 w-3.5" />}
       </Button>
-      <PlainButton
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => setDismissed(true)}
-        className="text-muted-foreground hover:text-foreground shrink-0"
-        aria-label={t('common.emailVerificationBanner.dismiss')}
+        title={t('common.emailVerificationBanner.dismiss')}
+        tooltipSide="bottom"
+        className="h-6 w-6"
       >
-        <X className="h-4 w-4" />
-      </PlainButton>
+        <X className="h-3.5 w-3.5" />
+      </Button>
     </div>
   );
 }

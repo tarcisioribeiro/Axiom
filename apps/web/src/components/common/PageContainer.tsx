@@ -1,7 +1,6 @@
 import { cn } from '@/lib/utils';
 
 import { AnimatedPage } from './AnimatedPage';
-import { EmailVerificationBanner } from './EmailVerificationBanner';
 
 interface PageContainerProps {
   children: React.ReactNode;
@@ -24,7 +23,6 @@ export const PageContainer: React.FC<PageContainerProps> = ({
 }) => {
   return (
     <AnimatedPage className={cn('space-y-lg px-sm py-md md:px-lg md:py-xl', className)}>
-      <EmailVerificationBanner />
       {children}
     </AnimatedPage>
   );

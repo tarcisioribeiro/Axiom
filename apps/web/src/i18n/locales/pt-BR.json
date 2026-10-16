@@ -159,6 +159,7 @@
       "success": "Sucesso"
     },
     "emailVerificationBanner": {
+      "short": "E-mail não verificado",
       "message": "Confirme seu endereço de email para garantir acesso completo à sua conta.",
       "resend": "Reenviar email",
       "sending": "Enviando...",

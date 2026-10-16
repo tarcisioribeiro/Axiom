@@ -159,6 +159,7 @@
       "success": "Success"
     },
     "emailVerificationBanner": {
+      "short": "Email not verified",
       "message": "Please confirm your email address to ensure full access to your account.",
       "resend": "Resend email",
       "sending": "Sending...",

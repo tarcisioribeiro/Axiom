@@ -1,6 +1,6 @@
 # Padrões de design do frontend web
 
-**Documento oficial** · versão 1.8 · 15/10/2026
+**Documento oficial** · versão 1.9 · 16/10/2026
 
 Padrões de UI/UX definidos pelo product owner desde 25/08/2026. Toda mudança visual no frontend web segue este documento. Quando um pedido contradiz uma regra, a regra é atualizada aqui primeiro.
 
@@ -78,7 +78,7 @@ Há três tipos de modal:
 
 - **[desktop]** Nenhum modal (formulário, detalhe ou ação) pode ter barra de rolagem, nem vertical nem horizontal. Isso inclui áreas roláveis internas (`overflow-y-auto`, `max-h-*`).
 - **[desktop]** Quando o conteúdo não cabe:
-  - **Formulário longo:** distribuir em colunas e alargar o modal (ex.: "Novo Livro" com duas colunas em `max-w-6xl`; "Editar Empréstimo", que junta as 3 etapas do assistente, em `max-w-5xl` com 3 colunas; "Valor a Pagar" em `max-w-5xl` com as seções Valores e Datas lado a lado).
+  - **Formulário longo:** distribuir em colunas e alargar o modal (ex.: "Novo Autor" em `max-w-4xl` com foto, dados pessoais e datas à esquerda e biografia ocupando a coluna direita (16/10/2026); "Novo Livro" com duas colunas em `max-w-6xl`; "Editar Empréstimo", que junta as 3 etapas do assistente, em `max-w-5xl` com 3 colunas; "Valor a Pagar" em `max-w-5xl` com as seções Valores e Datas lado a lado).
   - **Grupo fixo de opções** (checkboxes de eventos etc.): mais colunas.
   - **Lista de tamanho variável dentro do modal:** paginar com `PaginatedSlide` e `pinNav={false}`, com no máximo 5 itens por página (`LIST_PAGE_SIZE`). Itens de texto longo (resumos, destaques, opções de refeição com ingredientes) usam 3 por página. Lista editável em que o usuário adiciona itens (ingredientes da opção de cardápio, 3 por página por terem vários campos por linha) usa `PageSlide` controlado e pula para a última página ao adicionar (também as Receitas/Despesas Avulsas do Planejador Mensal, 5 por página). Grades de imagens usam até 8 (4 × 2).
   - **Fluxo longo:** etapas (um passo por vez), como no formulário de sessão de treino.
@@ -203,6 +203,9 @@ Há três tipos de modal:
 ## 12. Layout
 
 - **[regra]** Calendário e seletor de horário abrem por cima da tela, sem expandi-la.
+- **[regra]** Avisos persistentes de conta (ex.: e-mail não verificado) não ocupam altura da página: ficam como pílula compacta na barra superior, à esquerda da busca (ícone + rótulo curto, rótulo só a partir de `lg`; ações só ícone com tooltip abaixo: Reenviar, Dispensar). Antes era um banner no topo de cada página, que gerava rolagem (16/10/2026).
+- **[regra]** O `<main>` dos layouts (app e painel admin) não tem padding: o espaçamento da página vem só do `PageContainer` (antes o admin somava `p-lg` + `py-xl` e `/admin/config` rolava) (16/10/2026).
+- **[pontual]** Intelecto Hoje: os empty states dos 4 cards usam `py-lg` (em vez do `py-16` padrão) para os cards caberem em 880 px sem rolagem (16/10/2026).
 - **[regra]** Calendários de página (Treinos, Calendário Financeiro) usam o mesmo layout: grade do mês à esquerda (`lg:grid-cols-[minmax(0,1fr)_20rem]`, células de 72 px, troca de mês deslizando para o lado e limpando a seleção) e painel do dia à direita ("Selecione um dia" quando vazio; ao clicar, card com `animate-pop-in`, botão ✕ e itens neutros paginados em 5 com `PaginatedSlide pinNav={false}`). Referência: `components/workout/WorkoutCalendar.tsx`.
 - **[regra]** Datas futuras desabilitadas no próprio calendário.
 - **[regra]** Conteúdo centralizado na vertical entre componentes (filtro e paginação, abas e paginação, dentro de cards).
