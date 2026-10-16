@@ -56,7 +56,7 @@ export interface PayablePaymentRequest {
   scheduled?: boolean;
 }
 
-export interface RecalculationPreviewInstallment {
+interface RecalculationPreviewInstallment {
   number: number;
   old_value: string | null;
   new_value: string;

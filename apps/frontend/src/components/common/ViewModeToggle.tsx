@@ -4,7 +4,7 @@ import { PlainButton } from '@/components/ui/plain-button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
-export interface ViewModeOption<T extends string> {
+interface ViewModeOption<T extends string> {
   value: T;
   label: string;
   icon: LucideIcon;

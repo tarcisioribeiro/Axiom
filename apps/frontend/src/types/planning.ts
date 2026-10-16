@@ -1,6 +1,4 @@
-import type { InstanceStatus, KanbanStatus, TaskPriority } from './planning-constants';
-
-export type { InstanceStatus, KanbanStatus, TaskPriority };
+import type { KanbanStatus, TaskPriority } from './planning-constants';
 
 export interface RoutineTask {
   id: number;
@@ -126,7 +124,7 @@ export interface FocusBlockFormData {
   owner: number;
 }
 
-export interface RoutineTemplateTask {
+interface RoutineTemplateTask {
   name: string;
   description?: string;
   category: string;

@@ -52,7 +52,7 @@ type CommandDef = Omit<Command, 'title'>;
 /**
  * Comandos de navegação - todas as rotas principais
  */
-export const navigationCommands: CommandDef[] = [
+const navigationCommands: CommandDef[] = [
   {
     id: 'home',
     description: 'Página inicial',
@@ -297,7 +297,7 @@ export const navigationCommands: CommandDef[] = [
 /**
  * Comandos de ação rápida (sem navegação)
  */
-export const actionCommands: CommandDef[] = [
+const actionCommands: CommandDef[] = [
   {
     id: 'new-expense',
     description: 'Registrar nova despesa',
@@ -321,7 +321,7 @@ export const actionCommands: CommandDef[] = [
 /**
  * Comandos de configuração (ações dinâmicas)
  */
-export const createSettingsCommands = (
+const createSettingsCommands = (
   onLogout: () => void,
   onToggleTheme: () => void,
   isDark: boolean

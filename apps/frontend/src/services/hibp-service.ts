@@ -13,7 +13,7 @@ async function sha1(text: string): Promise<string> {
     .toUpperCase();
 }
 
-export interface HibpCheckResult {
+interface HibpCheckResult {
   breached: boolean;
   count: number;
 }

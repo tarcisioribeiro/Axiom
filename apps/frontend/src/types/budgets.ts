@@ -154,20 +154,20 @@ export interface AnomalyAlert {
   suggested_action_type?: string;
 }
 
-export interface SpendingInsightCategory {
+interface SpendingInsightCategory {
   category: string;
   total: number;
   percentage: number;
 }
 
-export interface SpendingInsightGrowing {
+interface SpendingInsightGrowing {
   category: string;
   current: number;
   prior_avg: number;
   pct_change: number;
 }
 
-export interface SpendingInsightMonthly {
+interface SpendingInsightMonthly {
   month: string;
   total: number;
 }

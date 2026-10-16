@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-export interface GoalComputedProgress {
+interface GoalComputedProgress {
   current_value: string;
   target_value: string;
   percentage: string;
@@ -212,7 +212,7 @@ export interface VaultYieldUpdateResponse {
   vault: Vault;
 }
 
-export interface VaultSummary {
+interface VaultSummary {
   id: number;
   uuid: string;
   description: string;

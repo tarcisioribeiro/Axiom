@@ -232,5 +232,3 @@ export function useCommandPalette(): UseCommandPaletteReturn {
     handleKeyDown,
   };
 }
-
-export default useCommandPalette;

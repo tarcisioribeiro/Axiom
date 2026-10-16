@@ -47,7 +47,7 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout);
 };
 
-export const reducer = (state: State, action: Action): State => {
+const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case 'ADD_TOAST': {
       if (state.toasts.length < TOAST_LIMIT) {

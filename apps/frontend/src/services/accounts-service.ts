@@ -4,7 +4,7 @@ import type { Account, AccountFormData } from '@/types';
 import { apiClient } from './api-client';
 import { BaseService } from './base-service';
 
-export interface ProjectedBalance {
+interface ProjectedBalance {
   account_id: string;
   date: string;
   current_balance: string;

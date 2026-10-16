@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatLocalDate } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import { payablesService } from '@/services/payables-service';
 import type { Payable, PayableFormData, Member } from '@/types';
@@ -139,16 +138,5 @@ export function usePayablesPage(): UsePayablesPageReturn {
     handleEdit,
     handleDelete,
     handleSubmit,
-  };
-}
-
-export function getPayableDefaultFormData(): PayableFormData {
-  return {
-    description: '',
-    value: 0,
-    paid_value: 0,
-    date: formatLocalDate(new Date()),
-    category: 'others',
-    status: 'active',
   };
 }

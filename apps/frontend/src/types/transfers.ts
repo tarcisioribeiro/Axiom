@@ -40,35 +40,3 @@ export interface TransferFormData {
   notes?: string;
   member?: number | null;
 }
-
-export interface FixedTransfer {
-  id: number;
-  uuid: string;
-  description: string;
-  value: string;
-  category: string;
-  origin_account: number;
-  origin_account_name?: string;
-  destiny_account: number;
-  destiny_account_name?: string;
-  due_day: number;
-  is_active: boolean;
-  fee: string;
-  last_generated_month?: string | null;
-  notes?: string;
-  total_generated?: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface FixedTransferFormData {
-  description: string;
-  value: number;
-  category: string;
-  origin_account: number;
-  destiny_account: number;
-  due_day: number;
-  is_active?: boolean;
-  fee?: number;
-  notes?: string;
-}

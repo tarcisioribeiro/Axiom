@@ -14,7 +14,6 @@ export const DURATION = {
  * two for new code instead of adding another ad-hoc curve.
  */
 export const EASE_OUT = [0.16, 1, 0.3, 1] as const;
-export const EASE_IN_OUT = [0.77, 0, 0.175, 1] as const;
 
 /**
  * Transições padrão. `normal` é o default global (MotionConfig em App.tsx):

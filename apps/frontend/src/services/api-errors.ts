@@ -28,14 +28,14 @@ export class ValidationError extends Error {
   }
 }
 
-export class NotFoundError extends Error {
+class NotFoundError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'NotFoundError';
   }
 }
 
-export class PermissionError extends Error {
+class PermissionError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'PermissionError';
@@ -56,7 +56,7 @@ function isDisallowedHostResponse(data: unknown): boolean {
   return typeof data === 'string' && data.includes('DisallowedHost');
 }
 
-export function formatErrorMessage(data: unknown): string {
+function formatErrorMessage(data: unknown): string {
   if (typeof data === 'string') {
     return data;
   }

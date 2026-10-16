@@ -4,7 +4,7 @@ import type { Expense, ExpenseFormData } from '@/types';
 import { apiClient } from './api-client';
 import { BaseService } from './base-service';
 
-export interface CategorySuggestionParams {
+interface CategorySuggestionParams {
   description?: string;
   merchant?: string;
   value?: number | string;

@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-export interface ExportParams {
+interface ExportParams {
   export_format: 'csv' | 'pdf';
   date_from?: string;
   date_to?: string;

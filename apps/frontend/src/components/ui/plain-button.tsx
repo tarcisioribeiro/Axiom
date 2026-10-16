@@ -3,7 +3,7 @@ import * as React from 'react';
 import { buttonTooltipText, useButtonTooltip } from '@/components/ui/button-tooltip';
 import { cn } from '@/lib/utils';
 
-export interface PlainButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface PlainButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /** Texto do tooltip. Padrão: aria-label/title, só em botões sem texto. `false` desliga. */
   tooltip?: string | false;
   tooltipSide?: 'top' | 'bottom' | 'left' | 'right';

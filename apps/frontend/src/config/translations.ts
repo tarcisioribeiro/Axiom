@@ -548,7 +548,7 @@ export const REVERSE_TRANSLATIONS = {
 };
 
 // English display labels (for en-US locale)
-export const TRANSLATIONS_EN = {
+const TRANSLATIONS_EN = {
   accountTypes: {
     CC: 'Checking Account',
     CS: 'Salary Account',

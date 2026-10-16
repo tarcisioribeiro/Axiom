@@ -88,7 +88,6 @@ import {
   Wallet,
   Wind,
   XCircle,
-  Zap,
 } from 'lucide-react';
 
 import type { IconComponent } from '@/types/icon';
@@ -305,13 +304,6 @@ export const PLATFORM_ICONS: Record<string, IconComponent> = {
   alura: Laptop,
   pluralsight: Monitor,
   other: Globe,
-};
-
-export const TRANSFER_TYPE_ICONS: Record<string, IconComponent> = {
-  pix: Zap,
-  ted: Building2,
-  doc: FileText,
-  withdrawal: Banknote,
 };
 
 export const WORKOUT_CATEGORY_ICONS: Record<string, IconComponent> = {

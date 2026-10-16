@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DollarSign, TrendingUp, CreditCard, AlertCircle } from 'lucide-react';
 
 import { StatCard } from './StatCard';

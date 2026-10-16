@@ -11,7 +11,7 @@ export const bubbleClasses =
 export const InsideTooltipContext = React.createContext(false);
 
 /** Texto visível de um nó React (para usar como tooltip de botões só com texto). */
-export function textOf(node: React.ReactNode): string {
+function textOf(node: React.ReactNode): string {
   if (typeof node === 'string' || typeof node === 'number') return String(node);
   if (Array.isArray(node)) return node.map(textOf).join('');
   if (React.isValidElement<{ children?: React.ReactNode }>(node))

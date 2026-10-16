@@ -114,13 +114,13 @@ export interface CourseSessionFormData {
   owner: number;
 }
 
-export interface SkillRelatedBook {
+interface SkillRelatedBook {
   id: number;
   title: string;
   genre: string;
 }
 
-export interface SkillRelatedCourse {
+interface SkillRelatedCourse {
   id: number;
   title: string;
   platform: string;
@@ -191,7 +191,7 @@ export interface KnowledgeLinkFormData {
   owner: number;
 }
 
-export interface GraphNodeMetadata {
+interface GraphNodeMetadata {
   // Book
   genre?: string;
   read_status?: string;

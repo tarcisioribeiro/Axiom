@@ -151,5 +151,3 @@ export function CommandPalette() {
     </Dialog>
   );
 }
-
-export default CommandPalette;

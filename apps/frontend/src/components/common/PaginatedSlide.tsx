@@ -150,7 +150,7 @@ interface PaginationNavProps {
  * Navegação ‹ Página X de Y › padrão do app. Usada pelo PaginatedSlide e por
  * listas paginadas no servidor (DataTable, logs). Some com uma página só.
  */
-export function PaginationNav({
+function PaginationNav({
   page,
   totalPages,
   onPageChange,

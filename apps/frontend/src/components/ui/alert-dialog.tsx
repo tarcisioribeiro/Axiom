@@ -9,8 +9,6 @@ import type { IconComponent } from '@/types/icon';
 
 const AlertDialog = AlertDialogPrimitive.Root;
 
-const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
-
 const AlertDialogPortal = AlertDialogPrimitive.Portal;
 
 const alertDialogOverlayVariants = cva('fixed inset-0 z-50', {
@@ -228,9 +226,6 @@ AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName;
 
 export {
   AlertDialog,
-  AlertDialogPortal,
-  AlertDialogOverlay,
-  AlertDialogTrigger,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogFooter,
@@ -238,10 +233,4 @@ export {
   AlertDialogDescription,
   AlertDialogAction,
   AlertDialogCancel,
-};
-
-export type {
-  AlertDialogContentProps,
-  AlertDialogHeaderProps,
-  AlertDialogOverlayProps,
 };

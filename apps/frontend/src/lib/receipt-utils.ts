@@ -13,7 +13,6 @@ import type {
   Revenue,
   CreditCardBill,
   CreditCardPurchase,
-  CreditCardInstallment,
   BillItem,
   Loan,
   Payable,
@@ -87,51 +86,6 @@ export function mapCreditCardBillToReceipt(
     accountName: bill.credit_card_associated_account_name,
     memberName,
     generatedAt: new Date(),
-  };
-}
-
-/**
- * Maps a CreditCardBill with its installments to ReceiptData with statement
- * @deprecated Use mapCreditCardBillWithBillItemsToReceipt for unified bill items
- */
-export function mapCreditCardBillWithItemsToReceipt(
-  bill: CreditCardBill,
-  installments: CreditCardInstallment[],
-  memberName: string
-): ReceiptData {
-  const statementItems: ReceiptStatementItem[] = installments.map((inst) => ({
-    description: inst.description || i18next.t('receipt.descriptions.purchaseFallback'),
-    category: inst.category || 'others',
-    categoryLabel: autoTranslate(inst.category || 'others'),
-    value: typeof inst.value === 'string' ? parseFloat(inst.value) : inst.value,
-    date: inst.due_date,
-    installmentNumber: inst.installment_number,
-    totalInstallments: inst.total_installments,
-    merchant: inst.merchant,
-    payed: inst.payed,
-  }));
-
-  const paidItems = statementItems.filter((i) => i.payed).length;
-
-  return {
-    type: 'credit_card_bill',
-    typeLabel: RECEIPT_TYPE_LABELS.credit_card_bill,
-    // Use \u00A0 (non-breaking space) for consistent rendering in html2canvas
-    description: `${i18next.t('receipt.descriptions.billPrefix')}\u00A0${translate('months', bill.month)}/${bill.year}\u00A0-\u00A0${bill.credit_card_name || i18next.t('receipt.descriptions.cardFallback')}`,
-    value: parseFloat(bill.total_amount),
-    date: bill.due_date || bill.invoice_ending_date,
-    category: 'fatura_cartao',
-    status: bill.status,
-    statusLabel: STATUS_LABELS[bill.status] || bill.status,
-    cardName: bill.credit_card_name,
-    accountName: bill.credit_card_associated_account_name,
-    memberName,
-    generatedAt: new Date(),
-    // Extrato detalhado
-    statementItems,
-    totalItems: statementItems.length,
-    totalPaidItems: paidItems,
-    totalPendingItems: statementItems.length - paidItems,
   };
 }
 

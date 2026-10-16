@@ -1,4 +1,4 @@
-export type AgentRole = 'user' | 'agent';
+type AgentRole = 'user' | 'agent';
 
 export interface IndexedSource {
   index: number;
@@ -46,12 +46,12 @@ export interface AgentStatus {
   models: string[];
 }
 
-export interface AgentStreamToken {
+interface AgentStreamToken {
   token: string;
   done?: false;
 }
 
-export interface AgentStreamDone {
+interface AgentStreamDone {
   done: true;
   agent: string;
   sources: string[];

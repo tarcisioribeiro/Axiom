@@ -1,7 +1,7 @@
 import type { RoutineTask } from './planning';
 import type { InstanceStatus, TaskPriority } from './planning-constants';
 
-export interface GoalFailure {
+interface GoalFailure {
   id: number;
   failure_date: string;
   streak_at_failure: number;
@@ -145,7 +145,7 @@ export interface TaskInstanceBulkUpdateResponse {
   errors: Array<{ id: number; error: string }>;
 }
 
-export interface WeekdayAnalytics {
+interface WeekdayAnalytics {
   weekday: number;
   weekday_display: string;
   total: number;
@@ -153,7 +153,7 @@ export interface WeekdayAnalytics {
   rate: number | null;
 }
 
-export type HabitInsightType =
+type HabitInsightType =
   | 'best_day'
   | 'worst_day'
   | 'weekend_drop'

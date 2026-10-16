@@ -1,9 +1,3 @@
-export const VAULT_TRANSACTION_TYPES = [
-  { value: 'deposit', label: 'Depósito' },
-  { value: 'withdrawal', label: 'Saque' },
-  { value: 'yield', label: 'Rendimento' },
-] as const;
-
 export const FINANCIAL_GOAL_CATEGORIES = [
   { value: 'savings', label: 'Poupança' },
   { value: 'investment', label: 'Investimento' },

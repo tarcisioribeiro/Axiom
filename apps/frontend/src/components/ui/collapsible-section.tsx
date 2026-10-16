@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
  * Expandir/recolher padrão (altura + fade) para toggles tipo "Ver detalhes".
  * Uso: `<Collapse open={expanded}>…</Collapse>` no lugar de `{expanded && …}`.
  */
-export function Collapse({
+function Collapse({
   open,
   children,
   className,

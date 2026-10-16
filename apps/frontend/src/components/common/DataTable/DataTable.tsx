@@ -32,7 +32,7 @@ export interface Column<T> {
   className?: string;
 }
 
-export type DataTableDensity = 'comfortable' | 'compact';
+type DataTableDensity = 'comfortable' | 'compact';
 
 export interface DataTableProps<T> {
   data: T[];

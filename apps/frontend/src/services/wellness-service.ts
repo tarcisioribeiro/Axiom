@@ -48,7 +48,7 @@ export interface EmotionalCheckin {
   created_at: string;
 }
 
-export interface EmotionalCheckinCreate {
+interface EmotionalCheckinCreate {
   checked_at: string;
   loneliness: number;
   neediness: number;
@@ -71,19 +71,6 @@ export type EmotionalState =
 
 export type ImpulseType =
   'pornography' | 'alcohol' | 'social_media' | 'shopping' | 'procrastination' | 'other';
-
-export interface CrisisActionPlan {
-  '5min': string[];
-  '10min': string[];
-  '20min': string[];
-}
-
-export interface CrisisAIResponse {
-  validation: string;
-  explanation: string;
-  action_plan: CrisisActionPlan;
-  affirmation: string;
-}
 
 export interface CrisisImpulseLog {
   id: number;
@@ -110,7 +97,7 @@ export interface CrisisImpulseLogCreate {
 export type InterventionCategory =
   'self_esteem' | 'loneliness' | 'neediness' | 'anxiety' | 'emotional_dependency';
 
-export type DifficultyLevel = 'easy' | 'medium' | 'hard';
+type DifficultyLevel = 'easy' | 'medium' | 'hard';
 
 export interface WellnessIntervention {
   id: number;
@@ -125,7 +112,7 @@ export interface WellnessIntervention {
   is_global: boolean;
 }
 
-export interface WellnessInterventionCompletion {
+interface WellnessInterventionCompletion {
   id: number;
   intervention: number;
   intervention_title: string;
@@ -136,7 +123,7 @@ export interface WellnessInterventionCompletion {
   created_at: string;
 }
 
-export interface WellnessDashboard {
+interface WellnessDashboard {
   self_esteem: {
     current_score: number | null;
     assessed_at: string | null;
@@ -158,7 +145,7 @@ export interface WellnessDashboard {
   };
 }
 
-export interface PaginatedResponse<T> {
+interface PaginatedResponse<T> {
   results: T[];
   count: number;
 }

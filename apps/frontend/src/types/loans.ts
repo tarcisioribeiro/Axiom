@@ -77,7 +77,7 @@ export interface LoanPaymentRequest {
   notes?: string;
 }
 
-export interface LoanRecalculationPreview {
+interface LoanRecalculationPreview {
   loan_id: number;
   mode: 'keep_count' | 'change_count';
   old_installment_count: number;
@@ -106,7 +106,7 @@ export interface LoanReceiptRequest {
   scheduled?: boolean;
 }
 
-export interface AmortizationEntry {
+interface AmortizationEntry {
   installment: number;
   due_date: string;
   payment: string;

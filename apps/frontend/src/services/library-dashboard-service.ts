@@ -2,7 +2,7 @@ import { API_CONFIG } from '@/config/api-config';
 
 import { apiClient } from './api-client';
 
-export interface LibraryDashboardStats {
+interface LibraryDashboardStats {
   total_books: number;
   total_authors: number;
   total_publishers: number;
@@ -136,7 +136,7 @@ export interface LibraryDashboardStats {
   }>;
 }
 
-export interface LibraryStreak {
+interface LibraryStreak {
   current: number;
   longest: number;
   today_completed: boolean;

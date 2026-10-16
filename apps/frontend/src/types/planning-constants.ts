@@ -87,14 +87,7 @@ export const UNIT_CHOICES = [
   { value: 'comprimido', label: 'comprimido' },
 ] as const;
 
-export const INSTANCE_STATUS_CHOICES = [
-  { value: 'pending', label: 'Pendente' },
-  { value: 'in_progress', label: 'Em Andamento' },
-  { value: 'completed', label: 'Concluída' },
-  { value: 'skipped', label: 'Pulada' },
-  { value: 'cancelled', label: 'Cancelada' },
-] as const;
-
-export type InstanceStatus = (typeof INSTANCE_STATUS_CHOICES)[number]['value'];
+export type InstanceStatus =
+  'pending' | 'in_progress' | 'completed' | 'skipped' | 'cancelled';
 
 export type KanbanStatus = 'todo' | 'doing' | 'done';

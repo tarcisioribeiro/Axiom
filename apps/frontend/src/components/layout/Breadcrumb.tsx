@@ -95,5 +95,3 @@ export function Breadcrumb({ className, items }: BreadcrumbProps) {
     </nav>
   );
 }
-
-export default Breadcrumb;

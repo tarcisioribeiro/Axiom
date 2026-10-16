@@ -2,7 +2,7 @@ import { API_CONFIG } from '@/config/api-config';
 
 import { apiClient } from './api-client';
 
-export interface VaultHealthIssuesSummary {
+interface VaultHealthIssuesSummary {
   weak: number;
   medium: number;
   duplicate: number;
@@ -27,7 +27,7 @@ export interface VaultHealthReport {
   problematic_passwords: VaultHealthPassword[];
 }
 
-export interface SecurityDashboardStats {
+interface SecurityDashboardStats {
   total_passwords: number;
   total_stored_cards: number;
   total_stored_accounts: number;
@@ -76,7 +76,7 @@ export interface VaultHealthSnapshot {
   snapshot_date: string;
 }
 
-export interface VaultAlertConfig {
+interface VaultAlertConfig {
   id?: number;
   alert_on_new_ip: boolean;
   alert_on_failed_unlock: boolean;
@@ -88,7 +88,7 @@ export interface VaultAlertConfig {
   notify_email: boolean;
 }
 
-export interface PasswordHistoryEntry {
+interface PasswordHistoryEntry {
   id: number;
   changed_at: string;
   changed_by_username: string | null;

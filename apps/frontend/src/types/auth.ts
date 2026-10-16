@@ -3,11 +3,6 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface TokenResponse {
-  access: string;
-  refresh: string;
-}
-
 export interface User {
   id: number;
   username: string;

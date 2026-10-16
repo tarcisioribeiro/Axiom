@@ -2,7 +2,7 @@ import { API_CONFIG } from '@/config/constants';
 
 import { apiClient } from './api-client';
 
-export interface SimulatorScenarioInput {
+interface SimulatorScenarioInput {
   name?: string;
   initial_amount: number;
   monthly_deposit: number;
@@ -10,7 +10,7 @@ export interface SimulatorScenarioInput {
   months: number;
 }
 
-export interface SimulatorDataPoint {
+interface SimulatorDataPoint {
   month: number;
   balance: number;
   label: string;
@@ -29,7 +29,7 @@ export interface SimulatorScenarioResult {
   data_points: SimulatorDataPoint[];
 }
 
-export interface SimulatorResponse {
+interface SimulatorResponse {
   scenarios: SimulatorScenarioResult[];
 }
 

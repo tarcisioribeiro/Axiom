@@ -72,5 +72,3 @@ export function useSuccessAnimation(options: UseSuccessAnimationOptions = {}) {
     animationProps,
   };
 }
-
-export default useSuccessAnimation;

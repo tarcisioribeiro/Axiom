@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
-export type { PaginatedResponse, ApiError } from './common';
-export type { LoginCredentials, TokenResponse, User, Permission } from './auth';
+export type { PaginatedResponse } from './common';
+export type { LoginCredentials, User, Permission } from './auth';
 export type {
   ConfigCategory,
   SystemConfig,
@@ -16,15 +16,12 @@ export type {
   PermissionUser,
 } from './admin';
 export type {
-  AgentRole,
   AgentMessage,
   AgentHistoryResponse,
   AgentName,
   AgentAskRequest,
   AgentAskResponse,
   AgentStatus,
-  AgentStreamToken,
-  AgentStreamDone,
   AgentStreamEvent,
   IndexedSource,
 } from './agents';
@@ -56,24 +53,16 @@ export type {
   CreditCardPurchase,
   CreditCardPurchaseFormData,
   CreditCardInstallment,
-  CreditCardInstallmentNested,
   CreditCardInstallmentUpdateData,
 } from './credit-card-purchases';
-export type {
-  Transfer,
-  TransferFormData,
-  FixedTransfer,
-  FixedTransferFormData,
-} from './transfers';
+export type { Transfer, TransferFormData } from './transfers';
 export type {
   Loan,
   LoanFormData,
   LoanInstallment,
   LoanPaymentRequest,
   LoanReceiptRequest,
-  LoanRecalculationPreview,
   LoanRecalculationResponse,
-  AmortizationEntry,
   AmortizationSchedule,
 } from './loans';
 export type {
@@ -82,7 +71,6 @@ export type {
   PayableInstallment,
   PayablePaymentRequest,
   RecalculationPreview,
-  RecalculationPreviewInstallment,
   PaymentPlanRequest,
   PaymentPlanResponse,
   RecalculationResponse,
@@ -102,14 +90,9 @@ export type {
   DashboardSummary,
   AccountBalance,
   BalanceForecast,
-  CashFlowForecastDay,
   CashFlowForecast,
-  DebtPayoffSurplusMonth,
   DebtPayoffPlanDebt,
-  DebtPayoffStrategyPlan,
   DebtPayoffPlan,
-  ChartData,
-  TimeSeriesData,
 } from './dashboard';
 export * from './security-all';
 export type {
@@ -146,13 +129,6 @@ export type {
   IntellectCategory,
   SkillProficiency,
   SkillStatus,
-  KnowledgeLink,
-  KnowledgeLinkFormData,
-  KnowledgeNodeType,
-  KnowledgeLinkRelation,
-  GraphNode,
-  GraphLink,
-  KnowledgeGraphData,
 } from './intellect';
 export {
   ERAS,
@@ -161,7 +137,6 @@ export {
   BOOK_LANGUAGES,
   BOOK_GENRES,
   LITERARY_TYPES,
-  MEDIA_TYPES,
   READ_STATUS,
 } from './library-constants';
 export {
@@ -174,9 +149,8 @@ export {
   MOOD_CHOICES,
   PRIORITY_CHOICES,
   UNIT_CHOICES,
-  INSTANCE_STATUS_CHOICES,
 } from './planning-constants';
-export type { TaskPriority, InstanceStatus, KanbanStatus } from './planning-constants';
+export type { InstanceStatus, KanbanStatus } from './planning-constants';
 export type {
   RoutineTask,
   RoutineTaskFormData,
@@ -184,7 +158,6 @@ export type {
   FocusBlockFormData,
   FocusBlockTask,
   FocusBlockTaskFormData,
-  RoutineTemplateTask,
   RoutineTemplate,
   RoutineTemplateImportResult,
   HeatmapDay,
@@ -193,7 +166,6 @@ export type {
 } from './planning';
 export type {
   Goal,
-  GoalFailure,
   GoalFormData,
   DailyReflection,
   DailyReflectionFormData,
@@ -203,16 +175,13 @@ export type {
   InstancesForDateResponse,
   TaskInstanceBulkUpdate,
   TaskInstanceBulkUpdateResponse,
-  WeekdayAnalytics,
   HabitInsight,
-  HabitInsightType,
   PersonalPlanningAnalytics,
   PersonalPlanningDashboardStats,
 } from './planning-instances';
 export type {
   FixedExpense,
   FixedExpenseFormData,
-  FixedExpenseValue,
   BulkGenerateRequest,
   BulkGenerateResponse,
   BlockedCard,
@@ -220,15 +189,12 @@ export type {
   FixedExpenseGenerationLog,
   FixedRevenue,
   FixedRevenueFormData,
-  FixedRevenueValue,
   BulkGenerateRevenuesRequest,
   BulkGenerateRevenuesResponse,
-  FixedRevenueStats,
   FixedRevenueGenerationLog,
   FullyGeneratedMonthsResponse,
 } from './fixed';
 export type {
-  GoalComputedProgress,
   VaultTransaction,
   Vault,
   VaultFormData,
@@ -247,7 +213,6 @@ export type {
   VaultOperationResponse,
   VaultYieldResponse,
   VaultYieldUpdateResponse,
-  VaultSummary,
   FinancialGoal,
   FinancialGoalListItem,
   FinancialGoalFormData,
@@ -255,7 +220,7 @@ export type {
   FinancialGoalVaultsRequest,
   FinancialGoalVaultsResponse,
 } from './vaults';
-export { VAULT_TRANSACTION_TYPES, FINANCIAL_GOAL_CATEGORIES } from './vaults-constants';
+export { FINANCIAL_GOAL_CATEGORIES } from './vaults-constants';
 export type {
   NotificationType,
   Notification,
@@ -282,9 +247,6 @@ export type {
   BankStatementImport,
   AnomalyAlert,
   SpendingInsights,
-  SpendingInsightCategory,
-  SpendingInsightGrowing,
-  SpendingInsightMonthly,
 } from './budgets';
 export type {
   Webhook,

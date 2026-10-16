@@ -23,10 +23,4 @@ export type {
   PasswordGenerateResponse,
   ActivityLog,
 } from './security';
-export {
-  PASSWORD_CATEGORIES,
-  CARD_FLAGS,
-  ACCOUNT_TYPES,
-  ARCHIVE_CATEGORIES,
-  ARCHIVE_TYPES,
-} from './security-constants';
+export { PASSWORD_CATEGORIES, CARD_FLAGS, ACCOUNT_TYPES } from './security-constants';

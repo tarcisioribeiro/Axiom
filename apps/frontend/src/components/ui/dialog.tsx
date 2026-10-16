@@ -15,7 +15,6 @@ const Dialog = (props: React.ComponentProps<typeof DialogPrimitive.Root>) => (
     <DialogPrimitive.Root {...props} />
   </DialogOpenContext.Provider>
 );
-const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
 const DialogClose = DialogPrimitive.Close;
 
@@ -181,10 +180,6 @@ DialogDescription.displayName = DialogPrimitive.Description.displayName;
 
 export {
   Dialog,
-  DialogPortal,
-  DialogOverlay,
-  DialogClose,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogFooter,

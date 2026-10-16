@@ -27,21 +27,3 @@ export const ACCOUNT_TYPES = [
   { value: 'CI', label: 'Conta Investimento' },
   { value: 'OTHER', label: 'Outro' },
 ];
-
-export const ARCHIVE_CATEGORIES = [
-  { value: 'personal', label: 'Pessoal' },
-  { value: 'financial', label: 'Financeiro' },
-  { value: 'legal', label: 'Jurídico' },
-  { value: 'medical', label: 'Médico' },
-  { value: 'tax', label: 'Impostos' },
-  { value: 'work', label: 'Trabalho' },
-  { value: 'other', label: 'Outro' },
-];
-
-export const ARCHIVE_TYPES = [
-  { value: 'text', label: 'Texto' },
-  { value: 'pdf', label: 'PDF' },
-  { value: 'image', label: 'Imagem' },
-  { value: 'document', label: 'Documento' },
-  { value: 'other', label: 'Outro' },
-];

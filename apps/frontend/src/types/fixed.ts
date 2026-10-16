@@ -43,7 +43,7 @@ export interface FixedExpenseFormData {
   allow_value_edit: boolean;
 }
 
-export interface FixedExpenseValue {
+interface FixedExpenseValue {
   fixed_expense_id: number;
   value: number;
   /** Data do lançamento dentro do mês (`YYYY-MM-DD`). Default: dia de vencimento. */
@@ -130,7 +130,7 @@ export interface FixedRevenueFormData {
   notes?: string;
 }
 
-export interface FixedRevenueValue {
+interface FixedRevenueValue {
   fixed_revenue_id: number;
   value: number;
   /** Data do lançamento dentro do mês (`YYYY-MM-DD`). Default: dia de vencimento. */
@@ -149,21 +149,6 @@ export interface BulkGenerateRevenuesResponse {
   skipped_count: number;
   month: string;
   revenues: Revenue[];
-}
-
-export interface FixedRevenueStats {
-  active_templates: number;
-  current_month: {
-    month: string;
-    total_amount: number;
-    received_count: number;
-    generated_count: number;
-    pending_count: number;
-  };
-  previous_month: {
-    month: string;
-    total_amount: number;
-  };
 }
 
 export interface FixedExpenseGenerationLog {

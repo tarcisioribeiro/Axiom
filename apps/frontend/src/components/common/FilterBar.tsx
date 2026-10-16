@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PlainButton } from '@/components/ui/plain-button';
 import { cn } from '@/lib/utils';
 
-export interface ActiveFilterChip {
+interface ActiveFilterChip {
   key: string;
   label: string;
   onRemove: () => void;

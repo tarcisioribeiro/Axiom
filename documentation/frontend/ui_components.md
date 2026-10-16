@@ -33,7 +33,6 @@ src/components/ui/
 ├── label.tsx             # Labels de formulário
 ├── popover.tsx           # Popovers
 ├── progress.tsx          # Barras de progresso
-├── radio-group.tsx       # Radio buttons
 ├── scroll-area.tsx       # Área com scroll customizado
 ├── select.tsx            # Dropdowns/selects
 ├── skeleton-variants.tsx # Variantes de skeleton pré-definidas
@@ -358,27 +357,7 @@ import { Label } from '@/components/ui/label';
 </div>
 ```
 
-### 12. Radio Group
-
-Grupo de radio buttons.
-
-```tsx
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-
-<RadioGroup value={value} onValueChange={setValue}>
-  <div className="flex items-center space-x-2">
-    <RadioGroupItem value="option1" id="option1" />
-    <Label htmlFor="option1">Opção 1</Label>
-  </div>
-  <div className="flex items-center space-x-2">
-    <RadioGroupItem value="option2" id="option2" />
-    <Label htmlFor="option2">Opção 2</Label>
-  </div>
-</RadioGroup>
-```
-
-### 13. Skeleton
+### 12. Skeleton
 
 Loading placeholder animado.
 
@@ -392,7 +371,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 </div>
 ```
 
-### 14. Progress
+### 13. Progress
 
 Barra de progresso.
 
@@ -402,7 +381,7 @@ import { Progress } from '@/components/ui/progress';
 <Progress value={60} className="w-full" />
 ```
 
-### 15. Popover
+### 14. Popover
 
 Tooltip ou popover com conteúdo rico.
 
@@ -496,7 +475,6 @@ Antes de criar novos componentes, verifique se os componentes comuns cobrem a ne
 | `IconButton` | Botão ícone + tooltip acessível |
 | `AnimatedPage` | Wrapper Framer Motion para transição de página |
 | `ExportModal` | Diálogo de exportação com seleção de intervalo de datas |
-| `StatementExportModal` | Variante de export para extratos |
 | `ErrorBoundary` | React Error Boundary para captura de erros |
 | `LanguageSelector` | Seletor PT-BR / EN-US |
 | `ThemeToggle` | Alternância Dracula / Alucard |

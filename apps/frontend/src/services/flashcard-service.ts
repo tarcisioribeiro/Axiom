@@ -28,10 +28,6 @@ export interface FlashCardFormData {
   back: string;
 }
 
-export interface FlashCardReviewResult {
-  rating: number;
-}
-
 class FlashCardService {
   /** Todas as páginas (a tela filtra e pagina no cliente). */
   async getAll(dueOnly?: boolean): Promise<{ results: FlashCard[]; count: number }> {

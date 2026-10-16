@@ -142,5 +142,3 @@ export function FormField({
     </div>
   );
 }
-
-export default FormField;

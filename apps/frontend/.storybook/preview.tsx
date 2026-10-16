@@ -1,4 +1,4 @@
-import type { Decorator, Preview } from '@storybook/react';
+import type { Decorator, Preview } from '@storybook/react-vite';
 import React from 'react';
 
 import '../src/i18n';
@@ -14,7 +14,7 @@ const withTheme: Decorator = (Story, context) => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6 text-foreground">
+    <div className="bg-background text-foreground min-h-screen p-6">
       <Story />
     </div>
   );

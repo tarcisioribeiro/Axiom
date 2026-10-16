@@ -27,10 +27,10 @@ import {
   YAxis,
 } from 'recharts';
 
-import { Can } from '@/components/common/Can';
 import { EnhancedPieChart } from '@/components/charts/EnhancedPieChart';
 import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';

@@ -60,7 +60,7 @@ export interface BalanceForecast {
   };
 }
 
-export interface CashFlowForecastDay {
+interface CashFlowForecastDay {
   date: string;
   revenues: number;
   expenses: number;
@@ -79,7 +79,7 @@ export interface CashFlowForecast {
   daily_breakdown: CashFlowForecastDay[];
 }
 
-export interface DebtPayoffSurplusMonth {
+interface DebtPayoffSurplusMonth {
   year: number;
   month: number;
   revenues: number;
@@ -112,7 +112,7 @@ export interface DebtPayoffPlanDebt {
   payment_plan_exists: boolean;
 }
 
-export interface DebtPayoffStrategyPlan {
+interface DebtPayoffStrategyPlan {
   debts: DebtPayoffPlanDebt[];
   total_interest: number;
   last_payoff_date: string | null;
@@ -127,16 +127,4 @@ export interface DebtPayoffPlan {
   surplus_projection: DebtPayoffSurplusMonth[];
   snowball: DebtPayoffStrategyPlan;
   avalanche: DebtPayoffStrategyPlan;
-}
-
-export interface ChartData {
-  name: string;
-  value: number;
-  color?: string;
-}
-
-export interface TimeSeriesData {
-  date: string;
-  expenses: number;
-  revenues: number;
 }

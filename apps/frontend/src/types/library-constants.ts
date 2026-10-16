@@ -79,11 +79,6 @@ export const LITERARY_TYPES = [
   { value: 'essay', label: 'Ensaio' },
 ];
 
-export const MEDIA_TYPES = [
-  { value: 'Dig', label: 'Digital' },
-  { value: 'Phi', label: 'Física' },
-];
-
 export const READ_STATUS = [
   { value: 'to_read', label: 'Para ler' },
   { value: 'reading', label: 'Lendo' },

@@ -127,8 +127,8 @@ import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { ScrollArea } from './scroll-area';
 
 // Map of icon names to icon components
-// eslint-disable-next-line react-refresh/only-export-components
-export const TASK_ICONS: Record<string, IconComponent> = {
+
+const TASK_ICONS: Record<string, IconComponent> = {
   // Health & Wellness
   Heart: Heart,
   Pill: Pill,

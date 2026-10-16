@@ -2,7 +2,7 @@
  * Fundo dos destaques de leitura na cor escolhida (§5: destaques mantêm só o
  * fundo colorido, borda neutra). Tokens `--highlight-*` em `index.css`.
  */
-export const HIGHLIGHT_BG: Record<string, string> = {
+const HIGHLIGHT_BG: Record<string, string> = {
   yellow: 'bg-highlight-yellow/15',
   green: 'bg-highlight-green/15',
   blue: 'bg-highlight-blue/15',

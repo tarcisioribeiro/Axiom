@@ -1,19 +1,5 @@
 import { useSyncExternalStore, useMemo, useId } from 'react';
 
-/**
- * Sistema de cores para gráficos Recharts.
- * Lê os tokens de tema (--success, --primary, --category-*, etc.) diretamente
- * do :root computado, funcionando para as 16 variantes de tema definidas em
- * index.css — não só para o par Alucard (light) / Dracula (dark) original.
- */
-
-/**
- * Verifica se o tema atual é dark
- */
-export const isDarkTheme = (): boolean => {
-  return document.documentElement.classList.contains('dark');
-};
-
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
@@ -62,12 +48,6 @@ function _getThemeKey(): string {
 }
 
 /**
- * Hook reativo para o estado dark/light do tema.
- */
-export const useIsDarkTheme = (): boolean =>
-  useSyncExternalStore(_subscribe, isDarkTheme);
-
-/**
  * Hook reativo para a chave completa de tema (dark/light + variante).
  * Dispara re-render quando o usuário troca de tema claro/escuro OU de
  * variante dentro do mesmo modo.
@@ -102,33 +82,11 @@ const SEMANTIC_VAR_MAP: Record<SemanticColor, string> = {
 /**
  * Retorna cores semânticas baseadas no tema ativo (qualquer uma das 16 variantes)
  */
-export const getSemanticColors = (): Record<SemanticColor, string> => {
+const getSemanticColors = (): Record<SemanticColor, string> => {
   const entries = Object.entries(SEMANTIC_VAR_MAP) as [SemanticColor, string][];
   return Object.fromEntries(
     entries.map(([key, varName]) => [key, themeColor(varName)])
   ) as Record<SemanticColor, string>;
-};
-
-/**
- * Retorna uma cor semântica específica
- */
-export const getSemanticColor = (color: SemanticColor): string =>
-  themeColor(SEMANTIC_VAR_MAP[color]);
-
-/**
- * Retorna cor com opacidade ajustada
- */
-export const withOpacity = (color: string, opacity: number): string => {
-  if (color.startsWith('#')) {
-    const r = parseInt(color.slice(1, 3), 16);
-    const g = parseInt(color.slice(3, 5), 16);
-    const b = parseInt(color.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-  }
-  if (color.startsWith('hsl(') && color.endsWith(')')) {
-    return `${color.slice(0, -1)} / ${opacity})`;
-  }
-  return color;
 };
 
 // 8 tons distintos para séries de gráfico, lidos dos tokens de tema em vez
@@ -147,16 +105,7 @@ const CHART_SERIES_VARS = [
 /**
  * Retorna a paleta de cores atual baseada no tema ativo
  */
-export const getChartColors = (): string[] => CHART_SERIES_VARS.map(themeColor);
-
-/**
- * Retorna cores para força de senha baseadas no tema ativo
- */
-export const getPasswordStrengthColors = () => ({
-  weak: themeColor('--destructive'),
-  medium: themeColor('--warning'),
-  strong: themeColor('--success'),
-});
+const getChartColors = (): string[] => CHART_SERIES_VARS.map(themeColor);
 
 export type TaskCategoryKey =
   | 'health'
@@ -200,7 +149,7 @@ const TASK_CATEGORY_VAR_MAP: Record<TaskCategoryKey, string> = {
  * Cada categoria mapeia para um token semântico/de categoria já definido em
  * index.css, então fica correto nas 16 variantes de tema sem tabela própria.
  */
-export const getTaskCategoryColors = (): Record<TaskCategoryKey, string> => {
+const getTaskCategoryColors = (): Record<TaskCategoryKey, string> => {
   const entries = Object.entries(TASK_CATEGORY_VAR_MAP) as [TaskCategoryKey, string][];
   return Object.fromEntries(
     entries.map(([key, varName]) => [key, themeColor(varName)])
@@ -227,15 +176,6 @@ export const useSemanticColors = () => {
   const themeKey = useThemeKey();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => getSemanticColors(), [themeKey]);
-};
-
-/**
- * Hook reativo para cores de força de senha
- */
-export const usePasswordStrengthColors = () => {
-  const themeKey = useThemeKey();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => getPasswordStrengthColors(), [themeKey]);
 };
 
 /**

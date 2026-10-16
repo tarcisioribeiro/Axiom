@@ -14,13 +14,13 @@ import type {
 
 import { apiClient } from './api-client';
 
-export interface MonthlyStatementCategory {
+interface MonthlyStatementCategory {
   category: string;
   total: string;
   count: number;
 }
 
-export interface MonthlyStatement {
+interface MonthlyStatement {
   period: string;
   total_revenues: string;
   total_expenses: string;
@@ -29,7 +29,7 @@ export interface MonthlyStatement {
   expenses_by_category: MonthlyStatementCategory[];
 }
 
-export interface IRReport {
+interface IRReport {
   year: number;
   revenues: { category: string; total: number }[];
   deductible_expenses: { category: string; total: number }[];

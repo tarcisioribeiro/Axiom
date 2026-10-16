@@ -2,7 +2,7 @@ import { API_CONFIG } from '@/config/constants';
 
 import { apiClient } from './api-client';
 
-export interface SkillHistoryEntry {
+interface SkillHistoryEntry {
   id: number;
   uuid: string;
   skill: number;

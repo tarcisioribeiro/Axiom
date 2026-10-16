@@ -1,34 +1,11 @@
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 /**
- * Skeleton para cards de conta/cartao financeiro.
- */
-export function SkeletonCard({ className }: { className?: string }) {
-  return (
-    <Card className={cn('overflow-hidden', className)}>
-      <CardHeader className="pb-sm">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-8 w-8 rounded-full" />
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <Skeleton className="h-8 w-24" />
-        <div className="flex justify-between">
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-4 w-16" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-/**
  * Skeleton para linhas de tabela.
  */
-export function SkeletonTableRow({ columns = 5 }: { columns?: number }) {
+function SkeletonTableRow({ columns = 5 }: { columns?: number }) {
   return (
     <tr className="border-b">
       {Array.from({ length: columns }).map((_, i) => (
@@ -77,7 +54,7 @@ export function SkeletonTable({
 /**
  * Skeleton para lista de itens (despesas, receitas, etc).
  */
-export function SkeletonListItem({ className }: { className?: string }) {
+function SkeletonListItem({ className }: { className?: string }) {
   return (
     <div className={cn('gap-md p-md flex items-center border-b', className)}>
       <Skeleton className="h-10 w-10 flex-shrink-0 rounded-full" />
@@ -112,7 +89,7 @@ export function SkeletonList({
 /**
  * Skeleton para stats/metricas do dashboard.
  */
-export function SkeletonStat({ className }: { className?: string }) {
+function SkeletonStat({ className }: { className?: string }) {
   return (
     <Card className={className}>
       <CardContent className="px-lg py-lg pt-lg">
@@ -144,73 +121,6 @@ export function SkeletonStatsGrid({
       {Array.from({ length: items }).map((_, i) => (
         <SkeletonStat key={i} />
       ))}
-    </div>
-  );
-}
-
-/**
- * Skeleton para grafico.
- */
-export function SkeletonChart({
-  className,
-  height = 300,
-}: {
-  className?: string;
-  height?: number;
-}) {
-  return (
-    <Card className={className}>
-      <CardHeader>
-        <Skeleton className="h-5 w-40" />
-        <Skeleton className="h-4 w-60" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="w-full" style={{ height }} />
-      </CardContent>
-    </Card>
-  );
-}
-
-/**
- * Skeleton para pagina de dashboard completa.
- */
-export function SkeletonDashboard() {
-  return (
-    <div
-      className="space-y-lg"
-      role="status"
-      aria-busy="true"
-      aria-label="Carregando dashboard"
-    >
-      <SkeletonStatsGrid items={4} />
-      <div className="gap-lg grid md:grid-cols-2">
-        <SkeletonChart height={300} />
-        <SkeletonChart height={300} />
-      </div>
-      <SkeletonTable rows={5} columns={6} />
-    </div>
-  );
-}
-
-/**
- * Skeleton para formulario.
- */
-export function SkeletonForm({
-  fields = 4,
-  className,
-}: {
-  fields?: number;
-  className?: string;
-}) {
-  return (
-    <div className={cn('space-y-lg', className)} aria-busy="true">
-      {Array.from({ length: fields }).map((_, i) => (
-        <div key={i} className="space-y-sm">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-      ))}
-      <Skeleton className="h-10 w-32" />
     </div>
   );
 }

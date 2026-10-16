@@ -4,9 +4,3 @@ export interface PaginatedResponse<T> {
   previous: string | null;
   results: T[];
 }
-
-export interface ApiError {
-  message: string;
-  status?: number;
-  errors?: Record<string, string[]>;
-}

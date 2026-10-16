@@ -43,7 +43,7 @@ export interface HealthResponse {
 }
 
 /** Aviso do sistema de agentes; o texto é montado via i18n a partir do `code`. */
-export interface LlmWarning {
+interface LlmWarning {
   code: string;
   role?: 'primary' | 'fallback' | 'embeddings';
   provider?: string;

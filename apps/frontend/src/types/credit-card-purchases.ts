@@ -39,7 +39,7 @@ export interface CreditCardExpenseFormData {
   notes?: string;
 }
 
-export interface CreditCardInstallmentNested {
+interface CreditCardInstallmentNested {
   id: number;
   installment_number: number;
   value: number;

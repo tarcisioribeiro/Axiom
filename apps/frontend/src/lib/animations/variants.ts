@@ -80,20 +80,6 @@ export const emptyStateVariants: Variants = {
   },
 };
 
-// Badge scale in
-export const badgeVariants: Variants = {
-  initial: { scale: 0.9, opacity: 0 },
-  animate: {
-    scale: 1,
-    opacity: 1,
-    transition: {
-      type: 'spring',
-      stiffness: 500,
-      damping: 30,
-    },
-  },
-};
-
 // Checkmark circle animation
 export const checkmarkCircleVariants: Variants = {
   initial: { scale: 0.9, opacity: 0 },

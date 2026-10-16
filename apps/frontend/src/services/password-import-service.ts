@@ -28,7 +28,7 @@ export interface ImportPreviewResponse {
   entries: ImportPreviewEntry[];
 }
 
-export interface ImportConfirmEntry {
+interface ImportConfirmEntry {
   title: string;
   username: string;
   password: string;

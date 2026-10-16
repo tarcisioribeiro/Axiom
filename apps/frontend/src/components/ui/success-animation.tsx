@@ -202,5 +202,3 @@ export function SuccessAnimation({
     </AnimatePresence>
   );
 }
-
-export default SuccessAnimation;

@@ -16,14 +16,7 @@ import {
   type RequestData,
 } from './api-errors';
 
-export type { RequestData, QueryParams };
-export {
-  AuthenticationError,
-  ValidationError,
-  NotFoundError,
-  PermissionError,
-} from './api-errors';
-
+export type { RequestData };
 const MAX_RETRIES = 3;
 const REQUEST_TIMEOUT_MS = 30_000;
 

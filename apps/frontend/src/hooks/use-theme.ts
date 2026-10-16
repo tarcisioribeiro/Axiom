@@ -48,7 +48,7 @@ const DEFAULT_LIGHT_VARIANT: LightVariant = 'alucard';
 const THEME_CHANGE_EVENT = 'axiom:theme-change';
 
 /** Par claro de cada tema escuro — `T` alterna dentro do par */
-export const LIGHT_PAIR: Record<DarkVariant, LightVariant> = {
+const LIGHT_PAIR: Record<DarkVariant, LightVariant> = {
   dracula: 'alucard',
   'catppuccin-mocha': 'catppuccin-latte',
   'tokyo-night': 'tokyo-day',
@@ -58,7 +58,7 @@ export const LIGHT_PAIR: Record<DarkVariant, LightVariant> = {
   'mint-dark': 'mint-light',
 };
 
-export const DARK_PAIR = Object.fromEntries(
+const DARK_PAIR = Object.fromEntries(
   Object.entries(LIGHT_PAIR).map(([dark, light]) => [light, dark])
 ) as Record<LightVariant, DarkVariant>;
 

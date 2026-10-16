@@ -156,5 +156,3 @@ export function createCrudService<
     }
   })();
 }
-
-export default BaseService;
