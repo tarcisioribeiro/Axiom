@@ -372,232 +372,237 @@ export function RoutineTaskForm({
         </div>
       </FormSection>
 
-      <FormSection
-        title={t('pages.routineTasks.form.sectionPeriodicity')}
-        icon={Repeat}
-      >
-        <div className="space-y-md">
-          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-            <div
-              className={cn(
-                'space-y-sm',
-                periodicity !== 'weekly' &&
-                  periodicity !== 'monthly' &&
-                  periodicity !== 'custom' &&
-                  'md:col-span-2'
+      {/* Periodicidade à esquerda, Meta e Unidade à direita (a partir de lg) */}
+      <div className="gap-lg grid grid-cols-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <FormSection
+          title={t('pages.routineTasks.form.sectionPeriodicity')}
+          icon={Repeat}
+        >
+          <div className="space-y-md">
+            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+              <div
+                className={cn(
+                  'space-y-sm',
+                  periodicity !== 'weekly' &&
+                    periodicity !== 'monthly' &&
+                    periodicity !== 'custom' &&
+                    'md:col-span-2'
+                )}
+              >
+                <Label className="gap-xs flex items-center">
+                  <Repeat className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.routineTasks.form.periodicityLabel')}
+                  <Tooltip
+                    content={t('pages.routineTasks.form.periodicityTooltip')}
+                    side="right"
+                  >
+                    <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
+                  </Tooltip>
+                </Label>
+                <Select
+                  value={periodicity}
+                  onValueChange={(value) => setValue('periodicity', value)}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger aria-invalid={!!errors.periodicity}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PERIODICITY_CHOICES.map((period) => {
+                      const PeriodIcon = PERIODICITY_ICONS[period.value];
+                      return (
+                        <SelectItem
+                          key={period.value}
+                          value={period.value}
+                          icon={
+                            PeriodIcon ? <PeriodIcon className="h-4 w-4" /> : undefined
+                          }
+                        >
+                          {t(
+                            `pages.routineTasks.form.periodicityOptions.${period.value}`
+                          )}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {periodicity === 'weekly' && (
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <Repeat className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.routineTasks.form.weekdayLabel')}
+                  </Label>
+                  <Select
+                    value={watch('weekday')?.toString() ?? ''}
+                    onValueChange={(value) => setValue('weekday', parseInt(value, 10))}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger aria-invalid={!!errors.weekday}>
+                      <SelectValue
+                        placeholder={t('pages.routineTasks.form.weekdayPlaceholder')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {WEEKDAY_CHOICES.map((day) => (
+                        <SelectItem key={day.value} value={day.value.toString()}>
+                          {t(`pages.routineTasks.form.weekdayOptions.${day.value}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
-            >
-              <Label className="gap-xs flex items-center">
-                <Repeat className="text-muted-foreground h-3.5 w-3.5" />
-                {t('pages.routineTasks.form.periodicityLabel')}
+
+              {periodicity === 'monthly' && (
+                <div className="space-y-sm">
+                  <Label htmlFor="day_of_month" className="gap-xs flex items-center">
+                    <Repeat className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.routineTasks.form.dayOfMonthLabel')}
+                  </Label>
+                  <Controller
+                    control={control}
+                    name="day_of_month"
+                    render={({ field }) => (
+                      <NumberStepper
+                        aria-invalid={!!errors.day_of_month}
+                        id="day_of_month"
+                        disabled={isLoading}
+                        placeholder="Ex.: 15"
+                        min={1}
+                        max={31}
+                        optional
+                        value={field.value}
+                        onChange={(v) => field.onChange(v ?? undefined)}
+                        className="mx-auto"
+                      />
+                    )}
+                  />
+                </div>
+              )}
+
+              {periodicity === 'custom' && (
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <Repeat className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.routineTasks.form.customWeekdaysLabel')}
+                  </Label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        aria-invalid={!!errors.custom_weekdays}
+                        className="w-full justify-between font-normal"
+                        disabled={isLoading}
+                      >
+                        <span className="truncate">
+                          {(watch('custom_weekdays')?.length ?? 0) === 0
+                            ? t('pages.routineTasks.form.weekdayPlaceholder')
+                            : (watch('custom_weekdays') ?? [])
+                                .slice()
+                                .sort((a, b) => a - b)
+                                .map((d) =>
+                                  t(`pages.routineTasks.form.weekdayOptions.${d}`)
+                                )
+                                .join(', ')}
+                        </span>
+                        <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="min-w-[var(--radix-dropdown-menu-trigger-width)]"
+                    >
+                      {WEEKDAY_CHOICES.map((day) => (
+                        <DropdownMenuCheckboxItem
+                          key={day.value}
+                          checked={
+                            watch('custom_weekdays')?.includes(day.value) || false
+                          }
+                          onSelect={(e) => e.preventDefault()}
+                          onCheckedChange={(checked) => {
+                            const current = watch('custom_weekdays') || [];
+                            setValue(
+                              'custom_weekdays',
+                              checked
+                                ? [...current, day.value]
+                                : current.filter((d) => d !== day.value)
+                            );
+                          }}
+                        >
+                          {t(`pages.routineTasks.form.weekdayOptions.${day.value}`)}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
+            </div>
+          </div>
+        </FormSection>
+
+        <FormSection title={t('pages.routineTasks.form.sectionGoalUnit')} icon={Target}>
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+            <div className="space-y-sm">
+              <Label
+                htmlFor="target_quantity"
+                className="gap-xs flex items-center justify-center"
+              >
+                <Target className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.routineTasks.form.targetQuantityLabel')}
                 <Tooltip
-                  content={t('pages.routineTasks.form.periodicityTooltip')}
+                  content={t('pages.routineTasks.form.targetQuantityTooltip')}
                   side="right"
                 >
                   <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
                 </Tooltip>
               </Label>
+              <Controller
+                control={control}
+                name="target_quantity"
+                render={({ field }) => (
+                  <NumberStepper
+                    aria-invalid={!!errors.target_quantity}
+                    id="target_quantity"
+                    disabled={isLoading}
+                    min={1}
+                    value={field.value}
+                    onChange={field.onChange}
+                    className="mx-auto"
+                  />
+                )}
+              />
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="gap-xs flex items-center justify-center">
+                <Target className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.routineTasks.form.unitLabel')}
+              </Label>
               <Select
-                value={periodicity}
-                onValueChange={(value) => setValue('periodicity', value)}
+                value={watch('unit') ?? 'vez'}
+                onValueChange={(value) =>
+                  setValue('unit', value as (typeof UNIT_CHOICES)[number]['value'])
+                }
                 disabled={isLoading}
               >
-                <SelectTrigger aria-invalid={!!errors.periodicity}>
+                <SelectTrigger aria-invalid={!!errors.unit} className="mx-auto w-fit">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {PERIODICITY_CHOICES.map((period) => {
-                    const PeriodIcon = PERIODICITY_ICONS[period.value];
-                    return (
-                      <SelectItem
-                        key={period.value}
-                        value={period.value}
-                        icon={
-                          PeriodIcon ? <PeriodIcon className="h-4 w-4" /> : undefined
-                        }
-                      >
-                        {t(
-                          `pages.routineTasks.form.periodicityOptions.${period.value}`
-                        )}
-                      </SelectItem>
-                    );
-                  })}
+                  {UNIT_CHOICES.map((u) => (
+                    <SelectItem key={u.value} value={u.value}>
+                      {t(`pages.routineTasks.form.unitOptions.${u.value}`)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-
-            {periodicity === 'weekly' && (
-              <div className="space-y-sm">
-                <Label className="gap-xs flex items-center">
-                  <Repeat className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.routineTasks.form.weekdayLabel')}
-                </Label>
-                <Select
-                  value={watch('weekday')?.toString() ?? ''}
-                  onValueChange={(value) => setValue('weekday', parseInt(value, 10))}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger aria-invalid={!!errors.weekday}>
-                    <SelectValue
-                      placeholder={t('pages.routineTasks.form.weekdayPlaceholder')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {WEEKDAY_CHOICES.map((day) => (
-                      <SelectItem key={day.value} value={day.value.toString()}>
-                        {t(`pages.routineTasks.form.weekdayOptions.${day.value}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {periodicity === 'monthly' && (
-              <div className="space-y-sm">
-                <Label htmlFor="day_of_month" className="gap-xs flex items-center">
-                  <Repeat className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.routineTasks.form.dayOfMonthLabel')}
-                </Label>
-                <Controller
-                  control={control}
-                  name="day_of_month"
-                  render={({ field }) => (
-                    <NumberStepper
-                      aria-invalid={!!errors.day_of_month}
-                      id="day_of_month"
-                      disabled={isLoading}
-                      placeholder="Ex.: 15"
-                      min={1}
-                      max={31}
-                      optional
-                      value={field.value}
-                      onChange={(v) => field.onChange(v ?? undefined)}
-                      className="mx-auto"
-                    />
-                  )}
-                />
-              </div>
-            )}
-
-            {periodicity === 'custom' && (
-              <div className="space-y-sm">
-                <Label className="gap-xs flex items-center">
-                  <Repeat className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.routineTasks.form.customWeekdaysLabel')}
-                </Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      aria-invalid={!!errors.custom_weekdays}
-                      className="w-full justify-between font-normal"
-                      disabled={isLoading}
-                    >
-                      <span className="truncate">
-                        {(watch('custom_weekdays')?.length ?? 0) === 0
-                          ? t('pages.routineTasks.form.weekdayPlaceholder')
-                          : (watch('custom_weekdays') ?? [])
-                              .slice()
-                              .sort((a, b) => a - b)
-                              .map((d) =>
-                                t(`pages.routineTasks.form.weekdayOptions.${d}`)
-                              )
-                              .join(', ')}
-                      </span>
-                      <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    className="min-w-[var(--radix-dropdown-menu-trigger-width)]"
-                  >
-                    {WEEKDAY_CHOICES.map((day) => (
-                      <DropdownMenuCheckboxItem
-                        key={day.value}
-                        checked={watch('custom_weekdays')?.includes(day.value) || false}
-                        onSelect={(e) => e.preventDefault()}
-                        onCheckedChange={(checked) => {
-                          const current = watch('custom_weekdays') || [];
-                          setValue(
-                            'custom_weekdays',
-                            checked
-                              ? [...current, day.value]
-                              : current.filter((d) => d !== day.value)
-                          );
-                        }}
-                      >
-                        {t(`pages.routineTasks.form.weekdayOptions.${day.value}`)}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            )}
           </div>
-        </div>
-      </FormSection>
-
-      <FormSection title={t('pages.routineTasks.form.sectionGoalUnit')} icon={Target}>
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm">
-            <Label
-              htmlFor="target_quantity"
-              className="gap-xs flex items-center justify-center"
-            >
-              <Target className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.routineTasks.form.targetQuantityLabel')}
-              <Tooltip
-                content={t('pages.routineTasks.form.targetQuantityTooltip')}
-                side="right"
-              >
-                <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
-              </Tooltip>
-            </Label>
-            <Controller
-              control={control}
-              name="target_quantity"
-              render={({ field }) => (
-                <NumberStepper
-                  aria-invalid={!!errors.target_quantity}
-                  id="target_quantity"
-                  disabled={isLoading}
-                  min={1}
-                  value={field.value}
-                  onChange={field.onChange}
-                  className="mx-auto"
-                />
-              )}
-            />
-          </div>
-
-          <div className="space-y-sm">
-            <Label className="gap-xs flex items-center">
-              <Target className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.routineTasks.form.unitLabel')}
-            </Label>
-            <Select
-              value={watch('unit') ?? 'vez'}
-              onValueChange={(value) =>
-                setValue('unit', value as (typeof UNIT_CHOICES)[number]['value'])
-              }
-              disabled={isLoading}
-            >
-              <SelectTrigger aria-invalid={!!errors.unit}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {UNIT_CHOICES.map((u) => (
-                  <SelectItem key={u.value} value={u.value}>
-                    {t(`pages.routineTasks.form.unitOptions.${u.value}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </FormSection>
+        </FormSection>
+      </div>
 
       <FormSection title={t('pages.routineTasks.form.scheduleSection')} icon={Clock}>
         <div className="space-y-md">
