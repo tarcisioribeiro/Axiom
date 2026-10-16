@@ -329,6 +329,7 @@ export function AuthorForm({
           title={t('pages.authors.form.sectionAbout')}
           icon={FileText}
           className="flex flex-col"
+          contentClassName="flex flex-1 flex-col"
         >
           <div className="space-y-sm flex flex-1 flex-col">
             <Label htmlFor="biography" className="gap-xs flex items-center">
