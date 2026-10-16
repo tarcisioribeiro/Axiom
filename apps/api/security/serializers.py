@@ -58,13 +58,29 @@ class PasswordCreateUpdateSerializer(serializers.ModelSerializer):
     Serializer para criação/atualização de senhas (aceita senha em texto).
     """
 
+    # Obrigatória só na criação: na edição, em branco mantém a senha salva.
     password = serializers.CharField(
-        write_only=True, required=True, style={"input_type": "password"}
+        write_only=True,
+        required=False,
+        allow_blank=True,
+        style={"input_type": "password"},
     )
 
     totp_secret = serializers.CharField(
         write_only=True, required=False, allow_blank=True, allow_null=True
     )
+
+    def validate_password(self, value: str) -> str:
+        if self.instance is None and not value:
+            raise serializers.ValidationError("Este campo é obrigatório.")
+        return value
+
+    def validate(self, attrs: dict) -> dict:
+        if self.instance is None and "password" not in attrs:
+            raise serializers.ValidationError(
+                {"password": ["Este campo é obrigatório."]}
+            )
+        return attrs
 
     class Meta:
         model = Password

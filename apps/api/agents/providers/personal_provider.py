@@ -12,7 +12,10 @@ from typing import Any
 from django.contrib.auth.models import User
 from django.db.models import Count
 
+from agents.providers.access import requires_screen
 
+
+@requires_screen("planning.tasks_goals", "planning.weekly", empty=[])
 def task_instances_status(
     user: User, start: date, end: date
 ) -> list[dict[str, Any]]:
@@ -26,6 +29,7 @@ def task_instances_status(
     return list(qs)
 
 
+@requires_screen("planning.tasks_goals", "planning.weekly", empty=[])
 def missed_task_instances_by_template(
     user: User, start: date, end: date, limit: int = 5
 ) -> list[dict[str, Any]]:
@@ -45,6 +49,7 @@ def missed_task_instances_by_template(
     return list(qs)
 
 
+@requires_screen("planning.tasks_goals", empty=[])
 def active_goals(user: User, limit: int = 10) -> list[dict[str, Any]]:
     from personal_planning.models import Goal
 
@@ -60,6 +65,7 @@ def active_goals(user: User, limit: int = 10) -> list[dict[str, Any]]:
     return list(rows)
 
 
+@requires_screen("planning.tasks_goals", "planning.weekly", empty=[])
 def today_pending_task_instances(
     user: User, today: date, limit: int = 10
 ) -> list[dict[str, Any]]:
@@ -74,6 +80,7 @@ def today_pending_task_instances(
     return list(rows)
 
 
+@requires_screen("planning.workout", empty=[])
 def workout_sessions(
     user: User, start: date, end: date
 ) -> list[dict[str, Any]]:
@@ -93,6 +100,7 @@ def workout_sessions(
     return list(rows)
 
 
+@requires_screen("planning.nutrition", empty=[])
 def meal_logs(user: User, start: date, end: date) -> list[dict[str, Any]]:
     from personal_planning.models import MealLog
 
@@ -110,6 +118,7 @@ def meal_logs(user: User, start: date, end: date) -> list[dict[str, Any]]:
     return list(rows)
 
 
+@requires_screen("planning.workout", empty=None)
 def active_workout_plan_with_days(user: User) -> dict[str, Any] | None:
     """Plano de treino mais recente do usuário e seus dias, ou None se não
     houver plano."""

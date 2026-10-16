@@ -74,7 +74,7 @@ class Command(BaseCommand):
         dry_run = options["dry_run"]
         member_id = options.get("member_id")
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         soon = today + timedelta(days=3)
 
         members_qs = Member.objects.filter(is_deleted=False).select_related(

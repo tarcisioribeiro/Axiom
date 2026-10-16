@@ -15,7 +15,7 @@ from django.core.mail import get_connection, send_mail
 from django.db import connections
 from django.utils.timezone import now
 from rest_framework import status
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -23,6 +23,7 @@ from rest_framework.views import APIView
 from admin_panel.models import SystemConfig
 from admin_panel.serializers import SystemConfigSerializer
 from agents.core.llm_client import LLMClient
+from app.permissions import IsSuperuser
 from app.request_utils import request_data
 from security.models import ActivityLog
 from security.serializers import ActivityLogSerializer
@@ -30,7 +31,7 @@ from storage.health import check_storage
 
 
 class AdminBaseView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, IsSuperuser]
 
 
 # ─── .env helpers
@@ -150,6 +151,19 @@ class SystemConfigDetailView(AdminBaseView):
             _update_dotenv(key, plain_value)
 
         return Response(SystemConfigSerializer(config).data)
+
+
+class SystemConfigRevealView(AdminBaseView):
+    """GET /api/v1/admin/config/<key>/reveal/ — valor real (decifrado)."""
+
+    def get(self, request: Request, key: str) -> Response:
+        config = SystemConfig.objects.filter(key=key).first()  # type: ignore[attr-defined]  # noqa: E501
+        if config is None:
+            return Response(
+                {"error": "Configuração não encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response({"value": config.get_value()})
 
 
 # ─── Health
@@ -788,3 +802,50 @@ class AdminAgentsStatusView(AdminBaseView):
                 ),
             }
         )
+
+
+# ─── Staff (gerenciado só pelo superuser) ──────────────────────────────────
+
+
+def _staff_queryset() -> Any:
+    from django.contrib.auth.models import User
+
+    return User.objects.filter(is_staff=True, is_superuser=False)
+
+
+def _staff_data(user: Any) -> dict[str, Any]:
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "name": user.get_full_name(),
+        "is_active": user.is_active,
+        "date_joined": user.date_joined,
+    }
+
+
+class StaffListCreateView(AdminBaseView):
+    def get(self, request: Request) -> Response:
+        users = _staff_queryset().order_by("username")
+        return Response([_staff_data(u) for u in users])
+
+    def post(self, request: Request) -> Response:
+        from authentication.views import create_account
+
+        return create_account(request_data(request), is_staff=True)
+
+
+class StaffDetailView(AdminBaseView):
+    def patch(self, request: Request, pk: int) -> Response:
+        user = _staff_queryset().filter(pk=pk).first()
+        if user is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        is_active = request_data(request).get("is_active")
+        if not isinstance(is_active, bool):
+            return Response(
+                {"error": "is_active deve ser booleano"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user.is_active = is_active
+        user.save(update_fields=["is_active"])
+        return Response(_staff_data(user))

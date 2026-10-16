@@ -22,6 +22,7 @@ O sistema de agentes do Axiom (`apps/api/agents/`) suporta quatro provedores de 
 - [Verificando a Configuração](#verificando-a-configuração)
 - [Monitoramento dos Agentes](#monitoramento-dos-agentes)
 - [Solução de Problemas](#solução-de-problemas)
+  - [Avisos em Integrações](#avisos-em-integrações-problemas-no-sistema-de-agentes)
 
 ---
 
@@ -324,3 +325,47 @@ for c in AgentConversation.objects.order_by('-created_at')[:5]:
 | `model not found` no log do Ollama | `OLLAMA_MODEL` tem uma tag não baixada | Verifique o nome com `ollama list`; puxe com `ollama pull` |
 | Resultados de busca semântica ruins | Modelo de embedding trocado sem re-indexar | Recrie os embeddings ou volte ao modelo anterior |
 | `LLM_PROVIDER` não mudou após salvar | A chave requer restart | `docker compose restart api` |
+
+### Avisos em Integrações ("Problemas no sistema de agentes")
+
+A página `/admin/integrations` lista problemas detectados por `LLMClient.diagnostics()` (`apps/api/agents/core/llm_client.py`). O backend devolve cada aviso como código estruturado (`{"code", "role", "provider", ...}`); o texto é montado no frontend via i18n (`pages.adminIntegrations.llmIssues`), no idioma do usuário. O erro técnico completo fica só no log da API (`docker compose logs api | grep inacessível`).
+
+> **Precedência:** valores salvos em `/admin/config` (tabela `SystemConfig`) **sobrepõem o `.env`** e são lidos a cada requisição — não é preciso reiniciar após corrigi-los. Se o `.env` está certo e o aviso persiste, o valor errado está no banco.
+
+| Aviso | Causa | Correção |
+|-------|-------|----------|
+| Ollama inacessível em `<url>` (endereço não encontrado) | `OLLAMA_BASE_URL` aponta para um host que não existe nesta rede. Caso típico: `http://ollama-service:11434` (nome do k8s) usado no Docker local, onde o serviço se chama `ollama` | Ajuste `OLLAMA_BASE_URL` para `http://ollama:11434` (ou apague o valor no painel para usar o `.env`) |
+| Ollama inacessível (conexão recusada / tempo esgotado) | Container `axiom-llm` parado, iniciando ou sobrecarregado | `docker compose up -d ollama`; ver `docker compose logs ollama` |
+| Modelo `<x>` não está baixado no Ollama | `OLLAMA_MODEL` / `OLLAMA_EMBED_MODEL` sem `pull` | `docker compose exec ollama ollama pull <x>` |
+| Modelo do Groq `<x>` descontinuado; usando `<y>` temporariamente | `GROQ_MODEL` retirado pelo Groq; o sistema já usa `GROQ_DEFAULT_MODEL` | Atualize `GROQ_MODEL` (ex.: `openai/gpt-oss-120b`) |
+| Modelo `<x>` foi descontinuado (provedor principal) | Nem `GROQ_MODEL` nem o modelo padrão existem mais no Groq | Atualize `GROQ_MODEL` e `GROQ_DEFAULT_MODEL` no código |
+| `<KEY>` não configurada / recusada pelo serviço | Chave de API ausente ou inválida (401) | Gere uma nova chave e cadastre em `/admin/config` |
+| `<KEY>` não pôde ser lida | Salva com outra `ENCRYPTION_KEY` | Cadastre a chave novamente |
+| Nenhum fallback configurado | `LLM_FALLBACK_PROVIDERS` vazio | Defina, ex.: `groq,anthropic` |
+| Serviço inacessível (provedor em nuvem) | Sem saída para a internet a partir do container | Verifique DNS/proxy do host |
+
+**Correção via linha de comando** (equivalente a editar em `/admin/config`):
+
+```bash
+DC="docker compose -f infra/docker/docker-compose.yml --project-directory ."
+
+# Conferir os valores salvos no banco
+$DC exec api python manage.py shell -c "
+from admin_panel.models import SystemConfig as S
+for k in ['OLLAMA_BASE_URL', 'GROQ_MODEL', 'OLLAMA_MODEL', 'OLLAMA_EMBED_MODEL']:
+    o = S.objects.filter(key=k).first(); print(k, o.get_value() if o else None)
+"
+
+# Corrigir
+$DC exec api python manage.py shell -c "
+from admin_panel.models import SystemConfig as S
+for k, v in {'OLLAMA_BASE_URL': 'http://ollama:11434', 'GROQ_MODEL': 'openai/gpt-oss-120b'}.items():
+    o = S.objects.get(key=k); o.set_value(v); o.save()
+"
+
+# Verificar: a API alcança o Ollama (espera-se 200) e os modelos estão baixados
+$DC exec api python -c "import requests; print(requests.get('http://ollama:11434/api/tags').status_code)"
+$DC exec ollama ollama list
+```
+
+Depois, recarregue `/admin/integrations` (a página também se atualiza sozinha a cada 60 s).

@@ -47,7 +47,7 @@ graph LR
 
 **Responsabilidade**: Extrai JWT token de cookies HttpOnly e adiciona ao header Authorization.
 
-**Localização**: `/home/tarcisio/Development/Axiom/apps/api/authentication/middleware.py`
+**Localização**: `apps/api/authentication/middleware.py`
 
 ```python
 class JWTCookieMiddleware:
@@ -113,7 +113,7 @@ const response = await apiClient.get('/api/v1/accounts/');
 
 **Responsabilidade**: Registra ações dos usuários para auditoria e segurança.
 
-**Localização**: `/home/tarcisio/Development/Axiom/apps/api/app/middleware.py`
+**Localização**: `apps/api/app/middleware.py`
 
 ```python
 class AuditLoggingMiddleware(MiddlewareMixin):
@@ -396,7 +396,7 @@ Signals permitem que aplicações desacopladas sejam notificadas quando ações 
 
 ### 1. Signals de Atualização de Saldo
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/accounts/signals.py`
+**Arquivo**: `apps/api/accounts/signals.py`
 
 **Objetivo**: Atualizar automaticamente o saldo das contas quando receitas/despesas são criadas, editadas ou deletadas.
 
@@ -495,7 +495,7 @@ def create_initial_revenue_on_account_creation(sender, instance, created, **kwar
 
 ### 2. Signals de Transferência
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/transfers/signals.py`
+**Arquivo**: `apps/api/transfers/signals.py`
 
 **Objetivo**: Criar automaticamente despesa na origem e receita no destino quando transferência é efetivada.
 
@@ -603,7 +603,7 @@ graph TD
 
 ### 3. Signals de Empréstimo
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/loans/signals.py`
+**Arquivo**: `apps/api/loans/signals.py`
 
 **Objetivo**: Atualizar automaticamente `payed_value` e `status` de empréstimos quando despesas/receitas relacionadas são criadas, editadas ou deletadas.
 
@@ -844,5 +844,5 @@ with disable_signals():
 
 ## Próximos Passos
 
-- [Criptografia](./criptografia.md) - Sistema de criptografia Fernet
-- [Comandos Management](./comandos-management.md) - Comandos customizados
+- [Criptografia](./criptography.md) - Sistema de criptografia Fernet
+- [Comandos Management](./management_commands.md) - Comandos customizados

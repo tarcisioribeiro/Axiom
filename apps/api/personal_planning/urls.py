@@ -6,8 +6,6 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     AIWorkoutPlanGenerationView,
     BodyMetricListCreateView,
     BodyMetricRetrieveUpdateDestroyView,
-    ChallengeListCreateView,
-    ChallengeRetrieveUpdateDestroyView,
     CrisisImpulseLogDetailView,
     CrisisImpulseLogListCreateView,
     CrisisImpulseResolveView,
@@ -420,17 +418,6 @@ urlpatterns = [
         "goals/export/",
         ExportGoalsView.as_view(),
         name="goals-export",
-    ),
-    # Challenges
-    path(
-        "challenges/",
-        ChallengeListCreateView.as_view(),
-        name="challenge-list-create",
-    ),
-    path(
-        "challenges/<int:pk>/",
-        ChallengeRetrieveUpdateDestroyView.as_view(),
-        name="challenge-detail",
     ),
     # Body Metrics
     path(

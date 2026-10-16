@@ -28,6 +28,7 @@ class MemberSerializer(serializers.ModelSerializer):
             "phone",
             "email",
             "email_verified",
+            "password_strength",
             "sex",
             "user",
             "is_creditor",
@@ -48,6 +49,7 @@ class MemberSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "uuid",
             "email_verified",
+            "password_strength",
             "created_at",
             "updated_at",
             "created_by",
@@ -88,15 +90,3 @@ class MemberSerializer(serializers.ModelSerializer):
             instance.document = document
         instance.save()
         return instance
-
-
-class MemberPermissionsSerializer(serializers.Serializer):
-    """Serializer para gerenciar permissões de um membro"""
-
-    permission_codenames = serializers.ListField(
-        child=serializers.CharField(),
-        required=True,
-        help_text=(
-            "Lista de codenames de permissões" " a serem atribuídas ao membro"
-        ),
-    )

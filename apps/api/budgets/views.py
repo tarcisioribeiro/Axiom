@@ -279,7 +279,7 @@ class BudgetSuggestView(APIView):
             "include_llm_reasoning", False
         )
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         three_months_ago = (today.replace(day=1) - timedelta(days=1)).replace(
             day=1
         ) - timedelta(days=60)

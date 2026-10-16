@@ -1,0 +1,877 @@
+/* eslint-disable max-lines */
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
+import {
+  AlertCircle,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Link2,
+  Loader2,
+  Save,
+  Sparkles,
+  Store,
+  Tag,
+  Wallet,
+  X,
+} from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import type { Resolver } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+
+import { RecalculationPreviewDialog } from '@/components/payables/RecalculationPreviewDialog';
+import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
+import { DatePicker } from '@/components/ui/date-picker';
+import { FormSection } from '@/components/ui/form-section';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { StatusToggle } from '@/components/ui/status-toggle';
+import { TimePicker } from '@/components/ui/time-picker';
+import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { useCurrentMember } from '@/hooks/use-current-member';
+import { useToast } from '@/hooks/use-toast';
+import { notifyFormErrors } from '@/lib/form-errors';
+import { formatCurrency, formatDate } from '@/lib/formatters';
+import { getAccountBalanceInfo } from '@/lib/helpers';
+import { formatLocalDate } from '@/lib/utils';
+import { expenseSchema } from '@/lib/validations';
+import { accountsService } from '@/services/accounts-service';
+import { automationRulesService } from '@/services/automation-rules-service';
+import type { CategorySuggestion } from '@/services/expenses-service';
+import { expensesService } from '@/services/expenses-service';
+import { payableInstallmentsService } from '@/services/payable-installments-service';
+import type {
+  Account,
+  AutomationRule,
+  Expense,
+  ExpenseFormData,
+  FixedExpense,
+  Loan,
+  Payable,
+  RecalculationPreview,
+} from '@/types';
+import { getErrorMessage } from '@/utils/error-utils';
+
+export interface ExpensePrefillData {
+  description?: string;
+  value?: number;
+  date?: string;
+}
+
+interface ExpenseFormProps {
+  expense?: Expense;
+  prefillData?: ExpensePrefillData;
+  accounts: Account[];
+  loans?: Loan[];
+  payables?: Payable[];
+  fixedExpenses?: FixedExpense[];
+  onSubmit: (data: ExpenseFormData) => void;
+  /** Called when the redistribution flow (requirement 7) commits the
+   * Expense itself via the atomic redistribute-after-payment endpoint —
+   * the parent should treat this the same as a successful onSubmit
+   * (invalidate the list, toast, close the dialog) without calling
+   * onSubmit again. */
+  onRedistributedSuccess?: () => void;
+  onCancel: () => void;
+  isLoading?: boolean;
+}
+
+/** Extrai o padrão simples (merchant contém X → definir categoria Y) de uma
+ * AutomationRule, usado para sugestão instantânea de categoria ao digitar o
+ * estabelecimento. Regras mais complexas (múltiplas condições, add_tag,
+ * etc.) retornam null e só são aplicadas pelo motor de automação no backend. */
+function extractSimpleMerchantRule(
+  rule: AutomationRule
+): { merchantContains: string; category: string } | null {
+  const condition = rule.conditions.find(
+    (c) => c.field === 'merchant' && c.operator === 'contains'
+  );
+  const action = rule.actions.find((a) => a.type === 'set_category');
+  if (!condition?.value || !action?.value) return null;
+  return { merchantContains: condition.value, category: action.value };
+}
+
+type BalanceAlertTone = 'info' | 'warning' | 'destructive';
+const BALANCE_ALERT_TONES: Record<BalanceAlertTone, string> = {
+  info: 'border-info/30 bg-info/10 text-info',
+  warning: 'border-warning/30 bg-warning/10 text-warning',
+  destructive: 'border-destructive/30 bg-destructive/10 text-destructive',
+};
+
+export const ExpenseForm: React.FC<ExpenseFormProps> = ({
+  expense,
+  prefillData,
+  accounts,
+  loans,
+  payables,
+  fixedExpenses,
+  onSubmit,
+  onRedistributedSuccess,
+  onCancel,
+  isLoading = false,
+}) => {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const { data: currentUserMember = null } = useCurrentMember();
+  const [categorizationRules, setCategorizationRules] = useState<AutomationRule[]>([]);
+  const [redistributePreview, setRedistributePreview] =
+    useState<RecalculationPreview | null>(null);
+  const [pendingRedistributeData, setPendingRedistributeData] =
+    useState<ExpenseFormData | null>(null);
+  const [isRedistributing, setIsRedistributing] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<CategorySuggestion | null>(null);
+  const [isLoadingAiSuggestion, setIsLoadingAiSuggestion] = useState(false);
+  const merchantDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const aiSuggestionAbortRef = useRef<AbortController | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    getValues,
+    control,
+    formState: { errors },
+  } = useForm<ExpenseFormData>({
+    resolver: zodResolver(expenseSchema) as Resolver<ExpenseFormData>,
+    defaultValues: {
+      description: '',
+      value: 0,
+      date: formatLocalDate(new Date()),
+      horary: new Date().toTimeString().split(' ')[0].substring(0, 5),
+      payed: false,
+      category: '',
+      account: 0,
+      member: null,
+      merchant: '',
+      related_loan: null,
+      related_payable: null,
+      fixed_expense_template: null,
+    },
+  });
+
+  const watchedCategory = useWatch({ control, name: 'category' });
+  const watchedPayed = useWatch({ control, name: 'payed' });
+  const watchedAccount = useWatch({ control, name: 'account' });
+  const watchedValue = useWatch({ control, name: 'value' });
+  const watchedDate = useWatch({ control, name: 'date' });
+  const watchedMerchant = useWatch({ control, name: 'merchant' });
+  const watchedHorary = useWatch({ control, name: 'horary' });
+  const watchedRelatedLoan = useWatch({ control, name: 'related_loan' });
+  const watchedRelatedPayable = useWatch({ control, name: 'related_payable' });
+  const watchedFixedExpenseTemplate = useWatch({
+    control,
+    name: 'fixed_expense_template',
+  });
+
+  useEffect(() => {
+    if (currentUserMember && !expense) setValue('member', currentUserMember.id);
+  }, [currentUserMember, expense, setValue]);
+
+  useEffect(() => {
+    const loadRules = async () => {
+      try {
+        const data = await automationRulesService.getAll();
+        const rules = Array.isArray(data)
+          ? data
+          : ((data as { results: AutomationRule[] }).results ?? []);
+        setCategorizationRules(rules.filter((r) => r.is_active));
+      } catch {
+        // rules are optional
+      }
+    };
+    void loadRules();
+  }, []);
+
+  const eligibleLoans = useMemo(() => {
+    if (!loans || !currentUserMember) return [];
+    return loans.filter(
+      (loan) =>
+        loan.benefited === currentUserMember.id &&
+        loan.status !== 'paid' &&
+        loan.status !== 'cancelled'
+    );
+  }, [loans, currentUserMember]);
+
+  const eligiblePayables = useMemo(() => {
+    if (!payables) return [];
+    return payables.filter((p) => p.status === 'active' || p.status === 'overdue');
+  }, [payables]);
+
+  useEffect(() => {
+    if (expense) {
+      setValue('description', expense.description);
+      setValue('value', parseFloat(expense.value));
+      setValue('date', expense.date);
+      setValue('horary', expense.horary);
+      setValue('category', expense.category);
+      setValue('payed', expense.payed);
+      setValue('account', expense.account);
+      setValue('member', expense.member);
+      setValue('merchant', expense.merchant ?? '');
+      setValue('related_loan', expense.related_loan || null);
+      setValue('related_payable', expense.related_payable || null);
+      setValue('fixed_expense_template', expense.fixed_expense_template || null);
+    } else if (accounts.length > 0) {
+      setValue('account', accounts[0].id, { shouldDirty: true });
+    }
+  }, [expense, accounts, setValue]);
+
+  const fetchAiSuggestion = async (merchant: string) => {
+    const description = getValues('description');
+    if (!merchant.trim() && !description?.trim()) return;
+
+    if (aiSuggestionAbortRef.current) aiSuggestionAbortRef.current.abort();
+    aiSuggestionAbortRef.current = new AbortController();
+
+    setIsLoadingAiSuggestion(true);
+    setAiSuggestion(null);
+    try {
+      const result = await Promise.race([
+        expensesService.suggestCategory({
+          description: description || '',
+          merchant,
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 10000)
+        ),
+      ]);
+      const currentCat = getValues('category');
+      const categoryIsEmpty =
+        !currentCat || currentCat === 'others' || currentCat === '';
+      if (result.method === 'rule' && categoryIsEmpty) {
+        setValue('category', result.category);
+      } else if (result.method === 'llm' && result.category !== 'others') {
+        setAiSuggestion(result);
+      }
+    } catch {
+      // silent — LLM é opcional
+    } finally {
+      setIsLoadingAiSuggestion(false);
+    }
+  };
+
+  const handleMerchantChange = (value: string) => {
+    setValue('merchant', value);
+    setAiSuggestion(null);
+    if (merchantDebounceRef.current) clearTimeout(merchantDebounceRef.current);
+    if (!value.trim()) {
+      setIsLoadingAiSuggestion(false);
+      return;
+    }
+    merchantDebounceRef.current = setTimeout(() => {
+      const lower = value.toLowerCase();
+
+      // Verificação heurística local (feedback imediato, sem chamada de rede)
+      if (categorizationRules.length > 0) {
+        const matched = categorizationRules.find((rule) => {
+          const simple = extractSimpleMerchantRule(rule);
+          if (!simple) return false;
+          const merchantContains = simple.merchantContains.toLowerCase();
+          return lower.includes(merchantContains) || merchantContains.includes(lower);
+        });
+        if (matched) {
+          const category = extractSimpleMerchantRule(matched)?.category;
+          const currentCategory = getValues('category');
+          if (
+            category &&
+            (!currentCategory || currentCategory === 'others' || currentCategory === '')
+          ) {
+            setValue('category', category);
+          }
+          return; // Regra local encontrada — sem necessidade de chamar API
+        }
+      }
+
+      // Nenhuma regra local correspondeu: tenta LLM via API
+      void fetchAiSuggestion(value);
+    }, 600);
+  };
+
+  useEffect(() => {
+    if (!expense && prefillData) {
+      if (prefillData.description !== undefined)
+        setValue('description', prefillData.description);
+      if (prefillData.value !== undefined) setValue('value', prefillData.value);
+      if (prefillData.date !== undefined) setValue('date', prefillData.date);
+    }
+  }, [expense, prefillData, setValue]);
+
+  const today = formatLocalDate(new Date());
+  const isFutureDate = watchedDate > today;
+
+  const { data: projectedBalance = null, isLoading: isLoadingProjected } = useQuery({
+    queryKey: ['projected-balance', watchedAccount, watchedDate],
+    queryFn: async () => {
+      try {
+        const data = await accountsService.getProjectedBalance(
+          watchedAccount,
+          watchedDate
+        );
+        return data.projected_balance;
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!watchedAccount && !!watchedDate && watchedValue > 0 && isFutureDate,
+  });
+
+  const balanceInfo = useMemo(() => {
+    if (isFutureDate) return null;
+    if (!watchedPayed || !watchedAccount || watchedValue <= 0) return null;
+    const acc = accounts.find((a) => a.id === watchedAccount);
+    if (!acc) return null;
+    return getAccountBalanceInfo(acc, watchedValue);
+  }, [watchedPayed, watchedAccount, watchedValue, accounts, isFutureDate]);
+
+  const futureBalanceInfo = useMemo(() => {
+    if (!isFutureDate || watchedValue <= 0 || !watchedAccount) return null;
+    const acc = accounts.find((a) => a.id === watchedAccount);
+    if (!acc) return null;
+    const overdraft = parseFloat(acc.overdraft_limit ?? '0');
+    if (watchedPayed) return getAccountBalanceInfo(acc, watchedValue);
+    if (projectedBalance === null) return null;
+    const proj = parseFloat(projectedBalance);
+    const available = proj + overdraft;
+    return {
+      balance: proj,
+      overdraft,
+      available,
+      canPay: available >= watchedValue,
+      isUsingOverdraft: proj < watchedValue && available >= watchedValue,
+    };
+  }, [
+    isFutureDate,
+    watchedValue,
+    watchedAccount,
+    watchedPayed,
+    projectedBalance,
+    accounts,
+  ]);
+
+  const balanceAlert = ((): { tone: BalanceAlertTone; text: string } | null => {
+    if (isFutureDate && !!watchedAccount && watchedValue > 0) {
+      if (isLoadingProjected)
+        return { tone: 'info', text: t('common.balance.loadingProjected') };
+      if (futureBalanceInfo && !futureBalanceInfo.canPay)
+        return {
+          tone: 'destructive',
+          text: t('common.balance.insufficientEvenWithOverdraft', {
+            available: formatCurrency(futureBalanceInfo.available.toFixed(2)),
+          }),
+        };
+      if (futureBalanceInfo?.isUsingOverdraft)
+        return {
+          tone: 'warning',
+          text: t('common.balance.overdraftWarningDesc', {
+            balance: formatCurrency(futureBalanceInfo.balance.toFixed(2)),
+            overdraft: formatCurrency(futureBalanceInfo.overdraft.toFixed(2)),
+            total: formatCurrency(futureBalanceInfo.available.toFixed(2)),
+          }),
+        };
+      return {
+        tone: 'info',
+        text:
+          projectedBalance !== null
+            ? t('common.balance.projectedOn', {
+                date: formatDate(watchedDate),
+                balance: formatCurrency(projectedBalance),
+              })
+            : t('common.balance.projectedUnavailable'),
+      };
+    }
+    if (balanceInfo && watchedValue > 0)
+      return !balanceInfo.canPay
+        ? {
+            tone: 'destructive',
+            text: t('common.balance.insufficientEvenWithOverdraft', {
+              available: formatCurrency(balanceInfo.available.toFixed(2)),
+            }),
+          }
+        : {
+            tone: 'warning',
+            text: t('common.balance.overdraftWarningDesc', {
+              balance: formatCurrency(balanceInfo.balance.toFixed(2)),
+              overdraft: formatCurrency(balanceInfo.overdraft.toFixed(2)),
+              total: formatCurrency(balanceInfo.available.toFixed(2)),
+            }),
+          };
+    return null;
+  })();
+
+  // Requisito 7 do plano de pagamento de dívidas: lançar uma Expense nova
+  // vinculada a um Payable que já tem plano de pagamento (installments > 1)
+  // dispara o fluxo de preview + confirmação de redistribuição, em vez do
+  // submit normal — o endpoint atômico redistribute-after-payment cria a
+  // Expense e redistribui o saldo pelas parcelas pendentes numa única
+  // transação no backend.
+  const requestRedistributePreview = async (
+    data: ExpenseFormData,
+    payableId: number
+  ) => {
+    try {
+      const { preview } = await payableInstallmentsService.redistributeAfterPayment(
+        payableId,
+        {
+          expense: {
+            value: data.value,
+            account: data.account,
+            date: data.date,
+            payed: data.payed,
+            description: data.description,
+          },
+          mode: 'keep_count',
+          dry_run: true,
+        }
+      );
+      setPendingRedistributeData(data);
+      setRedistributePreview(preview);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleConfirmRedistribute = async () => {
+    if (!pendingRedistributeData?.related_payable) return;
+    setIsRedistributing(true);
+    try {
+      await payableInstallmentsService.redistributeAfterPayment(
+        pendingRedistributeData.related_payable,
+        {
+          expense: {
+            value: pendingRedistributeData.value,
+            account: pendingRedistributeData.account,
+            date: pendingRedistributeData.date,
+            payed: pendingRedistributeData.payed,
+            description: pendingRedistributeData.description,
+          },
+          mode: 'keep_count',
+          dry_run: false,
+        }
+      );
+      setRedistributePreview(null);
+      setPendingRedistributeData(null);
+      onRedistributedSuccess?.();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRedistributing(false);
+    }
+  };
+
+  const handleCancelRedistribute = () => {
+    setRedistributePreview(null);
+    setPendingRedistributeData(null);
+  };
+
+  const handleFormSubmit = (data: ExpenseFormData) => {
+    if (data.payed && balanceInfo && !balanceInfo.canPay) return;
+    if (futureBalanceInfo && !futureBalanceInfo.canPay) return;
+
+    if (!expense && data.related_payable) {
+      const linkedPayable = payables?.find((p) => p.id === data.related_payable);
+      if (linkedPayable && (linkedPayable.installments ?? 0) > 1) {
+        void requestRedistributePreview(data, linkedPayable.id);
+        return;
+      }
+    }
+
+    onSubmit(data);
+  };
+
+  const eligibleFixedExpenses = fixedExpenses ?? [];
+  const hasEligibleLinks =
+    eligibleLoans.length > 0 ||
+    eligiblePayables.length > 0 ||
+    eligibleFixedExpenses.length > 0;
+
+  return (
+    <form
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+      className="space-y-lg"
+      noValidate
+    >
+      {/* Seção: Informações Básicas */}
+      <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+          <div className="space-y-sm">
+            <Label htmlFor="description" className="gap-xs flex items-center">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.expenses.form.descriptionLabel')}
+            </Label>
+            <Input
+              id="description"
+              {...register('description')}
+              aria-invalid={!!errors.description}
+              placeholder={t('pages.expenses.form.descriptionPlaceholder')}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-sm">
+            <Label htmlFor="merchant" className="gap-xs flex items-center">
+              <Store className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.expenses.form.merchantLabel')}
+            </Label>
+            <Input
+              id="merchant"
+              value={watchedMerchant ?? ''}
+              onChange={(e) => handleMerchantChange(e.target.value)}
+              placeholder={t('pages.expenses.form.merchantPlaceholder')}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+      </FormSection>
+
+      {/* Seção: Valores & Data */}
+      <FormSection title={t('common.form.sections.values')} icon={Wallet}>
+        <div className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-sm">
+            <Label htmlFor="value" className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.expenses.form.valueLabel')}
+            </Label>
+            <CurrencyInput
+              id="value"
+              accentColor="destructive"
+              value={watchedValue}
+              onChange={(e) => setValue('value', parseFloat(e.target.value) || 0)}
+              aria-invalid={!!errors.value}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-sm">
+            <Label className="gap-xs flex items-center">
+              <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.expenses.form.paymentStatusLabel')}
+            </Label>
+            <StatusToggle
+              value={watchedPayed ? 'true' : 'false'}
+              options={[
+                {
+                  value: 'false',
+                  label: t('pages.expenses.form.pending'),
+                },
+                {
+                  value: 'true',
+                  label: t('pages.expenses.form.paid'),
+                  accentColor: 'success',
+                },
+              ]}
+              onChange={(v) => setValue('payed', v === 'true')}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-sm">
+            <Label htmlFor="date" className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.expenses.form.dateLabel')}
+            </Label>
+            <DatePicker
+              value={watchedDate}
+              onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
+              aria-invalid={!!errors.date}
+              placeholder={t('common.fields.selectDate')}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-sm">
+            <Label htmlFor="horary" className="gap-xs flex items-center">
+              <Clock className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.expenses.form.horaryLabel')}
+            </Label>
+            <TimePicker
+              value={watchedHorary}
+              onChange={(t) => setValue('horary', t ?? '')}
+              aria-invalid={!!errors.horary}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+      </FormSection>
+
+      {/* Seção: Classificação */}
+      <FormSection title={t('common.form.sections.classification')} icon={Tag}>
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+          <div className="space-y-sm">
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.expenses.form.categoryLabel')}
+            </Label>
+            <div className="relative">
+              <Select
+                value={watchedCategory || ''}
+                onValueChange={(v) => {
+                  if (!v) return;
+                  setValue('category', v);
+                  setAiSuggestion(null);
+                }}
+              >
+                <SelectTrigger aria-invalid={!!errors.category}>
+                  <SelectValue placeholder={t('common.actions.select')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => {
+                    const Icon = EXPENSE_CATEGORY_ICONS[key];
+                    return (
+                      <SelectItem key={key} value={key}>
+                        <span className="flex items-center gap-2">
+                          {Icon && (
+                            <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
+                          )}
+                          {translate('expenseCategories', key)}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            {isLoadingAiSuggestion && (
+              <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>{t('pages.expenses.form.aiSuggesting')}</span>
+              </div>
+            )}
+            {aiSuggestion && !isLoadingAiSuggestion && (
+              <div className="border-primary/20 bg-primary/5 flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs">
+                <Sparkles className="text-primary h-3.5 w-3.5 shrink-0" />
+                <span className="text-muted-foreground">
+                  {t('pages.expenses.form.aiSuggested')}:{' '}
+                  <button
+                    type="button"
+                    className="text-primary font-medium underline-offset-2 hover:underline"
+                    onClick={() => {
+                      setValue('category', aiSuggestion.category);
+                      setAiSuggestion(null);
+                    }}
+                  >
+                    {translate('expenseCategories', aiSuggestion.category)}
+                  </button>
+                </span>
+                <PlainButton
+                  type="button"
+                  aria-label={t('common.actions.close')}
+                  className="text-muted-foreground hover:text-foreground ml-auto transition-colors"
+                  onClick={() => setAiSuggestion(null)}
+                >
+                  <X className="h-3 w-3" />
+                </PlainButton>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-sm">
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.expenses.form.accountLabel')}
+            </Label>
+            <Select
+              value={watchedAccount?.toString() || ''}
+              onValueChange={(v) => v && setValue('account', parseInt(v))}
+            >
+              <SelectTrigger aria-invalid={!!errors.account}>
+                <SelectValue placeholder={t('common.actions.select')} />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((a) => (
+                  <SelectItem key={a.id} value={a.id.toString()}>
+                    <span>{a.account_name}</span>
+                    <span className="text-muted-foreground ml-2 text-xs">
+                      {formatCurrency(a.available_balance)}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </FormSection>
+
+      {/* Seção: Vínculos */}
+      {hasEligibleLinks && (
+        <FormSection title={t('common.form.sections.links')} icon={Link2}>
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+            {eligibleLoans.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.expenses.form.relatedLoanLabel')}
+                </Label>
+                <Select
+                  value={watchedRelatedLoan?.toString() || 'none'}
+                  onValueChange={(v) => {
+                    setValue('related_loan', v === 'none' ? null : parseInt(v));
+                    if (v !== 'none') {
+                      setValue('related_payable', null);
+                      setValue('fixed_expense_template', null);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.fields.select_optional')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {eligibleLoans.map((loan) => (
+                      <SelectItem key={loan.id} value={loan.id.toString()}>
+                        {loan.description} — {formatCurrency(loan.remaining_balance)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {eligiblePayables.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.expenses.form.relatedPayableLabel')}
+                </Label>
+                <Select
+                  value={watchedRelatedPayable?.toString() || 'none'}
+                  onValueChange={(v) => {
+                    setValue('related_payable', v === 'none' ? null : parseInt(v));
+                    if (v !== 'none') {
+                      setValue('related_loan', null);
+                      setValue('fixed_expense_template', null);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.fields.select_optional')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {eligiblePayables.map((payable) => (
+                      <SelectItem key={payable.id} value={payable.id.toString()}>
+                        {payable.description} —{' '}
+                        {formatCurrency(payable.remaining_value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {eligibleFixedExpenses.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.expenses.form.relatedFixedExpenseLabel')}
+                </Label>
+                <Select
+                  value={watchedFixedExpenseTemplate?.toString() || 'none'}
+                  onValueChange={(v) => {
+                    setValue(
+                      'fixed_expense_template',
+                      v === 'none' ? null : parseInt(v)
+                    );
+                    if (v !== 'none') {
+                      setValue('related_loan', null);
+                      setValue('related_payable', null);
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.fields.select_optional')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                    {eligibleFixedExpenses.map((fixedExpense) => (
+                      <SelectItem
+                        key={fixedExpense.id}
+                        value={fixedExpense.id.toString()}
+                      >
+                        {fixedExpense.description} —{' '}
+                        {formatCurrency(fixedExpense.default_value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+        </FormSection>
+      )}
+
+      {/* Alerta de saldo: espaço sempre reservado para o modal não mudar de altura */}
+      <div
+        className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
+          balanceAlert ? BALANCE_ALERT_TONES[balanceAlert.tone] : 'invisible'
+        }`}
+      >
+        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+        <p>
+          {balanceAlert?.text ??
+            t('common.balance.overdraftWarningDesc', {
+              balance: formatCurrency('0'),
+              overdraft: formatCurrency('0'),
+              total: formatCurrency('0'),
+            })}
+        </p>
+      </div>
+
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="h-4 w-4" />
+          {t('common.actions.cancel')}
+        </Button>
+        <Button
+          type="submit"
+          disabled={
+            isLoading ||
+            (watchedPayed && !!balanceInfo && !balanceInfo.canPay) ||
+            (!!futureBalanceInfo && !futureBalanceInfo.canPay)
+          }
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          {isLoading
+            ? t('common.actions.saving')
+            : expense
+              ? t('common.actions.update')
+              : t('common.actions.create')}
+        </Button>
+      </div>
+
+      <RecalculationPreviewDialog
+        open={!!redistributePreview}
+        title={t('pages.payables.form.recalculationPreviewTitle')}
+        description={t('pages.expenses.form.redistributeDesc')}
+        preview={redistributePreview}
+        isLoading={isRedistributing}
+        onConfirm={() => void handleConfirmRedistribute()}
+        onCancel={handleCancelRedistribute}
+      />
+    </form>
+  );
+};

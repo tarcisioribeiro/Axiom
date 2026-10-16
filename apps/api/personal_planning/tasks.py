@@ -106,7 +106,7 @@ def _notify_goal_risk(goal, actual_pct: float, expected_pct: float) -> None:
 
         from notifications.models import Notification
 
-        today = timezone.now().date()
+        today = timezone.localdate()
         already_notified = Notification.objects.filter(
             owner=goal.owner,
             notification_type="financial_goal_approaching",
@@ -170,10 +170,13 @@ def generate_weekly_planning_synthesis(self) -> dict:
 def _generate_synthesis_for_member(member) -> None:
     """Chama PlanningAgent para gerar síntese semanal e salvar notificação."""
     try:
+        from admin_panel.access import can_view_any
         from agents.core.base_agent import AgentContext
         from agents.core.router import AgentRouter
         from notifications.models import Notification
 
+        if not can_view_any(member.user, ("planning.tasks_goals",)):
+            return
         agent = AgentRouter.select_by_name("planning")
         if agent is None:
             return

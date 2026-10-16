@@ -224,7 +224,7 @@ class FinancialAgent(BaseAgent):
         )
 
         user = User.objects.get(pk=ctx.user_id)
-        now = timezone.now().date()
+        now = timezone.localdate()
         month_start = now.replace(day=1)
 
         temporal = (

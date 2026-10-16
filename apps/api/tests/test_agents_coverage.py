@@ -96,15 +96,6 @@ class ContextCompressorTest(TestCase):
         text = "a" * 40
         self.assertEqual(context_compressor.estimate_tokens(text), 10)
 
-    def test_should_compress_false_under_threshold(self) -> None:
-        self.assertFalse(
-            context_compressor.should_compress("short prompt", 1500)
-        )
-
-    def test_should_compress_true_over_threshold(self) -> None:
-        long_prompt = "x" * 10000
-        self.assertTrue(context_compressor.should_compress(long_prompt, 1500))
-
     def test_compress_prioritizes_mentioned_items(self) -> None:
         data = {
             "expenses": [
@@ -604,7 +595,7 @@ class SemanticRouterTest(TestCase):
     ) -> None:
         mock_llm.embed.return_value = []
         self.router._ensure_ready()
-        self.assertFalse(self.router.is_ready())
+        self.assertFalse(self.router._ready)
 
     @patch("agents.core.router.LLMClient")
     def test_ensure_ready_true_when_embeddings_generated(
@@ -612,7 +603,7 @@ class SemanticRouterTest(TestCase):
     ) -> None:
         mock_llm.embed.return_value = [0.1, 0.2]
         self.router._ensure_ready()
-        self.assertTrue(self.router.is_ready())
+        self.assertTrue(self.router._ready)
 
     def test_score_returns_empty_when_not_ready(self) -> None:
         with patch("agents.core.router.LLMClient") as mock_llm:

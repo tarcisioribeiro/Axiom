@@ -26,7 +26,7 @@ O Axiom utiliza criptografia simétrica **Fernet** (baseada em AES-128) para pro
 
 ### Módulo de Criptografia
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/app/encryption.py`
+**Arquivo**: `apps/api/app/encryption.py`
 
 ```python
 import os
@@ -701,4 +701,4 @@ Ao adicionar novo campo criptografado:
 
 ## Próximos Passos
 
-- [Comandos Management](./comandos-management.md) - Comandos customizados de gerenciamento
+- [Comandos Management](./management_commands.md) - Comandos customizados de gerenciamento

@@ -590,6 +590,6 @@ Não implementado atualmente, mas planejado para o futuro.
 
 ## Próximos Passos
 
-- **Autenticação:** Veja [autenticacao-tokens.md](./autenticacao-tokens.md)
-- **Tratamento de Erros:** Veja [tratamento-erros.md](./tratamento-erros.md)
-- **Filtros:** Veja [filtros-ordenacao.md](./filtros-ordenacao.md)
+- **Autenticação:** Veja [autenticacao-tokens.md](./token_authentication.md)
+- **Tratamento de Erros:** Veja [tratamento-erros.md](./error_treatments.md)
+- **Filtros:** Veja [filtros-ordenacao.md](./filters_ordering.md)

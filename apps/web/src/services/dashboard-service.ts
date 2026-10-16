@@ -1,0 +1,145 @@
+import { API_CONFIG } from '@/config/api-config';
+import type {
+  DashboardStats,
+  DashboardSummary,
+  AccountBalance,
+  CreditCardExpensesByCategory,
+  BalanceForecast,
+  CashFlowForecast,
+  DebtPayoffPlan,
+  FinancialAlert,
+  AnomalyAlert,
+  SpendingInsights,
+} from '@/types';
+
+import { apiClient } from './api-client';
+
+interface MonthlyStatementCategory {
+  category: string;
+  total: string;
+  count: number;
+}
+
+interface MonthlyStatement {
+  period: string;
+  total_revenues: string;
+  total_expenses: string;
+  balance: string;
+  revenues_by_category: MonthlyStatementCategory[];
+  expenses_by_category: MonthlyStatementCategory[];
+}
+
+interface IRReport {
+  year: number;
+  revenues: { category: string; total: number }[];
+  deductible_expenses: { category: string; total: number }[];
+  loans: { description: string; total_paid: number }[];
+  generated_at: string;
+}
+
+interface CreditCardExpensesByCategoryParams {
+  card?: number;
+  bill?: number;
+}
+
+interface LGPDErrorResponse {
+  detail?: string;
+}
+
+class DashboardService {
+  async getStats(): Promise<DashboardStats> {
+    // PERF-02: Endpoint otimizado que usa aggregations no banco de dados
+    // Reduz de 4 requisições + cálculos no cliente para 1 requisição otimizada
+    return apiClient.get<DashboardStats>('/api/v1/dashboard/stats/');
+  }
+
+  async getSummary(): Promise<DashboardSummary> {
+    return apiClient.get<DashboardSummary>('/api/v1/dashboard/summary/');
+  }
+
+  async getAccountBalances(): Promise<AccountBalance[]> {
+    return apiClient.get<AccountBalance[]>('/api/v1/dashboard/account-balances/');
+  }
+
+  async getCreditCardExpensesByCategory(
+    params?: CreditCardExpensesByCategoryParams
+  ): Promise<CreditCardExpensesByCategory[]> {
+    return apiClient.get<CreditCardExpensesByCategory[]>(
+      '/api/v1/dashboard/credit-card-expenses-by-category/',
+      params
+    );
+  }
+
+  async getBalanceForecast(): Promise<BalanceForecast> {
+    return apiClient.get<BalanceForecast>('/api/v1/dashboard/balance-forecast/');
+  }
+
+  async getCashFlowForecast(days: 30 | 60 | 90 = 30): Promise<CashFlowForecast> {
+    return apiClient.get<CashFlowForecast>('/api/v1/dashboard/cash-flow-forecast/', {
+      days,
+    });
+  }
+
+  async getDebtPayoffPlan(extraMonthly = 0): Promise<DebtPayoffPlan> {
+    return apiClient.get<DebtPayoffPlan>('/api/v1/dashboard/debt-payoff-plan/', {
+      extra_monthly: extraMonthly,
+    });
+  }
+
+  async getFinancialAlerts(): Promise<FinancialAlert[]> {
+    return apiClient.get<FinancialAlert[]>('/api/v1/dashboard/financial-alerts/');
+  }
+
+  async getAnomalies(): Promise<AnomalyAlert[]> {
+    return apiClient.get<AnomalyAlert[]>('/api/v1/dashboard/anomalies/');
+  }
+
+  async getSpendingInsights(year?: number, month?: number): Promise<SpendingInsights> {
+    return apiClient.get<SpendingInsights>(
+      API_CONFIG.ENDPOINTS.DASHBOARD_SPENDING_INSIGHTS,
+      year && month ? { year, month } : undefined
+    );
+  }
+
+  async getIRReport(year: number): Promise<IRReport> {
+    return apiClient.get<IRReport>('/api/v1/dashboard/ir-report/', { year });
+  }
+
+  async getMonthlyStatement(year: number, month: number): Promise<MonthlyStatement> {
+    return apiClient.get<MonthlyStatement>(
+      API_CONFIG.ENDPOINTS.DASHBOARD_MONTHLY_STATEMENT,
+      { year, month }
+    );
+  }
+
+  async requestLGPDExport(): Promise<void> {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}/api/v1/dashboard/lgpd-export/`,
+      {
+        credentials: 'include',
+      }
+    );
+    if (!response.ok) {
+      let detail = `Erro ${response.status}`;
+      try {
+        const data = (await response.json()) as LGPDErrorResponse;
+        if (data.detail) detail = data.detail;
+      } catch {
+        /* ignore */
+      }
+      throw new Error(detail);
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    a.href = url;
+    a.download = `axiom_dados_${dateStr}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+}
+
+export const dashboardService = new DashboardService();

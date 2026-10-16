@@ -1,12 +1,12 @@
 # Padrões de design do frontend web
 
-**Documento oficial** · versão 1.6 · 14/10/2026
+**Documento oficial** · versão 1.9 · 16/10/2026
 
 Padrões de UI/UX definidos pelo product owner desde 25/08/2026. Toda mudança visual no frontend web segue este documento. Quando um pedido contradiz uma regra, a regra é atualizada aqui primeiro.
 
 ## 1. Escopo e convenções
 
-- **Escopo:** todas as regras valem **apenas para o app web, usado em navegadores** (`apps/frontend`). O app mobile (Flutter, `apps/mobile`) não segue este documento.
+- **Escopo:** todas as regras valem para o app web, usado em navegadores (`apps/web`).
 - **Resolução de referência:** monitor 1920×1080 (ou maior) com a barra de tarefas do sistema e o navegador **não maximizado**, com abas, barra de endereço e barra de favoritos. Isso deixa uma **viewport útil de ~1920×900 px**. As regras marcadas com **[desktop]** são medidas com a viewport em **880 px de altura** (margem de segurança). Em viewports menores, modais e listas podem ter barra de rolagem.
 - **Legenda:**
   - **[regra]**: padrão global, vale para todas as telas e módulos.
@@ -44,13 +44,18 @@ Há três tipos de modal:
 - **[regra]** Erros de validação não aparecem abaixo do campo. Ver [Validação de formulários](#3-validação-de-formulários).
 - **[regra]** Seção condicional não aparece quando não se aplica (em vez de aparecer vazia).
 - **[regra]** Campos de data não têm opção de limpar. A data atual é o valor padrão. Status: `clearable` removido do `DatePicker`.
+- **[regra]** O calendário do `DatePicker`/`TimePicker` sempre flutua por cima de tudo (anexado ao `body`, `position: fixed`; `lib/flatpickr-floating.ts`): abre abaixo do campo, ou acima se não couber. O modal não muda de tamanho ao abrir/fechar o calendário e não leva altura mínima/fixa para "caber" o calendário. Animação: entrada `pop-in` (normal), saída `pop-out` (fast), em `styles/flatpickr-custom.css`. Status: modo `static`/prop `floating` removidos (15/10/2026).
 - **[regra]** Campos de observação/notas usam `Textarea` com `rows={1}` e ocupam a linha inteira, para o texto não quebrar em coluna estreita.
 - **[pontual]** Campos relacionados alinhados lado a lado.
+- **[pontual]** Modal de Tarefa (Planejamento Pessoal): seções "Periodicidade" e "Meta e Unidade" na mesma linha a partir de `lg` (`lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]`, Periodicidade à esquerda). "Quantidade alvo" e "Unidade" lado a lado, ambos centralizados (label + controle); o select de Unidade é compacto (`w-fit mx-auto`) (16/10/2026).
 - **[pontual]** Ação que revela campos (ex.: alterar senha) abre um modal em vez de expandir a tela.
 - **[pontual]** Exclusão sensível em etapas, com confirmação.
 - **[pontual]** Campos de quantidade usam `number-stepper`.
 - **[regra]** Campos sensíveis criptografados (número do cartão/conta, CVV, senhas) não voltam da API: na edição ficam vazios com placeholder "Manter a atual" e, em branco, mantêm o valor salvo (frontend `storedCardEditSchema`/`storedAccountEditSchema`, backend opcional no `update`).
 - **[regra]** Em modal, campo com `NumberStepper` ou `DecimalInput` com `step` (botões − / +) tem label e componente centralizados, e o `DecimalInput` fica compacto (largura do conteúdo). Status: automático via `data-stepper` + CSS em `index.css` escopado a `[role='dialog']`, quando o stepper tem label irmão (direto ou do `FormField`). Ficam de fora grades sem label (séries do treino) e stepper em linha com botão (recalcular parcelas).
+- **[regra]** Aviso que aparece e some conforme o preenchimento (ex.: saldo/cheque especial/saldo projetado no modal de Despesa, limite disponível na compra do cartão) tem o espaço sempre reservado: fica no layout com `invisible` quando não se aplica, para o modal não mudar de altura (15/10/2026).
+- **[regra]** Vínculos opcionais da Receita (Empréstimo / Receita Fixa) ficam sempre abertos, sem botão de recolher. Cada campo só aparece se houver opção elegível, e os rótulos não levam "(Opcional)". Título da seção: "Vínculo" (15/10/2026).
+- **[regra]** Parcelas da compra no cartão começam vazias. O resumo ("À vista" / "N× de R$ X") só aparece com o campo preenchido. Vazio no envio = toast "Revise a quantidade de parcelas" + borda vermelha (15/10/2026).
 
 ### 2.3 Modal de detalhe
 
@@ -67,17 +72,18 @@ Há três tipos de modal:
 - **[regra]** Botões **Cancelar** e **Salvar** (ou o verbo da ação: Registrar, Confirmar, Depositar…) com ícones. Fluxos em etapas mantêm Cancelar em todas as etapas. Na tela final de resultado, o rodapé vira o de detalhe (Fechar à esquerda).
 - **[regra]** Configuração e desbloqueio do cofre (módulo Segurança, `VaultGuard`) são modais de ação abertos sobre a página vazia, não cards no lugar da página. Rodapé com Cancelar + ação (Configurar / Desbloquear). Cancelar, Esc ou clique fora voltam à página anterior (ou ao Dashboard em acesso direto). A chave de recuperação abre um modal por cima do de desbloqueio.
 - **[regra]** Onboarding em etapas (ex.: boas-vindas do Planejamento Pessoal) é um `Dialog` padrão: título da etapa no header com ícone, sem X, rodapé com Cancelar, Voltar (a partir da 2ª etapa) e Próximo/Começar, troca de etapa com `slideVariants`. Na tela de sucesso, o rodapé vira `DialogCloseFooter`.
+- **[regra]** A paleta de comandos (`components/layout/CommandPalette.tsx`, aberta pela busca do header ou por Win+K / ⌘K) é um modal de ação: header "Paleta de comandos" com ícone, `SearchInput`, comandos paginados em 5 (`PageSlide` controlado, `pinNav={false}`; ↑/↓ trocam de página ao passar do último/primeiro item), só ícone + título + atalho (sem descrição), nome da seção acima do primeiro item de cada seção na página, `EmptyState` sem resultados e rodapé Cancelar + Executar (`CornerDownLeft`), sem dicas de teclado. O botão do header mostra a tecla meta como ícone + `K`: `Command` (⌘) no Mac e `Grid2x2` (tecla Win) no Windows/Linux. Títulos dos comandos em `layout.commandPalette.commands.<id>`.
 - **[regra]** Fluxo de perguntas em etapas (ex.: avaliação de autoestima): rodapé com Cancelar, **Voltar** (`ChevronLeft`, a partir da 2ª etapa, mantendo as respostas) e Confirmar/Enviar. A troca de etapa usa deslize lateral (`slideVariants` de `lib/animations`, `custom` = direção: avança para a esquerda, volta para a direita), a mesma animação do `PaginatedSlide`.
 
 ### 2.5 Sem rolagem em desktop
 
 - **[desktop]** Nenhum modal (formulário, detalhe ou ação) pode ter barra de rolagem, nem vertical nem horizontal. Isso inclui áreas roláveis internas (`overflow-y-auto`, `max-h-*`).
 - **[desktop]** Quando o conteúdo não cabe:
-  - **Formulário longo:** distribuir em colunas e alargar o modal (ex.: "Novo Livro" com duas colunas em `max-w-6xl`; "Editar Empréstimo", que junta as 3 etapas do assistente, em `max-w-5xl` com 3 colunas; "Valor a Pagar" em `max-w-5xl` com as seções Valores e Datas lado a lado).
+  - **Formulário longo:** distribuir em colunas e alargar o modal (ex.: "Novo Autor" em `max-w-4xl` com foto, dados pessoais e datas à esquerda e biografia ocupando a coluna direita (16/10/2026); "Novo Livro" com duas colunas em `max-w-6xl`; "Editar Empréstimo", que junta as 3 etapas do assistente, em `max-w-5xl` com 3 colunas; "Valor a Pagar" em `max-w-5xl` com as seções Valores e Datas lado a lado).
   - **Grupo fixo de opções** (checkboxes de eventos etc.): mais colunas.
   - **Lista de tamanho variável dentro do modal:** paginar com `PaginatedSlide` e `pinNav={false}`, com no máximo 5 itens por página (`LIST_PAGE_SIZE`). Itens de texto longo (resumos, destaques, opções de refeição com ingredientes) usam 3 por página. Lista editável em que o usuário adiciona itens (ingredientes da opção de cardápio, 3 por página por terem vários campos por linha) usa `PageSlide` controlado e pula para a última página ao adicionar (também as Receitas/Despesas Avulsas do Planejador Mensal, 5 por página). Grades de imagens usam até 8 (4 × 2).
   - **Fluxo longo:** etapas (um passo por vez), como no formulário de sessão de treino.
-- **Exceções** (conteúdo que por natureza rola): transcrição de chat (aba Chat do livro), visualizador de documento/PDF (certificado de curso, pré-visualização de arquivo) e a paleta de comandos.
+- **Exceções** (conteúdo que por natureza rola): transcrição de chat (aba Chat do livro) e visualizador de documento/PDF (certificado de curso, pré-visualização de arquivo).
 - **Status:** medido em 1024 px de altura (mais rigoroso que 1080) nos formulários de inclusão, detalhes de card/linha e modais de ação dos módulos Controle Financeiro, Intelecto e Planejamento Pessoal, todos sem rolagem. Módulo Segurança revisado em 14/10/2026: formulários de Cartão, Conta e Arquivo em duas colunas (`max-w-4xl`), gerador de senha em modal sobre o formulário, Compartilhar Credencial em duas colunas (assistente + links existentes), importação de senhas em etapas com prévia no `DataTable` paginado. Medido no navegador em 14/10/2026 (viewport ~880 px): grades em `md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4`, modais sem rolagem; Painel de Segurança sem rolagem com Atividade Recente como 4ª coluna da linha de Saúde do Cofre e Configurações de Alertas em modal (botão "Alertas" no header, salva a cada alteração).
 
 ## 3. Validação de formulários
@@ -111,6 +117,8 @@ Há três tipos de modal:
 - **[pontual]** Botão de revelar senha ou documento é só ícone, com tooltip.
 - **[regra]** No cofre (Senhas, Cartões Guardados, Contas Guardadas), "Copiar dados" no menu "..." do card copia o registro inteiro, um campo por linha com rótulo: senha → Site, Usuário, Senha; cartão → Bandeira, Número, Titular, Validade, CVV; conta → Instituição, Número, Senha 1, Senha 2. É o único botão de cópia: os modais de detalhe de Senha, Cartão e Conta não têm copiar por campo (nem do código TOTP) e ficam só com Fechar + Revelar. Revelar não pede confirmação extra (o cofre já está desbloqueado). "Verificar vazamento" (HIBP) fica no "..." do card de senha e mostra o resultado em toast, sem exibir a senha.
 
+- **[regra]** Controle de acesso por tela (15/10/2026): o que o usuário não pode fazer **some**, nunca fica desabilitado. Tela sem "Ver" sai do menu, da paleta e da Home (card do módulo leva à primeira tela liberada; sem nenhum, `EmptyState` "Nenhum módulo liberado") e a URL direta cai em `/unauthorized`. Botões: `<Can action="…">` (`components/common/Can.tsx`) ou `useCurrentScreen().can(…)`; `CardActions` esconde Editar/Excluir sem `change`/`delete` e cada item do "..." declara `action` (padrão `view`); a ação principal do `PageHeader` exige `add` (ou `permission`). Campos de vínculo com outro módulo só carregam/aparecem com a tela de destino. Mapa rota → tela em `lib/screen-access.ts`.
+
 ## 5. Cards, listas e empty states
 
 - **[regra]** Empty state: sem botão, sem texto abaixo do ícone e do rótulo, centralizado na horizontal e na vertical. Usar o componente `EmptyState`.
@@ -125,6 +133,8 @@ Há três tipos de modal:
 - **[regra]** Data em card de registro é texto dd/mm/aaaa (`formatDate`), não bloco com dia em cima e mês embaixo. Ex.: card de sessão de treino, com a data num chip `bg-primary/10` à esquerda.
 - **[pontual]** Linha de métricas/chips abaixo do título do card de sessão de treino fica centralizada na horizontal. O card usa `p-sm` e `mt-xs` entre título e chips, para 5 sessões caberem em 880 px de altura.
 - **[pontual]** Card de intervenção (Bem-Estar Emocional): linha 1 com categoria, duração, dificuldade e título à esquerda, benefício esperado centralizado no card e botão de ação à direita (`grid-cols-[1fr_auto_1fr]` a partir de `sm`); linha 2 só com a descrição. Assim 5 cards cabem na página sem rolagem. Sem rodapé com borda.
+- **[pontual]** Resultado da avaliação de autoestima (Bem-Estar Emocional): nota centralizada, análise em card de largura total e Pontos fortes / Crenças para trabalhar / Sugestões lado a lado em `lg:grid-cols-3` (cards `h-full`), para caber sem rolagem.
+- **[pontual]** Meu Perfil: card em duas colunas da altura toda (`lg:grid-cols-[minmax(0,1fr)_28rem]`): à esquerda foto + nome e, abaixo, Dados Pessoais; à direita, desde o topo, Verificação de E-mail, Preferências de Notificação e Segurança. Sem rolagem em 855 px. O modal Alterar senha usa `warnCapsLock` nos três campos. Em Segurança, duas linhas iguais: ícone + rótulo com badge de status alinhado à direita e, abaixo, o botão à esquerda. "Autenticação de dois fatores" (Ativa/Inativa → Gerenciar 2FA) e "Senha" (badge de força zxcvbn guardada em `Member.password_strength`, "Desconhecida" até o próximo login/troca → Alterar senha; `PasswordRow`). "Alterar dados" fica logo abaixo dos campos, sem rodapé com borda.
 
 ## 6. Paginação e filtros
 
@@ -140,6 +150,7 @@ Há três tipos de modal:
 - **[regra]** `PaginatedSlide` dentro de gráficos (cards de dashboard e análise) e dentro de modais usa `pinNav={false}`. Com o padrão `pinNav`, a classe `page-fill` estica os ancestrais até o `<main>`.
 - **[regra]** Telas com filtro e busca usam `FilterBar` + `SearchInput`, como no Controle Financeiro.
 - **[regra]** Filtros ocupam toda a largura, com rótulo acima de cada um: cada campo do `FilterBar` vai dentro de `<FilterField label=...>` (rótulo `text-xs` centralizado, campos alinhados pela base; botões como "Favoritos" sem rótulo). Rótulos genéricos em `common.filterLabels.*` / `common.fields.*`.
+- **[regra]** Entre o `FilterBar` e o conteúdo abaixo (lista, tabela, grade ou `EmptyState`) há sempre 24 px: pai com `space-y-lg` (o `PageContainer` já tem) ou `className="mb-lg"` no `FilterBar`. Nunca `mb-md`/`space-y-md` (no Tailwind 4 o `mb-*` do filho sobrescreve o `space-y` do pai) nem conteúdo colado, como num `TabsContent` ou fragmento sem espaçamento (16/10/2026).
 
 ## 7. Tabelas
 
@@ -153,11 +164,14 @@ Há três tipos de modal:
 
 - **[regra]** Animações visíveis mas leves, usando só `opacity` e `transform`: abas, páginas, toggles, modais, troca de filtros e carregamentos. Usar os tokens `duration-*`. Status: ainda há ~11 durações fixas no Framer Motion e 6 usos de `transition-all`.
 - **[regra]** A transição de paginação é a da tela de Tarefas Rotineiras (referência).
+- **[regra]** Checkbox (componente base `components/ui/checkbox.tsx`): o ✓ entra com `animate-pop-in` ao marcar e sai com `animate-pop-out` ao desmarcar; o fundo troca sem transição (15/10/2026).
+- **[regra]** Seletor que troca o conteúdo de uma lista (ex.: módulos no editor de permissões) usa a mesma transição da paginação (`slideVariants`), com direção pela posição da opção no seletor.
 - **[regra]** Animações indesejadas são removidas (ex.: giro de número em contador, tela piscando).
 - **[pontual]** Animação na troca entre senha e 2FA, ao abrir campos de data e horário e ao ocultar o widget do agente.
 
 ## 9. Tema, cores e tipografia
 
+- **[regra]** Seletor de tema (`components/common/ThemeToggle.tsx`, botão ☀/☾ do header) abre um modal "Temas" (ícone `Palette`, `size="xl"`, só "Fechar" no rodapé) com as seções **Temas claros** e **Temas escuros**, 4 por linha; cada cartão é uma miniatura do app (barra lateral, card com texto e botão primário) nas cores do tema, com o nome embaixo e borda primária + ✓ no ativo. Os temas formam pares claro/escuro (Alucard↔Dracula, Latte↔Mocha, Tokyo Day↔Night, Gruvbox, Everforest, Ubuntu, Mint) na mesma coluna; escolher um salva o modo e o par, e a tecla `T` alterna dentro do par. As cores da miniatura ficam em `theme-options.ts` (cópia das variáveis de `index.css` — manter em sincronia).
 - **[regra]** Nenhuma cor fixa. Usar variáveis de cor do tema, em claro e escuro. Exceção: o degradê da bandeira do cartão de crédito (`card-brands.ts`, Visa/Master/Elo…) e o texto branco sobre ele, que imitam o cartão físico. Status: Controle Financeiro sem cores fixas fora dessa exceção (13/10/2026); ainda há `slate`, `black` e `white` em outros módulos.
 - **[regra]** Cada ação de card/modal tem uma variável de cor própria `--action-<ação>` em `index.css` (Tailwind `text-action-<ação>`, mapa `ACTION_COLOR` em `lib/action-colors.ts`). As variáveis apontam para o tema, por significado: editar `--info`; excluir `--destructive`; "..." e ações neutras (compartilhar, revelar, baixar, pré-visualizar, parcelas, plano, progresso, amortização, transações, aportes, simulador, gerenciar cofres, verificar conclusão) `--muted-foreground`; pagar, receber, depositar e aplicar rendimento `--success`; sacar e favoritar `--warning`; comprovante e copiar `--primary`; verificar vazamento `--muted-foreground` (`--action-check-leak`). Para mudar a cor de uma ação, altere só a variável dela.
 - **[regra]** Cores de ícones são globais, não exclusivas de um módulo. Mapeamentos: chama/calorias `text-warning`; hidratação `text-info`; período da refeição: manhã `text-warning`, almoço/tarde `text-category-nutrition`, noite `text-info`.
@@ -178,7 +192,7 @@ Há três tipos de modal:
 ## 11. Textos, formatação e tradução
 
 - **[regra]** Títulos de tela sem subtítulo (`PageHeader` sem `subtitle`).
-- **[regra]** Todo texto passa pelo sistema de tradução. Status: parcial (ex.: "Command Palette").
+- **[regra]** Todo texto passa pelo sistema de tradução. Status: parcial (paleta de comandos traduzida em 15/10/2026).
 - **[regra]** Campos de escolha vindos da API (gênero, status, plataforma, categoria, nacionalidade, tipo de destaque, conquista, dia da semana) são traduzidos pelo código, ``t(`...${code}`, { defaultValue: x_display })``, nunca exibindo o `*_display` (pt-BR fixo do backend). Mensagens de erro de campo do servidor (título/nome duplicado) também usam chave do frontend (`serverFieldError` em `lib/form-errors.ts` + `setError` + toast).
 - **[regra]** Toasts padronizados, sem linha técnica. Status: parcial.
 - **[regra]** Moeda em BRL com vírgula e duas casas: `R$ 0,00`.
@@ -191,6 +205,9 @@ Há três tipos de modal:
 ## 12. Layout
 
 - **[regra]** Calendário e seletor de horário abrem por cima da tela, sem expandi-la.
+- **[regra]** Avisos persistentes de conta (ex.: e-mail não verificado) não ocupam altura da página: ficam como pílula compacta na barra superior, à esquerda da busca (ícone + rótulo curto, rótulo só a partir de `lg`; ações só ícone com tooltip abaixo: Reenviar, Dispensar). Antes era um banner no topo de cada página, que gerava rolagem (16/10/2026).
+- **[regra]** O `<main>` dos layouts (app e painel admin) não tem padding: o espaçamento da página vem só do `PageContainer` (antes o admin somava `p-lg` + `py-xl` e `/admin/config` rolava) (16/10/2026).
+- **[pontual]** Intelecto Hoje: os empty states dos 4 cards usam `py-lg` (em vez do `py-16` padrão) para os cards caberem em 880 px sem rolagem (16/10/2026).
 - **[regra]** Calendários de página (Treinos, Calendário Financeiro) usam o mesmo layout: grade do mês à esquerda (`lg:grid-cols-[minmax(0,1fr)_20rem]`, células de 72 px, troca de mês deslizando para o lado e limpando a seleção) e painel do dia à direita ("Selecione um dia" quando vazio; ao clicar, card com `animate-pop-in`, botão ✕ e itens neutros paginados em 5 com `PaginatedSlide pinNav={false}`). Referência: `components/workout/WorkoutCalendar.tsx`.
 - **[regra]** Datas futuras desabilitadas no próprio calendário.
 - **[regra]** Conteúdo centralizado na vertical entre componentes (filtro e paginação, abas e paginação, dentro de cards).
@@ -204,8 +221,11 @@ Há três tipos de modal:
 - **[regra]** O painel admin usa o mesmo `Breadcrumb` na barra superior (`Painel admin › Página`), com os itens por prop.
 - **[regra]** Painel admin segue as mesmas regras das demais telas. Status (14/10/2026):
   - Visão Geral: banner de status neutro (cor só no ícone), status dos serviços em `Badge`, uso de disco no `Progress`, sem "Atualizado às" no header.
-  - Configurações: categorias em accordion (`CollapsibleSection`, a primeira aberta), variáveis paginadas em 5 (`PaginatedSlide pinNav={false}`), descrição da variável no popover de ajuda (?), edição em modal "Editar configuração" (Cancelar/Salvar, erro em toast) no lugar da edição em linha, sem aviso âmbar de reinício (cada variável tem o badge "Requer reinicialização"). Modal Reiniciar com `DialogTitle icon`, sem textos de apoio e botão de confirmação na variante padrão.
+  - Configurações: categorias em accordion (`CollapsibleSection`, a primeira aberta), variáveis paginadas em 5 (`PaginatedSlide pinNav={false}`), descrição da variável no popover de ajuda (?), edição em modal "Editar configuração" (Cancelar/Salvar, erro em toast) no lugar da edição em linha, sem aviso âmbar de reinício (cada variável tem o badge "Requer reinicialização"). Variáveis secretas já configuradas têm o botão de ícone Visualizar (`Eye`, `ACTION_COLOR.reveal`, antes do Editar), que abre um modal de detalhe com o valor real (buscado em `config/<key>/reveal/` só ao abrir, sem cache; `DialogCloseFooter`) (15/10/2026). Modal Reiniciar com `DialogTitle icon`, sem textos de apoio e botão de confirmação na variante padrão.
   - Integrações: cards neutros em `md:grid-cols-2 lg:grid-cols-3` (ícone + nome + mensagem em 1 linha + badge; "N modelos" como métrica), clique abre o detalhe (`DialogCloseFooter`, lista de modelos); rodapé `border-t` só com ícones: Ollama → Reiniciar (mesmo `RestartModal` de Configurações), E-mail → modal de ação "Enviar email de teste".
   - Logs: `DataTable` com paginação no servidor (5 por página), data "dd/mm/aaaa hh:mm", descrição truncada com `title`, ação traduzida pelo código em `Badge` com variante do tema; filtros aplicam na hora (sem botão "Aplicar filtros").
-- **[regra]** Rota sem link na interface é removida, não mantida órfã.
+  - Equipe (`/admin/users`, só superuser) (15/10/2026): `PageHeader` "Equipe" (`UserCog`) com "Novo staff" (`UserPlus`, variante padrão); `DataTable` (5 por página) com Usuário, Nome, E-mail, Status (`Badge`) e Criado em; ação única só ícone com tooltip, Desativar (`UserX`, confirmação via `showConfirm`) / Ativar (`UserCheck`). "Novo staff" é modal de formulário com os mesmos campos do cadastro (`components/auth/AccountFields.tsx`).
+  - Permissões (`/admin/permissions/users|defaults`, staff e superuser) (15/10/2026): abas com rota; staff vê no `/admin` só este item (entra pelo menu do avatar → "Painel de permissões", e volta por "Voltar ao app"). Usuários: `FilterBar` (busca + status) e `DataTable` (Usuário, Nome, E-mail, Status, Telas "N de 40"); ações Permissões (`ShieldCheck`) e Desativar/Ativar (confirmação). O editor (`PermissionMatrix`) tem seletor segmentado de módulos (com os ícones do menu), "Liberar módulo inteiro" e telas paginadas em 5: um `Card` por tela (`bg-card`, `min-h-[5.5rem]` para os 5 ocuparem a altura útil em 880 px), com o ícone da tela do menu num quadrado `bg-primary/10` e os checkboxes das ações; sem "Ver" as demais ficam desabilitadas. Na página, `PaginatedSlide` padrão (navegação fixa, lista centralizada com 2+ páginas); no modal, `pinNav={false}`. Espaço `mt-lg` entre o header e as abas e `space-y-lg` entre filtro e tabela na aba. Em Usuários abre em modal de ação (`max-w-5xl`, Cancelar/Salvar); em Padrões fica na página com Salvar no header.
+- **[regra]** Rota sem link na interface é removida, não mantida órfã. Rota de tela com endpoint no backend entra no menu (`nav-config.ts`). Status (15/10/2026): Segurança ganhou "Saúde do Cofre" e "Logs de Atividade"; "Webhooks" entrou no menu principal; `/settings/two-factor` e `/settings/notifications` removidas (já são modais em Meu Perfil).
+- **[regra]** Cadastro público (15/10/2026): só abre com um staff ativo (`useRegistrationStatus`). Fechado, `/register` mostra no card a logo + `EmptyState` "Cadastro indisponível" (`UserX`) e só o link "Voltar ao login"; o login esconde "Não tem conta? Cadastre-se". E-mail obrigatório no cadastro.
 - **[pontual]** O timer de estudo flutuante (`StudyTimer`) aparece em Obras/Autores/Editoras (leitura) e Cursos/Habilidades (curso), não no Grafo de Conhecimento. Obras não tem "Registrar Progresso" no header (leituras são registradas no detalhe da obra ou pelo timer). Status (14/10/2026): Intelecto Hoje e Flash Cards entraram no menu (submódulo Intelecto); `/library/reader/:bookId` removida (o leitor abre sobre a tela de Livros).

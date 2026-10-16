@@ -98,7 +98,10 @@ class NotificationListViewTest(BaseNotificationTestCase):
     def test_list_notifications_excludes_other_users(self):
         """Does not return notifications belonging to another user's member."""
         other_user = User.objects.create_user(
-            username="other_notif_user", password="pass", is_superuser=True
+            username="other_notif_user",
+            email="other_notif_user@test.com",
+            password="pass",
+            is_superuser=True,
         )
         other_member = _make_member(other_user, name="Other Member")
         Notification.objects.create(
@@ -186,7 +189,10 @@ class NotificationUpdateViewTest(BaseNotificationTestCase):
     def test_cannot_update_other_users_notification(self):
         """Returns 404 when trying to update another user's notification."""
         other_user = User.objects.create_user(
-            username="other_notif_user2", password="pass", is_superuser=True
+            username="other_notif_user2",
+            email="other_notif_user2@test.com",
+            password="pass",
+            is_superuser=True,
         )
         other_member = _make_member(other_user, name="Other Member 2")
         other_notif = Notification.objects.create(
@@ -1082,7 +1088,10 @@ class ReconciliationPendingNotificationCommandTest(BaseNotificationTestCase):
     def test_no_notification_when_import_belongs_to_other_user(self):
         """Does not create notifications for imports owned by another user."""
         other_user = User.objects.create_user(
-            username="recon_other_user", password="pass", is_superuser=True
+            username="recon_other_user",
+            email="recon_other_user@test.com",
+            password="pass",
+            is_superuser=True,
         )
         self.stmt_import.owner = other_user
         self.stmt_import.save()

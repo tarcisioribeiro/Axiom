@@ -19,7 +19,10 @@ from revenues.models import FixedRevenue, Revenue
 class MonthlyPlanApplyTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="planner", password="testpass123", is_superuser=True
+            username="planner",
+            email="planner@test.com",
+            password="testpass123",
+            is_superuser=True,
         )
         self.client = APIClient()
         token = RefreshToken.for_user(self.user).access_token

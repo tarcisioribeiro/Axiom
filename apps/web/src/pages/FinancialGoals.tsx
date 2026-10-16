@@ -1,0 +1,1106 @@
+/* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  CalendarDays,
+  CheckCircle2,
+  ChevronDown,
+  FileText,
+  Link,
+  Link2,
+  Loader2,
+  PiggyBank,
+  Plus,
+  Save,
+  Search,
+  Sliders,
+  Tag,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Vault as VaultIcon,
+  Wallet,
+  X,
+} from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { CardActions } from '@/components/common/CardActions';
+import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
+import { LoadingState } from '@/components/common/LoadingState';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CurrencyInput } from '@/components/ui/currency-input';
+import { DatePicker } from '@/components/ui/date-picker';
+import {
+  Dialog,
+  DialogCloseFooter,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { FormSection } from '@/components/ui/form-section';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
+import { translate } from '@/config/constants';
+import {
+  FINANCIAL_GOAL_CATEGORY_ICONS,
+  EXPENSE_CATEGORY_ICONS,
+  GOAL_STATUS_ICONS,
+} from '@/config/icons';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useNow } from '@/hooks/use-now';
+import { useToast } from '@/hooks/use-toast';
+import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatLocalDate } from '@/lib/utils';
+import { accountsService } from '@/services/accounts-service';
+import { vaultsService, financialGoalsService } from '@/services/vaults-service';
+import type {
+  Account,
+  FinancialGoal,
+  FinancialGoalListItem,
+  FinancialGoalFormData,
+  Vault,
+} from '@/types';
+import { FINANCIAL_GOAL_CATEGORIES as CATEGORIES } from '@/types';
+import { getErrorMessage } from '@/utils/error-utils';
+
+function ProgressRing({
+  pct,
+  size = 80,
+  color = 'hsl(var(--success))',
+}: {
+  pct: number;
+  size?: number;
+  color?: string;
+}) {
+  const r = (size - 8) / 2;
+  const circ = 2 * Math.PI * r;
+  const filled = Math.min(pct / 100, 1) * circ;
+  return (
+    <svg width={size} height={size} className="-rotate-90">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={6}
+        className="text-muted/30"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth={6}
+        strokeDasharray={`${filled} ${circ - filled}`}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+interface GoalCardProps {
+  goal: FinancialGoalListItem;
+  todayTimestamp: number;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+  onEdit: (g: FinancialGoalListItem) => void;
+  onDelete: (id: number) => void;
+  onManageVaults: (g: FinancialGoalListItem) => void;
+  onCheckCompletion: (g: FinancialGoalListItem) => void;
+}
+
+function GoalCard({
+  goal,
+  todayTimestamp,
+  t,
+  onEdit,
+  onDelete,
+  onManageVaults,
+  onCheckCompletion,
+}: GoalCardProps) {
+  const [detailOpen, setDetailOpen] = useState(false);
+  // Portal do menu "...": o clique num item não pode abrir o detalhe do card.
+  const suppressRef = useRef(false);
+  const cp = goal.computed_progress;
+  const currentVal = parseFloat(cp.current_value);
+  const targetVal = parseFloat(cp.target_value);
+  const pct = parseFloat(cp.percentage);
+
+  const categoryConfig: Record<
+    string,
+    { icon: React.ReactNode; color: string; ringColor: string }
+  > = {
+    reduce_expenses: {
+      icon: <TrendingDown className="text-warning h-5 w-5" />,
+      color: 'text-warning',
+      ringColor: 'hsl(var(--warning))',
+    },
+    increase_revenue: {
+      icon: <TrendingUp className="text-info h-5 w-5" />,
+      color: 'text-info',
+      ringColor: 'hsl(var(--info))',
+    },
+  };
+
+  const config = categoryConfig[goal.category] ?? {
+    icon: <PiggyBank className="text-success h-5 w-5" />,
+    color: 'text-success',
+    ringColor: 'hsl(var(--success))',
+  };
+
+  const daysLeft = goal.target_date
+    ? Math.ceil(
+        (new Date(goal.target_date).getTime() - todayTimestamp) / (1000 * 60 * 60 * 24)
+      )
+    : null;
+
+  const statusBadge = (
+    <Badge
+      variant={goal.is_completed ? 'success' : 'secondary'}
+      className="shrink-0 text-xs"
+    >
+      {goal.is_completed
+        ? t('pages.financialGoals.goalCompletedLabel')
+        : t('pages.financialGoals.activeGoal')}
+    </Badge>
+  );
+  const ring = (size: number) => (
+    <div className="relative flex justify-center">
+      <ProgressRing pct={pct} size={size} color={config.ringColor} />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className={`text-sm font-bold ${config.color}`}>{pct.toFixed(0)}%</span>
+      </div>
+    </div>
+  );
+
+  // Card enxuto (§5): ícone, título, categoria, anel e status; valores no detalhe.
+  return (
+    <>
+      <Card
+        role="button"
+        tabIndex={0}
+        onClick={(e) => {
+          if (suppressRef.current) {
+            suppressRef.current = false;
+            return;
+          }
+          if (!(e.target as HTMLElement).closest('button')) setDetailOpen(true);
+        }}
+        onKeyDown={(e) => {
+          if (
+            (e.key === 'Enter' || e.key === ' ') &&
+            !(e.target as HTMLElement).closest('button')
+          ) {
+            e.preventDefault();
+            setDetailOpen(true);
+          }
+        }}
+        className="cursor-pointer overflow-hidden"
+      >
+        <CardContent className="p-md pt-md space-y-sm">
+          <div className="gap-sm flex items-start justify-between">
+            <div className="gap-sm flex min-w-0 items-center">
+              {config.icon}
+              <div className="min-w-0">
+                <p className="truncate leading-tight font-semibold">
+                  {goal.description}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {t(`pages.financialGoals.categories.${goal.category}`, {
+                    defaultValue: goal.category_display,
+                  })}
+                </p>
+              </div>
+            </div>
+            {statusBadge}
+          </div>
+
+          {ring(72)}
+
+          <div className="gap-xs pt-sm flex items-center justify-end border-t">
+            <CardActions
+              onEdit={() => onEdit(goal)}
+              onDelete={() => onDelete(goal.id)}
+              onMenuPointerDown={() => {
+                suppressRef.current = true;
+              }}
+              menuActions={[
+                {
+                  icon: Link,
+                  label: t('pages.financialGoals.manageVaults'),
+                  action: 'change',
+                  onClick: () => onManageVaults(goal),
+                  color: 'manage-vaults',
+                },
+                {
+                  icon: CheckCircle2,
+                  label: t('pages.financialGoals.checkCompletion'),
+                  action: 'change',
+                  onClick: () => onCheckCompletion(goal),
+                  color: 'check-completion',
+                  disabled: goal.is_completed,
+                },
+              ]}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent size="lg">
+          <DialogHeader>
+            <DialogTitle icon={Target}>{goal.description}</DialogTitle>
+            <DialogDescription>{goal.description}</DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground text-sm">
+              {t(`pages.financialGoals.categories.${goal.category}`, {
+                defaultValue: goal.category_display,
+              })}
+            </p>
+            {statusBadge}
+          </div>
+          {ring(96)}
+          <div className="gap-md grid grid-cols-2">
+            <div>
+              <p className="text-muted-foreground text-xs">
+                {t('pages.financialGoals.columns.current')}
+              </p>
+              <p className={`font-semibold ${config.color}`}>
+                {formatCurrency(currentVal)}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs">
+                {t('pages.financialGoals.columns.target')}
+              </p>
+              <p className="font-semibold">{formatCurrency(targetVal)}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs">
+                {t('pages.financialGoals.columns.targetDate')}
+              </p>
+              <p
+                className={`font-semibold ${
+                  daysLeft !== null && daysLeft <= 0
+                    ? 'text-destructive'
+                    : daysLeft !== null && daysLeft <= 30
+                      ? 'text-warning'
+                      : ''
+                }`}
+              >
+                {goal.target_date
+                  ? `${formatDate(goal.target_date)} · ${
+                      daysLeft !== null && daysLeft > 0
+                        ? t('pages.financialGoals.daysLeft', { count: daysLeft })
+                        : t('pages.financialGoals.deadlinePassed')
+                    }`
+                  : '—'}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs">
+                {t('pages.financialGoals.columns.vaults')}
+              </p>
+              <p className="font-semibold">
+                {t('pages.financialGoals.vaultsCount', { count: goal.vaults_count })}
+              </p>
+            </div>
+          </div>
+          <DialogCloseFooter />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+const TRANSACTION_BASED_CATEGORIES = new Set(['reduce_expenses', 'increase_revenue']);
+
+const EMPTY_GOALS: FinancialGoalListItem[] = [];
+const EMPTY_VAULTS: Vault[] = [];
+const EMPTY_ACCOUNTS: Account[] = [];
+
+export default function FinancialGoals() {
+  const { t } = useTranslation();
+  const todayTimestamp = useNow();
+  const queryClient = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isVaultsDialogOpen, setIsVaultsDialogOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState<FinancialGoal | undefined>();
+  const [selectedGoalForVaults, setSelectedGoalForVaults] = useState<
+    FinancialGoal | undefined
+  >();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedVaultIds, setSelectedVaultIds] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>(
+    'all'
+  );
+
+  // Form state
+  const [formData, setFormData] = useState<FinancialGoalFormData>({
+    description: '',
+    category: 'savings',
+    target_value: 0,
+    vaults: [],
+    target_date: '',
+    is_active: true,
+    notes: '',
+    linked_expense_category: '',
+    linked_account: null,
+  });
+
+  const { toast } = useToast();
+  const { showConfirm } = useAlertDialog();
+
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['financial-goals'],
+    queryFn: async () => {
+      try {
+        const [goalsData, vaultsData, accountsData] = await Promise.all([
+          financialGoalsService.getAll(),
+          vaultsService.getAll({ is_active: true }),
+          accountsService.getAll(),
+        ]);
+        return { goals: goalsData, vaults: vaultsData, accounts: accountsData };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
+          variant: 'destructive',
+        });
+        return { goals: EMPTY_GOALS, vaults: EMPTY_VAULTS, accounts: EMPTY_ACCOUNTS };
+      }
+    },
+  });
+  const goals = pageData?.goals ?? EMPTY_GOALS;
+  const vaults = pageData?.vaults ?? EMPTY_VAULTS;
+  const accounts = pageData?.accounts ?? EMPTY_ACCOUNTS;
+
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ['financial-goals'] });
+
+  const handleCreate = () => {
+    setSelectedGoal(undefined);
+    setFormData({
+      description: '',
+      category: 'savings',
+      target_value: 0,
+      vaults: [],
+      target_date: formatLocalDate(new Date()),
+      is_active: true,
+      notes: '',
+      linked_expense_category: '',
+      linked_account: null,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = async (goalItem: FinancialGoalListItem) => {
+    try {
+      const goal = await financialGoalsService.getById(goalItem.id);
+      setSelectedGoal(goal);
+      setFormData({
+        description: goal.description,
+        category: goal.category,
+        target_value: parseFloat(goal.target_value),
+        vaults: goal.vaults,
+        target_date: goal.target_date || '',
+        is_active: goal.is_active,
+        notes: goal.notes || '',
+        linked_expense_category: goal.linked_expense_category || '',
+        linked_account: goal.linked_account ?? null,
+      });
+      setIsDialogOpen(true);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    const confirmed = await showConfirm({
+      title: t('pages.financialGoals.deleteTitle'),
+      description: t('pages.financialGoals.deleteDesc'),
+    });
+
+    if (confirmed) {
+      try {
+        await financialGoalsService.delete(id);
+        toast({
+          title: t('pages.financialGoals.deleted'),
+        });
+        void refresh();
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.description || formData.target_value <= 0) {
+      toast({
+        title: t('common.messages.fillRequired'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      if (selectedGoal) {
+        await financialGoalsService.update(selectedGoal.id, formData);
+        toast({
+          title: t('pages.financialGoals.updated'),
+        });
+      } else {
+        await financialGoalsService.create(formData);
+        toast({
+          title: t('pages.financialGoals.created'),
+        });
+      }
+      setIsDialogOpen(false);
+      void refresh();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleManageVaults = async (goalItem: FinancialGoalListItem) => {
+    try {
+      const goal = await financialGoalsService.getById(goalItem.id);
+      setSelectedGoalForVaults(goal);
+      setSelectedVaultIds(goal.vaults);
+      setIsVaultsDialogOpen(true);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSaveVaults = async () => {
+    if (!selectedGoalForVaults) return;
+
+    try {
+      setIsSubmitting(true);
+
+      // Find vaults to add and remove
+      const currentVaults = selectedGoalForVaults.vaults;
+      const vaultsToAdd = selectedVaultIds.filter((id) => !currentVaults.includes(id));
+      const vaultsToRemove = currentVaults.filter(
+        (id) => !selectedVaultIds.includes(id)
+      );
+
+      if (vaultsToAdd.length > 0) {
+        await financialGoalsService.addVaults(selectedGoalForVaults.id, vaultsToAdd);
+      }
+      if (vaultsToRemove.length > 0) {
+        await financialGoalsService.removeVaults(
+          selectedGoalForVaults.id,
+          vaultsToRemove
+        );
+      }
+
+      toast({
+        title: t('pages.financialGoals.vaultsUpdatedDesc'),
+      });
+      setIsVaultsDialogOpen(false);
+      void refresh();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCheckCompletion = async (goal: FinancialGoalListItem) => {
+    try {
+      const response = await financialGoalsService.checkCompletion(goal.id);
+      if (response.is_completed) {
+        toast({
+          title: t('pages.financialGoals.goalCompletedDesc'),
+        });
+      } else {
+        toast({
+          title: `Meta em andamento com ${response.progress_percentage.toFixed(1)}% concluído (${formatCurrency(response.current_value)} de ${formatCurrency(response.target_value)}).`,
+        });
+      }
+      void refresh();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const toggleVault = (vaultId: number) => {
+    setSelectedVaultIds((prev) =>
+      prev.includes(vaultId) ? prev.filter((id) => id !== vaultId) : [...prev, vaultId]
+    );
+  };
+
+  const filteredGoals = useMemo(() => {
+    return goals.filter((g) => {
+      if (
+        searchTerm &&
+        !g.description.toLowerCase().includes(searchTerm.toLowerCase())
+      ) {
+        return false;
+      }
+      if (categoryFilter !== 'all' && g.category !== categoryFilter) return false;
+      if (statusFilter === 'active' && g.is_completed) return false;
+      if (statusFilter === 'completed' && !g.is_completed) return false;
+      return true;
+    });
+  }, [goals, searchTerm, categoryFilter, statusFilter]);
+
+  const hasActiveFilters =
+    !!searchTerm || categoryFilter !== 'all' || statusFilter !== 'all';
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('all');
+    setStatusFilter('all');
+  };
+
+  return (
+    <PageContainer>
+      <PageHeader
+        title={t('pages.financialGoals.title')}
+        icon={<Target />}
+        action={{
+          label: t('pages.financialGoals.newBtn'),
+          icon: <Plus className="h-4 w-4" />,
+          onClick: handleCreate,
+        }}
+      />
+
+      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.financialGoals.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-44"
+              aria-label={t('pages.financialGoals.allCategories')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.financialGoals.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.financialGoals.allCategories')}
+              </SelectItem>
+              {CATEGORIES.map((cat) => {
+                const CatIcon =
+                  FINANCIAL_GOAL_CATEGORY_ICONS[cat.value] ??
+                  FINANCIAL_GOAL_CATEGORY_ICONS['other'];
+                return (
+                  <SelectItem
+                    key={cat.value}
+                    value={cat.value}
+                    icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                  >
+                    {t(`pages.financialGoals.categories.${cat.value}`)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v as 'all' | 'active' | 'completed')}
+          >
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.financialGoals.allStatus')}
+              startIcon={<Target className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.financialGoals.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.financialGoals.allStatus')}</SelectItem>
+              <SelectItem
+                value="active"
+                icon={<GOAL_STATUS_ICONS.active className="h-4 w-4" />}
+              >
+                {t('common.status.active')}
+              </SelectItem>
+              <SelectItem
+                value="completed"
+                icon={<GOAL_STATUS_ICONS.completed className="h-4 w-4" />}
+              >
+                {t('common.status.completed')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+      </FilterBar>
+
+      {/* Goal Cards Grid */}
+      {isLoading ? (
+        <LoadingState />
+      ) : filteredGoals.length === 0 ? (
+        <EmptyState
+          icon={<Target className="text-muted-foreground h-12 w-12" />}
+          title={t('pages.financialGoals.emptyState')}
+        />
+      ) : (
+        <PaginatedSlide
+          items={filteredGoals}
+          pageSize={6}
+          centerList
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+        >
+          {(pageItems) =>
+            pageItems.map((goal) => (
+              <GoalCard
+                key={goal.id}
+                goal={goal}
+                todayTimestamp={todayTimestamp}
+                t={t}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onManageVaults={handleManageVaults}
+                onCheckCompletion={handleCheckCompletion}
+              />
+            ))
+          }
+        </PaginatedSlide>
+      )}
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle mode={selectedGoal ? 'edit' : 'create'}>
+              {selectedGoal
+                ? t('pages.financialGoals.editTitle')
+                : t('pages.financialGoals.newTitle')}
+            </DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedGoal
+                  ? t('pages.financialGoals.editDesc')
+                  : t('pages.financialGoals.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
+          </DialogHeader>
+          <div className="space-y-lg">
+            {/* Seção: Identificação */}
+            <FormSection title={t('common.form.sections.basicInfo')} icon={Target}>
+              <div className="space-y-md">
+                <div className="space-y-sm">
+                  <Label htmlFor="description" className="gap-xs flex items-center">
+                    <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('common.fields.description')} *
+                  </Label>
+                  <Input
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    placeholder={t('pages.financialGoals.form.descriptionPlaceholder')}
+                  />
+                </div>
+
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <Tag className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('common.fields.category')} *
+                  </Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, category: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((cat) => {
+                        const CatIcon =
+                          FINANCIAL_GOAL_CATEGORY_ICONS[cat.value] ??
+                          FINANCIAL_GOAL_CATEGORY_ICONS['other'];
+                        return (
+                          <SelectItem
+                            key={cat.value}
+                            value={cat.value}
+                            icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                          >
+                            {t(`pages.financialGoals.categories.${cat.value}`)}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.category === 'reduce_expenses' && (
+                  <div className="space-y-sm">
+                    <Label className="gap-xs flex items-center">
+                      <Tag className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.financialGoals.form.linkedExpenseCategoryLabel')}
+                    </Label>
+                    <Select
+                      value={formData.linked_expense_category || ''}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, linked_expense_category: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t(
+                            'pages.financialGoals.form.linkedExpenseCategoryPlaceholder'
+                          )}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EXPENSE_CATEGORIES_CANONICAL.map((cat) => {
+                          const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
+                          return (
+                            <SelectItem key={cat.key} value={cat.key}>
+                              <span className="gap-sm flex items-center">
+                                {CatIcon && <CatIcon className="h-4 w-4" />}
+                                {translate('expenseCategories', cat.key)}
+                              </span>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {TRANSACTION_BASED_CATEGORIES.has(formData.category) && (
+                  <div className="space-y-sm">
+                    <Label className="gap-xs flex items-center">
+                      <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.financialGoals.form.linkedAccountLabel')}
+                    </Label>
+                    <Select
+                      value={formData.linked_account?.toString() ?? ''}
+                      onValueChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          linked_account: value ? parseInt(value, 10) : null,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t(
+                            'pages.financialGoals.form.linkedAccountPlaceholder'
+                          )}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {accounts.map((acc) => (
+                          <SelectItem key={acc.id} value={acc.id.toString()}>
+                            {acc.account_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </FormSection>
+
+            {/* Seção: Valores e Prazo */}
+            <FormSection title={t('common.form.sections.values')} icon={Wallet}>
+              <div className="gap-md grid grid-cols-2">
+                <div className="space-y-sm col-span-2">
+                  <Label htmlFor="target_value" className="gap-xs flex items-center">
+                    <Wallet className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.financialGoals.targetValueLabel')}
+                  </Label>
+                  <CurrencyInput
+                    id="target_value"
+                    accentColor="success"
+                    value={formData.target_value}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        target_value: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="space-y-sm col-span-2">
+                  <Label htmlFor="target_date" className="gap-xs flex items-center">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.financialGoals.targetDateLabel')}
+                  </Label>
+                  <DatePicker
+                    value={formData.target_date || ''}
+                    onChange={(date) =>
+                      setFormData({
+                        ...formData,
+                        target_date: date ? formatLocalDate(date) : '',
+                      })
+                    }
+                    placeholder={t('common.fields.selectDate')}
+                  />
+                </div>
+              </div>
+            </FormSection>
+
+            {/* Seção: Configuração */}
+            <FormSection title={t('common.form.sections.configuration')} icon={Sliders}>
+              <div className="space-y-md">
+                {/* Cofres associados */}
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <PiggyBank className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.financialGoals.associatedVaults')}
+                  </Label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild disabled={vaults.length === 0}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full justify-between font-normal"
+                      >
+                        <span className="truncate">
+                          {formData.vaults.length === 0
+                            ? t('pages.financialGoals.noVaultsSelected')
+                            : vaults
+                                .filter((v) => formData.vaults.includes(v.id))
+                                .map((v) => v.description)
+                                .join(', ')}
+                        </span>
+                        <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="min-w-[var(--radix-dropdown-menu-trigger-width)]"
+                    >
+                      {vaults.length === 0 ? (
+                        <p className="text-muted-foreground px-sm py-sm text-sm">
+                          {t('pages.financialGoals.noVaults')}
+                        </p>
+                      ) : (
+                        vaults.map((vault) => (
+                          <DropdownMenuCheckboxItem
+                            key={vault.id}
+                            checked={formData.vaults.includes(vault.id)}
+                            onSelect={(e) => e.preventDefault()}
+                            onCheckedChange={(checked) =>
+                              setFormData({
+                                ...formData,
+                                vaults: checked
+                                  ? [...formData.vaults, vault.id]
+                                  : formData.vaults.filter((id) => id !== vault.id),
+                              })
+                            }
+                          >
+                            <span className="gap-sm flex w-full items-center justify-between">
+                              <span className="truncate">{vault.description}</span>
+                              <span className="text-muted-foreground shrink-0 text-xs">
+                                {formatCurrency(parseFloat(vault.current_balance))}
+                              </span>
+                            </span>
+                          </DropdownMenuCheckboxItem>
+                        ))
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData({ ...formData, is_active: !formData.is_active })
+                  }
+                  className={`gap-sm p-sm flex w-full items-start rounded-lg border text-left transition ${
+                    formData.is_active
+                      ? 'border-success/50 bg-success/5 ring-success/20 ring-1'
+                      : 'border-border/60 bg-muted/20 opacity-70'
+                  }`}
+                >
+                  <div
+                    className={`mt-0.5 rounded-full p-1 ${
+                      formData.is_active
+                        ? 'bg-success/10 text-success'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">
+                      {t('pages.financialGoals.activeGoal')}
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </FormSection>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <X className="h-4 w-4" />
+              {t('common.actions.cancel')}
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={
+                isSubmitting || !formData.description || formData.target_value <= 0
+              }
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {isSubmitting
+                ? t('common.actions.saving')
+                : selectedGoal
+                  ? t('common.actions.save')
+                  : t('common.actions.create')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Vaults Dialog */}
+      <Dialog open={isVaultsDialogOpen} onOpenChange={setIsVaultsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="gap-sm flex items-center">
+              <VaultIcon className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
+              {t('pages.financialGoals.manageVaults')}
+            </DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedGoalForVaults &&
+                  t('pages.financialGoals.manageVaultsDesc', {
+                    name: selectedGoalForVaults.description,
+                  })}
+              </DialogDescription>
+            </VisuallyHidden>
+          </DialogHeader>
+          <div className="space-y-sm rounded-md border p-3">
+            {vaults.length === 0 ? (
+              <p className="text-muted-foreground text-sm">
+                {t('pages.financialGoals.noVaults')}
+              </p>
+            ) : (
+              <PaginatedSlide
+                items={vaults}
+                pageSize={5}
+                pinNav={false}
+                className="space-y-sm"
+              >
+                {(pageItems) =>
+                  pageItems.map((vault) => (
+                    <div
+                      key={vault.id}
+                      className="gap-sm p-sm hover:bg-muted/50 flex items-center rounded"
+                    >
+                      <Checkbox
+                        id={`manage-vault-${vault.id}`}
+                        checked={selectedVaultIds.includes(vault.id)}
+                        onCheckedChange={() => toggleVault(vault.id)}
+                      />
+                      <Label
+                        htmlFor={`manage-vault-${vault.id}`}
+                        className="flex-1 cursor-pointer"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{vault.description}</div>
+                            <div className="text-muted-foreground text-xs">
+                              {vault.account_name}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-success font-semibold">
+                              {formatCurrency(parseFloat(vault.current_balance))}
+                            </div>
+                            <div className="text-muted-foreground text-xs">
+                              +{formatCurrency(parseFloat(vault.accumulated_yield))}{' '}
+                              {t('pages.financialGoals.yields')}
+                            </div>
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+                  ))
+                }
+              </PaginatedSlide>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsVaultsDialogOpen(false)}>
+              <X className="h-4 w-4" />
+              {t('common.actions.cancel')}
+            </Button>
+            <Button onClick={handleSaveVaults} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {isSubmitting ? t('common.actions.saving') : t('common.actions.save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </PageContainer>
+  );
+}

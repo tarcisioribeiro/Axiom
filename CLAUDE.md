@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Full-stack monorepo: Django REST Framework backend (port 39100) + React/TypeScript frontend (port 39101). UI in Brazilian Portuguese; API keys translated via `apps/frontend/src/config/constants.ts`.
+Full-stack monorepo: Django REST Framework backend (port 39100) + React/TypeScript frontend (port 39101). UI in Brazilian Portuguese; API keys translated via `apps/web/src/config/constants.ts`.
 
 ## Architecture
 
@@ -11,8 +11,7 @@ Full-stack monorepo: Django REST Framework backend (port 39100) + React/TypeScri
 Axiom/
 ├── apps/
 │   ├── api/       # Django backend (port 39100)
-│   ├── frontend/  # React frontend (port 39101)
-│   └── mobile/    # Flutter app
+│   └── web/       # React frontend (port 39101)
 ├── infra/
 │   ├── k8s/       # Kubernetes manifests (kustomize)
 │   ├── docker/    # docker-compose.yml
@@ -23,22 +22,24 @@ Axiom/
 
 ### Backend (Django)
 
-**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, receivables, vaults, dashboard, authentication, members, app (core), security, library, personal_planning, notifications, budgets, bank_reconciliation, monthly_planning, agents, exchange_rates, webhooks, admin_panel
+**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, receivables, vaults, dashboard, authentication, members, app (core), security, library, personal_planning, notifications, budgets, bank_reconciliation, monthly_planning, agents, exchange_rates, webhooks, admin_panel, storage
 
 **Large flat apps** — `library`, `security`, `personal_planning` are each a **single flat app** (one `models.py`/`views.py`), not sub-packages. Don't create sub-directories.
 - `library`: books/authors/readings, Intellect extension (courses, skills, flashcards SM-2, knowledge graph, `IntellectBadge`)
 - `security`: password vault (passwords, cards, accounts, archives), vault config/session keys, credential-sharing tokens
 - `personal_planning`: habits/goals (`TaskInstance` lazily generated from `RoutineTask`), gamification (XP/badges — unrelated to `library`'s `IntellectBadge`), wellness center, workout/nutrition tracking. Exercise images come only from `ExerciseDatasetEntry` (via `Exercise.dataset_entry` FK); no free-form upload.
 
-**Base Model** (`app/models.py`): uuid PK, timestamps, audit fields (`created_by`, `updated_by`, `deleted_by`, `deleted_at`), `is_deleted`. All models extend this. Also defines shared choices: `PAYMENT_FREQUENCY_CHOICES`, `PAYMENT_METHOD_CHOICES`, `LOAN_STATUS_CHOICES`, `BILL_STATUS_CHOICES`.
+**Base Model** (`app/models.py`): integer PK + unique `uuid` field, timestamps, audit fields (`created_by`, `updated_by`, `deleted_by`, `deleted_at`), `is_deleted`. All models extend this. Also defines shared choices: `PAYMENT_FREQUENCY_CHOICES`, `PAYMENT_METHOD_CHOICES`, `LOAN_STATUS_CHOICES`, `BILL_STATUS_CHOICES`.
 
 **View Pattern**: DRF generic views (not ViewSets). Extend `BaseListCreateView` / `BaseRetrieveUpdateDestroyView` (`app/base_views.py`) — `IsAuthenticated` + `GlobalDefaultPermission` already included.
 
 **Permissions**: `GlobalDefaultPermission` (`app/permissions.py`) auto-derives model perms from HTTP method (GET→view, POST→add, PUT/PATCH→change, DELETE→delete).
 
+**Screen access** (`admin_panel/screens.py`): common users only reach module routes (finance, planning, security, library) granted per screen/action in `UserScreenAccess`; enforced by `ScreenAccessMiddleware` (staff/superuser bypass). Every new route under those prefixes must be added to a screen's `routes` — `tests/test_screen_access.py` fails otherwise. New users get `ScreenDefault`.
+
 **Soft Delete**: filter `is_deleted=False` in querysets.
 
-**Signals**: accounts, credit_cards, loans, payables, receivables, personal_planning, transfers — registered via `apps.py:ready()`.
+**Signals**: accounts, admin_panel, authentication, budgets, credit_cards, expenses, library, loans, payables, personal_planning, receivables, revenues, security, transfers, vaults — registered via `apps.py:ready()`.
 
 **Encryption** (`app/encryption.py:FieldEncryption`, Fernet): encrypted fields use `_` prefix. Decryption cache per-request via `DecryptionCacheMiddleware`. Use `defer('_field')` in list querysets.
 
@@ -46,13 +47,13 @@ Axiom/
 
 **Desktop theme sync**: `ThemePreference` (one per user) updated via `PUT /api/v1/theme-sync/` (`Authorization: ThemeSync <token>`, no JWT). Token issued with `manage.py issue_theme_sync_token` or `POST /api/v1/me/theme/sync-token/` (authenticated; used by the dotfiles repo's `setup-env.sh`). Web app reads via `GET /api/v1/me/theme/` in `hooks/use-desktop-theme-sync.ts` (applies when different from `localStorage.desktopThemeSynced`).
 
-**Agents / LLM** (`apps/api/agents/`): Six domain agents selected by `core/router.py`. Endpoints: `/api/v1/agents/` (ask/, stream/, history/, sessions/, status/). **Rule**: `providers/` is the **only** place in `agents/` allowed to import models from other apps — tools, domain agents, and views consume data through it. See `documentation/architecture/agents-llm-boundary.md`.
+**Agents / LLM** (`apps/api/agents/`): Six domain agents selected by `core/router.py`. Endpoints: `/api/v1/agents/` (ask/, stream/, history/, sessions/, status/). **Rule**: `providers/` is the **only** place in `agents/` allowed to import models from other apps — tools, domain agents, and views consume data through it. Provider functions taking `user` must be decorated with `@requires_screen(...)` (`providers/access.py`) so agents respect screen access. See `documentation/architecture/agents-llm-boundary.md`.
 
-**Async Tasks**: Worker `axiom-worker`, beat `axiom-queue` (`DatabaseScheduler`). Tests: `CELERY_TASK_ALWAYS_EAGER=True`.
+**Async Tasks**: Worker `axiom-worker`, beat `axiom-queue` (`DatabaseScheduler`). Periodic tasks live only in `CELERY_BEAT_SCHEDULE` (`app/settings.py`); `app.conf.beat_schedule` in `celery.py` is silently overridden. Tests: `CELERY_TASK_ALWAYS_EAGER=True`.
 
 **Webhooks**: `dispatch_event(event, payload, user=user)` from `webhooks.dispatch`. Signed with HMAC-SHA256 (`X-Axiom-Signature`).
 
-**Misc**: All endpoints `/api/v1/`. `PageNumberPagination` PAGE_SIZE=50. `DjangoFilterBackend`. Timezone `America/Sao_Paulo` — always `timezone.now()`. PostgreSQL 16; tests use SQLite in-memory. Redis cache prefix `axiom`. TTLs: `CACHE_TTL_DASHBOARD_STATS` 60s, `CACHE_TTL_ACCOUNT_BALANCES` 30s, `CACHE_TTL_CATEGORY_BREAKDOWN` 300s, `CACHE_TTL_BALANCE_FORECAST` 120s.
+**Misc**: All endpoints `/api/v1/`. `PageNumberPagination` PAGE_SIZE=50. `DjangoFilterBackend`. Timezone `America/Sao_Paulo` — always `timezone.now()`; for dates use `timezone.localdate()` (never `timezone.now().date()`, which is the UTC date). PostgreSQL 16; tests use SQLite in-memory. Redis cache prefix `axiom`. TTLs: `CACHE_TTL_DASHBOARD_STATS` 60s, `CACHE_TTL_ACCOUNT_BALANCES` 30s, `CACHE_TTL_CATEGORY_BREAKDOWN` 300s, `CACHE_TTL_BALANCE_FORECAST` 120s.
 
 **Key models**:
 - `Receivable`: mirror of `payables`; recording receipt (`received_value`) triggers revenue, not creation. Statuses: `active`, `received`, `overdue`, `cancelled`.
@@ -70,7 +71,7 @@ docker compose -f infra/docker/docker-compose.yml --project-directory . up front
 ```
 Depois, usando a extensão claude-in-chrome, abra `localhost:39101` e faça login como usuário comum usando os valores de `AXIOM_LOCAL_USERNAME` e `AXIOM_LOCAL_USER_PASSWORD` do `.env`.
 
-**Stack**: React 19, Vite 7, TypeScript 5.9, TailwindCSS 3, Radix UI, Zustand, React Router v7, Recharts, Framer Motion, React Hook Form + Zod, TanStack Query v5
+**Stack**: React 19, Vite 8, TypeScript 6, TailwindCSS 4, Radix UI, Zustand, React Router v8, Recharts, Framer Motion, React Hook Form + Zod, TanStack Query v5
 
 **Data fetching**: use `useQuery` + `useMutation` (TanStack Query) — not the older `use-crud-page.ts`. Client in `src/lib/query-client.ts`.
 
@@ -92,25 +93,17 @@ Depois, usando a extensão claude-in-chrome, abra `localhost:39101` e faça logi
 - Framer Motion: `MotionConfig` in `App.tsx` defaults every `motion.*` to `transitions.normal` — omit the `transition` prop; use `transitions.fast` only for micro-interactions.
 - Show/hide toggles ("Ver detalhes"): `<Collapse open={x}>…</Collapse>` from `components/ui/collapsible-section` instead of `{x && …}`.
 
-**Common Components** (`components/common/`) — use before creating new ones: `PageContainer`, `EmptyState`, `LoadingState`, `DataTable`, `PageHeader`, `SearchInput`, `StatCard`, `ExportModal`, `StatementExportModal`, `AnimatedPage`, `IconButton`, `ErrorBoundary`, `LanguageSelector`, `ThemeToggle`.
+**Common Components** (`components/common/`) — use before creating new ones: `PageContainer`, `EmptyState`, `LoadingState`, `DataTable`, `PageHeader`, `SearchInput`, `StatCard`, `ExportModal`, `AnimatedPage`, `IconButton`, `ErrorBoundary`, `LanguageSelector`, `ThemeToggle`.
 
-**UI Primitives** (`components/ui/`): `button`, `input`, `select`, `checkbox`, `dialog`, `alert-dialog`, `form-field`, `date-picker`, `dropdown-menu`, `popover`, `badge`, `card`, `progress`, `radio-group`, `star-rating`, `textarea`, `toast`, `toaster`, `tooltip`, `skeleton`, `skeleton-variants`, `scroll-area`, `table`, `label`, `visually-hidden`, `file-input`, `icon-picker`, `circular-progress`, `success-animation`, `currency-input` (BRL, `accentColor` variants), `form-section`, `status-toggle`, `number-stepper` (integer − / + with ↑/↓ keys, typeable, `optional` for empty), `decimal-input` (pt-BR comma, `unit` suffix, optional `step` − / +), `slider` (styled native range, `tone`, `floor`), `color-picker` (swatch + popover palette + hex). Never use raw `<input type="number|range|color|checkbox">`.
+**UI Primitives** (`components/ui/`): `button`, `input`, `select`, `checkbox`, `dialog`, `alert-dialog`, `form-field`, `date-picker`, `dropdown-menu`, `popover`, `badge`, `card`, `progress`, `star-rating`, `textarea`, `toast`, `toaster`, `tooltip`, `skeleton`, `skeleton-variants`, `scroll-area`, `table`, `label`, `visually-hidden`, `file-input`, `icon-picker`, `circular-progress`, `success-animation`, `currency-input` (BRL, `accentColor` variants), `form-section`, `status-toggle`, `number-stepper` (integer − / + with ↑/↓ keys, typeable, `optional` for empty), `decimal-input` (pt-BR comma, `unit` suffix, optional `step` − / +), `slider` (styled native range, `tone`, `floor`), `color-picker` (swatch + popover palette + hex). Never use raw `<input type="number|range|color|checkbox">`.
 
 **Dialogs** (rules in `documentation/frontend/design-patterns.md` §2): `DialogHeader` is always sticky and `DialogDescription` is always `sr-only` (primitive enforces both). Title needs an icon: `<DialogTitle mode={x ? 'edit' : 'create'}>` for forms, `<DialogTitle icon={Icon}>` for detail/action. Forms/actions: sticky footer (`DialogFooter` or `.dialog-footer`), "Cancelar" = `variant="outline"` + `X`, "Salvar" = default variant + `Save` (no category colors). Detail: `<DialogCloseFooter>{actions}</DialogCloseFooter>` (Fechar left, actions right). No `max-h-[NNvh]`/fixed heights/inner `overflow-y-auto` — at ≥1920×1080 no dialog may scroll; paginate long lists inside with `PaginatedSlide pinNav={false}` (≤5). No subtitle, no card repeating the title, no helper text under fields/buttons. Validation errors do not render under fields: each message goes to a toast (`notifyFormErrors` from `@/lib/form-errors`, passed as `handleSubmit(onSubmit, notifyFormErrors)`) and the invalid field gets a red border via `aria-invalid` (primitives in `components/ui/` already style it). Live computed values stay. Fields with `NumberStepper` or stepped `DecimalInput` are centered (label + control) automatically via `data-stepper` CSS in `index.css` — don't add `text-center`/`mx-auto` by hand.
 
 **Routing**: `ProtectedRoute` HOC; all protected pages lazy-loaded. Public routes redirect home if authenticated.
 
-**Import alias**: `@/` → `apps/frontend/src/`
+**Import alias**: `@/` → `apps/web/src/`
 
 **Pre-commit**: `pre-commit` runs black/isort/flake8/mypy (backend); `husky` + `lint-staged` runs ESLint + Prettier (frontend).
-
-### Mobile (Flutter)
-
-**Stack**: Flutter 3.27.x / Dart 3.6.x, Material 3. Auth via `dio` + `PersistCookieJar` (same httpOnly-cookie model as web). State via `flutter_riverpod`. Navigation via `go_router` (4 bottom-nav tabs). Portuguese enum labels in `utils/choice_labels.dart`.
-
-**Scope**: daily-use subset (finance, planning, library, wellness, vault, AI chat). Reports/config/admin stay web-only. LLM source is always `agents/` — mobile calls existing endpoints only.
-
-**Dependencies**: pinned exact versions in `pubspec.yaml`; `pubspec.lock` committed.
 
 ## Development Commands
 
@@ -153,7 +146,7 @@ $DC exec api python manage.py import_exercise_dataset      # one-time per env
 
 ### Frontend
 ```bash
-cd apps/frontend
+cd apps/web
 npm run dev / build / lint / lint:fix / format / format:check / typecheck
 npm run test -- --run                  # All tests
 npm run test -- --run -t "test name"   # Single test
@@ -162,14 +155,6 @@ npm run storybook
 ```
 
 **Testing stack**: Vitest 4 + @testing-library/react v16 + happy-dom. `globals: false` — import `{ describe, it, expect, vi }` explicitly. Pre-push hook runs `test:coverage` automatically.
-
-### Mobile
-```bash
-cd apps/mobile
-flutter pub get && flutter run
-flutter analyze && flutter test --coverage
-dart format --set-exit-if-changed .
-```
 
 ### CI/CD Validation
 ```bash
@@ -181,7 +166,7 @@ Simulates MR lint checks (black/isort/flake8, migrations, bandit, pip-audit, esl
 ```bash
 source .venv/bin/activate
 cd apps/api && python manage.py migrate && python manage.py runserver 0.0.0.0:39100
-cd apps/frontend && npm install && npm run dev
+cd apps/web && npm install && npm run dev
 ```
 
 ### Database
@@ -317,7 +302,7 @@ Format: `<type>(<optional scope>): <description>`
 
 Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `ci`, `perf`, `revert`, `style`
 
-Config: `apps/frontend/commitlint.config.cjs`.
+Config: `apps/web/commitlint.config.cjs`.
 
 ## Dependencies
 

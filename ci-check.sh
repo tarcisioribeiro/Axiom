@@ -37,12 +37,9 @@
 #                      uma MR só existe dentro de uma pipeline de MR real)
 #   lint:secrets       gitleaks (opcional local — obrigatório no GitLab CI)
 #
-# Mobile não tem jobs no GitLab CI (removidos — ver CLAUDE.md) — rode os
-# comandos Flutter diretamente para lint/test/build local.
-#
 # Pré-requisitos:
 #   - Docker + docker compose com o serviço 'api' rodando (só para lint:migrations)
-#   - Node.js 20+ com apps/frontend/node_modules instalado no host
+#   - Node.js 20+ com apps/web/node_modules instalado no host
 #     (o container 'frontend' é nginx-only; npm roda direto no host)
 #
 # Flags:
@@ -211,9 +208,9 @@ check_node() {
 	ver="$(node --version)"
 	log "${GREEN}  ✓  Node.js $ver encontrado${NC}"
 
-	if [ ! -d "$SCRIPT_DIR/apps/frontend/node_modules" ]; then
+	if [ ! -d "$SCRIPT_DIR/apps/web/node_modules" ]; then
 		log "${YELLOW}  node_modules ausente — rodando npm ci...${NC}"
-		if ! (cd "$SCRIPT_DIR/apps/frontend" && npm ci) >>"$LOG_FILE" 2>&1; then
+		if ! (cd "$SCRIPT_DIR/apps/web" && npm ci) >>"$LOG_FILE" 2>&1; then
 			log "${RED}  ✗  Falha ao instalar dependências do frontend.${NC}"
 			return 1
 		fi
@@ -367,7 +364,7 @@ show_develop_info() {
 	print_job_card "build:frontend:assets" "build" \
 		"Roda 'npm run build' (VITE_APP_ENV=staging) num job node:22-alpine simples, reaproveitando o cache de node_modules do lint/test, e sobe dist/ como artifact." \
 		"push em develop" \
-		"Nada de especial — reproduzível localmente com 'npm run build' em apps/frontend."
+		"Nada de especial — reproduzível localmente com 'npm run build' em apps/web."
 
 	print_job_card "build:frontend" "build" \
 		"Empacota o dist/ (artifact do job anterior) numa imagem nginx (Dockerfile.ci, sem builder stage), gera SBOM e faz push para o GHCR." \
@@ -438,7 +435,7 @@ show_main_info() {
 	print_job_card "build:frontend:assets" "build" \
 		"Sempre rebuilda com VITE_APP_ENV=production (o valor é embutido no bundle JS, não dá pra reaproveitar o dist/ de staging)." \
 		"push em main" \
-		"Nada de especial — reproduzível localmente com 'npm run build' em apps/frontend."
+		"Nada de especial — reproduzível localmente com 'npm run build' em apps/web."
 
 	print_job_card "build:frontend" "build" \
 		"Empacota o dist/ de produção numa imagem nginx e faz push das tags :main." \
@@ -575,13 +572,13 @@ if $RUN_MR; then
 
 	if ! $BACKEND_ONLY; then
 		run_step_safe "lint:frontend" "eslint" \
-			sh -c "cd '$SCRIPT_DIR/apps/frontend' && npm run lint"
+			sh -c "cd '$SCRIPT_DIR/apps/web' && npm run lint"
 
 		run_step_safe "lint:frontend" "prettier" \
-			sh -c "cd '$SCRIPT_DIR/apps/frontend' && npm run format:check"
+			sh -c "cd '$SCRIPT_DIR/apps/web' && npm run format:check"
 
 		run_step_safe "lint:npm-audit" "npm audit --audit-level=high" \
-			sh -c "cd '$SCRIPT_DIR/apps/frontend' && out=\$(npm audit --audit-level=high 2>&1); ec=\$?; printf '%s\n' \"\$out\"; if [ \$ec -ne 0 ] && printf '%s' \"\$out\" | grep -qE 'endpoint returned an error|request.*failed'; then printf 'AVISO: npm audit falhou por indisponibilidade do registry — verifique manualmente.\n'; exit 0; fi; exit \$ec"
+			sh -c "cd '$SCRIPT_DIR/apps/web' && out=\$(npm audit --audit-level=high 2>&1); ec=\$?; printf '%s\n' \"\$out\"; if [ \$ec -ne 0 ] && printf '%s' \"\$out\" | grep -qE 'endpoint returned an error|request.*failed'; then printf 'AVISO: npm audit falhou por indisponibilidade do registry — verifique manualmente.\n'; exit 0; fi; exit \$ec"
 	fi
 
 	# ==========================================================================
@@ -608,7 +605,7 @@ if $RUN_MR; then
 	log "${DIM}  uma MR real, então isto é uma aproximação: valida os commits desde o merge-base${NC}"
 	log "${DIM}  com origin/develop.${NC}"
 
-	if command -v npx >/dev/null 2>&1 && [ -f "$SCRIPT_DIR/apps/frontend/commitlint.config.cjs" ]; then
+	if command -v npx >/dev/null 2>&1 && [ -f "$SCRIPT_DIR/apps/web/commitlint.config.cjs" ]; then
 		COMMITLINT_BASE="$(cd "$SCRIPT_DIR" && git merge-base HEAD origin/develop 2>/dev/null)"
 		if [ -z "$COMMITLINT_BASE" ]; then
 			(cd "$SCRIPT_DIR" && git fetch origin develop --quiet 2>/dev/null) || true
@@ -617,7 +614,7 @@ if $RUN_MR; then
 
 		if [ -n "$COMMITLINT_BASE" ]; then
 			run_step_safe "lint:commits" "commitlint --from $(git -C "$SCRIPT_DIR" rev-parse --short "$COMMITLINT_BASE") --to HEAD" \
-				sh -c "cd '$SCRIPT_DIR/apps/frontend' && npx commitlint --from '$COMMITLINT_BASE' --to HEAD"
+				sh -c "cd '$SCRIPT_DIR/apps/web' && npx commitlint --from '$COMMITLINT_BASE' --to HEAD"
 		else
 			log "${YELLOW}  ⚠  Não foi possível determinar o merge-base com origin/develop — pulando lint:commits local.${NC}"
 		fi

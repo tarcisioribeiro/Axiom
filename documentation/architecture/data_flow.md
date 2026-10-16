@@ -35,7 +35,7 @@ sequenceDiagram
     User->>LoginForm: Insere credenciais
     LoginForm->>LoginForm: Validação Zod
     LoginForm->>AuthService: login(username, password)
-    AuthService->>APIClient: POST /api/v1/auth/login/
+    AuthService->>APIClient: POST /api/v1/authentication/token/
 
     APIClient->>Backend: HTTP Request
     Backend->>JWTMiddleware: Processa requisição
@@ -103,7 +103,7 @@ sequenceDiagram
     Backend-->>APIClient: 401 Unauthorized
 
     Interceptor->>Interceptor: Detecta 401
-    Interceptor->>APIClient: POST /api/v1/auth/refresh/
+    Interceptor->>APIClient: POST /api/v1/authentication/token/refresh/
     APIClient->>Backend: Request com refresh_token cookie
 
     Backend->>Backend: Valida refresh_token
@@ -152,7 +152,7 @@ sequenceDiagram
 
     User->>Component: Clica em Logout
     Component->>AuthService: logout()
-    AuthService->>APIClient: POST /api/v1/auth/logout/
+    AuthService->>APIClient: POST /api/v1/authentication/logout/
 
     APIClient->>Backend: Request
     Backend->>Backend: Invalida refresh_token
@@ -586,21 +586,21 @@ sequenceDiagram
 
     par Requisições Paralelas
         Dashboard->>Service: getAccountsSummary()
-        Service->>Backend: GET /api/v1/dashboard/accounts-summary/
+        Service->>Backend: GET /api/v1/dashboard/account-balances/
         Backend->>Database: SELECT SUM(balance) FROM accounts...
         Database-->>Backend: Total balance
         Backend-->>Service: { total_balance: 5000 }
         Service-->>Dashboard: Summary data
     and
         Dashboard->>Service: getExpensesByCategory()
-        Service->>Backend: GET /api/v1/dashboard/expenses-by-category/
+        Service->>Backend: GET /api/v1/dashboard/stats/
         Backend->>Database: SELECT category, SUM(amount) FROM expenses GROUP BY...
         Database-->>Backend: Categorias e totais
         Backend-->>Service: [{ category, total }]
         Service-->>Dashboard: Category data
     and
         Dashboard->>Service: getRevenuesVsExpenses()
-        Service->>Backend: GET /api/v1/dashboard/monthly-summary/
+        Service->>Backend: GET /api/v1/dashboard/summary/
         Backend->>Database: Complex query com JOIN e GROUP BY
         Database-->>Backend: Meses com receitas e despesas
         Backend-->>Service: Monthly data

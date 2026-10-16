@@ -744,7 +744,7 @@ documentation/
 ├── overview/           # Visão geral do sistema
 ├── architecture/       # Arquitetura e design
 ├── apps/api/               # Documentação de APIs
-├── apps/frontend/          # Frontend específico
+├── apps/web/          # Frontend específico
 ├── backend/           # Backend específico
 ├── development/       # Guias de desenvolvimento (este arquivo)
 └── deployment/        # Deploy e produção

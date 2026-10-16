@@ -27,7 +27,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from members.models import Member
 from personal_planning.models import (
     BodyMetric,
-    Challenge,
     CrisisImpulseLog,
     DailyReflection,
     EmotionalCheckin,
@@ -843,92 +842,8 @@ class ExportGoalsTest(BasePlanningCoverageTestCase):
 
 
 # ============================================================================
-# CHALLENGES / BODY METRICS
+# BODY METRICS
 # ============================================================================
-
-
-class ChallengeViewTest(BasePlanningCoverageTestCase):
-    def _data(self):
-        today = date.today()
-        return {
-            "title": "30 dias sem açúcar",
-            "duration_days": 30,
-            "start_date": str(today),
-            "end_date": str(today + timedelta(days=30)),
-            "status": "active",
-            "owner": self.member.pk,
-        }
-
-    def test_create_and_list_challenge(self):
-        url = reverse("challenge-list-create")
-        response = self.client.post(url, self._data(), format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        list_response = self.client.get(url)
-        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list_response.data["count"], 1)
-
-    def test_filter_challenge_by_status(self):
-        Challenge.objects.create(
-            owner=self.member,
-            title="Ativo",
-            duration_days=30,
-            start_date=date.today(),
-            end_date=date.today() + timedelta(days=30),
-            status="active",
-        )
-        Challenge.objects.create(
-            owner=self.member,
-            title="Concluído",
-            duration_days=7,
-            start_date=date.today(),
-            end_date=date.today() + timedelta(days=7),
-            status="completed",
-        )
-        url = reverse("challenge-list-create")
-        response = self.client.get(url, {"status": "completed"})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 1)
-
-    def test_update_and_delete_challenge(self):
-        challenge = Challenge.objects.create(
-            owner=self.member,
-            title="Editável",
-            duration_days=7,
-            start_date=date.today(),
-            end_date=date.today() + timedelta(days=7),
-            status="active",
-        )
-        url = reverse("challenge-detail", args=[challenge.pk])
-        response = self.client.patch(
-            url, {"title": "Renomeado"}, format="json"
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["title"], "Renomeado")
-
-        delete_response = self.client.delete(url)
-        self.assertEqual(
-            delete_response.status_code, status.HTTP_204_NO_CONTENT
-        )
-        challenge.refresh_from_db()
-        self.assertTrue(challenge.is_deleted)
-
-    def test_list_challenge_no_member_returns_empty(self):
-        user2 = User.objects.create_user(
-            username="challenge_nomember",
-            email="challengenomember@test.com",
-            password="testpass123",
-            is_superuser=True,
-        )
-        client2 = APIClient()
-        refresh = RefreshToken.for_user(user2)
-        client2.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
-        )
-        url = reverse("challenge-list-create")
-        response = client2.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 0)
 
 
 class BodyMetricViewTest(BasePlanningCoverageTestCase):

@@ -73,7 +73,7 @@ def fetch_ptax_rates(target_date: str | None = None) -> dict:
     if target_date:
         ref_date = date.fromisoformat(target_date)
     else:
-        ref_date = timezone.now().date() - timedelta(days=1)
+        ref_date = timezone.localdate() - timedelta(days=1)
 
     # Fim de semana não tem PTAX — usa sexta-feira
     while ref_date.weekday() >= 5:

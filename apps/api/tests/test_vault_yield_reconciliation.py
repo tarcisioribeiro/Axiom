@@ -69,7 +69,7 @@ class VaultYieldInvariantTest(TestCase):
 
     def _age_yield_clock(self, days):
         self.vault.refresh_from_db()
-        self.vault.last_yield_date = timezone.now().date() - timedelta(
+        self.vault.last_yield_date = timezone.localdate() - timedelta(
             days=days
         )
         self.vault.save()
@@ -200,7 +200,7 @@ class VaultYieldExternalEditSyncTest(TestCase):
 
     def _age_yield_clock(self, days):
         self.vault.refresh_from_db()
-        self.vault.last_yield_date = timezone.now().date() - timedelta(
+        self.vault.last_yield_date = timezone.localdate() - timedelta(
             days=days
         )
         self.vault.save()
@@ -308,7 +308,7 @@ class VaultTransactionUpdateViewLeakTest(APITestCase):
             created_by=self.user,
         )
         self.vault.deposit(Decimal("1000.00"), user=self.user)
-        self.vault.last_yield_date = timezone.now().date() - timedelta(days=10)
+        self.vault.last_yield_date = timezone.localdate() - timedelta(days=10)
         self.vault.save()
         applied = self.vault.apply_yield(user=self.user)
         self.assertGreater(applied, Decimal("0.00"))

@@ -562,5 +562,5 @@ console.log(error); // Usa log ao invés de error
 ## Próximos Passos
 
 - **Endpoints:** Veja [endpoints.md](./endpoints.md)
-- **Autenticação:** Veja [autenticacao-tokens.md](./autenticacao-tokens.md)
-- **Filtros:** Veja [filtros-ordenacao.md](./filtros-ordenacao.md)
+- **Autenticação:** Veja [autenticacao-tokens.md](./token_authentication.md)
+- **Filtros:** Veja [filtros-ordenacao.md](./filters_ordering.md)

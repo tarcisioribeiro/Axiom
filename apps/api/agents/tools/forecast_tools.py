@@ -24,7 +24,7 @@ def get_fixed_expenses_upcoming(
     user: User, days: int = 30
 ) -> list[dict[str, Any]]:
     """Retorna despesas fixas que vencem nos próximos N dias."""
-    today = timezone.now().date()
+    today = timezone.localdate()
     upcoming = []
 
     fixed = financial_provider.fixed_expenses_active(user)
@@ -70,7 +70,7 @@ def get_expected_revenues(user: User, days: int = 30) -> list[dict[str, Any]]:
     """
     Retorna receitas recorrentes históricas para estimar entradas futuras.
     """
-    cutoff = timezone.now().date() - timedelta(days=90)
+    cutoff = timezone.localdate() - timedelta(days=90)
     recurring = financial_provider.recurring_revenues_avg(user, cutoff)
     return [
         {
