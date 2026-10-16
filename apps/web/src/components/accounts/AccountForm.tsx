@@ -35,7 +35,11 @@ import {
 import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
-import { accountSchema, type AccountFormData } from '@/lib/validations';
+import {
+  accountEditSchema,
+  accountSchema,
+  type AccountFormData,
+} from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import type { Account } from '@/types';
 
@@ -65,7 +69,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
     watch,
     formState: { errors },
   } = useForm<AccountFormData>({
-    resolver: zodResolver(accountSchema),
+    resolver: zodResolver(account ? accountEditSchema : accountSchema),
     defaultValues: account
       ? {
           account_name: account.account_name,

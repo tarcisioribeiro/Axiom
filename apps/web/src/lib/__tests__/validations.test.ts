@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { expenseSchema } from '@/lib/validations';
+import { accountEditSchema, accountSchema, expenseSchema } from '@/lib/validations';
 
 const baseExpense = {
   value: 100,
@@ -63,5 +63,31 @@ describe('expenseSchema — link exclusivity (requirement 8)', () => {
       fixed_expense_template: 9,
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('account schemas', () => {
+  const account = {
+    account_name: 'Conta',
+    account_type: 'CC',
+    institution: 'NUB',
+    account_number: '',
+    balance: 0,
+    overdraft_limit: 0,
+    owner: 1,
+  };
+
+  it('requires the account number on create', () => {
+    expect(accountSchema.safeParse(account).success).toBe(false);
+  });
+
+  it('keeps the stored number when left blank on edit', () => {
+    expect(accountEditSchema.safeParse(account).success).toBe(true);
+  });
+
+  it('still enforces the overdraft rule on edit', () => {
+    expect(accountEditSchema.safeParse({ ...account, balance: -10 }).success).toBe(
+      false
+    );
   });
 });

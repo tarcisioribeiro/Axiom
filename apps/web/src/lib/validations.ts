@@ -39,64 +39,76 @@ const positiveError = (field: string) => `${field} deve ser maior que zero`;
 // SCHEMAS DE CONTAS BANCÁRIAS
 // ============================================================================
 
-export const accountSchema = z
-  .object({
-    account_name: z
-      .string()
-      .min(1, requiredError('Nome da conta'))
-      .max(255, maxError('Nome', 255)),
-    account_type: z.enum(['CC', 'CS', 'FG', 'VA', 'VR', 'CP', 'CM'], {
-      message: 'Selecione um tipo de conta válido',
-    }),
-    institution: z.enum(
-      [
-        'NUB',
-        'SIC',
-        'MPG',
-        'IFB',
-        'CEF',
-        'BTG',
-        'ITA',
-        'SAN',
-        'BRB',
-        'BBR',
-        'BMG',
-        'PAY',
-        'C6B',
-        'INT',
-        'CAI',
-        'PAN',
-      ],
-      {
-        message: 'Selecione uma instituição válida',
-      }
-    ),
-    account_number: z
-      .string()
-      .min(1, requiredError('Número da conta'))
-      .max(50, maxError('Número da conta', 50)),
-    balance: z.number({ message: numberError('Saldo') }),
-    overdraft_limit: z
-      .number({ message: numberError('Cheque especial') })
-      .min(0, 'Limite de cheque especial não pode ser negativo'),
-    owner: z
-      .number({ message: 'Proprietário inválido' })
-      .int('Proprietário deve ser um número inteiro')
-      .positive('Selecione um proprietário'),
-  })
-  .superRefine((data, ctx) => {
-    const minBalance = -(data.overdraft_limit ?? 0);
-    if (data.balance < minBalance) {
-      ctx.addIssue({
-        code: 'too_small',
-        minimum: minBalance,
-        origin: 'number',
-        inclusive: true,
-        message: `Saldo não pode ser menor que -${data.overdraft_limit ?? 0} (limite do cheque especial)`,
-        path: ['balance'],
-      });
+const accountBaseSchema = z.object({
+  account_name: z
+    .string()
+    .min(1, requiredError('Nome da conta'))
+    .max(255, maxError('Nome', 255)),
+  account_type: z.enum(['CC', 'CS', 'FG', 'VA', 'VR', 'CP', 'CM'], {
+    message: 'Selecione um tipo de conta válido',
+  }),
+  institution: z.enum(
+    [
+      'NUB',
+      'SIC',
+      'MPG',
+      'IFB',
+      'CEF',
+      'BTG',
+      'ITA',
+      'SAN',
+      'BRB',
+      'BBR',
+      'BMG',
+      'PAY',
+      'C6B',
+      'INT',
+      'CAI',
+      'PAN',
+    ],
+    {
+      message: 'Selecione uma instituição válida',
     }
-  });
+  ),
+  account_number: z
+    .string()
+    .min(1, requiredError('Número da conta'))
+    .max(50, maxError('Número da conta', 50)),
+  balance: z.number({ message: numberError('Saldo') }),
+  overdraft_limit: z
+    .number({ message: numberError('Cheque especial') })
+    .min(0, 'Limite de cheque especial não pode ser negativo'),
+  owner: z
+    .number({ message: 'Proprietário inválido' })
+    .int('Proprietário deve ser um número inteiro')
+    .positive('Selecione um proprietário'),
+});
+
+const refineAccountBalance = (
+  data: z.infer<typeof accountBaseSchema>,
+  ctx: z.RefinementCtx
+) => {
+  const minBalance = -(data.overdraft_limit ?? 0);
+  if (data.balance < minBalance) {
+    ctx.addIssue({
+      code: 'too_small',
+      minimum: minBalance,
+      origin: 'number',
+      inclusive: true,
+      message: `Saldo não pode ser menor que -${data.overdraft_limit ?? 0} (limite do cheque especial)`,
+      path: ['balance'],
+    });
+  }
+};
+
+export const accountSchema = accountBaseSchema.superRefine(refineAccountBalance);
+
+/** Na edição, o número (criptografado, não volta da API) em branco mantém o atual. */
+export const accountEditSchema = accountBaseSchema
+  .extend({
+    account_number: accountBaseSchema.shape.account_number.or(z.literal('')),
+  })
+  .superRefine(refineAccountBalance);
 
 // ============================================================================
 // SCHEMAS DE DESPESAS
