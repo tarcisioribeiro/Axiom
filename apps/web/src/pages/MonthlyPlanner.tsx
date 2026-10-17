@@ -499,6 +499,58 @@ function ExtraItemRow({
   );
 }
 
+/** Altura reservada de 5 linhas + navegação (gap-md + botão h-9), para o modal
+ * não mudar de tamanho ao adicionar itens ou paginar. `ROW_MAX_H` = dobro da
+ * linha, limite de crescimento quando a lista tem até 4 itens. */
+const EXTRA_LIST_MIN_H = 'min-h-[14.25rem]';
+const FIXED_LIST = { minH: 'min-h-[15.5rem]', rowMaxH: 'max-h-[4.5rem]' };
+const BILL_LIST = { minH: 'min-h-[13.75rem]', rowMaxH: 'max-h-[3.75rem]' };
+const REGISTERED_LIST = { minH: 'min-h-[18.75rem]', rowMaxH: 'max-h-[5.75rem]' };
+const GROW_LIMIT = 4;
+
+/** Lista de cards com altura reservada. Até `GROW_LIMIT` itens, os cards
+ * crescem até `rowMaxH` e o bloco fica centralizado; vazia, mostra `empty`
+ * no centro; acima disso, pagina em 5 com os cards no tamanho normal. */
+function ReservedList<T>({
+  items,
+  minH,
+  rowMaxH,
+  empty,
+  renderItem,
+}: {
+  items: T[];
+  minH: string;
+  rowMaxH: string;
+  empty: ReactNode;
+  renderItem: (item: T, index: number) => ReactNode;
+}) {
+  const grow = items.length <= GROW_LIMIT;
+  return (
+    <div className={cn('flex flex-col', minH, grow && 'justify-center')}>
+      {items.length === 0 ? (
+        empty
+      ) : grow ? (
+        <div className="gap-xs flex flex-1 flex-col justify-center">
+          {items.map((item, i) => (
+            <div key={i} className={cn('flex flex-1 flex-col *:flex-1', rowMaxH)}>
+              {renderItem(item, i)}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <PaginatedSlide
+          items={items}
+          pageSize={LIST_PAGE_SIZE}
+          pinNav={false}
+          className="space-y-xs"
+        >
+          {(pageItems) => pageItems.map(renderItem)}
+        </PaginatedSlide>
+      )}
+    </div>
+  );
+}
+
 /** Avulsas: lista editável paginada; ao adicionar, vai para a última página (§2.5). */
 function ExtraItemsList({
   items,
@@ -523,27 +575,29 @@ function ExtraItemsList({
   const start = (current - 1) * LIST_PAGE_SIZE;
   return (
     <>
-      {items.length > 0 && (
-        <PageSlide
-          page={current}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          pinNav={false}
-          className="space-y-xs"
-        >
-          {items.slice(start, start + LIST_PAGE_SIZE).map((item, i) => (
-            <ExtraItemRow
-              key={start + i}
-              item={item}
-              index={start + i}
-              onChange={onChange}
-              onToggle={onToggle}
-              onRemove={onRemove}
-              removeLabel={removeLabel}
-            />
-          ))}
-        </PageSlide>
-      )}
+      <div className={cn('flex flex-col', EXTRA_LIST_MIN_H)}>
+        {items.length > 0 && (
+          <PageSlide
+            page={current}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pinNav={false}
+            className="space-y-xs"
+          >
+            {items.slice(start, start + LIST_PAGE_SIZE).map((item, i) => (
+              <ExtraItemRow
+                key={start + i}
+                item={item}
+                index={start + i}
+                onChange={onChange}
+                onToggle={onToggle}
+                onRemove={onRemove}
+                removeLabel={removeLabel}
+              />
+            ))}
+          </PageSlide>
+        )}
+      </div>
       <Button
         variant="outline"
         size="sm"
@@ -1474,39 +1528,31 @@ export default function MonthlyPlanner({
                 icon={CircleDollarSign}
                 total={totalFixed}
               >
-                {(data?.fixed_revenues.length ?? 0) === 0 && (
-                  <EmptyState title={t('monthlyPlanner.noFixedRevenues')} />
-                )}
-                <PaginatedSlide
+                <ReservedList
+                  {...FIXED_LIST}
                   items={data?.fixed_revenues ?? []}
-                  pageSize={LIST_PAGE_SIZE}
-                  pinNav={false}
-                  className="space-y-xs"
-                >
-                  {(pageItems) =>
-                    pageItems.map((r) => (
-                      <EditableFixedItem
-                        key={r.id}
-                        id={r.id}
-                        label={r.description}
-                        defaultValue={r.default_value}
-                        sub={
-                          r.account_name ||
-                          t('monthlyPlanner.dueDay', { day: r.due_day })
-                        }
-                        override={fixedRevenueOverrides[String(r.id)]}
-                        alreadyPosted={r.already_posted}
-                        settledLabel={
-                          r.already_received
-                            ? t('monthlyPlanner.alreadyReceived')
-                            : undefined
-                        }
-                        onToggle={toggleFixedRevenue}
-                        onValueChange={updateFixedRevenueValue}
-                      />
-                    ))
-                  }
-                </PaginatedSlide>
+                  empty={<EmptyState title={t('monthlyPlanner.noFixedRevenues')} />}
+                  renderItem={(r) => (
+                    <EditableFixedItem
+                      key={r.id}
+                      id={r.id}
+                      label={r.description}
+                      defaultValue={r.default_value}
+                      sub={
+                        r.account_name || t('monthlyPlanner.dueDay', { day: r.due_day })
+                      }
+                      override={fixedRevenueOverrides[String(r.id)]}
+                      alreadyPosted={r.already_posted}
+                      settledLabel={
+                        r.already_received
+                          ? t('monthlyPlanner.alreadyReceived')
+                          : undefined
+                      }
+                      onToggle={toggleFixedRevenue}
+                      onValueChange={updateFixedRevenueValue}
+                    />
+                  )}
+                />
               </CardSubSection>
 
               <CardSubSection
@@ -1530,41 +1576,30 @@ export default function MonthlyPlanner({
               icon={TrendingUp}
               total={actualRevenues}
             >
-              {actualRevenueItems.length === 0 ? (
-                <EmptyState title={t('monthlyPlanner.noRegisteredRevenues')} />
-              ) : (
-                <PaginatedSlide
-                  items={actualRevenueItems}
-                  pageSize={LIST_PAGE_SIZE}
-                  pinNav={false}
-                  className="space-y-xs"
-                >
-                  {(pageItems) =>
-                    pageItems.map((item, idx) => {
-                      const r = item;
-                      return (
-                        <div
-                          key={idx}
-                          className="bg-muted/30 px-sm py-xs flex items-center justify-between rounded-lg text-sm"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <span className="block truncate font-medium">
-                              {r.description}
-                            </span>
-                            <span className="text-muted-foreground text-xs">
-                              {translateCategory(r.category, 'revenue')} ·{' '}
-                              {formatDate(r.date)}
-                            </span>
-                          </div>
-                          <span className="ml-sm text-success shrink-0 font-semibold">
-                            {formatCurrency(r.value)}
-                          </span>
-                        </div>
-                      );
-                    })
-                  }
-                </PaginatedSlide>
-              )}
+              <ReservedList
+                {...REGISTERED_LIST}
+                items={actualRevenueItems}
+                empty={<EmptyState title={t('monthlyPlanner.noRegisteredRevenues')} />}
+                renderItem={(r, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-muted/30 px-sm py-xs flex items-center justify-between rounded-lg text-sm"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">
+                        {r.description}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        {translateCategory(r.category, 'revenue')} ·{' '}
+                        {formatDate(r.date)}
+                      </span>
+                    </div>
+                    <span className="ml-sm text-success shrink-0 font-semibold">
+                      {formatCurrency(r.value)}
+                    </span>
+                  </div>
+                )}
+              />
             </CardSubSection>
           </div>
           <DialogCloseFooter />
@@ -1592,42 +1627,35 @@ export default function MonthlyPlanner({
                 icon={TrendingDown}
                 total={totalFixedExp}
               >
-                {(data?.fixed_expenses.length ?? 0) === 0 && (
-                  <EmptyState title={t('monthlyPlanner.noFixedExpenses')} />
-                )}
-                <PaginatedSlide
+                <ReservedList
+                  {...FIXED_LIST}
                   items={data?.fixed_expenses ?? []}
-                  pageSize={LIST_PAGE_SIZE}
-                  pinNav={false}
-                  className="space-y-xs"
-                >
-                  {(pageItems) =>
-                    pageItems.map((e) => (
-                      <EditableFixedItem
-                        key={e.id}
-                        id={e.id}
-                        label={e.description}
-                        defaultValue={e.default_value}
-                        sub={e.credit_card_name || e.account_name}
-                        override={fixedExpenseOverrides[String(e.id)]}
-                        alreadyPosted={e.already_posted && !e.credit_card_name}
-                        settledLabel={
-                          e.already_paid
-                            ? t(
-                                e.credit_card_name
-                                  ? 'monthlyPlanner.alreadyRegistered'
-                                  : 'monthlyPlanner.alreadyPaid'
-                              )
-                            : undefined
-                        }
-                        forceDisabled={e.already_posted && Boolean(e.credit_card_name)}
-                        debtName={e.related_loan_name ?? e.related_payable_name}
-                        onToggle={toggleFixedExpense}
-                        onValueChange={updateFixedExpenseValue}
-                      />
-                    ))
-                  }
-                </PaginatedSlide>
+                  empty={<EmptyState title={t('monthlyPlanner.noFixedExpenses')} />}
+                  renderItem={(e) => (
+                    <EditableFixedItem
+                      key={e.id}
+                      id={e.id}
+                      label={e.description}
+                      defaultValue={e.default_value}
+                      sub={e.credit_card_name || e.account_name}
+                      override={fixedExpenseOverrides[String(e.id)]}
+                      alreadyPosted={e.already_posted && !e.credit_card_name}
+                      settledLabel={
+                        e.already_paid
+                          ? t(
+                              e.credit_card_name
+                                ? 'monthlyPlanner.alreadyRegistered'
+                                : 'monthlyPlanner.alreadyPaid'
+                            )
+                          : undefined
+                      }
+                      forceDisabled={e.already_posted && Boolean(e.credit_card_name)}
+                      debtName={e.related_loan_name ?? e.related_payable_name}
+                      onToggle={toggleFixedExpense}
+                      onValueChange={updateFixedExpenseValue}
+                    />
+                  )}
+                />
               </CardSubSection>
               <CardSubSection
                 title={t('monthlyPlanner.extraExpenses')}
@@ -1651,18 +1679,20 @@ export default function MonthlyPlanner({
                 icon={CreditCard}
                 total={totalBills}
               >
-                {(data?.credit_card_bills.length ?? 0) === 0 && (
-                  <EmptyState title={t('monthlyPlanner.noBills')} />
-                )}
-                {data?.credit_card_bills.map((b) => (
-                  <BillItem
-                    key={b.id}
-                    bill={b}
-                    enabled={billOverrides[String(b.id)] !== false}
-                    onToggle={toggleBill}
-                    isInsufficient={billInsufficientMap[b.id] === true}
-                  />
-                ))}
+                <ReservedList
+                  {...BILL_LIST}
+                  items={data?.credit_card_bills ?? []}
+                  empty={<EmptyState title={t('monthlyPlanner.noBills')} />}
+                  renderItem={(b) => (
+                    <BillItem
+                      key={b.id}
+                      bill={b}
+                      enabled={billOverrides[String(b.id)] !== false}
+                      onToggle={toggleBill}
+                      isInsufficient={billInsufficientMap[b.id] === true}
+                    />
+                  )}
+                />
               </CardSubSection>
 
               <CardSubSection
@@ -1670,51 +1700,42 @@ export default function MonthlyPlanner({
                 icon={TrendingDown}
                 total={actualExpenses}
               >
-                {actualExpenseItems.length === 0 ? (
-                  <EmptyState title={t('monthlyPlanner.noRegisteredExpenses')} />
-                ) : (
-                  <PaginatedSlide
-                    items={actualExpenseItems}
-                    pageSize={LIST_PAGE_SIZE}
-                    pinNav={false}
-                    className="space-y-xs"
-                  >
-                    {(pageItems) =>
-                      pageItems.map((item, idx) => {
-                        const e = item;
-                        return (
-                          <div
-                            key={idx}
-                            className="bg-muted/30 px-sm py-xs flex items-center justify-between rounded-lg text-sm"
-                          >
-                            <div className="min-w-0 flex-1">
-                              <div className="gap-xs flex items-center">
-                                <span className="block truncate font-medium">
-                                  {e.description}
-                                </span>
-                                {!e.payed && (
-                                  <Badge
-                                    variant="outline"
-                                    className="text-warning shrink-0 text-xs"
-                                  >
-                                    {t('monthlyPlanner.pending')}
-                                  </Badge>
-                                )}
-                              </div>
-                              <span className="text-muted-foreground text-xs">
-                                {translateCategory(e.category, 'expense')} ·{' '}
-                                {formatDate(e.date)}
-                              </span>
-                            </div>
-                            <span className="ml-sm text-destructive shrink-0 font-semibold">
-                              {formatCurrency(e.value)}
-                            </span>
-                          </div>
-                        );
-                      })
-                    }
-                  </PaginatedSlide>
-                )}
+                <ReservedList
+                  {...REGISTERED_LIST}
+                  items={actualExpenseItems}
+                  empty={
+                    <EmptyState title={t('monthlyPlanner.noRegisteredExpenses')} />
+                  }
+                  renderItem={(e, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-muted/30 px-sm py-xs flex items-center justify-between rounded-lg text-sm"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="gap-xs flex items-center">
+                          <span className="block truncate font-medium">
+                            {e.description}
+                          </span>
+                          {!e.payed && (
+                            <Badge
+                              variant="outline"
+                              className="text-warning shrink-0 text-xs"
+                            >
+                              {t('monthlyPlanner.pending')}
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-muted-foreground text-xs">
+                          {translateCategory(e.category, 'expense')} ·{' '}
+                          {formatDate(e.date)}
+                        </span>
+                      </div>
+                      <span className="ml-sm text-destructive shrink-0 font-semibold">
+                        {formatCurrency(e.value)}
+                      </span>
+                    </div>
+                  )}
+                />
               </CardSubSection>
             </div>
           </div>

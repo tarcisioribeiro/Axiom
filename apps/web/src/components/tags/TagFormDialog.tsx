@@ -51,7 +51,7 @@ export function TagFormDialog({
             </DialogDescription>
           </VisuallyHidden>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-md">
+        <form noValidate onSubmit={onSubmit} className="space-y-md">
           <div className="space-y-sm">
             <Label className="gap-xs flex items-center" htmlFor="tag-name">
               <Type className="text-muted-foreground h-3.5 w-3.5" />

@@ -135,6 +135,7 @@ export function WaterLogPanel({ date }: { date: string }) {
           </Button>
         ))}
         <form
+          noValidate
           className="gap-xs flex items-center"
           onSubmit={(e) => {
             e.preventDefault();
@@ -260,6 +261,7 @@ export function HydrationGoalCard() {
         </div>
 
         <form
+          noValidate
           className="gap-sm flex items-end"
           onSubmit={(e) => {
             e.preventDefault();

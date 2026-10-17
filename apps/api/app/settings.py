@@ -121,6 +121,8 @@ INSTALLED_APPS = [
     "webhooks",
     # Exchange Rates (multi-currency)
     "exchange_rates",
+    # Revisão diária (pendências do dia anterior)
+    "daily_review",
 ]
 
 MIDDLEWARE = [
@@ -132,6 +134,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Bloqueia login/sessão Web (cookie) em smartphone/tablet; antes do JWT
+    "authentication.device_policy.WebDevicePolicyMiddleware",
     "authentication.middleware.JWTCookieMiddleware",  # JWT via cookies
     "app.middleware.AuditLoggingMiddleware",
     "admin_panel.middleware.ScreenAccessMiddleware",  # acesso por tela
@@ -140,6 +144,12 @@ MIDDLEWARE = [
     "app.middleware.SecurityHeadersMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
+
+# Versão Web só para PCs/notebooks (authentication/device_policy.py).
+# Afeta só login e sessão por cookie; clientes com Authorization não.
+WEB_BLOCK_MOBILE_DEVICES = (
+    os.getenv("WEB_BLOCK_MOBILE_DEVICES", "True") == "True"
+)
 
 ROOT_URLCONF = "app.urls"
 

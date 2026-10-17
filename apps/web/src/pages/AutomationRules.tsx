@@ -455,7 +455,7 @@ function RuleFormDialog({
           </VisuallyHidden>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-lg">
+        <form noValidate onSubmit={handleSubmit} className="space-y-lg">
           {/* Básico */}
           <div className="gap-md grid grid-cols-1 md:grid-cols-2">
             <div className="space-y-sm">

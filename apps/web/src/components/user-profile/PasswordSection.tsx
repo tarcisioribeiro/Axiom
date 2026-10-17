@@ -242,6 +242,7 @@ function PasswordForm({ onClose }: { onClose: () => void }) {
 
   return (
     <form
+      noValidate
       className="gap-md flex flex-col"
       onSubmit={(e) => {
         e.preventDefault();

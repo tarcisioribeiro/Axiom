@@ -4,8 +4,6 @@ import {
   ArrowRight,
   CheckCircle2,
   CheckSquare,
-  ChevronLeft,
-  Eye,
   FileType,
   FileUp,
   Import,
@@ -21,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/common/DataTable';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { StepNav } from '@/components/common/StepNav';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -159,6 +158,14 @@ export function PasswordImportDialog({ open, onOpenChange }: Props) {
     }
     setCategoryMapping(mapping);
     goTo(2);
+  };
+
+  // Importar fica sempre visível: antes da última etapa, valida e leva à
+  // etapa que falta (pré-visualização, seleção ou mapeamento de categorias).
+  const handleImportClick = () => {
+    if (step === 0) void handlePreview();
+    else if (step === 1) handleGoToMapping();
+    else void handleImport();
   };
 
   const handleImport = async () => {
@@ -472,40 +479,27 @@ export function PasswordImportDialog({ open, onOpenChange }: Props) {
             </Button>
           </DialogCloseFooter>
         ) : (
-          <DialogFooter className="gap-sm">
-            <Button variant="outline" onClick={close}>
-              <X />
-              {t('common.actions.cancel')}
-            </Button>
-            {step > 0 && (
-              <Button
-                variant="outline"
-                onClick={() => goTo(step - 1)}
-                disabled={isLoading}
-              >
-                <ChevronLeft />
-                {t('common.actions.back')}
+          <>
+            <StepNav
+              onBack={() => goTo(step - 1)}
+              onNext={() =>
+                step === 0 ? void handlePreview() : step === 1 && handleGoToMapping()
+              }
+              isFirst={step === 0}
+              isLast={step === 2}
+              disabled={isLoading}
+            />
+            <DialogFooter className="gap-sm">
+              <Button variant="outline" onClick={close}>
+                <X />
+                {t('common.actions.cancel')}
               </Button>
-            )}
-            {step === 0 && (
-              <Button onClick={() => void handlePreview()} loading={isLoading}>
-                {!isLoading && <Eye />}
-                {t('pages.passwordImport.previewBtn')}
-              </Button>
-            )}
-            {step === 1 && (
-              <Button onClick={handleGoToMapping}>
-                <ArrowRight />
-                {t('common.actions.next')}
-              </Button>
-            )}
-            {step === 2 && (
-              <Button onClick={() => void handleImport()} loading={isLoading}>
+              <Button onClick={handleImportClick} loading={isLoading}>
                 {!isLoading && <Import />}
                 {t('pages.passwordImport.importBtn')}
               </Button>
-            )}
-          </DialogFooter>
+            </DialogFooter>
+          </>
         )}
       </DialogContent>
     </Dialog>

@@ -149,6 +149,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
 
   return (
     <form
+      noValidate
       onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
       className="space-y-lg"
     >

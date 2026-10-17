@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 @config '../tailwind.config.js';
 
+/* Celular deitado (altura útil ~300–412 px): telas de bloqueio da versão web */
+@custom-variant phone-landscape (@media (orientation: landscape) and (max-height: 500px));
+
 /* Padrão global de animação: todo `transition-*` sem duração/easing explícitos
    usa --duration-fast + --ease-out (espelhados aqui porque @theme não resolve
    var() de :root). */

@@ -463,7 +463,7 @@ export default function Budgets() {
               <DialogDescription>{t('pages.budgets.formDesc')}</DialogDescription>
             </VisuallyHidden>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-lg">
+          <form noValidate onSubmit={handleSubmit} className="space-y-lg">
             {/* Seção: Classificação */}
             <FormSection title={t('common.form.sections.classification')} icon={Tag}>
               <div className="space-y-sm">

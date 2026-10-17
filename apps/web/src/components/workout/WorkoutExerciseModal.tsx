@@ -190,6 +190,7 @@ export function WorkoutExerciseModal({
 
   return (
     <form
+      noValidate
       onSubmit={handleSubmit(handleFormSubmit)}
       className="gap-md flex min-h-0 flex-1 flex-col"
     >

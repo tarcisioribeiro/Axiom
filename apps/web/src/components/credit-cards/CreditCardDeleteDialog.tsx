@@ -159,7 +159,11 @@ export function CreditCardDeleteDialog({
             </div>
           </>
         ) : (
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
+          <form
+            noValidate
+            onSubmit={(e) => void handleSubmit(e)}
+            className="space-y-md"
+          >
             <DialogHeader>
               <DialogTitle icon={ShieldAlert}>
                 {t('pages.creditCards.deleteFlow.credentialsTitle')}

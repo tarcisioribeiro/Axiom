@@ -291,7 +291,11 @@ export function RoutineTaskForm({
     isExercise;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       <FormSection
         title={t('pages.routineTasks.form.sectionIdentification')}
         icon={CheckSquare}

@@ -1121,6 +1121,24 @@ class RoutineTaskCustomPeriodicityTest(APITestCase):
         with self.assertRaises(ValidationError):
             task.full_clean()
 
+    def test_closing_time_before_default_time(self):
+        from django.core.exceptions import ValidationError
+
+        from personal_planning.models import RoutineTask
+
+        task = RoutineTask(
+            name="Horario Invertido",
+            category="health",
+            periodicity="daily",
+            default_time=time(10, 0),
+            closing_time=time(9, 0),
+            owner=self.member,
+        )
+        with self.assertRaises(ValidationError):
+            task.clean()
+        task.closing_time = time(10, 0)
+        task.clean()
+
     def test_custom_with_weekdays_valid(self):
         from personal_planning.models import RoutineTask
 

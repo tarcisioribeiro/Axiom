@@ -114,7 +114,7 @@ export function ReceivableForm({
     form.value > 0 ? Math.min(100, ((form.received_value ?? 0) / form.value) * 100) : 0;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-lg">
+    <form noValidate onSubmit={handleSubmit} className="space-y-lg">
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={FileText}>
         <div className="space-y-sm">

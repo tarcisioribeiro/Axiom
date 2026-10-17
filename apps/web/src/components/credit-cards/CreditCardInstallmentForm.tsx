@@ -62,7 +62,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
+    <form noValidate onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
       {/* Informações da parcela (somente leitura) */}
       <div className="space-y-sm bg-muted/50 p-md rounded-lg">
         <div className="flex items-center justify-between">

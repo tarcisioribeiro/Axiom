@@ -1201,7 +1201,9 @@ class SelfEsteemAssessmentTest(BasePlanningCoverageTestCase):
             '"limiting_beliefs": [], "weekly_suggestions": ["respire"]}'
         )
         url = reverse("self-esteem-list-create")
-        response = self.client.post(url, self._data(), format="json")
+        # A IA roda na task disparada após o commit (worker)
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(url, self._data(), format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         assessment = SelfEsteemAssessment.objects.get(pk=response.data["id"])
         self.assertIn("Você está bem.", assessment.ai_analysis)
@@ -1300,7 +1302,9 @@ class CrisisImpulseLogTest(BasePlanningCoverageTestCase):
             '"20min": []}, "affirmation": "Você consegue."}'
         )
         url = reverse("crisis-impulse-list-create")
-        response = self.client.post(url, self._data(), format="json")
+        # A IA roda na task disparada após o commit (worker)
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(url, self._data(), format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         log = CrisisImpulseLog.objects.get(pk=response.data["id"])
         self.assertIn("Você consegue.", log.ai_response)

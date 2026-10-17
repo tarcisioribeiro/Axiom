@@ -4,6 +4,7 @@ import { useLocation, useOutlet } from 'react-router';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { PageTour } from '@/components/common/PageTour';
+import { DailyReview } from '@/components/daily-review/DailyReview';
 
 import { CommandPalette } from './CommandPalette';
 import { Header } from './Header';
@@ -46,6 +47,9 @@ export const Layout = () => {
 
       {/* Command Palette (Ctrl+K / Cmd+K) */}
       <CommandPalette />
+
+      {/* Revisão do(s) dia(s) anterior(es): bloqueante, tem prioridade sobre o tour */}
+      <DailyReview />
 
       {/* Tour guiado da página atual */}
       <PageTour />

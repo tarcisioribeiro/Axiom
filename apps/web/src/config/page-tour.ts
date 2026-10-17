@@ -102,4 +102,15 @@ export function setTourHidden(tourKey: string, hidden: boolean) {
   }
 }
 
+/** Volta a exibir todos os tours marcados como "não mostrar mais". */
+export function resetHiddenTours() {
+  try {
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith(hiddenKey('')))
+      .forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // localStorage indisponível — não há o que resetar
+  }
+}
+
 export const OPEN_TOUR_EVENT = 'axiom:open-tour';

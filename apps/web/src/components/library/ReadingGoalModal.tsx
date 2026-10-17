@@ -157,6 +157,7 @@ export function ReadingGoalModal({
         </DialogHeader>
 
         <form
+          noValidate
           onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
           className="space-y-lg"
         >

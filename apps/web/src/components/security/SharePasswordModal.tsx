@@ -2,10 +2,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight,
   CalendarDays,
   Check,
-  ChevronLeft,
   Copy,
   Hash,
   Link2,
@@ -20,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
+import { StepNav } from '@/components/common/StepNav';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -167,6 +166,16 @@ export function SharePasswordModal({
 
   const handleCreate = async () => {
     if (!password) return;
+    // Compartilhar fica sempre visível: sem membro, avisa e volta à 1ª etapa.
+    if (!selectedMember) {
+      toast({
+        title: t('pages.sharePassword.selectMemberFirst'),
+        variant: 'destructive',
+      });
+      setDirection(-1);
+      setStep(0);
+      return;
+    }
     setIsCreating(true);
     try {
       const result = await credentialShareService.createToken(password.id, {
@@ -448,6 +457,16 @@ export function SharePasswordModal({
                 </motion.div>
               </AnimatePresence>
             </div>
+
+            {!newShareUrl && (
+              <StepNav
+                onBack={goBack}
+                onNext={goNext}
+                isFirst={step === 0}
+                isLast={step === 2}
+                disabled={isCreating}
+              />
+            )}
           </div>
 
           <div className="space-y-sm">
@@ -513,23 +532,10 @@ export function SharePasswordModal({
               <X />
               {t('common.actions.cancel')}
             </Button>
-            {step > 0 && (
-              <Button variant="outline" onClick={goBack} disabled={isCreating}>
-                <ChevronLeft />
-                {t('pages.sharePassword.backBtn')}
-              </Button>
-            )}
-            {step < 2 ? (
-              <Button onClick={goNext}>
-                <ArrowRight />
-                {t('pages.sharePassword.nextBtn')}
-              </Button>
-            ) : (
-              <Button onClick={() => void handleCreate()} loading={isCreating}>
-                {!isCreating && <Share2 />}
-                {t('pages.sharePassword.confirmBtn')}
-              </Button>
-            )}
+            <Button onClick={() => void handleCreate()} loading={isCreating}>
+              {!isCreating && <Share2 />}
+              {t('pages.sharePassword.confirmBtn')}
+            </Button>
           </DialogFooter>
         )}
       </DialogContent>

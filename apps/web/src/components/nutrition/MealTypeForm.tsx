@@ -140,6 +140,7 @@ export function MealTypeForm({
 
   return (
     <form
+      noValidate
       onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
       className="space-y-lg"
     >

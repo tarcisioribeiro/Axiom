@@ -462,6 +462,21 @@ class RoutineTask(BaseModel):
                 }
             )
 
+        if (
+            self.closing_time
+            and self.default_time
+            and (self.daily_occurrences or 1) == 1
+            and self.closing_time < self.default_time
+        ):
+            raise ValidationError(
+                {
+                    "closing_time": (
+                        "Horário de encerramento deve ser igual ou posterior"
+                        " ao horário padrão"
+                    )
+                }
+            )
+
         if self.interval_hours and not self.default_time:
             raise ValidationError(
                 {
@@ -1114,6 +1129,9 @@ class GoalFailure(BaseModel):
         verbose_name="Objetivo",
     )
     failure_date = models.DateField(verbose_name="Data da Falha")
+    failure_time = models.TimeField(
+        null=True, blank=True, verbose_name="Hora da Falha"
+    )
     streak_at_failure = models.PositiveIntegerField(
         default=0,
         verbose_name="Sequência Alcançada",
@@ -1123,7 +1141,7 @@ class GoalFailure(BaseModel):
     class Meta:
         verbose_name = "Falha de Objetivo"
         verbose_name_plural = "Falhas de Objetivos"
-        ordering = ["-failure_date"]
+        ordering = ["-failure_date", "-failure_time"]
         indexes = [models.Index(fields=["goal", "-failure_date"])]
 
     def __str__(self):

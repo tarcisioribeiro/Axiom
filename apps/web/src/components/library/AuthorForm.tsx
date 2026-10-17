@@ -119,7 +119,11 @@ export function AuthorForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       {/* Duas colunas: foto, dados e datas à esquerda; biografia à direita */}
       <div className="gap-lg grid grid-cols-1 lg:grid-cols-2">
         <div className="space-y-lg">

@@ -333,7 +333,7 @@ function TitleFormDialog({
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-md">
-        <form onSubmit={submit}>
+        <form noValidate onSubmit={submit}>
           <DialogHeader>
             <DialogTitle mode={mode}>{dialogTitle}</DialogTitle>
             <VisuallyHidden>
@@ -769,11 +769,13 @@ export function CourseModulesModal({ course, open, onClose }: CourseModalProps) 
 export function AddSessionForm({
   course,
   defaultMinutes = 60,
+  defaultDate,
   onSaved,
   onCancel,
 }: {
   course: Course;
   defaultMinutes?: number;
+  defaultDate?: string;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -787,7 +789,7 @@ export function AddSessionForm({
     notes: string;
   }>({
     defaultValues: {
-      session_date: formatLocalDate(new Date()),
+      session_date: defaultDate ?? formatLocalDate(new Date()),
       duration_minutes: defaultMinutes,
       notes: '',
     },
@@ -840,7 +842,11 @@ export function AddSessionForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-md">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit, notifyFormErrors)}
+      className="space-y-md"
+    >
       <div className="gap-md grid grid-cols-2">
         <div className="space-y-xs">
           <Label className="gap-xs flex items-center">
