@@ -395,7 +395,13 @@ class GoalFailureSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GoalFailure
-        fields = ["id", "failure_date", "streak_at_failure", "created_at"]
+        fields = [
+            "id",
+            "failure_date",
+            "failure_time",
+            "streak_at_failure",
+            "created_at",
+        ]
         read_only_fields = fields
 
 

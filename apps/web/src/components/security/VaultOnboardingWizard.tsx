@@ -2,7 +2,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight,
   CheckCircle2,
-  ChevronLeft,
   FileArchive,
   KeyRound,
   Lock,
@@ -13,6 +12,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
+import { StepNav } from '@/components/common/StepNav';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -160,20 +160,21 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
           </AnimatePresence>
         </div>
 
+        <StepNav
+          onBack={() => goTo(step - 1)}
+          onNext={() => goTo(step + 1)}
+          isFirst={step === 0}
+          isLast={isLast}
+        />
+
         <DialogFooter className="gap-sm">
           <Button variant="outline" onClick={handleComplete}>
             <X />
             {t('common.actions.cancel')}
           </Button>
-          {step > 0 && (
-            <Button variant="outline" onClick={() => goTo(step - 1)}>
-              <ChevronLeft />
-              {t('vaultOnboarding.back')}
-            </Button>
-          )}
-          <Button onClick={isLast ? handleComplete : () => goTo(step + 1)}>
+          <Button onClick={handleComplete}>
             <ArrowRight />
-            {isLast ? t('vaultOnboarding.finish') : t('vaultOnboarding.next')}
+            {t('vaultOnboarding.finish')}
           </Button>
         </DialogFooter>
       </DialogContent>

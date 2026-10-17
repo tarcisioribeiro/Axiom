@@ -814,6 +814,12 @@ class Course(BaseModel):
     end_date = models.DateField(
         null=True, blank=True, verbose_name="Data de conclusão"
     )
+    study_weekdays = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="Dias de estudo",
+        help_text="Dias da semana agendados para estudo [0-6, 0=Segunda]",
+    )
     completion_certificate = models.FileField(
         upload_to="courses/certificates/",
         null=True,

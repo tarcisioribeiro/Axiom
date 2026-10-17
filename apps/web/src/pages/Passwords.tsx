@@ -730,6 +730,7 @@ function PasswordsContent() {
               </DialogDescription>
             </DialogHeader>
             <form
+              noValidate
               onSubmit={rhfHandleSubmit(onFormSubmit, notifyFormErrors)}
               className="space-y-md"
             >

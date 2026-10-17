@@ -2,8 +2,6 @@
 import {
   AlertCircle,
   ArrowDownToLine,
-  ArrowLeft,
-  ArrowRight,
   ArrowUpFromLine,
   BadgePercent,
   CalendarDays,
@@ -23,9 +21,10 @@ import {
   Wallet,
   X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { StepNav } from '@/components/common/StepNav';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
@@ -47,6 +46,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { TimePicker } from '@/components/ui/time-picker';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { cn, formatLocalDate } from '@/lib/utils';
@@ -84,6 +84,8 @@ export function LoanForm({
   isLoading,
 }: LoanFormProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
   const [step, setStep] = useState(1);
   const totalSteps = 3;
 
@@ -179,9 +181,15 @@ export function LoanForm({
     accounts,
   ]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Próximo e Salvar passam pela validação nativa do formulário (campos
+  // `required` da etapa atual). Salvar antes da última etapa avisa e avança.
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (step < totalSteps && !isEditing) {
+      const submitter = (e.nativeEvent as SubmitEvent).submitter;
+      if (submitter?.dataset.action === 'save') {
+        toast({ title: t('pages.loans.wizard.finishSteps'), variant: 'destructive' });
+      }
       setStep((s) => s + 1);
       return;
     }
@@ -196,7 +204,7 @@ export function LoanForm({
   ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-lg">
+    <form noValidate ref={formRef} onSubmit={handleSubmit} className="space-y-lg">
       {/* Barra de progresso do wizard (apenas na criação) */}
       {!isEditing && (
         <div className="space-y-sm">
@@ -741,30 +749,30 @@ export function LoanForm({
         </div>
       )}
 
+      {!isEditing && (
+        <StepNav
+          onBack={() => setStep((s) => s - 1)}
+          onNext={() => formRef.current?.requestSubmit()}
+          isFirst={step === 1}
+          isLast={step === totalSteps}
+          disabled={isLoading}
+        />
+      )}
+
       <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
-        {step > 1 && !isEditing && (
-          <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
-            <ArrowLeft className="h-4 w-4" />
-            {t('common.actions.back')}
-          </Button>
-        )}
         <Button type="button" variant="outline" onClick={onCancel}>
           <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
           type="submit"
+          data-action="save"
           disabled={isLoading || (!!balanceInfo && !balanceInfo.canPay)}
         >
           {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
-            </>
-          ) : !isEditing && step < totalSteps ? (
-            <>
-              <ArrowRight className="h-4 w-4" />
-              {t('pages.loans.wizard.next')}
             </>
           ) : (
             <>

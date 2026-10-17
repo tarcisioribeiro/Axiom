@@ -74,6 +74,7 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
         </DialogHeader>
 
         <form
+          noValidate
           onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
           className="space-y-lg"
         >

@@ -648,7 +648,7 @@ export default function Flashcards() {
         {/* Incluir / editar */}
         <Dialog open={form.open} onOpenChange={(v) => !v && setForm({ open: false })}>
           <DialogContent className="max-w-md">
-            <form onSubmit={handleFormSubmit}>
+            <form noValidate onSubmit={handleFormSubmit}>
               <DialogHeader>
                 <DialogTitle mode={form.card ? 'edit' : 'create'}>
                   {form.card

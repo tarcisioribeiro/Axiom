@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 // API Configuration
 // Calcula a URL da API dinamicamente baseada no hostname atual
 // Isso permite que o app funcione tanto em localhost quanto em IPs de rede
@@ -54,6 +55,8 @@ export const API_CONFIG = {
     TWO_FACTOR_STATUS: '/api/v1/users/2fa/status/',
     CURRENT_USER: '/api/v1/me/',
     MY_THEME: '/api/v1/me/theme/',
+    MY_PREFERENCES: '/api/v1/me/preferences/',
+    DAILY_REVIEW: '/api/v1/daily-review/',
 
     // Resources
     ACCOUNTS: '/api/v1/accounts/',

@@ -139,7 +139,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
   ];
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Preview do Cartão */}
       {!hidePreview && (
         <div

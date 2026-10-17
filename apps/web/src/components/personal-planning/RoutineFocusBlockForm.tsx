@@ -74,7 +74,7 @@ export function RoutineFocusBlockForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-md">
+    <form noValidate onSubmit={handleSubmit} className="space-y-md">
       <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
         <div className="space-y-sm">
           <Label className="gap-xs flex items-center" htmlFor="focus-block-name">

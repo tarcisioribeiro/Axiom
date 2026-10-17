@@ -133,3 +133,38 @@ class ThemePreference(BaseModel):
         self.sync_token_hash = self.hash_token(token)
         self.save(update_fields=["sync_token_hash", "updated_at"])
         return token
+
+
+class UserPreference(BaseModel):
+    """Preferências de uso do app (revisão diária e tours das páginas)."""
+
+    SELF_ESTEEM_FREQUENCY_CHOICES = (
+        (1, "Diária"),
+        (7, "Semanal"),
+        (14, "Quinzenal"),
+    )
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="app_preference",
+        verbose_name="Usuário",
+    )
+    daily_review_on_weekends = models.BooleanField(
+        default=True, verbose_name="Revisão diária nos fins de semana"
+    )
+    self_esteem_frequency_days = models.PositiveSmallIntegerField(
+        default=1,
+        choices=SELF_ESTEEM_FREQUENCY_CHOICES,
+        verbose_name="Frequência da avaliação de autoestima (dias)",
+    )
+    tours_disabled = models.BooleanField(
+        default=False, verbose_name="Nunca exibir tours"
+    )
+
+    class Meta:
+        verbose_name = "Preferência do usuário"
+        verbose_name_plural = "Preferências do usuário"
+
+    def __str__(self) -> str:
+        return f"UserPreference({self.user.username})"

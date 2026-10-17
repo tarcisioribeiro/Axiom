@@ -472,6 +472,29 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
         failure = GoalFailure.objects.get(goal=self.goal)
         self.assertEqual(failure.failure_date, failure_date)
 
+    def test_register_failure_stores_time(self):
+        failure_date = localdate() - timedelta(days=1)
+        self.client.post(
+            self.failure_url,
+            {
+                "failure_date": failure_date.isoformat(),
+                "failure_time": "22:15",
+            },
+        )
+        failure = GoalFailure.objects.get(goal=self.goal)
+        self.assertEqual(failure.failure_time.strftime("%H:%M"), "22:15")
+
+    def test_register_failure_rejects_future_time_today(self):
+        response = self.client.post(
+            self.failure_url,
+            {
+                "failure_date": localdate().isoformat(),
+                "failure_time": "23:59:59",
+            },
+        )
+        # 23:59:59 só não é futuro no último segundo do dia
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_register_failure_updates_best_streak(self):
         # start_date is 15 days ago, sem tarefa relacionada -> streak =
         # min(days_active, target_value) = 15

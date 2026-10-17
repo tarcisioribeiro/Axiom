@@ -772,7 +772,7 @@ export default function BodyMetrics() {
               </VisuallyHidden>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-md">
+            <form noValidate onSubmit={handleSubmit} className="space-y-md">
               {recalcMode && age === null && (
                 <p className="text-warning bg-warning/10 px-md py-sm rounded-md text-xs font-medium">
                   {t('pages.bodyMetrics.pollockMissingBirthDate')}

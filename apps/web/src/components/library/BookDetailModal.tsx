@@ -1077,7 +1077,7 @@ export function BookDetailModal({
           {/* Summary form dialog */}
           <Dialog open={isSummaryFormOpen} onOpenChange={setIsSummaryFormOpen}>
             <DialogContent className="max-w-2xl">
-              <form onSubmit={(e) => void handleSummarySubmit(e)}>
+              <form noValidate onSubmit={(e) => void handleSummarySubmit(e)}>
                 <DialogHeader>
                   <DialogTitle mode={editingSummary ? 'edit' : 'create'}>
                     {editingSummary

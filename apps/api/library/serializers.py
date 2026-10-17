@@ -832,6 +832,7 @@ class CourseSerializer(serializers.ModelSerializer):
             "status_display",
             "start_date",
             "end_date",
+            "study_weekdays",
             "total_lessons",
             "completed_lessons",
             "progress_percentage",
@@ -861,9 +862,20 @@ class CourseCreateUpdateSerializer(serializers.ModelSerializer):
             "status",
             "start_date",
             "end_date",
+            "study_weekdays",
             "completion_certificate",
             "owner",
         ]
+
+    def validate_study_weekdays(self, value):
+        if not isinstance(value, list) or any(
+            not isinstance(d, int) or isinstance(d, bool) or not 0 <= d <= 6
+            for d in value
+        ):
+            raise serializers.ValidationError(
+                "Informe dias da semana entre 0 (segunda) e 6 (domingo)."
+            )
+        return sorted(set(value))
 
     def validate(self, data):
         certificate = data.get("completion_certificate")

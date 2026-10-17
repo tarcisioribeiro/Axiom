@@ -140,7 +140,11 @@ export function ReadingForm({
     : null;
 
   return (
-    <form onSubmit={handleSubmit(submit, notifyFormErrors)} className="space-y-lg">
+    <form
+      noValidate
+      onSubmit={handleSubmit(submit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       <FormSection title={t('pages.readings.form.sectionProgress')} icon={BookOpen}>
         <div className="gap-md grid">
           {books.length > 1 && (

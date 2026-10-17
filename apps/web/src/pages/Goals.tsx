@@ -18,7 +18,6 @@ import {
   Plus,
   RefreshCw,
   RotateCcw,
-  Save,
   Search,
   Shapes,
   Star,
@@ -42,12 +41,12 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
+import { GoalFailureDialog } from '@/components/personal-planning/GoalFailureDialog';
 import { GoalForm } from '@/components/personal-planning/GoalForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CircularProgress } from '@/components/ui/circular-progress';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogCloseFooter,
@@ -63,7 +62,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -76,7 +74,7 @@ import { GOAL_STATUS_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
-import { cn, formatLocalDate } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { type goalSchema } from '@/lib/validations';
 import { goalsService } from '@/services/goals-service';
 import { routineTasksService } from '@/services/routine-tasks-service';
@@ -429,8 +427,6 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [failureGoal, setFailureGoal] = useState<Goal | undefined>();
-  const [failureDate, setFailureDate] = useState<string>('');
-  const [isRegisteringFailure, setIsRegisteringFailure] = useState(false);
   const [viewingFailuresGoal, setViewingFailuresGoal] = useState<Goal | undefined>();
   const [detailsGoal, setDetailsGoal] = useState<Goal | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
@@ -513,38 +509,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
     }
   };
 
-  const handleRegisterFailure = (goal: Goal) => {
-    setFailureGoal(goal);
-    setFailureDate(formatLocalDate(new Date()));
-  };
-
-  const handleConfirmFailure = async () => {
-    if (!failureGoal) return;
-    if (!failureDate) {
-      toast({
-        title: t('common.fieldRequired', { field: t('pages.goals.failureDateLabel') }),
-        variant: 'destructive',
-      });
-      return;
-    }
-    try {
-      setIsRegisteringFailure(true);
-      await goalsService.registerFailure(failureGoal.id, failureDate);
-      toast({
-        title: t('pages.goals.failureRegisteredDesc'),
-      });
-      setFailureGoal(undefined);
-      setFailureDate('');
-      void refresh();
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.goals.failureError', { reason: getErrorMessage(error) }),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsRegisteringFailure(false);
-    }
-  };
+  const handleRegisterFailure = (goal: Goal) => setFailureGoal(goal);
 
   const handleRestart = async (goal: Goal) => {
     const confirmed = await showConfirm({
@@ -798,57 +763,14 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
       </Dialog>
 
       {/* Modal registrar falha */}
-      <Dialog
-        open={!!failureGoal}
-        onOpenChange={(open) => {
-          if (!open) {
-            setFailureGoal(undefined);
-            setFailureDate('');
-          }
+      <GoalFailureDialog
+        goal={failureGoal}
+        onClose={() => setFailureGoal(undefined)}
+        onRegistered={() => {
+          setFailureGoal(undefined);
+          void refresh();
         }}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="gap-sm flex items-center">
-              <AlertTriangle className="text-warning h-5 w-5" />
-              {t('pages.goals.registerFailureTitle')}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-xs">
-            <Label className="gap-xs flex items-center">
-              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.goals.failureDateLabel')}
-            </Label>
-            <DatePicker
-              value={failureDate}
-              onChange={(date) => setFailureDate(date ? formatLocalDate(date) : '')}
-              placeholder={t('pages.goals.failureDatePlaceholder')}
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setFailureGoal(undefined);
-                setFailureDate('');
-              }}
-            >
-              <X className="h-4 w-4" />
-              {t('common.actions.cancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => void handleConfirmFailure()}
-              loading={isRegisteringFailure}
-            >
-              {!isRegisteringFailure && <Save className="h-4 w-4" />}
-              {isRegisteringFailure
-                ? t('common.actions.saving')
-                : t('pages.goals.registerFailureConfirmBtn')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      />
 
       {/* Modal detalhes do objetivo */}
       <Dialog
@@ -922,6 +844,8 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
                 >
                   <span className="text-muted-foreground">
                     {formatDate(failure.failure_date)}
+                    {failure.failure_time &&
+                      ` ${t('dailyReview.at', { time: failure.failure_time.slice(0, 5) })}`}
                   </span>
                   <span className="font-medium">
                     {t('pages.goals.failureStreakReached', {

@@ -4,6 +4,7 @@ import type { InstanceStatus, TaskPriority } from './planning-constants';
 interface GoalFailure {
   id: number;
   failure_date: string;
+  failure_time: string | null;
   streak_at_failure: number;
   created_at: string;
 }

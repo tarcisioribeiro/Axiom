@@ -10,14 +10,12 @@ import {
   Brain,
   CalendarDays,
   CheckCircle2,
-  ChevronLeft,
   ChevronRight,
   Clock,
   Heart,
   History,
   ListChecks,
   Loader2,
-  MessageSquare,
   Minus,
   Play,
   Plus,
@@ -42,6 +40,7 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { StepNav } from '@/components/common/StepNav';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,10 +61,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import {
+  CHECKIN_SCALES,
+  CHECKIN_TEXTS,
+  ROSENBERG_OPTION_KEYS,
+  ROSENBERG_QUESTION_KEYS,
+} from '@/components/wellness/wellness-constants';
+import {
+  CheckinFormDialog,
+  SelfEsteemFormDialog,
+} from '@/components/wellness/WellnessFormDialogs';
 import { INTERVENTION_CATEGORY_ICONS } from '@/config/icons';
 import { useTabRoute } from '@/hooks/use-tab-route';
 import { useToast } from '@/hooks/use-toast';
@@ -79,7 +86,6 @@ import {
   type ImpulseType,
   type InterventionCategory,
   type SelfEsteemAssessment,
-  type SelfEsteemAssessmentCreate,
   type WellnessIntervention,
   wellnessService,
 } from '@/services/wellness-service';
@@ -87,28 +93,6 @@ import {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Tab = 'dashboard' | 'self-esteem' | 'checkin' | 'crisis' | 'library';
-
-// ─── Rosenberg questions ──────────────────────────────────────────────────────
-
-const ROSENBERG_QUESTION_KEYS = [
-  'q1',
-  'q2',
-  'q3',
-  'q4',
-  'q5',
-  'q6',
-  'q7',
-  'q8',
-  'q9',
-  'q10',
-] as const;
-
-const ROSENBERG_OPTION_KEYS = [
-  { value: 0, labelKey: 'stronglyDisagree' },
-  { value: 1, labelKey: 'disagree' },
-  { value: 2, labelKey: 'agree' },
-  { value: 3, labelKey: 'stronglyAgree' },
-] as const;
 
 const EMOTIONAL_STATE_VALUES: EmotionalState[] = [
   'loneliness',
@@ -155,52 +139,6 @@ function scoreLabel(score: number | null, t: TFunction) {
     label: t('pages.emotionalWellness.scoreLabel.low'),
     color: 'text-destructive',
   };
-}
-
-// ─── Scale slider ─────────────────────────────────────────────────────────────
-
-const INTENSITY_TEXT = {
-  success: 'text-success',
-  warning: 'text-warning',
-  destructive: 'text-destructive',
-} as const;
-
-function ScaleInput({
-  label,
-  value,
-  onChange,
-  colorHigh = false,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  colorHigh?: boolean;
-}) {
-  const good = colorHigh ? value >= 7 : value < 4;
-  const bad = colorHigh ? value < 4 : value >= 7;
-  const tone = good ? 'success' : bad ? 'destructive' : 'warning';
-  const color = INTENSITY_TEXT[tone];
-
-  return (
-    <div className="space-y-sm">
-      <div className="flex items-center justify-between">
-        <span className="text-foreground text-sm font-medium">{label}</span>
-        <span className={cn('text-lg font-bold tabular-nums', color)}>{value}</span>
-      </div>
-      <Slider
-        min={0}
-        max={10}
-        tone={tone}
-        aria-label={label}
-        value={value}
-        onChange={onChange}
-      />
-      <div className="text-muted-foreground flex justify-between text-xs">
-        <span>0</span>
-        <span>10</span>
-      </div>
-    </div>
-  );
 }
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
@@ -396,27 +334,8 @@ function SelfEsteemTab({
   setShowForm: (open: boolean) => void;
 }) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState<SelfEsteemAssessment | null>(null);
-  const [step, setStep] = useState(0);
-  // Direção do deslize entre perguntas: 1 avança, -1 volta
-  const [direction, setDirection] = useState(1);
-  const goToStep = (next: number) => {
-    setDirection(next > step ? 1 : -1);
-    setStep(next);
-  };
   const [selected, setSelected] = useState<SelfEsteemAssessment | null>(null);
-  // Reinicia o questionário a cada abertura (padrão "estado da renderização anterior").
-  const [wasOpen, setWasOpen] = useState(showForm);
-  if (wasOpen !== showForm) {
-    setWasOpen(showForm);
-    if (showForm) {
-      setAnswers({});
-      setStep(0);
-    }
-  }
   const [aiParsed, setAiParsed] = useState<{
     analysis: string;
     strengths: string[];
@@ -429,157 +348,33 @@ function SelfEsteemTab({
     queryFn: () => wellnessService.getSelfEsteemHistory(),
   });
 
-  const mutation = useMutation({
-    mutationFn: (data: SelfEsteemAssessmentCreate) =>
-      wellnessService.createSelfEsteemAssessment(data),
-    onSuccess: (result) => {
-      void queryClient.invalidateQueries({ queryKey: ['wellness'] });
-      setSubmitted(result);
-      setShowForm(false);
-      setAiParsed(null);
-      if (result.ai_analysis) {
-        try {
-          const parsed = JSON.parse(result.ai_analysis) as {
-            analysis: string;
-            strengths: string[];
-            limiting_beliefs: string[];
-            weekly_suggestions: string[];
-          };
-          setAiParsed(parsed);
-        } catch {
-          // ai analysis não é JSON válido ainda
-        }
+  function handleSaved(result: SelfEsteemAssessment) {
+    setSubmitted(result);
+    setAiParsed(null);
+    if (result.ai_analysis) {
+      try {
+        const parsed = JSON.parse(result.ai_analysis) as {
+          analysis: string;
+          strengths: string[];
+          limiting_beliefs: string[];
+          weekly_suggestions: string[];
+        };
+        setAiParsed(parsed);
+      } catch {
+        // ai analysis não é JSON válido ainda
       }
-      toast({
-        title: t('pages.emotionalWellness.selfEsteem.savedToast', {
-          score: result.score,
-        }),
-      });
-    },
-    onError: () =>
-      toast({
-        title: t('pages.emotionalWellness.selfEsteem.saveError'),
-        variant: 'destructive',
-      }),
-  });
-
-  const allAnswered = ROSENBERG_QUESTION_KEYS.every((_, i) => `q${i + 1}` in answers);
-  const stepKey = `q${step + 1}`;
-  const isLastStep = step === ROSENBERG_QUESTION_KEYS.length - 1;
-
-  function handleSubmit() {
-    if (!allAnswered) return;
-    mutation.mutate({
-      assessed_at: format(new Date(), 'yyyy-MM-dd'),
-      q1: answers.q1,
-      q2: answers.q2,
-      q3: answers.q3,
-      q4: answers.q4,
-      q5: answers.q5,
-      q6: answers.q6,
-      q7: answers.q7,
-      q8: answers.q8,
-      q9: answers.q9,
-      q10: answers.q10,
-    });
+    }
   }
 
   if (isLoading) return <LoadingState />;
 
   return (
     <div className="space-y-lg flex flex-1 flex-col">
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        {/* altura mínima fixa: o modal não varia com o tamanho do texto da pergunta */}
-        <DialogContent size="sm">
-          <DialogHeader>
-            <DialogTitle className="gap-sm flex items-center">
-              <Star className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
-              {t('pages.emotionalWellness.selfEsteem.dialogTitle')}
-            </DialogTitle>
-            <DialogDescription>
-              {t('pages.emotionalWellness.selfEsteem.dialogTitle')}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="overflow-hidden">
-            <AnimatePresence mode="wait" initial={false} custom={direction}>
-              <motion.div
-                key={step}
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                className="space-y-md min-h-56"
-              >
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.emotionalWellness.selfEsteem.questionOf', {
-                    current: step + 1,
-                    total: ROSENBERG_QUESTION_KEYS.length,
-                  })}
-                </p>
-                <p className="text-sm leading-relaxed font-medium">
-                  {t(
-                    `pages.emotionalWellness.selfEsteem.questions.${ROSENBERG_QUESTION_KEYS[step]}`
-                  )}
-                </p>
-                <div className="gap-sm grid grid-cols-2">
-                  {ROSENBERG_OPTION_KEYS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      aria-pressed={answers[stepKey] === opt.value}
-                      onClick={() =>
-                        setAnswers((prev) => ({ ...prev, [stepKey]: opt.value }))
-                      }
-                      className={cn(
-                        'py-sm px-sm rounded-lg border text-center text-xs font-medium transition',
-                        answers[stepKey] === opt.value
-                          ? 'border-primary bg-primary text-primary-foreground'
-                          : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                      )}
-                    >
-                      {t(`pages.emotionalWellness.selfEsteem.options.${opt.labelKey}`)}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          <DialogFooter className="gap-sm">
-            <Button variant="outline" onClick={() => setShowForm(false)}>
-              <X className="h-4 w-4" />
-              {t('common.actions.cancel')}
-            </Button>
-            {step > 0 && (
-              <Button variant="outline" onClick={() => goToStep(step - 1)}>
-                <ChevronLeft className="h-4 w-4" />
-                {t('common.actions.back')}
-              </Button>
-            )}
-            {isLastStep ? (
-              <Button
-                onClick={handleSubmit}
-                disabled={!allAnswered || mutation.isPending}
-              >
-                <Send className="h-4 w-4" />
-                {mutation.isPending
-                  ? t('pages.emotionalWellness.selfEsteem.analyzing')
-                  : t('common.actions.send')}
-              </Button>
-            ) : (
-              <Button
-                onClick={() => goToStep(step + 1)}
-                disabled={!(stepKey in answers)}
-              >
-                <ChevronRight className="h-4 w-4" />
-                {t('common.actions.confirm')}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SelfEsteemFormDialog
+        open={showForm}
+        onOpenChange={setShowForm}
+        onSaved={handleSaved}
+      />
 
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
         <DialogContent size="sm">
@@ -811,33 +606,6 @@ function SelfEsteemTab({
 
 // ─── Check-in tab ─────────────────────────────────────────────────────────────
 
-const CHECKIN_SCALES = [
-  { key: 'loneliness', colorHigh: false },
-  { key: 'neediness', colorHigh: false },
-  { key: 'anxiety', colorHigh: false },
-  { key: 'sadness', colorHigh: false },
-  { key: 'motivation', colorHigh: true },
-  { key: 'energy', colorHigh: true },
-] as const;
-
-const CHECKIN_TEXTS = [
-  { key: 'what_happened', icon: MessageSquare },
-  { key: 'occupying_thoughts', icon: Brain },
-] as const;
-
-const CHECKIN_STEPS = CHECKIN_SCALES.length + CHECKIN_TEXTS.length;
-
-const CHECKIN_INITIAL = {
-  loneliness: 5,
-  neediness: 5,
-  anxiety: 5,
-  sadness: 5,
-  motivation: 5,
-  energy: 5,
-  what_happened: '',
-  occupying_thoughts: '',
-};
-
 function CheckinTab({
   showForm,
   setShowForm,
@@ -846,20 +614,7 @@ function CheckinTab({
   setShowForm: (open: boolean) => void;
 }) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [form, setForm] = useState(CHECKIN_INITIAL);
-  const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<EmotionalCheckin | null>(null);
-  // Reinicia o formulário a cada abertura (padrão "estado da renderização anterior").
-  const [wasOpen, setWasOpen] = useState(showForm);
-  if (wasOpen !== showForm) {
-    setWasOpen(showForm);
-    if (showForm) {
-      setForm(CHECKIN_INITIAL);
-      setStep(0);
-    }
-  }
 
   const { data: history, isLoading } = useQuery({
     queryKey: ['wellness', 'checkins', 30],
@@ -876,109 +631,11 @@ function CheckinTab({
     return true;
   });
 
-  const mutation = useMutation({
-    mutationFn: wellnessService.createCheckin.bind(wellnessService),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['wellness'] });
-      setShowForm(false);
-      toast({ title: t('pages.emotionalWellness.checkin.savedToast') });
-    },
-    onError: () =>
-      toast({
-        title: t('pages.emotionalWellness.checkin.saveError'),
-        variant: 'destructive',
-      }),
-  });
-
-  function handleSubmit() {
-    mutation.mutate({
-      checked_at: format(new Date(), 'yyyy-MM-dd'),
-      ...form,
-    });
-  }
-
-  const scale = CHECKIN_SCALES[step];
-  const text = CHECKIN_TEXTS[step - CHECKIN_SCALES.length];
-  const isLastStep = step === CHECKIN_STEPS - 1;
-
   if (isLoading) return <LoadingState />;
 
   return (
     <div className="space-y-lg flex flex-1 flex-col">
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        {/* altura fixa: o modal não varia entre os passos de escala e de texto */}
-        <DialogContent size="sm">
-          <DialogHeader>
-            <DialogTitle className="gap-sm flex items-center">
-              <Heart className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
-              {t('pages.emotionalWellness.checkin.dialogTitle')}
-            </DialogTitle>
-            <DialogDescription>
-              {t('pages.emotionalWellness.checkin.dialogTitle')}
-            </DialogDescription>
-          </DialogHeader>
-
-          <p className="text-muted-foreground text-xs">
-            {t('pages.emotionalWellness.checkin.questionOf', {
-              current: step + 1,
-              total: CHECKIN_STEPS,
-            })}
-          </p>
-          <div key={step} className="animate-fade-in flex h-36 flex-col">
-            {scale ? (
-              <ScaleInput
-                label={t(`pages.emotionalWellness.checkin.scales.${scale.key}`)}
-                value={form[scale.key]}
-                onChange={(v) => setForm((p) => ({ ...p, [scale.key]: v }))}
-                colorHigh={scale.colorHigh}
-              />
-            ) : (
-              <div className="space-y-sm flex h-full flex-col">
-                <label
-                  htmlFor={text.key}
-                  className="gap-xs text-foreground flex items-center text-sm font-medium"
-                >
-                  <text.icon className="text-muted-foreground h-3.5 w-3.5" />
-                  {t(`pages.emotionalWellness.checkin.texts.${text.key}.label`)}
-                </label>
-                <Textarea
-                  id={text.key}
-                  value={form[text.key]}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, [text.key]: e.target.value }))
-                  }
-                  className="flex-1 resize-none"
-                  placeholder={t(
-                    `pages.emotionalWellness.checkin.texts.${text.key}.placeholder`
-                  )}
-                />
-              </div>
-            )}
-          </div>
-
-          <DialogFooter className="gap-sm">
-            <Button variant="outline" onClick={() => setShowForm(false)}>
-              <X className="h-4 w-4" />
-              {t('common.actions.cancel')}
-            </Button>
-            {isLastStep ? (
-              <Can action="add">
-                <Button onClick={handleSubmit} disabled={mutation.isPending}>
-                  <CheckCircle2 className="h-4 w-4" />
-                  {mutation.isPending
-                    ? t('common.actions.saving')
-                    : t('pages.emotionalWellness.checkin.registerBtn')}
-                </Button>
-              </Can>
-            ) : (
-              <Button onClick={() => setStep((s) => s + 1)}>
-                <ChevronRight className="h-4 w-4" />
-                {t('common.actions.confirm')}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CheckinFormDialog open={showForm} onOpenChange={setShowForm} />
 
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
         <DialogContent size="sm">
@@ -1184,6 +841,12 @@ function CrisisTab({
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [step, setStep] = useState(0);
+  // Direção do deslize entre etapas: 1 avança, -1 volta
+  const [direction, setDirection] = useState(1);
+  const goToStep = (next: number) => {
+    setDirection(next > step ? 1 : -1);
+    setStep(next);
+  };
   const [emotionalState, setEmotionalState] = useState<EmotionalState | null>(null);
   const [otherEmotion, setOtherEmotion] = useState('');
   const [impulseType, setImpulseType] = useState<ImpulseType | null>(null);
@@ -1250,8 +913,21 @@ function CrisisTab({
     },
   });
 
+  // Ação sempre visível: faltando escolha, avisa e volta à etapa dela.
   function handleSubmit() {
-    if (!emotionalState || !impulseType) return;
+    if (!emotionalState || !impulseType) {
+      const missingStep = emotionalState ? 1 : 0;
+      toast({
+        title: t(
+          missingStep === 0
+            ? 'pages.emotionalWellness.crisis.missingEmotion'
+            : 'pages.emotionalWellness.crisis.missingImpulse'
+        ),
+        variant: 'destructive',
+      });
+      goToStep(missingStep);
+      return;
+    }
     createMutation.mutate({
       emotional_state: emotionalState,
       emotional_state_other: otherEmotion,
@@ -1299,125 +975,137 @@ function CrisisTab({
             </DialogDescription>
           </DialogHeader>
 
-          <div key={step} className="animate-fade-in space-y-md">
-            {step < 2 && (
-              <p className="text-muted-foreground text-xs">
-                {t('pages.emotionalWellness.crisis.stepOf', {
-                  current: step + 1,
-                  total: CRISIS_STEPS,
-                })}
-              </p>
-            )}
-            {step === 0 && (
-              <>
-                <ChoiceGrid
-                  options={emotionalStateOptions}
-                  value={emotionalState}
-                  onChange={setEmotionalState}
-                />
-                {emotionalState === 'other' && (
-                  <Input
-                    placeholder={t(
-                      'pages.emotionalWellness.crisis.otherEmotionPlaceholder'
-                    )}
-                    value={otherEmotion}
-                    onChange={(e) => setOtherEmotion(e.target.value)}
-                  />
-                )}
-              </>
-            )}
-
-            {step === 1 && (
-              <>
-                <ChoiceGrid
-                  options={impulseTypeOptions}
-                  value={impulseType}
-                  onChange={setImpulseType}
-                />
-                {impulseType === 'other' && (
-                  <Input
-                    placeholder={t(
-                      'pages.emotionalWellness.crisis.otherImpulsePlaceholder'
-                    )}
-                    value={otherImpulse}
-                    onChange={(e) => setOtherImpulse(e.target.value)}
-                  />
-                )}
-              </>
-            )}
-
-            {step === 2 &&
-              (aiParsed ? (
-                <>
-                  <div className="space-y-xs">
-                    <p className="text-primary text-xs font-medium tracking-wider uppercase">
-                      {t('pages.emotionalWellness.crisis.validationTitle')}
-                    </p>
-                    <p className="text-sm leading-relaxed">{aiParsed.validation}</p>
-                  </div>
-                  <div className="space-y-xs">
-                    <p className="text-warning text-xs font-medium tracking-wider uppercase">
-                      {t('pages.emotionalWellness.crisis.contextTitle')}
-                    </p>
-                    <p className="text-sm leading-relaxed">{aiParsed.explanation}</p>
-                  </div>
-                  <div className="space-y-sm">
-                    <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-                      {t('pages.emotionalWellness.crisis.actionPlanTitle')}
-                    </p>
-                    {(['5min', '10min', '20min'] as const).map((duration) => (
-                      <Card key={duration}>
-                        <CardHeader className="px-md pb-sm pt-sm">
-                          <CardTitle className="gap-xs text-muted-foreground flex items-center text-xs">
-                            <Clock className="h-3.5 w-3.5" /> {duration}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-xs px-md pb-sm">
-                          {aiParsed.action_plan[duration]?.map((action, i) => (
-                            <div key={i} className="gap-sm flex items-start">
-                              <ChevronRight className="text-primary mt-0.5 h-3.5 w-3.5 shrink-0" />
-                              <p className="text-sm">{action}</p>
-                            </div>
-                          ))}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                  <p className="text-success text-center text-sm italic">
-                    "{aiParsed.affirmation}"
+          <div className="overflow-hidden">
+            <AnimatePresence mode="wait" initial={false} custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="space-y-md"
+              >
+                {step < 2 && (
+                  <p className="text-muted-foreground text-xs">
+                    {t('pages.emotionalWellness.crisis.stepOf', {
+                      current: step + 1,
+                      total: CRISIS_STEPS,
+                    })}
                   </p>
-                </>
-              ) : (
-                <p className="text-muted-foreground text-sm">
-                  Impulso registrado. A análise da IA estará disponível em breve.
-                </p>
-              ))}
+                )}
+                {step === 0 && (
+                  <>
+                    <ChoiceGrid
+                      options={emotionalStateOptions}
+                      value={emotionalState}
+                      onChange={setEmotionalState}
+                    />
+                    {emotionalState === 'other' && (
+                      <Input
+                        placeholder={t(
+                          'pages.emotionalWellness.crisis.otherEmotionPlaceholder'
+                        )}
+                        value={otherEmotion}
+                        onChange={(e) => setOtherEmotion(e.target.value)}
+                      />
+                    )}
+                  </>
+                )}
+
+                {step === 1 && (
+                  <>
+                    <ChoiceGrid
+                      options={impulseTypeOptions}
+                      value={impulseType}
+                      onChange={setImpulseType}
+                    />
+                    {impulseType === 'other' && (
+                      <Input
+                        placeholder={t(
+                          'pages.emotionalWellness.crisis.otherImpulsePlaceholder'
+                        )}
+                        value={otherImpulse}
+                        onChange={(e) => setOtherImpulse(e.target.value)}
+                      />
+                    )}
+                  </>
+                )}
+
+                {step === 2 &&
+                  (aiParsed ? (
+                    <>
+                      <div className="space-y-xs">
+                        <p className="text-primary text-xs font-medium tracking-wider uppercase">
+                          {t('pages.emotionalWellness.crisis.validationTitle')}
+                        </p>
+                        <p className="text-sm leading-relaxed">{aiParsed.validation}</p>
+                      </div>
+                      <div className="space-y-xs">
+                        <p className="text-warning text-xs font-medium tracking-wider uppercase">
+                          {t('pages.emotionalWellness.crisis.contextTitle')}
+                        </p>
+                        <p className="text-sm leading-relaxed">
+                          {aiParsed.explanation}
+                        </p>
+                      </div>
+                      <div className="space-y-sm">
+                        <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                          {t('pages.emotionalWellness.crisis.actionPlanTitle')}
+                        </p>
+                        {(['5min', '10min', '20min'] as const).map((duration) => (
+                          <Card key={duration}>
+                            <CardHeader className="px-md pb-sm pt-sm">
+                              <CardTitle className="gap-xs text-muted-foreground flex items-center text-xs">
+                                <Clock className="h-3.5 w-3.5" /> {duration}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-xs px-md pb-sm">
+                              {aiParsed.action_plan[duration]?.map((action, i) => (
+                                <div key={i} className="gap-sm flex items-start">
+                                  <ChevronRight className="text-primary mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                  <p className="text-sm">{action}</p>
+                                </div>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                      <p className="text-success text-center text-sm italic">
+                        "{aiParsed.affirmation}"
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">
+                      Impulso registrado. A análise da IA estará disponível em breve.
+                    </p>
+                  ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {step < 2 && (
-            <DialogFooter className="gap-sm">
-              <Button variant="outline" onClick={() => setShowForm(false)}>
-                <X className="h-4 w-4" />
-                {t('common.actions.cancel')}
-              </Button>
-              {step === 0 && (
-                <Button onClick={() => setStep(1)} disabled={!emotionalState}>
-                  <ChevronRight className="h-4 w-4" />
-                  {t('common.actions.confirm')}
+            <>
+              <StepNav
+                onBack={() => goToStep(step - 1)}
+                onNext={() => goToStep(step + 1)}
+                isFirst={step === 0}
+                isLast={step === 1}
+                disabled={createMutation.isPending}
+              />
+              <DialogFooter className="gap-sm">
+                <Button variant="outline" onClick={() => setShowForm(false)}>
+                  <X className="h-4 w-4" />
+                  {t('common.actions.cancel')}
                 </Button>
-              )}
-              {step === 1 && (
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!impulseType || createMutation.isPending}
-                >
-                  <Send className="h-4 w-4" />
+                <Button onClick={handleSubmit} loading={createMutation.isPending}>
+                  {!createMutation.isPending && <Send className="h-4 w-4" />}
                   {createMutation.isPending
                     ? t('pages.emotionalWellness.crisis.sending')
                     : t('pages.emotionalWellness.crisis.requestHelpBtn')}
                 </Button>
-              )}
-            </DialogFooter>
+              </DialogFooter>
+            </>
           )}
           {step === 2 && (
             <DialogCloseFooter>

@@ -645,6 +645,17 @@ export const routineTaskSchema = z
     }
   )
   .refine(
+    (data) =>
+      !data.default_time ||
+      !data.closing_time ||
+      (data.daily_occurrences ?? 1) > 1 ||
+      data.closing_time.padStart(5, '0') >= data.default_time.padStart(5, '0'),
+    {
+      message: 'Horário de Encerramento deve ser igual ou posterior ao Horário Padrão',
+      path: ['closing_time'],
+    }
+  )
+  .refine(
     (data) => {
       if (data.linked_meal_type && data.linked_hydration_goal) {
         return false;

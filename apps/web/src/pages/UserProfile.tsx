@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Bell, Pencil, Shield, UserPen } from 'lucide-react';
+import { Bell, Pencil, Shield, SlidersHorizontal, UserPen } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { AppPreferencesDialog } from '@/components/user-profile/AppPreferencesDialog';
 import { EmailVerificationSection } from '@/components/user-profile/EmailVerificationSection';
 import { PasswordRow } from '@/components/user-profile/PasswordSection';
 import { PersonalDataSection } from '@/components/user-profile/PersonalDataSection';
@@ -27,6 +28,7 @@ export default function UserProfile() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
 
   const { data: member } = useQuery({
     queryKey: ['members', 'me'],
@@ -52,22 +54,33 @@ export default function UserProfile() {
           <EmailVerificationSection emailVerified={emailVerified} />
 
           <Section
-            icon={<Bell className="h-4 w-4" />}
-            title={t('pages.notificationPreferences.title')}
+            icon={<SlidersHorizontal className="h-4 w-4" />}
+            title={t('userProfile.preferences.title')}
           >
-            <div className="gap-md flex items-center justify-between">
-              <p className="text-muted-foreground text-sm">
-                {t('nav.notificationPreferences')}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setNotificationsOpen(true)}
-              >
-                <Pencil />
-                {t('common.actions.edit')}
-              </Button>
-            </div>
+            {/* Preferências de notificação e do app: uma linha cada, mesmo botão */}
+            {[
+              {
+                icon: Bell,
+                label: t('nav.notificationPreferences'),
+                open: () => setNotificationsOpen(true),
+              },
+              {
+                icon: SlidersHorizontal,
+                label: t('userProfile.appPreferences.title'),
+                open: () => setPreferencesOpen(true),
+              },
+            ].map((row) => (
+              <div key={row.label} className="gap-md flex items-center justify-between">
+                <p className="gap-xs text-muted-foreground flex items-center text-sm">
+                  <row.icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  {row.label}
+                </p>
+                <Button variant="outline" size="sm" onClick={row.open}>
+                  <Pencil />
+                  {t('common.actions.edit')}
+                </Button>
+              </div>
+            ))}
           </Section>
 
           <Section
@@ -91,6 +104,8 @@ export default function UserProfile() {
           <NotificationPreferencesContent onClose={() => setNotificationsOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      <AppPreferencesDialog open={preferencesOpen} onOpenChange={setPreferencesOpen} />
     </PageContainer>
   );
 }

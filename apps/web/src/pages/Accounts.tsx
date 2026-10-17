@@ -633,7 +633,11 @@ export default function Accounts() {
               {t('pages.accounts.imports.dialogTitle')}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={(e) => void handleUploadSubmit(e)} className="space-y-md">
+          <form
+            noValidate
+            onSubmit={(e) => void handleUploadSubmit(e)}
+            className="space-y-md"
+          >
             <div className="space-y-sm">
               <Label className="gap-xs flex items-center" htmlFor="upload-file">
                 <Upload className="text-muted-foreground h-3.5 w-3.5" />

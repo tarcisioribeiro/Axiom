@@ -278,6 +278,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
             </DialogDescription>
           </DialogHeader>
           <form
+            noValidate
             id="vault-renew-form"
             onSubmit={(e) => void handleRenew(e)}
             className="space-y-md"
@@ -400,7 +401,12 @@ function VaultSetupDialog({ onSuccess, onCancel }: VaultDialogProps) {
           <DialogTitle icon={Shield}>{t('pages.vaultGuard.setup.title')}</DialogTitle>
           <DialogDescription>{t('pages.vaultGuard.setup.desc')}</DialogDescription>
         </DialogHeader>
-        <form id="vault-setup-form" onSubmit={handleSetup} className="space-y-md">
+        <form
+          noValidate
+          id="vault-setup-form"
+          onSubmit={handleSetup}
+          className="space-y-md"
+        >
           <div className="bg-warning/10 p-sm text-warning rounded-lg text-xs">
             <div className="gap-sm flex items-start">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
@@ -544,7 +550,12 @@ function VaultUnlockDialog({ onSuccess, onCancel }: VaultDialogProps) {
             <DialogTitle icon={Lock}>{t('pages.vaultGuard.locked.title')}</DialogTitle>
             <DialogDescription>{t('pages.vaultGuard.locked.desc')}</DialogDescription>
           </DialogHeader>
-          <form id="vault-unlock-form" onSubmit={handleUnlock} className="space-y-md">
+          <form
+            noValidate
+            id="vault-unlock-form"
+            onSubmit={handleUnlock}
+            className="space-y-md"
+          >
             <div className="space-y-xs">
               <Label className="gap-xs flex items-center" htmlFor="unlock-password">
                 <Lock className="text-muted-foreground h-3.5 w-3.5" />
@@ -677,7 +688,12 @@ function VaultRecoveryKeyDialog({
             {t('pages.vaultGuard.recoveryKey.useDesc')}
           </DialogDescription>
         </DialogHeader>
-        <form id="vault-recovery-form" onSubmit={handleUnlock} className="space-y-xs">
+        <form
+          noValidate
+          id="vault-recovery-form"
+          onSubmit={handleUnlock}
+          className="space-y-xs"
+        >
           <Label className="gap-xs flex items-center" htmlFor="recovery-key">
             <Key className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.vaultGuard.recoveryKey.label')}

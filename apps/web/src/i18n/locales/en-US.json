@@ -55,10 +55,13 @@
       "decrease": "Decrease",
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",
-      "fitView": "Fit to screen"
+      "fitView": "Fit to screen",
+      "ok": "OK"
     },
     "required": "Required field",
     "fieldRequired": "{{field}}: required field",
+    "fieldMinLength": "{{field}}: at least {{count}} characters",
+    "fieldInvalidFormat": "{{field}}: invalid format",
     "messages": {
       "loadError": "Could not load the data. {{reason}}",
       "saveError": "Could not save. {{reason}}",
@@ -290,6 +293,10 @@
       "flashcardBack": "e.g. Paris",
       "tagName": "e.g. Travel",
       "password": "••••••••"
+    },
+    "timePicker": {
+      "hours": "Hours",
+      "minutes": "Minutes"
     }
   },
   "nav": {
@@ -305,6 +312,7 @@
     "submodules": {
       "registrations": "Registrations",
       "records": "Records",
+      "insights": "Overview",
       "books": "Collection",
       "intellect": "Learning",
       "daily": "Daily Routine",
@@ -1102,7 +1110,8 @@
         "step2": "Parties & Account",
         "step3": "Conditions & Extras",
         "next": "Next",
-        "stepOf": "Step {{current}} of {{total}}"
+        "stepOf": "Step {{current}} of {{total}}",
+        "finishSteps": "Fill in the next steps before saving"
       },
       "frequencies": {
         "daily": "Daily",
@@ -3812,7 +3821,8 @@
         "estimatedHoursLabel": "Estimated Duration (h)",
         "statusLabel": "Status",
         "startDateLabel": "Start Date",
-        "endDateLabel": "Completion Date"
+        "endDateLabel": "Completion Date",
+        "studyWeekdaysLabel": "Study days"
       },
       "modules": {
         "title": "Modules",
@@ -4339,6 +4349,7 @@
       "registerFailureTitle": "Register Failure",
       "registerFailureDesc": "Select the failure date for \"{{name}}\". Progress will be recalculated from this date.",
       "failureDateLabel": "Failure Date",
+      "failureTimeLabel": "Failure Time",
       "failureDatePlaceholder": "dd/mm/yyyy",
       "registerFailureConfirmBtn": "Register",
       "failureRegistered": "Failure registered",
@@ -6224,7 +6235,8 @@
         "viewHistoryBtn": "View history",
         "emptyTitle": "No assessments yet",
         "saveError": "Error saving",
-        "savedToast": "Assessment recorded with a score of {{score}}/30."
+        "savedToast": "Assessment recorded with a score of {{score}}/30.",
+        "answerAll": "Answer all the questions"
       },
       "checkin": {
         "registerBtn": "Log",
@@ -6292,7 +6304,9 @@
         "emptyTitle": "No records yet",
         "emptyFilteredTitle": "No records in this period",
         "resolvedBadge": "Overcome",
-        "registeredBadge": "Logged"
+        "registeredBadge": "Logged",
+        "missingEmotion": "Choose what you are feeling",
+        "missingImpulse": "Choose the impulse type"
       },
       "library": {
         "categories": {
@@ -6577,6 +6591,23 @@
       "deleteError": "Error removing photo.",
       "invalidFile": "Please select a valid image file.",
       "fileTooLarge": "Image must be at most 5 MB."
+    },
+    "preferences": {
+      "title": "Preferences"
+    },
+    "appPreferences": {
+      "title": "App preferences",
+      "weekends": "Show daily review on weekends",
+      "selfEsteemFrequency": "Self-esteem frequency",
+      "frequency": {
+        "1": "Daily",
+        "7": "Weekly",
+        "14": "Biweekly"
+      },
+      "toursDisabled": "Never show tours",
+      "resetTours": "Reset tours",
+      "toursReset": "Tours will show again",
+      "saved": "Preferences saved"
     }
   },
   "activityDescriptions": {
@@ -7543,6 +7574,162 @@
       "completed": "Completed",
       "pending": "Pending",
       "missed": "Missed"
+    }
+  },
+  "dailyReview": {
+    "title": "Review of {{date}}",
+    "position": "Day {{day}} of {{days}} · Step {{step}} of {{steps}}",
+    "stepDone": "Step completed",
+    "pendingItems_one": "Resolve {{count}} pending item",
+    "pendingItems_other": "Resolve the {{count}} pending items",
+    "dayDone": "Review of {{date}} completed",
+    "completeDay": "Complete day",
+    "justify": "Justify",
+    "at": "at {{time}}",
+    "hydrationDetail": "{{total}} L of {{target}} L",
+    "register": {
+      "action": "Register",
+      "complete": "Complete",
+      "failure": "Register failure",
+      "intervention": "Intervention",
+      "wellnessTitle": "Register intervention",
+      "weighInTitle": "Register weigh-in",
+      "weight": "Weight",
+      "weighInSaved": "Weigh-in registered"
+    },
+    "backlog": {
+      "title": "Previous days",
+      "range_one": "{{range}} · {{count}} day",
+      "range_other": "{{range}} · {{count}} days"
+    },
+    "steps": {
+      "reflection": {
+        "title": "Daily reflection",
+        "item": "Reflection of {{date}}"
+      },
+      "tasks": {
+        "title": "Tasks"
+      },
+      "goals": {
+        "title": "Avoid-habit goals"
+      },
+      "workout": {
+        "title": "Workouts"
+      },
+      "meals": {
+        "title": "Meals"
+      },
+      "hydration": {
+        "title": "Hydration",
+        "item": "Water goal of {{date}}"
+      },
+      "checkin": {
+        "title": "Emotional check-in",
+        "item": "Check-in of {{date}}"
+      },
+      "self_esteem": {
+        "title": "Self-esteem",
+        "item": "Assessment of {{date}}"
+      },
+      "self_esteem_periodic": {
+        "title": "Self-esteem",
+        "item": "Assessment for the period"
+      },
+      "wellness": {
+        "title": "Wellness",
+        "item": "No intervention in the last 7 days"
+      },
+      "weigh_in": {
+        "title": "Weigh-in",
+        "item": "No weigh-in in the last 7 days"
+      },
+      "study": {
+        "title": "Study"
+      },
+      "flashcards": {
+        "title": "Flashcards",
+        "item_one": "{{count}} flashcard to review",
+        "item_other": "{{count}} flashcards to review"
+      }
+    },
+    "justifications": {
+      "reflection": {
+        "forgot": "Forgot",
+        "no_time": "No time",
+        "nothing_to_add": "Nothing to record"
+      },
+      "tasks": {
+        "no_time": "No time",
+        "not_needed": "Not needed",
+        "health": "Health issue",
+        "postponed": "Postponed (keep pending)"
+      },
+      "goals": {
+        "avoided": "I avoided the habit",
+        "not_applicable": "Not applicable"
+      },
+      "workout": {
+        "rest": "Rest",
+        "no_time": "No time",
+        "health": "Health issue or injury",
+        "other_activity": "Did another activity"
+      },
+      "meals": {
+        "skipped_meal": "Skipped the meal",
+        "forgot_to_log": "Forgot to log",
+        "fasting": "Fasting"
+      },
+      "hydration": {
+        "forgot_to_log": "Forgot to log",
+        "below_goal": "Drank less than the goal",
+        "health": "Health issue"
+      },
+      "checkin": {
+        "forgot": "Forgot",
+        "no_time": "No time",
+        "prefer_not": "Prefer not to answer"
+      },
+      "self_esteem": {
+        "forgot": "Forgot",
+        "no_time": "No time",
+        "prefer_not": "Prefer not to answer"
+      },
+      "self_esteem_periodic": {
+        "forgot": "Forgot",
+        "no_time": "No time",
+        "prefer_not": "Prefer not to answer"
+      },
+      "wellness": {
+        "no_time": "No time",
+        "feeling_well": "I'm feeling well",
+        "will_do_soon": "Will do it soon"
+      },
+      "weigh_in": {
+        "no_scale": "No scale",
+        "away": "Away from home",
+        "will_measure_soon": "Will weigh myself soon"
+      },
+      "study": {
+        "no_time": "No time",
+        "rest": "Rest",
+        "health": "Health issue",
+        "rescheduled": "Rescheduled"
+      },
+      "flashcards": {
+        "review_later": "Review later",
+        "no_time": "No time",
+        "paused_studies": "Studies paused"
+      }
+    }
+  },
+  "webAccess": {
+    "device": {
+      "title": "Available on computers only",
+      "message": "This version of the system was designed for PCs and laptops. To use the system, access it from a computer."
+    },
+    "smallWindow": {
+      "title": "Maximize the browser window",
+      "message": "To use the system properly, maximize the browser window or increase its width until it reaches the minimum required size."
     }
   }
 }

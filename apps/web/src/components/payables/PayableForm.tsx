@@ -146,7 +146,7 @@ export function PayableForm({
       : 0;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-lg">
+    <form noValidate onSubmit={handleSubmit} className="space-y-lg">
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Wallet}>
         <div className="space-y-sm">

@@ -288,7 +288,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
   const years = Array.from({ length: 5 }, (_, i) => (currentYear - 1 + i).toString());
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
+    <form noValidate onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
       <FormSection title={t('pages.creditCardBills.form.sectionBasic')}>
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           {creditCards.length > 1 && (

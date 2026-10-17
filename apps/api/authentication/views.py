@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -22,6 +22,7 @@ from admin_panel.access import get_user_actions
 from app.config import cfg
 from app.request_utils import request_data
 
+from .models import UserPreference
 from .signals import is_reserved_username
 from .throttles import RegisterRateThrottle, ThemeSyncRateThrottle
 
@@ -1085,6 +1086,44 @@ class MyThemeView(APIView):
         user = cast(User, request.user)
         pref = ThemePreference.objects.filter(user=user).first()
         return Response({"theme": (pref.theme or None) if pref else None})
+
+
+class UserPreferenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPreference
+        fields = [
+            "daily_review_on_weekends",
+            "self_esteem_frequency_days",
+            "tours_disabled",
+        ]
+
+
+class MyPreferencesView(APIView):
+    """
+    GET/PATCH /api/v1/me/preferences/
+
+    Preferências de uso do app (revisão diária e tours) do usuário
+    autenticado; criadas com os padrões no primeiro acesso.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def _pref(self, request: Request) -> UserPreference:
+        pref, _ = UserPreference.objects.get_or_create(
+            user=cast(User, request.user)
+        )
+        return pref
+
+    def get(self, request: Request) -> Response:
+        return Response(UserPreferenceSerializer(self._pref(request)).data)
+
+    def patch(self, request: Request) -> Response:
+        serializer = UserPreferenceSerializer(
+            self._pref(request), data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(updated_by=request.user)
+        return Response(serializer.data)
 
 
 class ThemeSyncTokenView(APIView):

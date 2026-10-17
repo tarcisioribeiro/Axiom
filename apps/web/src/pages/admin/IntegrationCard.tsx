@@ -199,7 +199,7 @@ export function EmailTestDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
       <DialogContent size="sm">
-        <form onSubmit={handleSubmit}>
+        <form noValidate onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle icon={Send}>
               {t('pages.adminIntegrations.sendTestEmail')}

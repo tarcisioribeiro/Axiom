@@ -166,7 +166,7 @@ export function ArchiveForm({
   const watchedArchiveType = watch('archive_type');
 
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-lg">
+    <form noValidate onSubmit={handleFormSubmit} className="space-y-lg">
       <div className="gap-lg grid lg:grid-cols-2">
         <div className="space-y-lg">
           <FormSection

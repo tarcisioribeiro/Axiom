@@ -45,6 +45,8 @@ Axiom/
 
 **Authentication**: JWT in HttpOnly cookies. `JWTCookieMiddleware` extracts cookies → Authorization header. Access: 15min, refresh: 1h. 2FA: TOTP via `pyotp` (`TOTPDevice` per user; backup codes as SHA-256 hashes).
 
+**Web device policy** (`authentication/device_policy.py`, `WebDevicePolicyMiddleware`): the web app is PC/notebook-only. Mobile/tablet UA or `Sec-CH-UA-Mobile: ?1` gets 403 `{"code": "web_device_not_allowed"}` only on the cookie login endpoints (token/, token/refresh/, 2fa/verify/) and on cookie-authenticated requests without an `Authorization` header. Bearer clients (future React Native/Electron) are never affected — a native app needs its own token endpoint (tokens in body) instead of the cookie login. UA is spoofable: UX policy, not auth. Toggle `WEB_BLOCK_MOBILE_DEVICES`. Frontend counterpart: `WebAccessGate` + `lib/web-access.ts` (`MIN_VIEWPORT_WIDTH` 1280).
+
 **Desktop theme sync**: `ThemePreference` (one per user) updated via `PUT /api/v1/theme-sync/` (`Authorization: ThemeSync <token>`, no JWT). Token issued with `manage.py issue_theme_sync_token` or `POST /api/v1/me/theme/sync-token/` (authenticated; used by the dotfiles repo's `setup-env.sh`). Web app reads via `GET /api/v1/me/theme/` in `hooks/use-desktop-theme-sync.ts` (applies when different from `localStorage.desktopThemeSynced`).
 
 **Agents / LLM** (`apps/api/agents/`): Six domain agents selected by `core/router.py`. Endpoints: `/api/v1/agents/` (ask/, stream/, history/, sessions/, status/). **Rule**: `providers/` is the **only** place in `agents/` allowed to import models from other apps — tools, domain agents, and views consume data through it. Provider functions taking `user` must be decorated with `@requires_screen(...)` (`providers/access.py`) so agents respect screen access. See `documentation/architecture/agents-llm-boundary.md`.
@@ -253,6 +255,8 @@ DB_USER, DB_PASSWORD, DB_NAME
 DB_HOST                     # db (Docker) | localhost
 REDIS_URL                   # default redis://localhost:6379/0
 REDIS_PASSWORD
+
+WEB_BLOCK_MOBILE_DEVICES    # True (default) | False — web login/session blocked on mobile/tablet
 
 VITE_API_BASE_URL           # default http://localhost:39100
 VITE_SENTRY_DSN             # optional; Sentry disabled if unset
