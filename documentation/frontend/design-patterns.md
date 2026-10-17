@@ -1,6 +1,6 @@
 # Padrões de design do frontend web
 
-**Documento oficial** · versão 1.10 · 16/10/2026
+**Documento oficial** · versão 1.11 · 16/10/2026
 
 Padrões de UI/UX definidos pelo product owner desde 25/08/2026. Toda mudança visual no frontend web segue este documento. Quando um pedido contradiz uma regra, a regra é atualizada aqui primeiro.
 
@@ -209,6 +209,7 @@ Há três tipos de modal:
 
 ## 12. Layout
 
+- **[regra]** A versão web só atende PCs/notebooks (`components/common/WebAccessGate.tsx`, envolve o app inteiro em `main.tsx`). Smartphone/tablet (ou 403 `web_device_not_allowed` do backend) vê uma tela cheia "Acesso disponível somente em computadores" (ícone `Monitor`); viewport abaixo de `MIN_VIEWPORT_WIDTH` = 1280 px (`lib/web-access.ts`, breakpoint `xl`) vê "Maximize a janela do navegador" (`Maximize2`), que some sozinho ao ampliar. Ambas: fundo `bg-muted/30` do login em `min-h-dvh`, `Card` `max-w-md` centralizado com logo (112 px, quadrado), ícone de 72 px em quadrado `bg-primary/10`, título `text-xl` `text-balance` + mensagem `text-base`, sem botões; cabem sem rolagem em celular retrato 1080×1920 / 1080×2400 (360×560–412×915 CSS px). Deitado (variante `phone-landscape` em `index.css`: landscape e altura ≤ 500 px), o card vira duas colunas (`max-w-2xl`): logo 80 px sobre ícone 56 px à esquerda, com borda vertical, e título + mensagem alinhados à esquerda; cabe em 640×300–915×412. Dispositivo tem prioridade sobre janela (16/10/2026).
 - **[regra]** Calendário e seletor de horário abrem por cima da tela, sem expandi-la.
 - **[regra]** Avisos persistentes de conta (ex.: e-mail não verificado) não ocupam altura da página: ficam como pílula compacta na barra superior, à esquerda da busca (ícone + rótulo curto, rótulo só a partir de `lg`; ações só ícone com tooltip abaixo: Reenviar, Dispensar). Antes era um banner no topo de cada página, que gerava rolagem (16/10/2026).
 - **[regra]** O `<main>` dos layouts (app e painel admin) não tem padding: o espaçamento da página vem só do `PageContainer` (antes o admin somava `p-lg` + `py-xl` e `/admin/config` rolava) (16/10/2026).

@@ -23,7 +23,9 @@ describe('installNativeValidation', () => {
     fireEvent.click(screen.getByText('Entrar'));
     expect(onSubmit).not.toHaveBeenCalled();
     expect(input.getAttribute('aria-invalid')).toBe('true');
-    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
+    expect(toast).toHaveBeenCalledWith(
+      expect.objectContaining({ variant: 'destructive' })
+    );
 
     fireEvent.input(input, { target: { value: 'joao' } });
     expect(input.hasAttribute('aria-invalid')).toBe(false);

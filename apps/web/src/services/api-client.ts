@@ -8,6 +8,7 @@ import Cookies from 'js-cookie';
 import { API_CONFIG } from '@/config/constants';
 import { logger } from '@/lib/logger';
 import { queryClient } from '@/lib/query-client';
+import { isWebDeviceBlockResponse, useWebAccessStore } from '@/lib/web-access';
 
 import {
   AuthenticationError,
@@ -70,6 +71,12 @@ class ApiClient {
           _retry?: boolean;
           _retryCount?: number;
         };
+
+        // 403 específico da política de dispositivo; os demais 403 seguem
+        // como PermissionError
+        if (isWebDeviceBlockResponse(error.response?.status, error.response?.data)) {
+          useWebAccessStore.setState({ serverBlocked: true });
+        }
 
         const isNetworkError = !error.response && !axios.isCancel(error);
         if (isNetworkError) {

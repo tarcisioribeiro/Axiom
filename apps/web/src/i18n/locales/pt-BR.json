@@ -7752,5 +7752,15 @@
         "paused_studies": "Estudos pausados"
       }
     }
+  },
+  "webAccess": {
+    "device": {
+      "title": "Acesso disponível somente em computadores",
+      "message": "Esta versão do sistema foi projetada para PCs e notebooks. Para utilizar o sistema, acesse-o por um computador."
+    },
+    "smallWindow": {
+      "title": "Maximize a janela do navegador",
+      "message": "Para utilizar o sistema corretamente, maximize a janela do navegador ou aumente sua largura até atingir o tamanho mínimo necessário."
+    }
   }
 }

@@ -7721,5 +7721,15 @@
         "paused_studies": "Studies paused"
       }
     }
+  },
+  "webAccess": {
+    "device": {
+      "title": "Available on computers only",
+      "message": "This version of the system was designed for PCs and laptops. To use the system, access it from a computer."
+    },
+    "smallWindow": {
+      "title": "Maximize the browser window",
+      "message": "To use the system properly, maximize the browser window or increase its width until it reaches the minimum required size."
+    }
   }
 }
