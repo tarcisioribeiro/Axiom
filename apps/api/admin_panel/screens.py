@@ -180,6 +180,7 @@ SCREENS: dict[str, dict[str, Any]] = {
             ),
             "ai-routine-suggestion": "ai_suggest",
             "goals-export": "export",
+            "routine-tasks-export": "export",
         },
     },
     "planning.reflections": {

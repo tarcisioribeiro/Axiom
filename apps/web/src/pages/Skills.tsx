@@ -17,7 +17,6 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { Can } from '@/components/common/Can';
 import { CardActions } from '@/components/common/CardActions';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -368,301 +367,295 @@ export default function Skills() {
   );
 
   return (
-    <AnimatedPage>
-      <PageContainer>
-        <PageHeader
-          title={t('pages.skills.title')}
-          icon={<Brain className="text-primary h-6 w-6" />}
-          actions={
-            <div className="gap-sm flex items-center">
-              {/* Toggle de visualização na linha do título (§4). */}
-              <ViewModeToggle
-                value={viewMode}
-                onChange={setViewMode}
-                options={[
-                  {
-                    value: 'list',
-                    label: t('pages.skills.viewList'),
-                    icon: LayoutGrid,
-                  },
-                  { value: 'radar', label: t('pages.skills.viewRadar'), icon: Radar },
-                ]}
-              />
-              <Can action="add">
-                <Button
-                  onClick={() => {
-                    setEditingSkill(null);
-                    setFormOpen(true);
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                  {t('pages.skills.newBtn')}
-                </Button>
-              </Can>
-            </div>
-          }
-        />
-
-        <FilterBar
-          hasActiveFilters={
-            !!search || statusFilter !== 'all' || categoryFilter !== 'all'
-          }
-          onClear={() => {
-            setSearch('');
-            setStatusFilter('all');
-            setCategoryFilter('all');
-          }}
-          activeFilters={[
-            ...(statusFilter !== 'all'
-              ? [
-                  {
-                    key: 'status',
-                    label: `${t('pages.skills.allStatus')}: ${t(`pages.skills.status.${statusFilter}`)}`,
-                    onRemove: () => setStatusFilter('all'),
-                  },
-                ]
-              : []),
-            ...(categoryFilter !== 'all'
-              ? [
-                  {
-                    key: 'category',
-                    label: `${t('pages.skills.allCategories')}: ${t(`pages.skills.category.${categoryFilter}`)}`,
-                    onRemove: () => setCategoryFilter('all'),
-                  },
-                ]
-              : []),
-          ]}
-        >
-          <FilterField label={t('common.filterLabels.search')} icon={Search}>
-            <SearchInput
-              placeholder={t('pages.skills.searchPlaceholder')}
-              value={search}
-              onValueChange={setSearch}
+    <PageContainer>
+      <PageHeader
+        title={t('pages.skills.title')}
+        icon={<Brain className="text-primary h-6 w-6" />}
+        actions={
+          <div className="gap-sm flex items-center">
+            {/* Toggle de visualização na linha do título (§4). */}
+            <ViewModeToggle
+              value={viewMode}
+              onChange={setViewMode}
+              options={[
+                {
+                  value: 'list',
+                  label: t('pages.skills.viewList'),
+                  icon: LayoutGrid,
+                },
+                { value: 'radar', label: t('pages.skills.viewRadar'), icon: Radar },
+              ]}
             />
-          </FilterField>
-          <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger
-                className="w-36"
-                aria-label={t('pages.skills.allStatus')}
-                startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            <Can action="add">
+              <Button
+                onClick={() => {
+                  setEditingSkill(null);
+                  setFormOpen(true);
+                }}
               >
-                <SelectValue placeholder={t('pages.skills.allStatus')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('pages.skills.allStatus')}</SelectItem>
-                {SKILL_STATUSES.map((status) => {
-                  const StatusIcon = SKILL_STATUS_ICONS[status];
-                  return (
-                    <SelectItem
-                      key={status}
-                      value={status}
-                      icon={<StatusIcon className="h-4 w-4" />}
-                    >
-                      {t(`pages.skills.status.${status}`)}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </FilterField>
-          <FilterField label={t('common.fields.category')} icon={Tag}>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger
-                className="w-40"
-                aria-label={t('pages.skills.allCategories')}
-                startIcon={<Brain className="h-3.5 w-3.5" />}
-              >
-                <SelectValue placeholder={t('pages.skills.allCategories')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('pages.skills.allCategories')}</SelectItem>
-                {SKILL_CATEGORIES.map((category) => {
-                  const Icon = SKILL_CATEGORY_ICONS[category];
-                  return (
-                    <SelectItem
-                      key={category}
-                      value={category}
-                      icon={<Icon className="h-4 w-4" />}
-                    >
-                      {t(`pages.skills.category.${category}`)}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </FilterField>
-        </FilterBar>
-
-        {/* Content */}
-        {isLoading ? (
-          <LoadingState />
-        ) : viewMode === 'radar' ? (
-          <div className="gap-md grid lg:grid-cols-2">
-            <SkillsRadarChart skills={filteredSkills} />
-            <PaginatedSlide
-              items={filteredSkills}
-              pageSize={LIST_PAGE_SIZE}
-              pinNav={false}
-              className="space-y-sm"
-            >
-              {(pageItems) =>
-                pageItems.map((skill) => (
-                  <div
-                    key={skill.id}
-                    className="border-border bg-card px-md py-sm flex items-center justify-between rounded-lg border"
-                  >
-                    <div className="gap-sm flex items-center">
-                      <ProficiencyDots level={skill.proficiency_level} />
-                      <span className="text-sm font-medium">{skill.name}</span>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {t(`pages.skills.category.${skill.category}`)}
-                    </Badge>
-                  </div>
-                ))
-              }
-            </PaginatedSlide>
+                <Plus className="h-4 w-4" />
+                {t('pages.skills.newBtn')}
+              </Button>
+            </Can>
           </div>
-        ) : filteredSkills.length === 0 ? (
-          <EmptyState
-            title={
-              search || statusFilter !== 'all' || categoryFilter !== 'all'
-                ? t('pages.skills.emptySearch')
-                : t('pages.skills.emptyState')
-            }
-            icon={<Brain className="text-muted-foreground h-10 w-10" />}
-          />
-        ) : (
-          <AnimatePresence>
-            <PaginatedSlide
-              key={`${search}-${statusFilter}-${categoryFilter}`}
-              items={filteredSkills}
-              pageSize={GRID_PAGE_SIZE}
-              className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
-            >
-              {(pageItems) =>
-                pageItems.map((skill) => (
-                  <SkillCard
-                    key={skill.id}
-                    skill={skill}
-                    onOpen={setDetailSkill}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onViewHistory={(s) => setHistorySkill(s)}
-                  />
-                ))
-              }
-            </PaginatedSlide>
-          </AnimatePresence>
-        )}
+        }
+      />
 
-        {/* Skill Form Dialog */}
-        <Dialog
-          open={formOpen}
-          onOpenChange={(v) => {
-            if (!v) {
+      <FilterBar
+        hasActiveFilters={
+          !!search || statusFilter !== 'all' || categoryFilter !== 'all'
+        }
+        onClear={() => {
+          setSearch('');
+          setStatusFilter('all');
+          setCategoryFilter('all');
+        }}
+        activeFilters={[
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('pages.skills.allStatus')}: ${t(`pages.skills.status.${statusFilter}`)}`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+          ...(categoryFilter !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('pages.skills.allCategories')}: ${t(`pages.skills.category.${categoryFilter}`)}`,
+                  onRemove: () => setCategoryFilter('all'),
+                },
+              ]
+            : []),
+        ]}
+      >
+        <FilterField label={t('common.filterLabels.search')} icon={Search}>
+          <SearchInput
+            placeholder={t('pages.skills.searchPlaceholder')}
+            value={search}
+            onValueChange={setSearch}
+          />
+        </FilterField>
+        <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="w-36"
+              aria-label={t('pages.skills.allStatus')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.skills.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.skills.allStatus')}</SelectItem>
+              {SKILL_STATUSES.map((status) => {
+                const StatusIcon = SKILL_STATUS_ICONS[status];
+                return (
+                  <SelectItem
+                    key={status}
+                    value={status}
+                    icon={<StatusIcon className="h-4 w-4" />}
+                  >
+                    {t(`pages.skills.status.${status}`)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('common.fields.category')} icon={Tag}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.skills.allCategories')}
+              startIcon={<Brain className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.skills.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.skills.allCategories')}</SelectItem>
+              {SKILL_CATEGORIES.map((category) => {
+                const Icon = SKILL_CATEGORY_ICONS[category];
+                return (
+                  <SelectItem
+                    key={category}
+                    value={category}
+                    icon={<Icon className="h-4 w-4" />}
+                  >
+                    {t(`pages.skills.category.${category}`)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FilterField>
+      </FilterBar>
+
+      {/* Content */}
+      {isLoading ? (
+        <LoadingState />
+      ) : viewMode === 'radar' ? (
+        <div className="gap-md grid lg:grid-cols-2">
+          <SkillsRadarChart skills={filteredSkills} />
+          <PaginatedSlide
+            items={filteredSkills}
+            pageSize={LIST_PAGE_SIZE}
+            pinNav={false}
+            className="space-y-sm"
+          >
+            {(pageItems) =>
+              pageItems.map((skill) => (
+                <div
+                  key={skill.id}
+                  className="border-border bg-card px-md py-sm flex items-center justify-between rounded-lg border"
+                >
+                  <div className="gap-sm flex items-center">
+                    <ProficiencyDots level={skill.proficiency_level} />
+                    <span className="text-sm font-medium">{skill.name}</span>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {t(`pages.skills.category.${skill.category}`)}
+                  </Badge>
+                </div>
+              ))
+            }
+          </PaginatedSlide>
+        </div>
+      ) : filteredSkills.length === 0 ? (
+        <EmptyState
+          title={
+            search || statusFilter !== 'all' || categoryFilter !== 'all'
+              ? t('pages.skills.emptySearch')
+              : t('pages.skills.emptyState')
+          }
+          icon={<Brain className="text-muted-foreground h-10 w-10" />}
+        />
+      ) : (
+        <AnimatePresence>
+          <PaginatedSlide
+            key={`${search}-${statusFilter}-${categoryFilter}`}
+            items={filteredSkills}
+            pageSize={GRID_PAGE_SIZE}
+            className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+          >
+            {(pageItems) =>
+              pageItems.map((skill) => (
+                <SkillCard
+                  key={skill.id}
+                  skill={skill}
+                  onOpen={setDetailSkill}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onViewHistory={(s) => setHistorySkill(s)}
+                />
+              ))
+            }
+          </PaginatedSlide>
+        </AnimatePresence>
+      )}
+
+      {/* Skill Form Dialog */}
+      <Dialog
+        open={formOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setFormOpen(false);
+            setEditingSkill(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle mode={editingSkill ? 'edit' : 'create'}>
+              {editingSkill ? t('pages.skills.editTitle') : t('pages.skills.newTitle')}
+            </DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>
+                {editingSkill ? t('pages.skills.editDesc') : t('pages.skills.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
+          </DialogHeader>
+          <SkillForm
+            skill={editingSkill ?? undefined}
+            ownerId={member?.id ?? 0}
+            onSubmit={handleSubmit}
+            onCancel={() => {
               setFormOpen(false);
               setEditingSkill(null);
-            }
-          }}
-        >
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle mode={editingSkill ? 'edit' : 'create'}>
-                {editingSkill
-                  ? t('pages.skills.editTitle')
-                  : t('pages.skills.newTitle')}
-              </DialogTitle>
-              <VisuallyHidden>
-                <DialogDescription>
-                  {editingSkill
-                    ? t('pages.skills.editDesc')
-                    : t('pages.skills.newDesc')}
-                </DialogDescription>
-              </VisuallyHidden>
-            </DialogHeader>
-            <SkillForm
-              skill={editingSkill ?? undefined}
-              ownerId={member?.id ?? 0}
-              onSubmit={handleSubmit}
-              onCancel={() => {
-                setFormOpen(false);
-                setEditingSkill(null);
-              }}
-              isLoading={createMutation.isPending || updateMutation.isPending}
-            />
-          </DialogContent>
-        </Dialog>
+            }}
+            isLoading={createMutation.isPending || updateMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
 
-        {/* Skill History Dialog — abre só com o histórico carregado (§7) */}
-        <Dialog
-          open={!!historySkill && !historyLoading}
-          onOpenChange={(v) => {
-            if (!v) setHistorySkill(null);
-          }}
-        >
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle icon={Clock}>
-                {t('pages.skills.history.title')}
-                {historySkill && (
-                  <span className="text-muted-foreground"> — {historySkill.name}</span>
-                )}
-              </DialogTitle>
-              <VisuallyHidden>
-                <DialogDescription>
-                  {t('pages.skills.history.timeline')}
-                </DialogDescription>
-              </VisuallyHidden>
-            </DialogHeader>
-            {!historyData?.results?.length ? (
-              <EmptyState title={t('pages.skills.history.noHistory')} />
-            ) : (
-              <PaginatedSlide
-                items={historyData.results}
-                pageSize={LIST_PAGE_SIZE}
-                pinNav={false}
-                className="relative pl-5"
-              >
-                {(pageEntries) => (
-                  <>
-                    <div className="bg-border absolute top-0 left-2 h-full w-px" />
-                    {pageEntries.map((entry) => (
-                      <div key={entry.id} className="pb-md relative">
-                        <div
-                          className={cn(
-                            'border-background absolute -left-3 flex h-5 w-5 items-center justify-center rounded-full border-2',
-                            entry.id === historyData.results[0].id
-                              ? 'bg-primary'
-                              : 'bg-muted'
-                          )}
-                        >
-                          <div className="bg-background h-2 w-2 rounded-full" />
-                        </div>
-                        <div className="ml-md">
-                          <p className="text-sm font-medium">
-                            {t(`pages.skills.proficiency.${entry.proficiency}`)}
-                            <span className="ml-xs text-muted-foreground text-xs font-normal">
-                              · {t(`pages.skills.status.${entry.status}`)}
-                            </span>
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            {formatDate(entry.created_at, 'dd/MM/yyyy')}
-                          </p>
-                        </div>
+      {/* Skill History Dialog — abre só com o histórico carregado (§7) */}
+      <Dialog
+        open={!!historySkill && !historyLoading}
+        onOpenChange={(v) => {
+          if (!v) setHistorySkill(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle icon={Clock}>
+              {t('pages.skills.history.title')}
+              {historySkill && (
+                <span className="text-muted-foreground"> — {historySkill.name}</span>
+              )}
+            </DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.skills.history.timeline')}
+              </DialogDescription>
+            </VisuallyHidden>
+          </DialogHeader>
+          {!historyData?.results?.length ? (
+            <EmptyState title={t('pages.skills.history.noHistory')} />
+          ) : (
+            <PaginatedSlide
+              items={historyData.results}
+              pageSize={LIST_PAGE_SIZE}
+              pinNav={false}
+              className="relative pl-5"
+            >
+              {(pageEntries) => (
+                <>
+                  <div className="bg-border absolute top-0 left-2 h-full w-px" />
+                  {pageEntries.map((entry) => (
+                    <div key={entry.id} className="pb-md relative">
+                      <div
+                        className={cn(
+                          'border-background absolute -left-3 flex h-5 w-5 items-center justify-center rounded-full border-2',
+                          entry.id === historyData.results[0].id
+                            ? 'bg-primary'
+                            : 'bg-muted'
+                        )}
+                      >
+                        <div className="bg-background h-2 w-2 rounded-full" />
                       </div>
-                    ))}
-                  </>
-                )}
-              </PaginatedSlide>
-            )}
-            <DialogCloseFooter />
-          </DialogContent>
-        </Dialog>
+                      <div className="ml-md">
+                        <p className="text-sm font-medium">
+                          {t(`pages.skills.proficiency.${entry.proficiency}`)}
+                          <span className="ml-xs text-muted-foreground text-xs font-normal">
+                            · {t(`pages.skills.status.${entry.status}`)}
+                          </span>
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          {formatDate(entry.created_at, 'dd/MM/yyyy')}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </PaginatedSlide>
+          )}
+          <DialogCloseFooter />
+        </DialogContent>
+      </Dialog>
 
-        <SkillDetailModal skill={detailSkill} onClose={() => setDetailSkill(null)} />
-      </PageContainer>
-    </AnimatedPage>
+      <SkillDetailModal skill={detailSkill} onClose={() => setDetailSkill(null)} />
+    </PageContainer>
   );
 }

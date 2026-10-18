@@ -169,6 +169,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
           key={searchTerm}
           items={filtered}
           pageSize={LIST_PAGE_SIZE}
+          growOnAdd
           className="space-y-sm"
         >
           {(pageItems) =>

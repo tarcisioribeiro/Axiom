@@ -19,6 +19,8 @@ import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
 import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { transitions } from '@/lib/animations';
+
 import { EmptyState } from '../EmptyState';
 import { LoadingState } from '../LoadingState';
 import { LIST_PAGE_SIZE, PageSlide } from '../PaginatedSlide';
@@ -147,16 +149,38 @@ export function DataTable<T>({
   // Loading state - usa skeleton para melhor perceived performance
   if (isLoading) {
     return (
-      <LoadingState
-        skeleton="table"
-        skeletonConfig={{ rows: 5, columns: columns.length + (actions ? 1 : 0) }}
-      />
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key="loading"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={transitions.fast}
+        >
+          <LoadingState
+            skeleton="table"
+            skeletonConfig={{ rows: 5, columns: columns.length + (actions ? 1 : 0) }}
+          />
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   // Empty state
   if (data.length === 0) {
-    return <EmptyState title={t('common.table.noData')} {...emptyState} />;
+    return (
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key="empty"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={transitions.fast}
+        >
+          <EmptyState title={t('common.table.noData')} {...emptyState} />
+        </motion.div>
+      </AnimatePresence>
+    );
   }
 
   // Render column content
@@ -164,151 +188,167 @@ export function DataTable<T>({
     column.render ? column.render(item) : String(item[column.key as keyof T] || '');
 
   return (
-    <PageSlide
-      page={page}
-      totalPages={totalPages}
-      onPageChange={onPageChange}
-      pinNav={pinNav}
-      centerList={centerList}
-      className="space-y-md"
-    >
-      {/* Mobile card list */}
-      <div className="bg-card block overflow-hidden rounded-lg border md:hidden">
-        <div className="divide-y">
-          {rows.map((item) => (
-            <div
-              key={keyExtractor(item)}
-              className={onRowClick ? 'cursor-pointer' : undefined}
-              role={onRowClick ? 'button' : undefined}
-              tabIndex={onRowClick ? 0 : undefined}
-              onClick={(e) => handleClick(e, item)}
-              onKeyDown={(e) => {
-                if (onRowClick && e.key === 'Enter' && e.target === e.currentTarget) {
-                  onRowClick(item);
-                }
-              }}
-            >
-              {mobileCard ? (
-                mobileCard(item)
-              ) : (
-                <div className="space-y-sm px-md py-3">
-                  {columns.map((column) => (
-                    <div
-                      key={column.key}
-                      className="gap-sm flex items-start justify-between"
-                    >
-                      <span className="text-muted-foreground shrink-0 text-xs">
-                        {column.label}
-                      </span>
-                      <span className={`text-sm ${getAlignClass(column.align)}`}>
-                        {renderColumnContent(item, column)}
-                      </span>
-                    </div>
-                  ))}
-                  {actions && (
-                    <div className="pt-xs flex justify-center">{actions(item)}</div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Desktop table */}
-      <div className="bg-card hidden overflow-hidden rounded-lg border md:block">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/50 border-b">
-              <tr>
-                {columns.map((column) => (
-                  <th
-                    key={column.key}
-                    scope="col"
-                    aria-sort={
-                      column.sortable ? getAriaSortValue(column.key) : undefined
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key="content"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={transitions.fast}
+      >
+        <PageSlide
+          page={page}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          pinNav={pinNav}
+          centerList={centerList}
+          className="space-y-md"
+        >
+          {/* Mobile card list */}
+          <div className="bg-card block overflow-hidden rounded-lg border md:hidden">
+            <div className="divide-y">
+              {rows.map((item) => (
+                <div
+                  key={keyExtractor(item)}
+                  className={onRowClick ? 'cursor-pointer' : undefined}
+                  role={onRowClick ? 'button' : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onClick={(e) => handleClick(e, item)}
+                  onKeyDown={(e) => {
+                    if (
+                      onRowClick &&
+                      e.key === 'Enter' &&
+                      e.target === e.currentTarget
+                    ) {
+                      onRowClick(item);
                     }
-                    className={`${cellPad} ${getAlignClass(column.align)} text-sm font-semibold ${
-                      column.className || ''
-                    }`}
-                  >
-                    {column.sortable && sorting ? (
-                      <button
-                        type="button"
-                        className="gap-xs hover:text-foreground/70 focus:ring-ring inline-flex items-center rounded focus:ring-2 focus:outline-none"
-                        onClick={() => sorting.onSort(column.key)}
-                      >
-                        {column.label}
-                        <span aria-hidden="true">{renderSortIcon(column.key)}</span>
-                      </button>
-                    ) : (
-                      column.label
-                    )}
-                  </th>
-                ))}
-                {actions && (
-                  <th
-                    scope="col"
-                    className={`${cellPad} text-center text-sm font-semibold`}
-                  >
-                    {t('common.table.actions')}
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              <AnimatePresence initial={false}>
-                {rows.map((item, index) => {
-                  const key = keyExtractor(item);
-                  const isDeleting = deletingKeys?.has(key);
-                  return (
-                    <motion.tr
-                      key={key}
-                      ref={(el) => {
-                        rowRefs.current[index] = el;
-                      }}
-                      tabIndex={0}
-                      className={`hover:bg-muted/30 focus:bg-muted/40 transition-colors focus:outline-none ${onRowClick ? 'cursor-pointer' : ''} ${rowClassName ? rowClassName(item) : ''}`}
-                      onClick={(e: React.MouseEvent) => handleClick(e, item)}
-                      onKeyDown={(e) => {
-                        handleRowKeyDown(e, index);
-                        if (
-                          onRowClick &&
-                          e.key === 'Enter' &&
-                          e.target === e.currentTarget
-                        ) {
-                          onRowClick(item);
-                        }
-                      }}
-                      animate={
-                        isDeleting
-                          ? { opacity: 0.4, scale: 0.99 }
-                          : { opacity: 1, scale: 1 }
-                      }
-                      exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                      layout
-                    >
+                  }}
+                >
+                  {mobileCard ? (
+                    mobileCard(item)
+                  ) : (
+                    <div className="space-y-sm px-md py-3">
                       {columns.map((column) => (
-                        <td
+                        <div
                           key={column.key}
-                          className={`${cellPad} ${getAlignClass(column.align)} ${
-                            column.align === 'right' ? 'numeric' : ''
-                          } ${column.className || ''}`}
+                          className="gap-sm flex items-start justify-between"
                         >
-                          {renderColumnContent(item, column)}
-                        </td>
+                          <span className="text-muted-foreground shrink-0 text-xs">
+                            {column.label}
+                          </span>
+                          <span className={`text-sm ${getAlignClass(column.align)}`}>
+                            {renderColumnContent(item, column)}
+                          </span>
+                        </div>
                       ))}
                       {actions && (
-                        <td className={`${cellPad} text-center`}>{actions(item)}</td>
+                        <div className="pt-xs flex justify-center">{actions(item)}</div>
                       )}
-                    </motion.tr>
-                  );
-                })}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </PageSlide>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop table */}
+          <div className="bg-card hidden overflow-hidden rounded-lg border md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-muted/50 border-b">
+                  <tr>
+                    {columns.map((column) => (
+                      <th
+                        key={column.key}
+                        scope="col"
+                        aria-sort={
+                          column.sortable ? getAriaSortValue(column.key) : undefined
+                        }
+                        className={`${cellPad} ${getAlignClass(column.align)} text-sm font-semibold ${
+                          column.className || ''
+                        }`}
+                      >
+                        {column.sortable && sorting ? (
+                          <button
+                            type="button"
+                            className="gap-xs hover:text-foreground/70 focus:ring-ring inline-flex items-center rounded focus:ring-2 focus:outline-none"
+                            onClick={() => sorting.onSort(column.key)}
+                          >
+                            {column.label}
+                            <span aria-hidden="true">{renderSortIcon(column.key)}</span>
+                          </button>
+                        ) : (
+                          column.label
+                        )}
+                      </th>
+                    ))}
+                    {actions && (
+                      <th
+                        scope="col"
+                        className={`${cellPad} text-center text-sm font-semibold`}
+                      >
+                        {t('common.table.actions')}
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  <AnimatePresence initial={false}>
+                    {rows.map((item, index) => {
+                      const key = keyExtractor(item);
+                      const isDeleting = deletingKeys?.has(key);
+                      return (
+                        <motion.tr
+                          key={key}
+                          ref={(el) => {
+                            rowRefs.current[index] = el;
+                          }}
+                          tabIndex={0}
+                          className={`hover:bg-muted/30 focus:bg-muted/40 transition-colors focus:outline-none ${onRowClick ? 'cursor-pointer' : ''} ${rowClassName ? rowClassName(item) : ''}`}
+                          onClick={(e: React.MouseEvent) => handleClick(e, item)}
+                          onKeyDown={(e) => {
+                            handleRowKeyDown(e, index);
+                            if (
+                              onRowClick &&
+                              e.key === 'Enter' &&
+                              e.target === e.currentTarget
+                            ) {
+                              onRowClick(item);
+                            }
+                          }}
+                          animate={
+                            isDeleting
+                              ? { opacity: 0.4, scale: 0.99 }
+                              : { opacity: 1, scale: 1 }
+                          }
+                          exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                          layout
+                        >
+                          {columns.map((column) => (
+                            <td
+                              key={column.key}
+                              className={`${cellPad} ${getAlignClass(column.align)} ${
+                                column.align === 'right' ? 'numeric' : ''
+                              } ${column.className || ''}`}
+                            >
+                              {renderColumnContent(item, column)}
+                            </td>
+                          ))}
+                          {actions && (
+                            <td className={`${cellPad} text-center`}>
+                              {actions(item)}
+                            </td>
+                          )}
+                        </motion.tr>
+                      );
+                    })}
+                  </AnimatePresence>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </PageSlide>
+      </motion.div>
+    </AnimatePresence>
   );
 }

@@ -1,6 +1,7 @@
 import { Loader2, Save, X, Calculator } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -64,46 +65,54 @@ export function RecalculationPreviewDialog({
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-muted-foreground border-b text-left">
-                    <th className="pb-sm pr-md">
-                      {t('pages.payables.installments.number')}
-                    </th>
-                    <th className="pb-sm pr-md">
-                      {t('pages.payables.installments.dueDate')}
-                    </th>
-                    <th className="pb-sm text-right">
-                      {t('pages.payables.installments.value')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {preview.installments_preview.map((item) => (
-                    <tr key={item.number} className="border-b last:border-0">
-                      <td className="py-sm pr-md">{item.number}</td>
-                      <td className="py-sm pr-md">
-                        {formatDate(item.due_date, 'dd/MM/yyyy')}
-                      </td>
-                      <td className="py-sm text-right">
-                        {item.old_value && item.old_value !== item.new_value && (
-                          <Badge
-                            variant="outline"
-                            className="text-muted-foreground mr-sm line-through"
-                          >
-                            {formatCurrency(item.old_value)}
-                          </Badge>
-                        )}
-                        <span className="font-semibold">
-                          {formatCurrency(item.new_value)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <PaginatedSlide
+              items={preview.installments_preview}
+              pageSize={LIST_PAGE_SIZE}
+              pinNav={false}
+            >
+              {(pageItems) => (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-muted-foreground border-b text-left">
+                        <th className="pb-sm pr-md">
+                          {t('pages.payables.installments.number')}
+                        </th>
+                        <th className="pb-sm pr-md">
+                          {t('pages.payables.installments.dueDate')}
+                        </th>
+                        <th className="pb-sm text-right">
+                          {t('pages.payables.installments.value')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pageItems.map((item) => (
+                        <tr key={item.number} className="border-b last:border-0">
+                          <td className="py-sm pr-md">{item.number}</td>
+                          <td className="py-sm pr-md">
+                            {formatDate(item.due_date, 'dd/MM/yyyy')}
+                          </td>
+                          <td className="py-sm text-right">
+                            {item.old_value && item.old_value !== item.new_value && (
+                              <Badge
+                                variant="outline"
+                                className="text-muted-foreground mr-sm line-through"
+                              >
+                                {formatCurrency(item.old_value)}
+                              </Badge>
+                            )}
+                            <span className="font-semibold">
+                              {formatCurrency(item.new_value)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </PaginatedSlide>
           </div>
         )}
 

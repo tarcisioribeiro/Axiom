@@ -4098,6 +4098,7 @@
       "allStatus": "All status",
       "allPriorities": "All priorities",
       "newBtn": "New Task",
+      "exportTitle": "Export Routine Tasks",
       "editTitle": "Edit Task",
       "newTitle": "New Task",
       "editDesc": "Update the routine task information.",

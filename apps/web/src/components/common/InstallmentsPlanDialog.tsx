@@ -12,6 +12,7 @@ import {
 import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MaskedCurrencyInput } from '@/components/ui/currency-input';
@@ -210,69 +211,77 @@ export function InstallmentsPlanDialog({
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-muted-foreground border-b text-left">
-                    <th className="pb-sm pr-md">{tr('number')}</th>
-                    <th className="pb-sm pr-md">{tr('dueDate')}</th>
-                    <th className="pb-sm pr-md text-right">{tr('value')}</th>
-                    <th className="pb-sm">{tr('status')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {installments.map((inst) => {
-                    const editable = isEditing && !inst.payed;
-                    const d = draftFor(inst);
-                    return (
-                      <tr key={inst.id} className="border-b last:border-0">
-                        <td className="py-sm pr-md align-middle">
-                          {inst.installment_number}
-                        </td>
-                        <td className="py-sm pr-md align-middle">
-                          {editable ? (
-                            <div className="w-44">
-                              <DatePicker
-                                value={d.due_date}
-                                onChange={(date) =>
-                                  setDraft(inst.installment_number, {
-                                    due_date: date ? formatLocalDate(date) : '',
-                                  })
-                                }
-                              />
-                            </div>
-                          ) : (
-                            formatDate(inst.due_date, 'dd/MM/yyyy')
-                          )}
-                        </td>
-                        <td className="py-sm pr-md text-right align-middle">
-                          {editable ? (
-                            <div className="ml-auto w-40">
-                              <MaskedCurrencyInput
-                                className="text-right"
-                                value={parseFloat(d.value) || 0}
-                                onValueChange={(value) =>
-                                  setDraft(inst.installment_number, {
-                                    value: value.toFixed(2),
-                                  })
-                                }
-                              />
-                            </div>
-                          ) : (
-                            formatCurrency(inst.value)
-                          )}
-                        </td>
-                        <td className="py-sm align-middle">
-                          <Badge variant={inst.payed ? 'secondary' : 'outline'}>
-                            {inst.payed ? tr('paid') : tr('pending')}
-                          </Badge>
-                        </td>
+            <PaginatedSlide
+              items={installments}
+              pageSize={LIST_PAGE_SIZE}
+              pinNav={false}
+            >
+              {(pageItems) => (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-muted-foreground border-b text-left">
+                        <th className="pb-sm pr-md">{tr('number')}</th>
+                        <th className="pb-sm pr-md">{tr('dueDate')}</th>
+                        <th className="pb-sm pr-md text-right">{tr('value')}</th>
+                        <th className="pb-sm">{tr('status')}</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                    </thead>
+                    <tbody>
+                      {pageItems.map((inst) => {
+                        const editable = isEditing && !inst.payed;
+                        const d = draftFor(inst);
+                        return (
+                          <tr key={inst.id} className="border-b last:border-0">
+                            <td className="py-sm pr-md align-middle">
+                              {inst.installment_number}
+                            </td>
+                            <td className="py-sm pr-md align-middle">
+                              {editable ? (
+                                <div className="w-44">
+                                  <DatePicker
+                                    value={d.due_date}
+                                    onChange={(date) =>
+                                      setDraft(inst.installment_number, {
+                                        due_date: date ? formatLocalDate(date) : '',
+                                      })
+                                    }
+                                  />
+                                </div>
+                              ) : (
+                                formatDate(inst.due_date, 'dd/MM/yyyy')
+                              )}
+                            </td>
+                            <td className="py-sm pr-md text-right align-middle">
+                              {editable ? (
+                                <div className="ml-auto w-40">
+                                  <MaskedCurrencyInput
+                                    className="text-right"
+                                    value={parseFloat(d.value) || 0}
+                                    onValueChange={(value) =>
+                                      setDraft(inst.installment_number, {
+                                        value: value.toFixed(2),
+                                      })
+                                    }
+                                  />
+                                </div>
+                              ) : (
+                                formatCurrency(inst.value)
+                              )}
+                            </td>
+                            <td className="py-sm align-middle">
+                              <Badge variant={inst.payed ? 'secondary' : 'outline'}>
+                                {inst.payed ? tr('paid') : tr('pending')}
+                              </Badge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </PaginatedSlide>
 
             {isEditing && can(recalcPermission) && (
               <div className="space-y-sm pt-md border-t">

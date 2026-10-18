@@ -296,7 +296,7 @@ export function SkillForm({
             value={watch('category')}
             onValueChange={(v) => setValue('category', v)}
           >
-            <SelectTrigger>
+            <SelectTrigger aria-invalid={!!errors.category}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

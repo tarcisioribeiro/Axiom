@@ -222,7 +222,7 @@ export function DatePicker({
           'border-input bg-background rounded-md border',
           'text-foreground placeholder:text-foreground text-sm',
           'focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
-          'duration-normal transition-all',
+          'duration-normal transition',
           'hover:border-primary/40',
           'aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-destructive/50 aria-[invalid=true]:ring-2',
           disabled && 'cursor-not-allowed opacity-50'

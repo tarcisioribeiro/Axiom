@@ -1,6 +1,6 @@
 # Padrões de design do frontend web
 
-**Documento oficial** · versão 1.11 · 16/10/2026
+**Documento oficial** · versão 1.12 · 18/10/2026
 
 Padrões de UI/UX definidos pelo product owner desde 25/08/2026. Toda mudança visual no frontend web segue este documento. Quando um pedido contradiz uma regra, a regra é atualizada aqui primeiro.
 
@@ -153,6 +153,7 @@ Há três tipos de modal:
 - **[desktop]** Telas com lista vertical de cards (um por linha) ou com `DataTable` não têm barra de rolagem: 5 registros por página cabem na viewport. Status: Reflexões, Sessões de Treino, Planejamento Semanal, Checklist Diário, Jornada e Diário Alimentar medidos em 880 px em 13/10/2026; os demais medidos em 1024 px de altura em Reflexões, Sessões de Treino, Regras de Automação, Check-in, Autoestima, Tarefas Rotineiras, Checklist Diário, Despesas, Receitas, Compras do Cartão, Transferências, Gastos/Receitas Fixas, Faturas, Livros e Flashcards, todas sem rolagem.
 - **[regra]** Nenhuma tela tem rolagem de página. Status: todo o Controle Financeiro medido em 880 px em 13/10/2026, sem rolagem: Dashboard (botão de alertas na linha do título), Calendário (contagem de vencimentos como badge no título do mês), Planejador Mensal (navegação do mês no header; tudo numa tela: 4 cards de resumo só com o valor, detalhamento em modal; cards de Receitas e Orçamentos à esquerda e Despesas à direita, só com o total, abrindo modais com os registros paginados; "Aplicar Plano" abre antes um modal de prévia do que será lançado), Insights (ranking de categorias em alta dentro do card de resumo), Comparação Mensal (categorias paginadas em 5), Patrimônio (rosca, ativos e passivos em 3 colunas), Quitação de Dívidas (Configurar + Comparativo numa coluna, plano paginado em 3), Contas, Membros, Metas, Orçamentos, Contas a Pagar/Receber e Empréstimos.
 - **[regra]** `PaginatedSlide` dentro de gráficos (cards de dashboard e análise) e dentro de modais usa `pinNav={false}`. Com o padrão `pinNav`, a classe `page-fill` estica os ancestrais até o `<main>`.
+- **[regra]** Lista de uma coluna que cresce por inclusão, com o registro criado na mesma tela/modal (ex.: aulas de um módulo de curso) usa `PaginatedSlide growOnAdd`: reserva desde o início a altura da página cheia (`LIST_PAGE_SIZE`), centraliza os itens nesse espaço enquanto a página não completa, anima a entrada de cada item e pagina sozinha para a página nova ao estourar o tamanho (o 6º registro, por ex.). Não usar em grade de várias colunas — a altura reservada pressupõe uma linha por item. Em lista com filtro/busca, o `PaginatedSlide` precisa de `key` pelo estado do filtro (já era o padrão), para a troca de filtro não ser confundida com inclusão de registro. Status: Cursos (aulas do módulo, sessões de estudo), Destaques, Reflexões Diárias, Webhooks e Divisões da Despesa (18/10/2026).
 - **[regra]** Telas com filtro e busca usam `FilterBar` + `SearchInput`, como no Controle Financeiro.
 - **[regra]** Filtros ocupam toda a largura, com rótulo acima de cada um: cada campo do `FilterBar` vai dentro de `<FilterField label=...>` (rótulo `text-xs` centralizado, campos alinhados pela base; botões como "Favoritos" sem rótulo). Rótulos genéricos em `common.filterLabels.*` / `common.fields.*`.
 - **[regra]** Entre o `FilterBar` e o conteúdo abaixo (lista, tabela, grade ou `EmptyState`) há sempre 24 px: pai com `space-y-lg` (o `PageContainer` já tem) ou `className="mb-lg"` no `FilterBar`. Nunca `mb-md`/`space-y-md` (no Tailwind 4 o `mb-*` do filho sobrescreve o `space-y` do pai) nem conteúdo colado, como num `TabsContent` ou fragmento sem espaçamento (16/10/2026).
@@ -167,10 +168,12 @@ Há três tipos de modal:
 
 ## 8. Animação
 
-- **[regra]** Animações visíveis mas leves, usando só `opacity` e `transform`: abas, páginas, toggles, modais, troca de filtros e carregamentos. Usar os tokens `duration-*`. Status: ainda há ~11 durações fixas no Framer Motion e 6 usos de `transition-all`.
-- **[regra]** A transição de paginação é a da tela de Tarefas Rotineiras (referência).
+- **[regra]** Animações visíveis mas leves, usando só `opacity` e `transform`: abas, páginas, toggles, modais, troca de filtros e carregamentos. Usar os tokens `duration-*`/`DURATION.*`. Status: `transition-all` zerado (18/10/2026) e durações fixas do Framer Motion mapeadas para os tokens, exceto pulsos decorativos contínuos (`StreakBadge`) e configs de spring (`KanbanCard`/`StatCard`), que não são duração-baseadas.
+- **[regra]** A transição de paginação é a da tela de Tarefas Rotineiras (referência); toda tela/página é animada uma única vez pelo wrapper `AnimatedPage` do `Layout.tsx` (nível de rota) — não duplicar com outro `AnimatedPage`/fade-in próprio dentro da página.
+- **[regra]** `DataTable` anima com fade a troca entre carregando → vazio → conteúdo (18/10/2026): toda tela baseada em `DataTable` já herda isso, sem precisar de ajuste por página.
 - **[regra]** Checkbox (componente base `components/ui/checkbox.tsx`): o ✓ entra com `animate-pop-in` ao marcar e sai com `animate-pop-out` ao desmarcar; o fundo troca sem transição (15/10/2026).
-- **[regra]** Seletor que troca o conteúdo de uma lista (ex.: módulos no editor de permissões) usa a mesma transição da paginação (`slideVariants`), com direção pela posição da opção no seletor.
+- **[regra]** Seletor que troca o conteúdo de uma lista (ex.: módulos no editor de permissões) usa a mesma transição da paginação (`slideVariants`), com direção pela posição da opção no seletor. Mesmo padrão aplicado à troca de mês em `SpendingInsights` (18/10/2026).
+- **[regra]** Diálogo com tabela/cronograma longo (parcelas, amortização) pagina com `PaginatedSlide pinNav={false}` em vez de listar tudo sem paginação nem transição (18/10/2026: `RecalculationPreviewDialog`, `LoanAmortizationDialog`, `InstallmentsPlanDialog`).
 - **[regra]** Animações indesejadas são removidas (ex.: giro de número em contador, tela piscando).
 - **[pontual]** Animação na troca entre senha e 2FA, ao abrir campos de data e horário e ao ocultar o widget do agente.
 

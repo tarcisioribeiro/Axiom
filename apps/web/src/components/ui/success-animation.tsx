@@ -188,7 +188,7 @@ export function SuccessAnimation({
                 pathLength: 1,
                 transition: {
                   delay: variant === 'minimal' ? 0.1 : DURATION.normal,
-                  duration: 0.4,
+                  duration: DURATION.medium,
                   ease: 'easeOut',
                 },
               }}

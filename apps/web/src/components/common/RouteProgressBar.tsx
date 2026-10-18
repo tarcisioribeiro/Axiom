@@ -2,6 +2,8 @@ import { motion, useAnimation } from 'framer-motion';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router';
 
+import { DURATION } from '@/lib/animations/transitions';
+
 export const RouteProgressBar = () => {
   const location = useLocation();
   const controls = useAnimation();
@@ -14,14 +16,14 @@ export const RouteProgressBar = () => {
       if (cancelled) return;
       await controls.start({
         width: '85%',
-        transition: { duration: 0.8, ease: 'easeOut' },
+        transition: { duration: DURATION.slow, ease: 'easeOut' },
       });
       if (cancelled) return;
       await new Promise<void>((r) => setTimeout(r, 200));
       if (cancelled) return;
-      await controls.start({ width: '100%', transition: { duration: 0.15 } });
+      await controls.start({ width: '100%', transition: { duration: DURATION.fast } });
       if (cancelled) return;
-      await controls.start({ opacity: 0, transition: { duration: 0.2 } });
+      await controls.start({ opacity: 0, transition: { duration: DURATION.fast } });
     };
 
     void run();

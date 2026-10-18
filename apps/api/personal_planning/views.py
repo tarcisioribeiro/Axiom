@@ -1,6 +1,7 @@
 import json
 import logging
-from datetime import date, timedelta
+from collections import Counter
+from datetime import date, time, timedelta
 from pathlib import Path
 
 from django.db import transaction
@@ -14,12 +15,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
-from app.export_utils import build_csv_response, build_pdf_response
+from app.export_utils import (
+    build_csv_response,
+    build_grouped_pdf_response,
+    build_pdf_response,
+)
 from app.permissions import GlobalDefaultPermission
 from app.throttles import ExportRateThrottle
 from members.models import Member
 from personal_planning.models import (
     AUTO_COMPLETION_GOAL_TYPES,
+    WEEKDAY_CHOICES,
     BodyMetric,
     DailyReflection,
     Exercise,
@@ -3047,6 +3053,206 @@ class ExportGoalsView(APIView):
                 filename="metas",
             )
         return build_csv_response(rows(), headers, "metas")
+
+
+_WEEKDAY_LABELS = dict(WEEKDAY_CHOICES)
+_WEEKDAYS_PT = (0, 1, 2, 3, 4)  # Segunda a Sexta
+_WEEKDAY_ORDER = (6, 0, 1, 2, 3, 4, 5)  # Domingo .. Sábado
+
+
+def _task_weekdays(task):
+    """
+    Dias da semana (0=Segunda..6=Domingo) em que a tarefa ocorre, ou
+    ``None`` quando ela não tem dia fixo (mensal por dia do mês, ou
+    personalizada por quantidade/intervalo sem dias definidos).
+    """
+    if task.periodicity == "daily":
+        return list(range(7))
+    if task.periodicity == "weekdays":
+        return list(_WEEKDAYS_PT)
+    if task.periodicity == "weekly":
+        return [task.weekday] if task.weekday is not None else None
+    if task.periodicity == "custom" and task.custom_weekdays:
+        return sorted(task.custom_weekdays)
+    return None
+
+
+def _task_card_lines(task):
+    lines = [f"<b>Categoria:</b> {task.get_category_display()}"]
+    if task.description:
+        lines.append(f"<b>Descrição:</b> {task.description}")
+    return lines
+
+
+def _day_heading(label, count):
+    return f"{label} — {count} tarefa{'s' if count != 1 else ''}"
+
+
+def _routine_task_agenda_groups(tasks):
+    """
+    Agrupa as tarefas como uma agenda semanal (Domingo a Sábado): um
+    cartão por ocorrência, com horário, nome (numerado quando a mesma
+    tarefa se repete no dia), categoria e descrição. Tarefas sem dia
+    fixo (mensais/personalizadas por intervalo) ficam numa seção final.
+    """
+    by_weekday = {d: [] for d in range(7)}
+    unscheduled = []
+    for t in tasks:
+        weekdays = _task_weekdays(t)
+        if weekdays is None:
+            unscheduled.append(t)
+        else:
+            for weekday in weekdays:
+                by_weekday[weekday].append(t)
+
+    groups = []
+    for weekday in _WEEKDAY_ORDER:
+        day_tasks = sorted(
+            by_weekday[weekday],
+            key=lambda t: (t.default_time or time(23, 59), t.name),
+        )
+        if not day_tasks:
+            continue
+
+        name_counts = Counter(t.name for t in day_tasks)
+        seen = Counter()
+        items = []
+        for t in day_tasks:
+            seen[t.name] += 1
+            suffix = f" ({seen[t.name]})" if name_counts[t.name] > 1 else ""
+            time_label = (
+                t.default_time.strftime("%H:%M")
+                if t.default_time
+                else "Sem horário"
+            )
+            items.append(
+                {
+                    "title": f"{time_label} — {t.name}{suffix}",
+                    "lines": _task_card_lines(t),
+                }
+            )
+
+        groups.append(
+            {
+                "heading": _day_heading(
+                    _WEEKDAY_LABELS[weekday], len(day_tasks)
+                ),
+                "items": items,
+            }
+        )
+
+    if unscheduled:
+        unscheduled.sort(key=lambda t: t.name)
+        items = []
+        for t in unscheduled:
+            label = (
+                f"Dia {t.day_of_month} do mês"
+                if t.periodicity == "monthly" and t.day_of_month
+                else t.get_periodicity_display()
+            )
+            items.append(
+                {
+                    "title": f"{label} — {t.name}",
+                    "lines": _task_card_lines(t),
+                }
+            )
+        groups.append(
+            {
+                "heading": _day_heading(
+                    "Outras tarefas (sem dia fixo)", len(unscheduled)
+                ),
+                "items": items,
+            }
+        )
+
+    return groups
+
+
+class ExportRoutineTasksView(APIView):
+    """
+    Exporta tarefas rotineiras do usuário em CSV ou PDF.
+
+    GET /api/v1/personal-planning/routine-tasks/export/
+    ?export_format=csv|pdf&category=...&status=active|inactive&priority=...
+
+    No formato PDF, a exportação é uma agenda ordenada por dia da semana
+    e horário (em vez da lista plana usada no CSV).
+    """
+
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = [ExportRateThrottle]
+
+    def get(self, request):
+        member = Member.objects.get(user=request.user)
+        qs = RoutineTask.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).order_by("name")
+
+        category = request.query_params.get("category")
+        if category:
+            qs = qs.filter(category=category)
+
+        status_filter = request.query_params.get("status")
+        if status_filter in ("active", "inactive"):
+            qs = qs.filter(is_active=(status_filter == "active"))
+
+        priority = request.query_params.get("priority")
+        if priority:
+            qs = qs.filter(priority=priority)
+
+        export_format = request.query_params.get(
+            "export_format", "csv"
+        ).lower()
+
+        if export_format == "pdf":
+            count = qs.count()
+            if count > PDF_ROW_LIMIT:
+                return Response(
+                    {
+                        "error": (
+                            f"Muitos registros ({count})."
+                            " Refine os filtros."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return build_grouped_pdf_response(
+                title="Agenda de Tarefas Rotineiras",
+                meta={
+                    "user_name": (
+                        request.user.get_full_name() or request.user.username
+                    ),
+                    "period": f"Status: {status_filter or 'todos'}",
+                },
+                groups=_routine_task_agenda_groups(qs),
+                filename="agenda_tarefas_rotineiras",
+                empty_message=(
+                    "Nenhuma tarefa rotineira encontrada para os filtros"
+                    " selecionados."
+                ),
+            )
+
+        headers = [
+            "Nome",
+            "Categoria",
+            "Periodicidade",
+            "Meta",
+            "Prioridade",
+            "Status",
+        ]
+
+        def rows():
+            for t in qs.iterator():
+                yield [
+                    t.name,
+                    t.get_category_display(),
+                    t.get_periodicity_display(),
+                    f"{t.target_quantity} {t.get_unit_display()}",
+                    t.get_priority_display(),
+                    "Ativa" if t.is_active else "Inativa",
+                ]
+
+        return build_csv_response(rows(), headers, "tarefas_rotineiras")
 
 
 # ============================================================================
