@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookMarked,
   BookOpen,
@@ -838,22 +839,29 @@ export default function Books() {
       <ReadingGoalsDialog open={isGoalsOpen} onClose={() => setIsGoalsOpen(false)} />
 
       {/* Fullscreen reader overlay */}
-      {readerBookId !== null && (
-        <div className="fixed inset-0 z-50">
-          <Suspense
-            fallback={
-              <div className="bg-background h-full">
-                <LoadingState />
-              </div>
-            }
+      <AnimatePresence>
+        {readerBookId !== null && (
+          <motion.div
+            className="fixed inset-0 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            <BookReader
-              bookIdProp={readerBookId}
-              onClose={() => setReaderBookId(null)}
-            />
-          </Suspense>
-        </div>
-      )}
+            <Suspense
+              fallback={
+                <div className="bg-background h-full">
+                  <LoadingState />
+                </div>
+              }
+            >
+              <BookReader
+                bookIdProp={readerBookId}
+                onClose={() => setReaderBookId(null)}
+              />
+            </Suspense>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </PageContainer>
   );
 }

@@ -653,6 +653,7 @@ export function CourseModulesModal({ course, open, onClose }: CourseModalProps) 
                       items={lessons}
                       pageSize={LIST_PAGE_SIZE}
                       pinNav={false}
+                      growOnAdd
                       className="space-y-xs"
                     >
                       {(pageLessons) =>
@@ -1097,6 +1098,7 @@ export function CourseSessionsModal({ course, open, onClose }: CourseModalProps)
                     items={sessions}
                     pageSize={LIST_PAGE_SIZE}
                     pinNav={false}
+                    growOnAdd
                     className="space-y-xs"
                   >
                     {(pageSessions) =>

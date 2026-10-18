@@ -24,6 +24,7 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     ExportGoalsView,
     ExportMealLogsView,
     ExportReflectionsView,
+    ExportRoutineTasksView,
     ExportWorkoutSessionsView,
     FocusBlockDetailView,
     FocusBlockListCreateView,
@@ -418,6 +419,11 @@ urlpatterns = [
         "goals/export/",
         ExportGoalsView.as_view(),
         name="goals-export",
+    ),
+    path(
+        "routine-tasks/export/",
+        ExportRoutineTasksView.as_view(),
+        name="routine-tasks-export",
     ),
     # Body Metrics
     path(

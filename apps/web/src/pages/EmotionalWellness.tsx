@@ -31,7 +31,6 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { Can } from '@/components/common/Can';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -1451,70 +1450,68 @@ export default function EmotionalWellness() {
   const [checkinFormOpen, setCheckinFormOpen] = useState(false);
   const [crisisFormOpen, setCrisisFormOpen] = useState(false);
   return (
-    <AnimatedPage>
-      <PageContainer>
-        <PageHeader
-          title={t(`pages.emotionalWellness.tabs.${activeTab.labelKey}`)}
-          icon={<ActiveIcon />}
-          actions={
-            tab === 'self-esteem' ? (
-              <Can action="add">
-                <Button onClick={() => setSelfEsteemFormOpen(true)}>
-                  <Plus className="h-4 w-4" />
-                  {t('pages.emotionalWellness.selfEsteem.newAssessmentBtn')}
-                </Button>
-              </Can>
-            ) : tab === 'checkin' ? (
-              <Can action="add">
-                <Button onClick={() => setCheckinFormOpen(true)}>
-                  <Plus className="h-4 w-4" />
-                  {t('pages.emotionalWellness.checkin.registerBtn')}
-                </Button>
-              </Can>
-            ) : (
-              tab === 'crisis' && (
-                <Button onClick={() => setCrisisFormOpen(true)}>
-                  <Shield className="h-4 w-4" />
-                  {t('pages.emotionalWellness.crisis.modeBtn')}
-                </Button>
-              )
+    <PageContainer>
+      <PageHeader
+        title={t(`pages.emotionalWellness.tabs.${activeTab.labelKey}`)}
+        icon={<ActiveIcon />}
+        actions={
+          tab === 'self-esteem' ? (
+            <Can action="add">
+              <Button onClick={() => setSelfEsteemFormOpen(true)}>
+                <Plus className="h-4 w-4" />
+                {t('pages.emotionalWellness.selfEsteem.newAssessmentBtn')}
+              </Button>
+            </Can>
+          ) : tab === 'checkin' ? (
+            <Can action="add">
+              <Button onClick={() => setCheckinFormOpen(true)}>
+                <Plus className="h-4 w-4" />
+                {t('pages.emotionalWellness.checkin.registerBtn')}
+              </Button>
+            </Can>
+          ) : (
+            tab === 'crisis' && (
+              <Button onClick={() => setCrisisFormOpen(true)}>
+                <Shield className="h-4 w-4" />
+                {t('pages.emotionalWellness.crisis.modeBtn')}
+              </Button>
             )
-          }
-        />
+          )
+        }
+      />
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-          <TabsList className="mb-lg w-full overflow-x-auto">
-            {TABS.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <TabsTrigger key={tab.id} value={tab.id} className="gap-xs flex-1">
-                  <Icon className="h-3.5 w-3.5" />
-                  {t(`pages.emotionalWellness.tabs.${tab.labelKey}`)}
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+        <TabsList className="mb-lg w-full overflow-x-auto">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <TabsTrigger key={tab.id} value={tab.id} className="gap-xs flex-1">
+                <Icon className="h-3.5 w-3.5" />
+                {t(`pages.emotionalWellness.tabs.${tab.labelKey}`)}
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
 
-          <TabsContent value="dashboard">
-            <DashboardTab />
-          </TabsContent>
-          <TabsContent value="self-esteem">
-            <SelfEsteemTab
-              showForm={selfEsteemFormOpen}
-              setShowForm={setSelfEsteemFormOpen}
-            />
-          </TabsContent>
-          <TabsContent value="checkin">
-            <CheckinTab showForm={checkinFormOpen} setShowForm={setCheckinFormOpen} />
-          </TabsContent>
-          <TabsContent value="crisis">
-            <CrisisTab showForm={crisisFormOpen} setShowForm={setCrisisFormOpen} />
-          </TabsContent>
-          <TabsContent value="library">
-            <LibraryTab />
-          </TabsContent>
-        </Tabs>
-      </PageContainer>
-    </AnimatedPage>
+        <TabsContent value="dashboard">
+          <DashboardTab />
+        </TabsContent>
+        <TabsContent value="self-esteem">
+          <SelfEsteemTab
+            showForm={selfEsteemFormOpen}
+            setShowForm={setSelfEsteemFormOpen}
+          />
+        </TabsContent>
+        <TabsContent value="checkin">
+          <CheckinTab showForm={checkinFormOpen} setShowForm={setCheckinFormOpen} />
+        </TabsContent>
+        <TabsContent value="crisis">
+          <CrisisTab showForm={crisisFormOpen} setShowForm={setCrisisFormOpen} />
+        </TabsContent>
+        <TabsContent value="library">
+          <LibraryTab />
+        </TabsContent>
+      </Tabs>
+    </PageContainer>
   );
 }

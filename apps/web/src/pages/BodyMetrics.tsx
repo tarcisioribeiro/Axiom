@@ -29,7 +29,6 @@ import {
 
 import { EnhancedPieChart } from '@/components/charts/EnhancedPieChart';
 import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -450,699 +449,692 @@ export default function BodyMetrics() {
   // ── JSX ───────────────────────────────────────────────────────────────────
 
   return (
-    <AnimatedPage>
-      <PageContainer>
-        <PageHeader
-          title={t('pages.bodyMetrics.title')}
-          icon={<Scale />}
-          actions={
-            <div className="gap-sm flex">
-              {metrics.length > 0 && (
-                <Button variant="outline" className="gap-sm" onClick={openRecalculate}>
-                  <RefreshCw className="h-4 w-4" />
-                  {t('pages.bodyMetrics.recalcBtn')}
-                </Button>
-              )}
-              <Can action="add">
-                <Button className="gap-sm" onClick={openCreate}>
-                  <Plus className="h-4 w-4" />
-                  {t('pages.bodyMetrics.newBtn')}
-                </Button>
-              </Can>
-            </div>
-          }
-        />
+    <PageContainer>
+      <PageHeader
+        title={t('pages.bodyMetrics.title')}
+        icon={<Scale />}
+        actions={
+          <div className="gap-sm flex">
+            {metrics.length > 0 && (
+              <Button variant="outline" className="gap-sm" onClick={openRecalculate}>
+                <RefreshCw className="h-4 w-4" />
+                {t('pages.bodyMetrics.recalcBtn')}
+              </Button>
+            )}
+            <Can action="add">
+              <Button className="gap-sm" onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                {t('pages.bodyMetrics.newBtn')}
+              </Button>
+            </Can>
+          </div>
+        }
+      />
 
-        {metrics.length === 0 ? (
-          <EmptyState
-            icon={<Scale className="h-8 w-8" />}
-            title={t('pages.bodyMetrics.empty')}
-          />
-        ) : (
-          <>
-            <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
-              <Card>
-                <CardHeader className="gap-md py-md pb-sm flex flex-row items-center justify-between">
-                  <CardTitle className="text-base">
-                    {t('pages.bodyMetrics.chartTitle')}
-                  </CardTitle>
-                  <div className="gap-sm flex items-center">
-                    <span className="text-muted-foreground text-xs">
-                      {t('pages.bodyMetrics.chartPeriod')}:
-                    </span>
-                    <Select
-                      value={period}
-                      onValueChange={(v) => setPeriod(v as PeriodKey)}
-                    >
-                      <SelectTrigger className="h-7 w-32 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="30">
-                          {t('pages.bodyMetrics.last30')}
-                        </SelectItem>
-                        <SelectItem value="90">
-                          {t('pages.bodyMetrics.last90')}
-                        </SelectItem>
-                        <SelectItem value="180">
-                          {t('pages.bodyMetrics.last180')}
-                        </SelectItem>
-                        <SelectItem value="all">
-                          {t('pages.bodyMetrics.allTime')}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-md gap-xs flex flex-wrap">
-                    {chartMetrics.map(({ key, labelKey, color, unit }) => {
-                      const isActive = activeMetrics.has(key);
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => toggleMetric(key)}
-                          className={cn(
-                            'gap-xs px-sm py-xs duration-normal inline-flex items-center rounded-full border text-xs font-medium transition',
-                            isActive ? 'shadow-sm' : 'hover:opacity-70'
-                          )}
+      {metrics.length === 0 ? (
+        <EmptyState
+          icon={<Scale className="h-8 w-8" />}
+          title={t('pages.bodyMetrics.empty')}
+        />
+      ) : (
+        <>
+          <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
+            <Card>
+              <CardHeader className="gap-md py-md pb-sm flex flex-row items-center justify-between">
+                <CardTitle className="text-base">
+                  {t('pages.bodyMetrics.chartTitle')}
+                </CardTitle>
+                <div className="gap-sm flex items-center">
+                  <span className="text-muted-foreground text-xs">
+                    {t('pages.bodyMetrics.chartPeriod')}:
+                  </span>
+                  <Select
+                    value={period}
+                    onValueChange={(v) => setPeriod(v as PeriodKey)}
+                  >
+                    <SelectTrigger className="h-7 w-32 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="30">
+                        {t('pages.bodyMetrics.last30')}
+                      </SelectItem>
+                      <SelectItem value="90">
+                        {t('pages.bodyMetrics.last90')}
+                      </SelectItem>
+                      <SelectItem value="180">
+                        {t('pages.bodyMetrics.last180')}
+                      </SelectItem>
+                      <SelectItem value="all">
+                        {t('pages.bodyMetrics.allTime')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-md gap-xs flex flex-wrap">
+                  {chartMetrics.map(({ key, labelKey, color, unit }) => {
+                    const isActive = activeMetrics.has(key);
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => toggleMetric(key)}
+                        className={cn(
+                          'gap-xs px-sm py-xs duration-normal inline-flex items-center rounded-full border text-xs font-medium transition',
+                          isActive ? 'shadow-sm' : 'hover:opacity-70'
+                        )}
+                        style={{
+                          borderColor: color,
+                          color: isActive ? color : 'hsl(var(--muted-foreground))',
+                          backgroundColor: isActive ? `${color}1a` : 'transparent',
+                          opacity: isActive ? 1 : 0.5,
+                        }}
+                      >
+                        <span
+                          className="h-2 w-2 rounded-full"
                           style={{
-                            borderColor: color,
-                            color: isActive ? color : 'hsl(var(--muted-foreground))',
-                            backgroundColor: isActive ? `${color}1a` : 'transparent',
-                            opacity: isActive ? 1 : 0.5,
+                            backgroundColor: isActive
+                              ? color
+                              : 'hsl(var(--muted-foreground))',
                           }}
-                        >
-                          <span
-                            className="h-2 w-2 rounded-full"
-                            style={{
-                              backgroundColor: isActive
-                                ? color
-                                : 'hsl(var(--muted-foreground))',
+                        />
+                        {t(`pages.bodyMetrics.${labelKey}`)}
+                        {unit ? ` (${unit})` : ''}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {chartData.length < 2 ? (
+                  <EmptyState
+                    title={t('pages.bodyMetrics.noDataForChart')}
+                    icon={<Activity />}
+                  />
+                ) : (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <AreaChart
+                      data={chartDataNormalized}
+                      margin={{ top: 8, right: 8, left: -10, bottom: 4 }}
+                    >
+                      <defs>
+                        {chartMetrics.map(({ key, color }, idx) => (
+                          <linearGradient
+                            key={`grad-${key}`}
+                            id={getGradientId(idx)}
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop offset="5%" stopColor={color} stopOpacity={0.25} />
+                            <stop offset="95%" stopColor={color} stopOpacity={0.02} />
+                          </linearGradient>
+                        ))}
+                      </defs>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="hsl(var(--border))"
+                        opacity={0.4}
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="date"
+                        tick={{
+                          fontSize: 11,
+                          fill: 'hsl(var(--muted-foreground))',
+                        }}
+                        tickLine={false}
+                        axisLine={{ stroke: 'hsl(var(--border))' }}
+                        dy={8}
+                      />
+                      <YAxis
+                        tick={{
+                          fontSize: 11,
+                          fill: 'hsl(var(--muted-foreground))',
+                        }}
+                        tickLine={false}
+                        axisLine={false}
+                        width={40}
+                        tickFormatter={(v: number) => `${v > 0 ? '+' : ''}${v}%`}
+                      />
+                      <Tooltip
+                        content={
+                          <EnhancedTooltip
+                            formatter={(value, entry) => {
+                              const pct = Number(value);
+                              const pctStr = `${pct > 0 ? '+' : ''}${pct.toFixed(1)}%`;
+                              if (!entry) return pctStr;
+                              const baseKey = entry.dataKey.replace(
+                                /_pct$/,
+                                ''
+                              ) as MetricKey;
+                              const meta = METRIC_META.find((m) => m.key === baseKey);
+                              const raw = entry.payload[baseKey] as
+                                number | null | undefined;
+                              const rawStr =
+                                raw !== null && raw !== undefined
+                                  ? `${raw.toFixed(1)}${meta?.unit ? ` ${meta.unit}` : ''}`
+                                  : '—';
+                              return `${rawStr} (${pctStr})`;
                             }}
                           />
-                          {t(`pages.bodyMetrics.${labelKey}`)}
-                          {unit ? ` (${unit})` : ''}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {chartData.length < 2 ? (
-                    <EmptyState
-                      title={t('pages.bodyMetrics.noDataForChart')}
-                      icon={<Activity />}
-                    />
-                  ) : (
-                    <ResponsiveContainer width="100%" height={280}>
-                      <AreaChart
-                        data={chartDataNormalized}
-                        margin={{ top: 8, right: 8, left: -10, bottom: 4 }}
-                      >
-                        <defs>
-                          {chartMetrics.map(({ key, color }, idx) => (
-                            <linearGradient
-                              key={`grad-${key}`}
-                              id={getGradientId(idx)}
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop offset="5%" stopColor={color} stopOpacity={0.25} />
-                              <stop offset="95%" stopColor={color} stopOpacity={0.02} />
-                            </linearGradient>
-                          ))}
-                        </defs>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="hsl(var(--border))"
-                          opacity={0.4}
-                          vertical={false}
-                        />
-                        <XAxis
-                          dataKey="date"
-                          tick={{
-                            fontSize: 11,
-                            fill: 'hsl(var(--muted-foreground))',
-                          }}
-                          tickLine={false}
-                          axisLine={{ stroke: 'hsl(var(--border))' }}
-                          dy={8}
-                        />
-                        <YAxis
-                          tick={{
-                            fontSize: 11,
-                            fill: 'hsl(var(--muted-foreground))',
-                          }}
-                          tickLine={false}
-                          axisLine={false}
-                          width={40}
-                          tickFormatter={(v: number) => `${v > 0 ? '+' : ''}${v}%`}
-                        />
-                        <Tooltip
-                          content={
-                            <EnhancedTooltip
-                              formatter={(value, entry) => {
-                                const pct = Number(value);
-                                const pctStr = `${pct > 0 ? '+' : ''}${pct.toFixed(1)}%`;
-                                if (!entry) return pctStr;
-                                const baseKey = entry.dataKey.replace(
-                                  /_pct$/,
-                                  ''
-                                ) as MetricKey;
-                                const meta = METRIC_META.find((m) => m.key === baseKey);
-                                const raw = entry.payload[baseKey] as
-                                  number | null | undefined;
-                                const rawStr =
-                                  raw !== null && raw !== undefined
-                                    ? `${raw.toFixed(1)}${meta?.unit ? ` ${meta.unit}` : ''}`
-                                    : '—';
-                                return `${rawStr} (${pctStr})`;
+                        }
+                        cursor={{
+                          stroke: 'hsl(var(--muted-foreground))',
+                          strokeWidth: 1,
+                          strokeDasharray: '4 4',
+                        }}
+                      />
+                      {chartMetrics
+                        .filter(({ key }) => activeMetrics.has(key))
+                        .map(({ key, labelKey, color, unit }) => {
+                          const gradIdx = chartMetrics.findIndex((m) => m.key === key);
+                          return (
+                            <Area
+                              key={key}
+                              type="monotone"
+                              dataKey={`${key}_pct`}
+                              stroke={color}
+                              strokeWidth={2.5}
+                              fill={`url(#${getGradientId(gradIdx)})`}
+                              dot={{
+                                r: 3,
+                                strokeWidth: 2,
+                                fill: 'hsl(var(--background))',
+                                stroke: color,
                               }}
+                              activeDot={{
+                                r: 6,
+                                strokeWidth: 2,
+                                fill: color,
+                                stroke: 'hsl(var(--background))',
+                                style: {
+                                  filter: `drop-shadow(0 0 4px ${color})`,
+                                },
+                              }}
+                              connectNulls
+                              animationDuration={600}
+                              animationEasing="ease-out"
+                              name={String(
+                                `${t(`pages.bodyMetrics.${labelKey}`)}${unit ? ` (${unit})` : ''}`
+                              )}
                             />
-                          }
-                          cursor={{
-                            stroke: 'hsl(var(--muted-foreground))',
-                            strokeWidth: 1,
-                            strokeDasharray: '4 4',
-                          }}
-                        />
-                        {chartMetrics
-                          .filter(({ key }) => activeMetrics.has(key))
-                          .map(({ key, labelKey, color, unit }) => {
-                            const gradIdx = chartMetrics.findIndex(
-                              (m) => m.key === key
-                            );
-                            return (
-                              <Area
-                                key={key}
-                                type="monotone"
-                                dataKey={`${key}_pct`}
-                                stroke={color}
-                                strokeWidth={2.5}
-                                fill={`url(#${getGradientId(gradIdx)})`}
-                                dot={{
-                                  r: 3,
-                                  strokeWidth: 2,
-                                  fill: 'hsl(var(--background))',
-                                  stroke: color,
-                                }}
-                                activeDot={{
-                                  r: 6,
-                                  strokeWidth: 2,
-                                  fill: color,
-                                  stroke: 'hsl(var(--background))',
-                                  style: {
-                                    filter: `drop-shadow(0 0 4px ${color})`,
-                                  },
-                                }}
-                                connectNulls
-                                animationDuration={600}
-                                animationEasing="ease-out"
-                                name={String(
-                                  `${t(`pages.bodyMetrics.${labelKey}`)}${unit ? ` (${unit})` : ''}`
-                                )}
+                          );
+                        })}
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+            {(() => {
+              const latestWeight = latest?.weight_kg
+                ? parseFloat(latest.weight_kg)
+                : null;
+              const latestFatPct = latest?.body_fat_pct
+                ? parseFloat(latest.body_fat_pct)
+                : null;
+              const hasComposition = latestWeight !== null && latestFatPct !== null;
+              const fatMassKg = hasComposition
+                ? latestWeight * (latestFatPct / 100)
+                : 0;
+              const leanMassKg = hasComposition ? latestWeight - fatMassKg : 0;
+
+              const pieData = [
+                {
+                  name: t('pages.bodyMetrics.leanMass'),
+                  value: hasComposition
+                    ? parseFloat((100 - latestFatPct).toFixed(1))
+                    : 0,
+                  kg: leanMassKg,
+                  color: semanticColors.success,
+                },
+                {
+                  name: t('pages.bodyMetrics.fatMassKg'),
+                  value: hasComposition ? parseFloat(latestFatPct.toFixed(1)) : 0,
+                  kg: fatMassKg,
+                  color: semanticColors.warning,
+                },
+              ];
+
+              return (
+                <Card>
+                  <CardHeader className="py-md pb-sm">
+                    <CardTitle className="gap-xs flex items-center text-base">
+                      <PieChart className="text-muted-foreground h-4 w-4" />
+                      {t('pages.bodyMetrics.massChartTitle')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {hasComposition ? (
+                      <>
+                        <div className="mb-md gap-xl flex flex-wrap items-center justify-center">
+                          {pieData.map((item) => (
+                            <div key={item.name} className="gap-sm flex items-center">
+                              <span
+                                className="h-8 w-1 rounded-full"
+                                style={{ backgroundColor: item.color }}
                               />
-                            );
-                          })}
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  )}
-                </CardContent>
-              </Card>
-              {(() => {
-                const latestWeight = latest?.weight_kg
-                  ? parseFloat(latest.weight_kg)
-                  : null;
-                const latestFatPct = latest?.body_fat_pct
-                  ? parseFloat(latest.body_fat_pct)
-                  : null;
-                const hasComposition = latestWeight !== null && latestFatPct !== null;
-                const fatMassKg = hasComposition
-                  ? latestWeight * (latestFatPct / 100)
-                  : 0;
-                const leanMassKg = hasComposition ? latestWeight - fatMassKg : 0;
-
-                const pieData = [
-                  {
-                    name: t('pages.bodyMetrics.leanMass'),
-                    value: hasComposition
-                      ? parseFloat((100 - latestFatPct).toFixed(1))
-                      : 0,
-                    kg: leanMassKg,
-                    color: semanticColors.success,
-                  },
-                  {
-                    name: t('pages.bodyMetrics.fatMassKg'),
-                    value: hasComposition ? parseFloat(latestFatPct.toFixed(1)) : 0,
-                    kg: fatMassKg,
-                    color: semanticColors.warning,
-                  },
-                ];
-
-                return (
-                  <Card>
-                    <CardHeader className="py-md pb-sm">
-                      <CardTitle className="gap-xs flex items-center text-base">
-                        <PieChart className="text-muted-foreground h-4 w-4" />
-                        {t('pages.bodyMetrics.massChartTitle')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {hasComposition ? (
-                        <>
-                          <div className="mb-md gap-xl flex flex-wrap items-center justify-center">
-                            {pieData.map((item) => (
-                              <div key={item.name} className="gap-sm flex items-center">
-                                <span
-                                  className="h-8 w-1 rounded-full"
-                                  style={{ backgroundColor: item.color }}
-                                />
-                                <div>
-                                  <p className="text-muted-foreground text-xs">
-                                    {item.name}
-                                  </p>
-                                  <p className="text-foreground text-sm font-bold">
-                                    {item.value.toFixed(1)}% · {item.kg.toFixed(1)} kg
-                                  </p>
-                                </div>
+                              <div>
+                                <p className="text-muted-foreground text-xs">
+                                  {item.name}
+                                </p>
+                                <p className="text-foreground text-sm font-bold">
+                                  {item.value.toFixed(1)}% · {item.kg.toFixed(1)} kg
+                                </p>
                               </div>
-                            ))}
-                          </div>
-                          <EnhancedPieChart
-                            data={pieData}
-                            dataKey="value"
-                            nameKey="name"
-                            colors={pieData.map((d) => d.color)}
-                            formatter={(v) => `${Number(v).toFixed(1)}%`}
-                            showLegend={false}
-                            height={250}
-                          />
-                        </>
-                      ) : (
-                        <EmptyState
-                          title={t('pages.bodyMetrics.noDataForComposition')}
-                          icon={<PieChart />}
+                            </div>
+                          ))}
+                        </div>
+                        <EnhancedPieChart
+                          data={pieData}
+                          dataKey="value"
+                          nameKey="name"
+                          colors={pieData.map((d) => d.color)}
+                          formatter={(v) => `${Number(v).toFixed(1)}%`}
+                          showLegend={false}
+                          height={250}
                         />
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })()}
-            </div>
-          </>
-        )}
+                      </>
+                    ) : (
+                      <EmptyState
+                        title={t('pages.bodyMetrics.noDataForComposition')}
+                        icon={<PieChart />}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })()}
+          </div>
+        </>
+      )}
 
-        {/* ── Dialog de formulário ── */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle mode="create">
+      {/* ── Dialog de formulário ── */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle mode="create">
+              {recalcMode
+                ? t('pages.bodyMetrics.recalcTitle')
+                : t('pages.bodyMetrics.newTitle')}
+            </DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>
                 {recalcMode
-                  ? t('pages.bodyMetrics.recalcTitle')
-                  : t('pages.bodyMetrics.newTitle')}
-              </DialogTitle>
-              <VisuallyHidden>
-                <DialogDescription>
-                  {recalcMode
-                    ? t('pages.bodyMetrics.recalcDesc')
-                    : t('pages.bodyMetrics.newDesc')}
-                </DialogDescription>
-              </VisuallyHidden>
-            </DialogHeader>
+                  ? t('pages.bodyMetrics.recalcDesc')
+                  : t('pages.bodyMetrics.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
+          </DialogHeader>
 
-            <form noValidate onSubmit={handleSubmit} className="space-y-md">
-              {recalcMode && age === null && (
-                <p className="text-warning bg-warning/10 px-md py-sm rounded-md text-xs font-medium">
+          <form noValidate onSubmit={handleSubmit} className="space-y-md">
+            {recalcMode && age === null && (
+              <p className="text-warning bg-warning/10 px-md py-sm rounded-md text-xs font-medium">
+                {t('pages.bodyMetrics.pollockMissingBirthDate')}
+              </p>
+            )}
+
+            <div className="space-y-xs">
+              <Label className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.bodyMetrics.measuredAt')}
+              </Label>
+              <DatePicker
+                value={form.measured_at}
+                onChange={(d) => setForm((f) => ({ ...f, measured_at: d }))}
+                aria-invalid={!form.measured_at}
+              />
+            </div>
+
+            {/* ── Peso e Altura → IMC ── */}
+            <FormSection title={t('pages.bodyMetrics.sectionWeightHeight')}>
+              <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Scale className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.weight')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="kg"
+                    aria-label={t('pages.bodyMetrics.weight')}
+                    placeholder={placeholderFor('weight_kg', 'Ex.: 75,5')}
+                    value={form.weight_kg}
+                    onChange={setNumber('weight_kg')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.height')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.height')}
+                    placeholder={placeholderFor('height_cm', 'Ex.: 175')}
+                    value={form.height_cm}
+                    onChange={setNumber('height_cm')}
+                  />
+                </div>
+              </div>
+            </FormSection>
+
+            {/* ── Perimetria (circunferências) ── */}
+            <FormSection title={t('pages.bodyMetrics.sectionPerimetry')} icon={Ruler}>
+              <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.neck')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.neck')}
+                    placeholder={placeholderFor('neck_cm', 'Ex.: 38')}
+                    value={form.neck_cm}
+                    onChange={setNumber('neck_cm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.shoulders')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.shoulders')}
+                    placeholder={placeholderFor('shoulders_cm')}
+                    value={form.shoulders_cm}
+                    onChange={setNumber('shoulders_cm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.chest')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.chest')}
+                    placeholder={placeholderFor('chest_cm')}
+                    value={form.chest_cm}
+                    onChange={setNumber('chest_cm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.abdomen')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.abdomen')}
+                    placeholder={placeholderFor('abdomen_cm')}
+                    value={form.abdomen_cm}
+                    onChange={setNumber('abdomen_cm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.waist')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.waist')}
+                    placeholder={placeholderFor('waist_cm', 'Ex.: 80')}
+                    value={form.waist_cm}
+                    onChange={setNumber('waist_cm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.hip')}
+                    {sex === 'F' && (
+                      <span className="ml-xs text-muted-foreground text-xs">*</span>
+                    )}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.hip')}
+                    placeholder={placeholderFor('hip_cm', 'Ex.: 95')}
+                    value={form.hip_cm}
+                    onChange={setNumber('hip_cm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.armLeft')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.armLeft')}
+                    placeholder={placeholderFor('arm_left_cm')}
+                    value={form.arm_left_cm}
+                    onChange={setNumber('arm_left_cm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.armRight')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.armRight')}
+                    placeholder={placeholderFor('arm_right_cm')}
+                    value={form.arm_right_cm}
+                    onChange={setNumber('arm_right_cm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.thighLeft')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.thighLeft')}
+                    placeholder={placeholderFor('thigh_left_cm')}
+                    value={form.thigh_left_cm}
+                    onChange={setNumber('thigh_left_cm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.thighRight')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.thighRight')}
+                    placeholder={placeholderFor('thigh_right_cm')}
+                    value={form.thigh_right_cm}
+                    onChange={setNumber('thigh_right_cm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.calfLeft')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.calfLeft')}
+                    placeholder={placeholderFor('calf_left_cm')}
+                    value={form.calf_left_cm}
+                    onChange={setNumber('calf_left_cm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Ruler className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.calfRight')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="cm"
+                    aria-label={t('pages.bodyMetrics.calfRight')}
+                    placeholder={placeholderFor('calf_right_cm')}
+                    value={form.calf_right_cm}
+                    onChange={setNumber('calf_right_cm')}
+                  />
+                </div>
+              </div>
+            </FormSection>
+
+            {/* ── Dobras Cutâneas → Gordura Corporal (Método Pollock 7 Dobras) ── */}
+            <FormSection title={t('pages.bodyMetrics.sectionSkinfolds')} icon={Layers}>
+              <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.skinfoldTriceps')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="mm"
+                    aria-label={t('pages.bodyMetrics.skinfoldTriceps')}
+                    placeholder={placeholderFor('skinfold_triceps_mm')}
+                    value={form.skinfold_triceps_mm}
+                    onChange={setNumber('skinfold_triceps_mm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.skinfoldSubscapular')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="mm"
+                    aria-label={t('pages.bodyMetrics.skinfoldSubscapular')}
+                    placeholder={placeholderFor('skinfold_subscapular_mm')}
+                    value={form.skinfold_subscapular_mm}
+                    onChange={setNumber('skinfold_subscapular_mm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.skinfoldSuprailiac')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="mm"
+                    aria-label={t('pages.bodyMetrics.skinfoldSuprailiac')}
+                    placeholder={placeholderFor('skinfold_suprailiac_mm')}
+                    value={form.skinfold_suprailiac_mm}
+                    onChange={setNumber('skinfold_suprailiac_mm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.skinfoldChest')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="mm"
+                    aria-label={t('pages.bodyMetrics.skinfoldChest')}
+                    placeholder={placeholderFor('skinfold_chest_mm')}
+                    value={form.skinfold_chest_mm}
+                    onChange={setNumber('skinfold_chest_mm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.skinfoldMidaxillary')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="mm"
+                    aria-label={t('pages.bodyMetrics.skinfoldMidaxillary')}
+                    placeholder={placeholderFor('skinfold_midaxillary_mm')}
+                    value={form.skinfold_midaxillary_mm}
+                    onChange={setNumber('skinfold_midaxillary_mm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.skinfoldAbdominal')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="mm"
+                    aria-label={t('pages.bodyMetrics.skinfoldAbdominal')}
+                    placeholder={placeholderFor('skinfold_abdominal_mm')}
+                    value={form.skinfold_abdominal_mm}
+                    onChange={setNumber('skinfold_abdominal_mm')}
+                  />
+                </div>
+                <div className="space-y-xs">
+                  <Label className="gap-xs flex items-center">
+                    <Pipette className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.bodyMetrics.skinfoldThigh')}
+                  </Label>
+                  <DecimalInput
+                    decimals={1}
+                    unit="mm"
+                    aria-label={t('pages.bodyMetrics.skinfoldThigh')}
+                    placeholder={placeholderFor('skinfold_thigh_mm')}
+                    value={form.skinfold_thigh_mm}
+                    onChange={setNumber('skinfold_thigh_mm')}
+                  />
+                </div>
+              </div>
+
+              {hasAllSkinfolds && age === null ? (
+                <p className="mt-sm text-warning bg-warning/10 px-md py-sm rounded-md text-xs font-medium">
                   {t('pages.bodyMetrics.pollockMissingBirthDate')}
                 </p>
-              )}
+              ) : liveBodyFat === null &&
+                skinfoldValues.some((v) => v > 0) &&
+                !hasAllSkinfolds ? (
+                <p className="mt-sm text-muted-foreground text-xs">
+                  {t('pages.bodyMetrics.pollockMethodIncomplete')}
+                </p>
+              ) : liveBodyFat === null && (liveWaist > 0 || liveNeck > 0) ? (
+                <p className="mt-sm text-muted-foreground text-xs">
+                  {t('pages.bodyMetrics.navyMethodIncomplete')}
+                </p>
+              ) : null}
+            </FormSection>
 
-              <div className="space-y-xs">
-                <Label className="gap-xs flex items-center">
-                  <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.bodyMetrics.measuredAt')}
-                </Label>
-                <DatePicker
-                  value={form.measured_at}
-                  onChange={(d) => setForm((f) => ({ ...f, measured_at: d }))}
-                  aria-invalid={!form.measured_at}
-                />
-              </div>
-
-              {/* ── Peso e Altura → IMC ── */}
-              <FormSection title={t('pages.bodyMetrics.sectionWeightHeight')}>
-                <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Scale className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.weight')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="kg"
-                      aria-label={t('pages.bodyMetrics.weight')}
-                      placeholder={placeholderFor('weight_kg', 'Ex.: 75,5')}
-                      value={form.weight_kg}
-                      onChange={setNumber('weight_kg')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.height')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.height')}
-                      placeholder={placeholderFor('height_cm', 'Ex.: 175')}
-                      value={form.height_cm}
-                      onChange={setNumber('height_cm')}
-                    />
-                  </div>
-                </div>
-              </FormSection>
-
-              {/* ── Perimetria (circunferências) ── */}
-              <FormSection title={t('pages.bodyMetrics.sectionPerimetry')} icon={Ruler}>
-                <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.neck')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.neck')}
-                      placeholder={placeholderFor('neck_cm', 'Ex.: 38')}
-                      value={form.neck_cm}
-                      onChange={setNumber('neck_cm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.shoulders')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.shoulders')}
-                      placeholder={placeholderFor('shoulders_cm')}
-                      value={form.shoulders_cm}
-                      onChange={setNumber('shoulders_cm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.chest')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.chest')}
-                      placeholder={placeholderFor('chest_cm')}
-                      value={form.chest_cm}
-                      onChange={setNumber('chest_cm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.abdomen')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.abdomen')}
-                      placeholder={placeholderFor('abdomen_cm')}
-                      value={form.abdomen_cm}
-                      onChange={setNumber('abdomen_cm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.waist')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.waist')}
-                      placeholder={placeholderFor('waist_cm', 'Ex.: 80')}
-                      value={form.waist_cm}
-                      onChange={setNumber('waist_cm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.hip')}
-                      {sex === 'F' && (
-                        <span className="ml-xs text-muted-foreground text-xs">*</span>
-                      )}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.hip')}
-                      placeholder={placeholderFor('hip_cm', 'Ex.: 95')}
-                      value={form.hip_cm}
-                      onChange={setNumber('hip_cm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.armLeft')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.armLeft')}
-                      placeholder={placeholderFor('arm_left_cm')}
-                      value={form.arm_left_cm}
-                      onChange={setNumber('arm_left_cm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.armRight')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.armRight')}
-                      placeholder={placeholderFor('arm_right_cm')}
-                      value={form.arm_right_cm}
-                      onChange={setNumber('arm_right_cm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.thighLeft')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.thighLeft')}
-                      placeholder={placeholderFor('thigh_left_cm')}
-                      value={form.thigh_left_cm}
-                      onChange={setNumber('thigh_left_cm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.thighRight')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.thighRight')}
-                      placeholder={placeholderFor('thigh_right_cm')}
-                      value={form.thigh_right_cm}
-                      onChange={setNumber('thigh_right_cm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.calfLeft')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.calfLeft')}
-                      placeholder={placeholderFor('calf_left_cm')}
-                      value={form.calf_left_cm}
-                      onChange={setNumber('calf_left_cm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Ruler className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.calfRight')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="cm"
-                      aria-label={t('pages.bodyMetrics.calfRight')}
-                      placeholder={placeholderFor('calf_right_cm')}
-                      value={form.calf_right_cm}
-                      onChange={setNumber('calf_right_cm')}
-                    />
-                  </div>
-                </div>
-              </FormSection>
-
-              {/* ── Dobras Cutâneas → Gordura Corporal (Método Pollock 7 Dobras) ── */}
-              <FormSection
-                title={t('pages.bodyMetrics.sectionSkinfolds')}
-                icon={Layers}
+            <div className="dialog-footer gap-sm pt-sm flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
               >
-                <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.skinfoldTriceps')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="mm"
-                      aria-label={t('pages.bodyMetrics.skinfoldTriceps')}
-                      placeholder={placeholderFor('skinfold_triceps_mm')}
-                      value={form.skinfold_triceps_mm}
-                      onChange={setNumber('skinfold_triceps_mm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.skinfoldSubscapular')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="mm"
-                      aria-label={t('pages.bodyMetrics.skinfoldSubscapular')}
-                      placeholder={placeholderFor('skinfold_subscapular_mm')}
-                      value={form.skinfold_subscapular_mm}
-                      onChange={setNumber('skinfold_subscapular_mm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.skinfoldSuprailiac')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="mm"
-                      aria-label={t('pages.bodyMetrics.skinfoldSuprailiac')}
-                      placeholder={placeholderFor('skinfold_suprailiac_mm')}
-                      value={form.skinfold_suprailiac_mm}
-                      onChange={setNumber('skinfold_suprailiac_mm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.skinfoldChest')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="mm"
-                      aria-label={t('pages.bodyMetrics.skinfoldChest')}
-                      placeholder={placeholderFor('skinfold_chest_mm')}
-                      value={form.skinfold_chest_mm}
-                      onChange={setNumber('skinfold_chest_mm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.skinfoldMidaxillary')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="mm"
-                      aria-label={t('pages.bodyMetrics.skinfoldMidaxillary')}
-                      placeholder={placeholderFor('skinfold_midaxillary_mm')}
-                      value={form.skinfold_midaxillary_mm}
-                      onChange={setNumber('skinfold_midaxillary_mm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.skinfoldAbdominal')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="mm"
-                      aria-label={t('pages.bodyMetrics.skinfoldAbdominal')}
-                      placeholder={placeholderFor('skinfold_abdominal_mm')}
-                      value={form.skinfold_abdominal_mm}
-                      onChange={setNumber('skinfold_abdominal_mm')}
-                    />
-                  </div>
-                  <div className="space-y-xs">
-                    <Label className="gap-xs flex items-center">
-                      <Pipette className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.bodyMetrics.skinfoldThigh')}
-                    </Label>
-                    <DecimalInput
-                      decimals={1}
-                      unit="mm"
-                      aria-label={t('pages.bodyMetrics.skinfoldThigh')}
-                      placeholder={placeholderFor('skinfold_thigh_mm')}
-                      value={form.skinfold_thigh_mm}
-                      onChange={setNumber('skinfold_thigh_mm')}
-                    />
-                  </div>
-                </div>
-
-                {hasAllSkinfolds && age === null ? (
-                  <p className="mt-sm text-warning bg-warning/10 px-md py-sm rounded-md text-xs font-medium">
-                    {t('pages.bodyMetrics.pollockMissingBirthDate')}
-                  </p>
-                ) : liveBodyFat === null &&
-                  skinfoldValues.some((v) => v > 0) &&
-                  !hasAllSkinfolds ? (
-                  <p className="mt-sm text-muted-foreground text-xs">
-                    {t('pages.bodyMetrics.pollockMethodIncomplete')}
-                  </p>
-                ) : liveBodyFat === null && (liveWaist > 0 || liveNeck > 0) ? (
-                  <p className="mt-sm text-muted-foreground text-xs">
-                    {t('pages.bodyMetrics.navyMethodIncomplete')}
-                  </p>
-                ) : null}
-              </FormSection>
-
-              <div className="dialog-footer gap-sm pt-sm flex justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                  {t('common.actions.cancel')}
-                </Button>
-                <Button type="submit" loading={isSaving}>
-                  {!isSaving && <Save className="h-4 w-4" />}
-                  {isSaving ? t('common.actions.saving') : t('common.actions.save')}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </PageContainer>
-    </AnimatedPage>
+                <X className="h-4 w-4" />
+                {t('common.actions.cancel')}
+              </Button>
+              <Button type="submit" loading={isSaving}>
+                {!isSaving && <Save className="h-4 w-4" />}
+                {isSaving ? t('common.actions.saving') : t('common.actions.save')}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </PageContainer>
   );
 }

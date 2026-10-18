@@ -248,7 +248,7 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
       {/* Floating trigger */}
       <div
         className={cn(
-          'gap-sm fixed right-6 bottom-6 z-40 flex flex-col items-end transition-all',
+          'gap-sm fixed right-6 bottom-6 z-40 flex flex-col items-end transition',
           // Fica fora do caminho quando o mouse está perto da paginação de
           // uma lista (ver stores/agent-widget-store.ts), exceto com o
           // painel aberto.

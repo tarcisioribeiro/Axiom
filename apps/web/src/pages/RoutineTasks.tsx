@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   CheckSquare,
   CircleDot,
+  Download,
   Edit,
   Flag,
   LayoutList,
@@ -21,6 +22,7 @@ import { type z } from 'zod';
 
 import { Can } from '@/components/common/Can';
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { ExportModal } from '@/components/common/ExportModal';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -62,7 +64,10 @@ import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { type routineTaskSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
-import { routineTasksService } from '@/services/routine-tasks-service';
+import {
+  routineTasksService,
+  type RoutineTaskExportParams,
+} from '@/services/routine-tasks-service';
 import { TASK_CATEGORIES, type RoutineTask } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -95,6 +100,7 @@ export default function RoutineTasks({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [heatmapTask, setHeatmapTask] = useState<RoutineTask | null>(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useTabRoute(
     '/planning/tasks-goals/routine',
     ROUTINE_TABS,
@@ -162,6 +168,28 @@ export default function RoutineTasks({
     } catch (error: unknown) {
       toast({
         title: t('pages.routineTasks.deleteError', { reason: getErrorMessage(error) }),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExport = async (modalParams: { export_format: 'csv' | 'pdf' }) => {
+    const exportParams: RoutineTaskExportParams = {
+      export_format: modalParams.export_format,
+      category: categoryFilter !== 'all' ? categoryFilter : undefined,
+      status:
+        statusFilter !== 'all' ? (statusFilter as 'active' | 'inactive') : undefined,
+      priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+    };
+    try {
+      await routineTasksService.exportTasks(exportParams);
+      toast({
+        title: t('common.messages.exportSuccess'),
+        description: t('common.messages.exportSuccessDesc'),
+      });
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.exportError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -421,21 +449,35 @@ export default function RoutineTasks({
 
   const header = (
     <PageHeader title={t('pages.routineTasks.title')} icon={<CheckSquare />}>
-      <Can action="add">
-        <Button
-          onClick={
-            activeTab === 'tasks'
-              ? handleCreate
-              : () => focusBlocksRef.current?.create()
-          }
-          className="gap-sm"
-        >
-          <Plus className="h-4 w-4" />
-          {activeTab === 'tasks'
-            ? t('pages.routineTasks.newBtn')
-            : t('pages.routineTasks.focusBlocks.newBlock')}
-        </Button>
-      </Can>
+      <div className="gap-sm flex items-center">
+        {activeTab === 'tasks' && (
+          <Can action="export">
+            <Button
+              variant="outline"
+              onClick={() => setIsExportModalOpen(true)}
+              className="gap-sm"
+            >
+              <Download className="h-4 w-4" />
+              {t('common.actions.export')}
+            </Button>
+          </Can>
+        )}
+        <Can action="add">
+          <Button
+            onClick={
+              activeTab === 'tasks'
+                ? handleCreate
+                : () => focusBlocksRef.current?.create()
+            }
+            className="gap-sm"
+          >
+            <Plus className="h-4 w-4" />
+            {activeTab === 'tasks'
+              ? t('pages.routineTasks.newBtn')
+              : t('pages.routineTasks.focusBlocks.newBlock')}
+          </Button>
+        </Can>
+      </div>
     </PageHeader>
   );
 
@@ -733,6 +775,13 @@ export default function RoutineTasks({
           <DialogCloseFooter />
         </DialogContent>
       </Dialog>
+
+      <ExportModal
+        open={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        title={t('pages.routineTasks.exportTitle')}
+        onExport={handleExport}
+      />
     </Wrapper>
   );
 }

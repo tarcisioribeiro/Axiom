@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 
+import { DURATION } from '@/lib/animations/transitions';
+
 interface CircularProgressProps {
   value: number; // 0-100
   size?: number;
@@ -51,7 +53,7 @@ export function CircularProgress({
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
+          transition={{ duration: DURATION.slow, ease: 'easeOut' }}
         />
       </svg>
       {children && (

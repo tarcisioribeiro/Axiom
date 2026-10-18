@@ -141,6 +141,7 @@ export const API_CONFIG = {
     // Personal Planning Module
     GOALS: '/api/v1/personal-planning/goals/',
     ROUTINE_TASKS: '/api/v1/personal-planning/routine-tasks/',
+    ROUTINE_TASKS_EXPORT: '/api/v1/personal-planning/routine-tasks/export/',
     ROUTINE_TASK_HEATMAP: '/api/v1/personal-planning/routine-tasks/heatmap/',
     FOCUS_BLOCKS: '/api/v1/personal-planning/focus-blocks/',
     FOCUS_BLOCK_TASKS: '/api/v1/personal-planning/focus-block-tasks/',

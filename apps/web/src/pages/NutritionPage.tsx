@@ -23,7 +23,6 @@ import {
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar, FilterField } from '@/components/common/FilterBar';
@@ -560,504 +559,495 @@ export default function NutritionPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <AnimatedPage>
-      <PageContainer>
-        <PageHeader
-          title={t(TAB_HEADERS[activeTab].titleKey)}
-          icon={TAB_HEADERS[activeTab].icon}
-          actions={
-            activeTab === 'meal-types' ? (
-              <Can action="add">
-                <Button
-                  disabled={mealTypes.length >= MAX_MEAL_TYPES}
-                  onClick={() => setDialog({ type: 'new-meal-type' })}
-                >
-                  <Plus className="h-4 w-4" />
-                  {t('pages.nutritionMealTypes.newMealTypeBtn')}
-                </Button>
-              </Can>
-            ) : activeTab === 'foods' ? (
-              <Can action="add">
-                <Button onClick={() => setDialog({ type: 'new-food' })}>
-                  <Plus className="h-4 w-4" />
-                  {t('pages.nutritionFoods.newFoodBtn')}
-                </Button>
-              </Can>
-            ) : undefined
-          }
-        />
+    <PageContainer>
+      <PageHeader
+        title={t(TAB_HEADERS[activeTab].titleKey)}
+        icon={TAB_HEADERS[activeTab].icon}
+        actions={
+          activeTab === 'meal-types' ? (
+            <Can action="add">
+              <Button
+                disabled={mealTypes.length >= MAX_MEAL_TYPES}
+                onClick={() => setDialog({ type: 'new-meal-type' })}
+              >
+                <Plus className="h-4 w-4" />
+                {t('pages.nutritionMealTypes.newMealTypeBtn')}
+              </Button>
+            </Can>
+          ) : activeTab === 'foods' ? (
+            <Can action="add">
+              <Button onClick={() => setDialog({ type: 'new-food' })}>
+                <Plus className="h-4 w-4" />
+                {t('pages.nutritionFoods.newFoodBtn')}
+              </Button>
+            </Can>
+          ) : undefined
+        }
+      />
 
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
-          className="flex flex-1 flex-col"
-        >
-          <TabsList className="mb-lg w-full">
-            <TabsTrigger value="log" className="gap-xs flex-1">
-              <CalendarDays className="h-4 w-4" />
-              {t('pages.nutritionFoods.tabLog')}
-            </TabsTrigger>
-            <TabsTrigger value="meal-types" className="gap-xs flex-1">
-              <UtensilsCrossed className="h-4 w-4" />
-              {t('pages.nutritionFoods.tabMealTypes')}
-            </TabsTrigger>
-            <TabsTrigger value="foods" className="gap-xs flex-1">
-              <Salad className="h-4 w-4" />
-              {t('pages.nutritionFoods.tabFoods')}
-            </TabsTrigger>
-          </TabsList>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
+        className="flex flex-1 flex-col"
+      >
+        <TabsList className="mb-lg w-full">
+          <TabsTrigger value="log" className="gap-xs flex-1">
+            <CalendarDays className="h-4 w-4" />
+            {t('pages.nutritionFoods.tabLog')}
+          </TabsTrigger>
+          <TabsTrigger value="meal-types" className="gap-xs flex-1">
+            <UtensilsCrossed className="h-4 w-4" />
+            {t('pages.nutritionFoods.tabMealTypes')}
+          </TabsTrigger>
+          <TabsTrigger value="foods" className="gap-xs flex-1">
+            <Salad className="h-4 w-4" />
+            {t('pages.nutritionFoods.tabFoods')}
+          </TabsTrigger>
+        </TabsList>
 
-          {/* ── Diário ───────────────────────────────────────────────────── */}
-          <TabsContent value="log" className="mt-0 flex-1">
-            <div className="mb-lg">
-              {/* Header card com aderência */}
-              <div className="border-border bg-card overflow-hidden rounded-lg border">
-                <div className="gap-md px-lg py-md flex items-center justify-between">
-                  <div className="min-w-0">
-                    <div className="gap-sm flex flex-wrap items-center">
-                      <p className="text-muted-foreground text-sm font-medium capitalize">
-                        {selectedDateLabel}
-                      </p>
-                      <div className="gap-sm flex items-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigateDay(-1)}
-                          title={t('pages.nutritionLog.prevDay')}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <div className="w-44">
-                          <DatePicker
-                            value={selectedDate}
-                            onChange={(v) =>
-                              setSelectedDate(v ? formatLocalDate(v) : today)
-                            }
-                            placeholder={t('pages.nutritionLog.selectDate')}
-                            maxDate={today}
-                          />
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigateDay(1)}
-                          disabled={selectedDate >= today}
-                          title={t('pages.nutritionLog.nextDay')}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="mt-xs gap-xs flex items-baseline">
-                      <span className="text-category-nutrition text-4xl font-bold tabular-nums">
-                        {selectedLogs.length}
-                      </span>
-                      <span className="text-muted-foreground text-xl">
-                        / {activeMealTypes.length}
-                      </span>
-                    </div>
-                    <p className="mt-xs text-muted-foreground text-sm">
-                      {t('pages.nutritionLog.mealsLogged', {
-                        logged: selectedLogs.length,
-                        total: activeMealTypes.length,
-                      })}
+        {/* ── Diário ───────────────────────────────────────────────────── */}
+        <TabsContent value="log" className="mt-0 flex-1">
+          <div className="mb-lg">
+            {/* Header card com aderência */}
+            <div className="border-border bg-card overflow-hidden rounded-lg border">
+              <div className="gap-md px-lg py-md flex items-center justify-between">
+                <div className="min-w-0">
+                  <div className="gap-sm flex flex-wrap items-center">
+                    <p className="text-muted-foreground text-sm font-medium capitalize">
+                      {selectedDateLabel}
                     </p>
-                  </div>
-
-                  <div className="gap-md flex shrink-0 items-center">
-                    <div className="text-right">
-                      <span className="text-warning inline-flex items-center gap-0.5 text-2xl font-bold tabular-nums">
-                        <Flame className="h-5 w-5" />
-                        {dayCalories}
-                      </span>
-                      <p className="text-muted-foreground text-xs">kcal</p>
-                    </div>
-                    <WaterTotal date={selectedDate} />
-
-                    {/* Circular progress */}
-                    {activeMealTypes.length > 0 && (
-                      <div className="relative shrink-0">
-                        <svg
-                          width="80"
-                          height="80"
-                          viewBox="0 0 80 80"
-                          className="-rotate-90"
-                        >
-                          <circle
-                            cx="40"
-                            cy="40"
-                            r={RADIUS}
-                            fill="none"
-                            strokeWidth="7"
-                            className="stroke-muted"
-                          />
-                          <circle
-                            cx="40"
-                            cy="40"
-                            r={RADIUS}
-                            fill="none"
-                            strokeWidth="7"
-                            strokeLinecap="round"
-                            className="stroke-category-nutrition duration-slow transition"
-                            strokeDasharray={CIRC}
-                            strokeDashoffset={dashOffset}
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-category-nutrition text-sm font-bold">
-                            {adherencePct}%
-                          </span>
-                        </div>
+                    <div className="gap-sm flex items-center">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigateDay(-1)}
+                        title={t('pages.nutritionLog.prevDay')}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <div className="w-44">
+                        <DatePicker
+                          value={selectedDate}
+                          onChange={(v) =>
+                            setSelectedDate(v ? formatLocalDate(v) : today)
+                          }
+                          placeholder={t('pages.nutritionLog.selectDate')}
+                          maxDate={today}
+                        />
                       </div>
-                    )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigateDay(1)}
+                        disabled={selectedDate >= today}
+                        title={t('pages.nutritionLog.nextDay')}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
+                  <div className="mt-xs gap-xs flex items-baseline">
+                    <span className="text-category-nutrition text-4xl font-bold tabular-nums">
+                      {selectedLogs.length}
+                    </span>
+                    <span className="text-muted-foreground text-xl">
+                      / {activeMealTypes.length}
+                    </span>
+                  </div>
+                  <p className="mt-xs text-muted-foreground text-sm">
+                    {t('pages.nutritionLog.mealsLogged', {
+                      logged: selectedLogs.length,
+                      total: activeMealTypes.length,
+                    })}
+                  </p>
+                </div>
+
+                <div className="gap-md flex shrink-0 items-center">
+                  <div className="text-right">
+                    <span className="text-warning inline-flex items-center gap-0.5 text-2xl font-bold tabular-nums">
+                      <Flame className="h-5 w-5" />
+                      {dayCalories}
+                    </span>
+                    <p className="text-muted-foreground text-xs">kcal</p>
+                  </div>
+                  <WaterTotal date={selectedDate} />
+
+                  {/* Circular progress */}
+                  {activeMealTypes.length > 0 && (
+                    <div className="relative shrink-0">
+                      <svg
+                        width="80"
+                        height="80"
+                        viewBox="0 0 80 80"
+                        className="-rotate-90"
+                      >
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r={RADIUS}
+                          fill="none"
+                          strokeWidth="7"
+                          className="stroke-muted"
+                        />
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r={RADIUS}
+                          fill="none"
+                          strokeWidth="7"
+                          strokeLinecap="round"
+                          className="stroke-category-nutrition duration-slow transition"
+                          strokeDasharray={CIRC}
+                          strokeDashoffset={dashOffset}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-category-nutrition text-sm font-bold">
+                          {adherencePct}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="gap-lg grid items-start lg:grid-cols-2">
-              <WaterLogPanel date={selectedDate} />
+          <div className="gap-lg grid items-start lg:grid-cols-2">
+            <WaterLogPanel date={selectedDate} />
 
-              {logsLoading ? (
-                <LoadingState />
-              ) : (
-                <MealTimeline
-                  mealTypes={activeMealTypes}
-                  logs={selectedLogs}
-                  onEdit={(log) => setDialog({ type: 'edit-log', log })}
-                  onDelete={async (log) => {
-                    const ok = await showConfirm({
-                      title: t('pages.nutritionLog.deleteLogTitle'),
-                      description: t('pages.nutritionLog.deleteLogDesc'),
-                    });
-                    if (ok) deleteLogMutation.mutate(log.id);
-                  }}
-                  onRegister={(mealTypeId) =>
-                    setDialog({ type: 'new-log', prefillMealType: mealTypeId })
-                  }
-                  t={t}
-                />
-              )}
-            </div>
-          </TabsContent>
-
-          {/* ── Plano Alimentar ──────────────────────────────────────────── */}
-          <TabsContent value="meal-types" className="mt-0 flex-1">
-            <div className="gap-lg grid items-start lg:grid-cols-2">
-              <HydrationGoalCard />
-              <div>
-                <FilterBar
-                  className="mb-lg"
-                  hasActiveFilters={hasMealTypeFilters}
-                  onClear={() => {
-                    setMealTypeSearch('');
-                    setMealTypeStatusFilter('all');
-                  }}
-                  activeFilters={[
-                    ...(mealTypeStatusFilter !== 'all'
-                      ? [
-                          {
-                            key: 'status',
-                            label: `${t('common.fields.status')}: ${
-                              mealTypeStatusFilter === 'active'
-                                ? t('pages.nutritionMealTypes.active')
-                                : t('pages.nutritionMealTypes.inactive')
-                            }`,
-                            onRemove: () => setMealTypeStatusFilter('all'),
-                          },
-                        ]
-                      : []),
-                  ]}
-                >
-                  <FilterField label={t('common.filterLabels.search')} icon={Search}>
-                    <SearchInput
-                      placeholder={t('pages.nutritionMealTypes.searchPlaceholder')}
-                      value={mealTypeSearch}
-                      onValueChange={setMealTypeSearch}
-                    />
-                  </FilterField>
-                  <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
-                    <Select
-                      value={mealTypeStatusFilter}
-                      onValueChange={setMealTypeStatusFilter}
-                    >
-                      <SelectTrigger
-                        className="w-36"
-                        aria-label={t('pages.nutritionMealTypes.allStatus')}
-                        startIcon={<CircleDot className="h-3.5 w-3.5" />}
-                      >
-                        <SelectValue
-                          placeholder={t('pages.nutritionMealTypes.allStatus')}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          {t('pages.nutritionMealTypes.allStatus')}
-                        </SelectItem>
-                        <SelectItem
-                          value="active"
-                          icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
-                        >
-                          {t('pages.nutritionMealTypes.active')}
-                        </SelectItem>
-                        <SelectItem
-                          value="inactive"
-                          icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
-                        >
-                          {t('pages.nutritionMealTypes.inactive')}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FilterField>
-                </FilterBar>
-
-                {mealTypesLoading ? (
-                  <LoadingState />
-                ) : filteredMealTypes.length === 0 ? (
-                  <EmptyState
-                    title={t('pages.nutritionMealTypes.emptyMealTypes')}
-                    icon={<UtensilsCrossed className="h-8 w-8" />}
-                  />
-                ) : (
-                  <div className="space-y-sm">
-                    {filteredMealTypes.map((mt) => (
-                      <MealTypeCard
-                        key={mt.id}
-                        mealType={mt}
-                        onOpenOptions={() => setOptionsMealTypeId(mt.id)}
-                        onEdit={() =>
-                          setDialog({ type: 'edit-meal-type', mealType: mt })
-                        }
-                        onDelete={async () => {
-                          const ok = await showConfirm({
-                            title: t('pages.nutritionMealTypes.deleteMealTypeTitle'),
-                            description: t(
-                              'pages.nutritionMealTypes.deleteMealTypeDesc'
-                            ),
-                          });
-                          if (ok) deleteMealTypeMutation.mutate(mt.id);
-                        }}
-                        t={t}
-                      />
-                    ))}
-                  </div>
-                )}
-                {mealTypes.length >= MAX_MEAL_TYPES && (
-                  <p className="text-muted-foreground mt-sm text-xs">
-                    {t('pages.nutritionMealTypes.limitReached', {
-                      max: MAX_MEAL_TYPES,
-                    })}
-                  </p>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* ── Alimentos ────────────────────────────────────────────────── */}
-          <TabsContent value="foods" className="mt-0 flex-1">
-            <FilterBar
-              className="mb-lg"
-              hasActiveFilters={!!foodSearch}
-              onClear={() => setFoodSearch('')}
-            >
-              <FilterField label={t('common.filterLabels.search')} icon={Search}>
-                <SearchInput
-                  placeholder={t('pages.nutritionFoods.searchPlaceholder')}
-                  value={foodSearch}
-                  onValueChange={setFoodSearch}
-                />
-              </FilterField>
-            </FilterBar>
-
-            {foodsLoading ? (
+            {logsLoading ? (
               <LoadingState />
-            ) : filteredFoods.length === 0 ? (
-              <EmptyState
-                title={t('pages.nutritionFoods.emptyFoods')}
-                icon={<Salad className="h-8 w-8" />}
-              />
             ) : (
-              <PaginatedSlide
-                key={foodSearch}
-                items={filteredFoods}
-                pageSize={GRID_PAGE_SIZE}
-                centerList
-                className="gap-sm grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-              >
-                {(pageFoods) =>
-                  pageFoods.map((food) => (
-                    <FoodCard
-                      key={food.id}
-                      food={food}
-                      onEdit={() => setDialog({ type: 'edit-food', food })}
-                      onDelete={async () => {
-                        const ok = await showConfirm({
-                          title: t('pages.nutritionFoods.deleteFoodTitle'),
-                          description: t('pages.nutritionFoods.deleteFoodDesc'),
-                        });
-                        if (ok) deleteFoodMutation.mutate(food.id);
-                      }}
-                    />
-                  ))
-                }
-              </PaginatedSlide>
-            )}
-          </TabsContent>
-        </Tabs>
-
-        {/* ── Dialog ────────────────────────────────────────────────────── */}
-        <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
-          <DialogContent
-            className={cn('max-w-xl', dialog?.type.endsWith('option') && 'max-w-5xl')}
-          >
-            <DialogHeader>
-              <DialogTitle mode={dialog?.type.startsWith('edit') ? 'edit' : 'create'}>
-                {dialogTitle()}
-              </DialogTitle>
-              <DialogDescription className="sr-only">{dialogDesc()}</DialogDescription>
-            </DialogHeader>
-
-            {(dialog?.type === 'new-food' || dialog?.type === 'edit-food') && (
-              <FoodForm
-                food={dialog.type === 'edit-food' ? dialog.food : undefined}
-                ownerId={ownerId}
-                onSubmit={async (data) => {
-                  if (dialog.type === 'edit-food') {
-                    await updateFoodMutation.mutateAsync({ id: dialog.food.id, data });
-                  } else {
-                    await createFoodMutation.mutateAsync(data);
-                  }
+              <MealTimeline
+                mealTypes={activeMealTypes}
+                logs={selectedLogs}
+                onEdit={(log) => setDialog({ type: 'edit-log', log })}
+                onDelete={async (log) => {
+                  const ok = await showConfirm({
+                    title: t('pages.nutritionLog.deleteLogTitle'),
+                    description: t('pages.nutritionLog.deleteLogDesc'),
+                  });
+                  if (ok) deleteLogMutation.mutate(log.id);
                 }}
-                onCancel={() => setDialog(null)}
-                isLoading={createFoodMutation.isPending || updateFoodMutation.isPending}
-              />
-            )}
-
-            {(dialog?.type === 'new-meal-type' ||
-              dialog?.type === 'edit-meal-type') && (
-              <MealTypeForm
-                mealType={
-                  dialog.type === 'edit-meal-type' ? dialog.mealType : undefined
+                onRegister={(mealTypeId) =>
+                  setDialog({ type: 'new-log', prefillMealType: mealTypeId })
                 }
-                ownerId={ownerId}
-                onSubmit={async (data) => {
-                  const ignoreId =
-                    dialog.type === 'edit-meal-type' ? dialog.mealType.id : undefined;
-                  if (isDuplicateMealType(data.name, data.suggested_time, ignoreId)) {
-                    toast({
-                      title: t('pages.nutritionMealTypes.duplicateMealType'),
-                      variant: 'destructive',
-                    });
-                    return;
-                  }
-                  if (dialog.type === 'edit-meal-type') {
-                    await updateMealTypeMutation.mutateAsync({
-                      id: dialog.mealType.id,
-                      data,
-                    });
-                  } else {
-                    await createMealTypeMutation.mutateAsync(data);
-                  }
-                }}
-                onCancel={() => setDialog(null)}
-                isLoading={
-                  createMealTypeMutation.isPending || updateMealTypeMutation.isPending
-                }
-              />
-            )}
-
-            {(dialog?.type === 'new-option' || dialog?.type === 'edit-option') && (
-              <MenuOptionForm
-                option={dialog.type === 'edit-option' ? dialog.option : undefined}
-                mealTypeId={
-                  dialog.type === 'new-option'
-                    ? dialog.mealTypeId
-                    : dialog.option.meal_type
-                }
-                ownerId={ownerId}
-                foods={foods}
-                onSubmit={async (optionData, ingredients) => {
-                  if (dialog.type === 'edit-option') {
-                    await updateOptionMutation.mutateAsync({
-                      id: dialog.option.id,
-                      optionData,
-                      ingredients,
-                    });
-                  } else {
-                    await createOptionMutation.mutateAsync({ optionData, ingredients });
-                  }
-                }}
-                onCancel={() => setDialog(null)}
-                isLoading={
-                  createOptionMutation.isPending || updateOptionMutation.isPending
-                }
-              />
-            )}
-
-            {(dialog?.type === 'new-log' || dialog?.type === 'edit-log') && (
-              <MealLogForm
-                log={dialog.type === 'edit-log' ? dialog.log : undefined}
-                prefillMealTypeId={
-                  dialog.type === 'new-log' ? dialog.prefillMealType : undefined
-                }
-                prefillDate={dialog.type === 'new-log' ? selectedDate : undefined}
-                mealTypes={mealTypes}
-                ownerId={ownerId}
-                onSubmit={async (data) => {
-                  if (dialog.type === 'edit-log') {
-                    await updateLogMutation.mutateAsync({ id: dialog.log.id, data });
-                  } else {
-                    await createLogMutation.mutateAsync(data);
-                  }
-                }}
-                onCancel={() => setDialog(null)}
-                isLoading={createLogMutation.isPending || updateLogMutation.isPending}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* ── Dialog: opções da refeição (formulários abrem por cima) ───── */}
-        <Dialog
-          open={optionsMealType !== null}
-          onOpenChange={(open) => !open && setOptionsMealTypeId(null)}
-        >
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="gap-sm flex items-center">
-                {getMealPeriodTheme(optionsMealType?.suggested_time).icon}
-                {optionsMealType?.name}
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                {t('pages.nutritionMealTypes.optionsDesc')}
-              </DialogDescription>
-            </DialogHeader>
-            {optionsMealType && (
-              <MealOptionsList
-                mealType={optionsMealType}
-                onEditOption={(opt) => setDialog({ type: 'edit-option', option: opt })}
-                onDeleteOption={handleDeleteOption}
                 t={t}
               />
             )}
-            <DialogCloseFooter>
-              {optionsMealType && (
-                <Can action="add">
-                  <Button
-                    onClick={() =>
-                      setDialog({ type: 'new-option', mealTypeId: optionsMealType.id })
-                    }
+          </div>
+        </TabsContent>
+
+        {/* ── Plano Alimentar ──────────────────────────────────────────── */}
+        <TabsContent value="meal-types" className="mt-0 flex-1">
+          <div className="gap-lg grid items-start lg:grid-cols-2">
+            <HydrationGoalCard />
+            <div>
+              <FilterBar
+                className="mb-lg"
+                hasActiveFilters={hasMealTypeFilters}
+                onClear={() => {
+                  setMealTypeSearch('');
+                  setMealTypeStatusFilter('all');
+                }}
+                activeFilters={[
+                  ...(mealTypeStatusFilter !== 'all'
+                    ? [
+                        {
+                          key: 'status',
+                          label: `${t('common.fields.status')}: ${
+                            mealTypeStatusFilter === 'active'
+                              ? t('pages.nutritionMealTypes.active')
+                              : t('pages.nutritionMealTypes.inactive')
+                          }`,
+                          onRemove: () => setMealTypeStatusFilter('all'),
+                        },
+                      ]
+                    : []),
+                ]}
+              >
+                <FilterField label={t('common.filterLabels.search')} icon={Search}>
+                  <SearchInput
+                    placeholder={t('pages.nutritionMealTypes.searchPlaceholder')}
+                    value={mealTypeSearch}
+                    onValueChange={setMealTypeSearch}
+                  />
+                </FilterField>
+                <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+                  <Select
+                    value={mealTypeStatusFilter}
+                    onValueChange={setMealTypeStatusFilter}
                   >
-                    <Plus className="h-4 w-4" />
-                    {t('pages.nutritionMealTypes.newOptionBtn')}
-                  </Button>
-                </Can>
+                    <SelectTrigger
+                      className="w-36"
+                      aria-label={t('pages.nutritionMealTypes.allStatus')}
+                      startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue
+                        placeholder={t('pages.nutritionMealTypes.allStatus')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.nutritionMealTypes.allStatus')}
+                      </SelectItem>
+                      <SelectItem
+                        value="active"
+                        icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                      >
+                        {t('pages.nutritionMealTypes.active')}
+                      </SelectItem>
+                      <SelectItem
+                        value="inactive"
+                        icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                      >
+                        {t('pages.nutritionMealTypes.inactive')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FilterField>
+              </FilterBar>
+
+              {mealTypesLoading ? (
+                <LoadingState />
+              ) : filteredMealTypes.length === 0 ? (
+                <EmptyState
+                  title={t('pages.nutritionMealTypes.emptyMealTypes')}
+                  icon={<UtensilsCrossed className="h-8 w-8" />}
+                />
+              ) : (
+                <div className="space-y-sm">
+                  {filteredMealTypes.map((mt) => (
+                    <MealTypeCard
+                      key={mt.id}
+                      mealType={mt}
+                      onOpenOptions={() => setOptionsMealTypeId(mt.id)}
+                      onEdit={() => setDialog({ type: 'edit-meal-type', mealType: mt })}
+                      onDelete={async () => {
+                        const ok = await showConfirm({
+                          title: t('pages.nutritionMealTypes.deleteMealTypeTitle'),
+                          description: t('pages.nutritionMealTypes.deleteMealTypeDesc'),
+                        });
+                        if (ok) deleteMealTypeMutation.mutate(mt.id);
+                      }}
+                      t={t}
+                    />
+                  ))}
+                </div>
               )}
-            </DialogCloseFooter>
-          </DialogContent>
-        </Dialog>
-      </PageContainer>
-    </AnimatedPage>
+              {mealTypes.length >= MAX_MEAL_TYPES && (
+                <p className="text-muted-foreground mt-sm text-xs">
+                  {t('pages.nutritionMealTypes.limitReached', {
+                    max: MAX_MEAL_TYPES,
+                  })}
+                </p>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* ── Alimentos ────────────────────────────────────────────────── */}
+        <TabsContent value="foods" className="mt-0 flex-1">
+          <FilterBar
+            className="mb-lg"
+            hasActiveFilters={!!foodSearch}
+            onClear={() => setFoodSearch('')}
+          >
+            <FilterField label={t('common.filterLabels.search')} icon={Search}>
+              <SearchInput
+                placeholder={t('pages.nutritionFoods.searchPlaceholder')}
+                value={foodSearch}
+                onValueChange={setFoodSearch}
+              />
+            </FilterField>
+          </FilterBar>
+
+          {foodsLoading ? (
+            <LoadingState />
+          ) : filteredFoods.length === 0 ? (
+            <EmptyState
+              title={t('pages.nutritionFoods.emptyFoods')}
+              icon={<Salad className="h-8 w-8" />}
+            />
+          ) : (
+            <PaginatedSlide
+              key={foodSearch}
+              items={filteredFoods}
+              pageSize={GRID_PAGE_SIZE}
+              centerList
+              className="gap-sm grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+            >
+              {(pageFoods) =>
+                pageFoods.map((food) => (
+                  <FoodCard
+                    key={food.id}
+                    food={food}
+                    onEdit={() => setDialog({ type: 'edit-food', food })}
+                    onDelete={async () => {
+                      const ok = await showConfirm({
+                        title: t('pages.nutritionFoods.deleteFoodTitle'),
+                        description: t('pages.nutritionFoods.deleteFoodDesc'),
+                      });
+                      if (ok) deleteFoodMutation.mutate(food.id);
+                    }}
+                  />
+                ))
+              }
+            </PaginatedSlide>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* ── Dialog ────────────────────────────────────────────────────── */}
+      <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
+        <DialogContent
+          className={cn('max-w-xl', dialog?.type.endsWith('option') && 'max-w-5xl')}
+        >
+          <DialogHeader>
+            <DialogTitle mode={dialog?.type.startsWith('edit') ? 'edit' : 'create'}>
+              {dialogTitle()}
+            </DialogTitle>
+            <DialogDescription className="sr-only">{dialogDesc()}</DialogDescription>
+          </DialogHeader>
+
+          {(dialog?.type === 'new-food' || dialog?.type === 'edit-food') && (
+            <FoodForm
+              food={dialog.type === 'edit-food' ? dialog.food : undefined}
+              ownerId={ownerId}
+              onSubmit={async (data) => {
+                if (dialog.type === 'edit-food') {
+                  await updateFoodMutation.mutateAsync({ id: dialog.food.id, data });
+                } else {
+                  await createFoodMutation.mutateAsync(data);
+                }
+              }}
+              onCancel={() => setDialog(null)}
+              isLoading={createFoodMutation.isPending || updateFoodMutation.isPending}
+            />
+          )}
+
+          {(dialog?.type === 'new-meal-type' || dialog?.type === 'edit-meal-type') && (
+            <MealTypeForm
+              mealType={dialog.type === 'edit-meal-type' ? dialog.mealType : undefined}
+              ownerId={ownerId}
+              onSubmit={async (data) => {
+                const ignoreId =
+                  dialog.type === 'edit-meal-type' ? dialog.mealType.id : undefined;
+                if (isDuplicateMealType(data.name, data.suggested_time, ignoreId)) {
+                  toast({
+                    title: t('pages.nutritionMealTypes.duplicateMealType'),
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+                if (dialog.type === 'edit-meal-type') {
+                  await updateMealTypeMutation.mutateAsync({
+                    id: dialog.mealType.id,
+                    data,
+                  });
+                } else {
+                  await createMealTypeMutation.mutateAsync(data);
+                }
+              }}
+              onCancel={() => setDialog(null)}
+              isLoading={
+                createMealTypeMutation.isPending || updateMealTypeMutation.isPending
+              }
+            />
+          )}
+
+          {(dialog?.type === 'new-option' || dialog?.type === 'edit-option') && (
+            <MenuOptionForm
+              option={dialog.type === 'edit-option' ? dialog.option : undefined}
+              mealTypeId={
+                dialog.type === 'new-option'
+                  ? dialog.mealTypeId
+                  : dialog.option.meal_type
+              }
+              ownerId={ownerId}
+              foods={foods}
+              onSubmit={async (optionData, ingredients) => {
+                if (dialog.type === 'edit-option') {
+                  await updateOptionMutation.mutateAsync({
+                    id: dialog.option.id,
+                    optionData,
+                    ingredients,
+                  });
+                } else {
+                  await createOptionMutation.mutateAsync({ optionData, ingredients });
+                }
+              }}
+              onCancel={() => setDialog(null)}
+              isLoading={
+                createOptionMutation.isPending || updateOptionMutation.isPending
+              }
+            />
+          )}
+
+          {(dialog?.type === 'new-log' || dialog?.type === 'edit-log') && (
+            <MealLogForm
+              log={dialog.type === 'edit-log' ? dialog.log : undefined}
+              prefillMealTypeId={
+                dialog.type === 'new-log' ? dialog.prefillMealType : undefined
+              }
+              prefillDate={dialog.type === 'new-log' ? selectedDate : undefined}
+              mealTypes={mealTypes}
+              ownerId={ownerId}
+              onSubmit={async (data) => {
+                if (dialog.type === 'edit-log') {
+                  await updateLogMutation.mutateAsync({ id: dialog.log.id, data });
+                } else {
+                  await createLogMutation.mutateAsync(data);
+                }
+              }}
+              onCancel={() => setDialog(null)}
+              isLoading={createLogMutation.isPending || updateLogMutation.isPending}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Dialog: opções da refeição (formulários abrem por cima) ───── */}
+      <Dialog
+        open={optionsMealType !== null}
+        onOpenChange={(open) => !open && setOptionsMealTypeId(null)}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="gap-sm flex items-center">
+              {getMealPeriodTheme(optionsMealType?.suggested_time).icon}
+              {optionsMealType?.name}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              {t('pages.nutritionMealTypes.optionsDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          {optionsMealType && (
+            <MealOptionsList
+              mealType={optionsMealType}
+              onEditOption={(opt) => setDialog({ type: 'edit-option', option: opt })}
+              onDeleteOption={handleDeleteOption}
+              t={t}
+            />
+          )}
+          <DialogCloseFooter>
+            {optionsMealType && (
+              <Can action="add">
+                <Button
+                  onClick={() =>
+                    setDialog({ type: 'new-option', mealTypeId: optionsMealType.id })
+                  }
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('pages.nutritionMealTypes.newOptionBtn')}
+                </Button>
+              </Can>
+            )}
+          </DialogCloseFooter>
+        </DialogContent>
+      </Dialog>
+    </PageContainer>
   );
 }
 

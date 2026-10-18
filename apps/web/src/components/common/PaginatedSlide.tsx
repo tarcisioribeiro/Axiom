@@ -1,6 +1,14 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  Children,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -20,6 +28,13 @@ interface PaginatedSlideProps<T> {
    * de uma página. Padrão `true` — use `false` para manter a lista alinhada
    * ao topo. */
   centerList?: boolean;
+  /** Lista de uma coluna só que cresce por inclusão (ex.: aulas de um módulo,
+   * criadas uma a uma na mesma tela/modal): reserva desde o início a altura
+   * da página cheia, centraliza os itens nela enquanto não completa, anima a
+   * entrada de cada item e pagina sozinha ao estourar o tamanho da página.
+   * Não usar em grade de múltiplas colunas (a altura reservada pressupõe uma
+   * linha por item). */
+  growOnAdd?: boolean;
   children: (pageItems: T[]) => ReactNode;
 }
 
@@ -38,21 +53,36 @@ export function PaginatedSlide<T>({
   items,
   pageSize,
   children,
+  growOnAdd,
   ...rest
 }: PaginatedSlideProps<T>) {
   const [pageIndex, setPageIndex] = useState(0);
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   // Clampa caso a lista encolha (ex.: após excluir) e a página atual suma.
   const index = Math.min(pageIndex, totalPages - 1);
+
+  // Pula para a página nova assim que um item incluído estoura a atual.
+  const prevLength = useRef(items.length);
+  useEffect(() => {
+    if (growOnAdd && items.length > prevLength.current) {
+      setPageIndex(Math.max(1, Math.ceil(items.length / pageSize)) - 1);
+    }
+    prevLength.current = items.length;
+  }, [items.length, growOnAdd, pageSize]);
+
+  const pageItems = items.slice(index * pageSize, (index + 1) * pageSize);
   return (
     <PageSlide
       page={index + 1}
       totalPages={totalPages}
       onPageChange={(next) => setPageIndex(next - 1)}
       resetKey={items.length === 0}
+      pageSize={pageSize}
+      pageItemCount={pageItems.length}
+      growOnAdd={growOnAdd}
       {...rest}
     >
-      {children(items.slice(index * pageSize, (index + 1) * pageSize))}
+      {children(pageItems)}
     </PageSlide>
   );
 }
@@ -67,6 +97,10 @@ interface PageSlideProps extends Omit<
   onPageChange: (page: number) => void;
   /** Muda quando a altura travada da lista deve ser recalculada. */
   resetKey?: unknown;
+  /** Tamanho da página e nº de itens na página atual, usados só com
+   * `growOnAdd` para projetar a altura da página cheia. */
+  pageSize?: number;
+  pageItemCount?: number;
   children: ReactNode;
 }
 
@@ -83,6 +117,9 @@ export function PageSlide({
   totalPages,
   onPageChange,
   resetKey,
+  pageSize,
+  pageItemCount,
+  growOnAdd,
   className,
   pinNav = true,
   centerList = true,
@@ -93,15 +130,27 @@ export function PageSlide({
   if (last.page !== page) setLast({ page, direction: page > last.page ? 1 : -1 });
 
   // Mantém a altura da lista na maior já vista (página cheia), para os botões
-  // de navegação não pularem durante a transição nem na última página.
+  // de navegação não pularem durante a transição nem na última página. Com
+  // `growOnAdd`, projeta a altura da página cheia a partir do item atual, para
+  // já reservar o espaço com só 1 item na tela.
+  const meta = useRef({ growOnAdd, pageSize, pageItemCount });
+  useEffect(() => {
+    meta.current = { growOnAdd, pageSize, pageItemCount };
+  });
   const listRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const list = listRef.current;
     if (!list) return;
     list.style.minHeight = '';
     const observer = new ResizeObserver(() => {
+      const { growOnAdd, pageSize, pageItemCount } = meta.current;
+      const projected =
+        growOnAdd && pageSize && pageItemCount
+          ? (list.offsetHeight / pageItemCount) * pageSize
+          : 0;
       const current = parseFloat(list.style.minHeight) || 0;
-      if (list.offsetHeight > current) list.style.minHeight = `${list.offsetHeight}px`;
+      const next = Math.max(current, list.offsetHeight, projected);
+      if (next > current) list.style.minHeight = `${next}px`;
     });
     observer.observe(list);
     return () => observer.disconnect();
@@ -114,7 +163,7 @@ export function PageSlide({
       <div
         className={cn(
           'flex flex-1 flex-col',
-          centerList && totalPages > 1 && 'justify-center'
+          centerList && (totalPages > 1 || growOnAdd) && 'justify-center'
         )}
       >
         <div ref={listRef} className="overflow-hidden">
@@ -128,7 +177,23 @@ export function PageSlide({
               exit="exit"
               className={className}
             >
-              {children}
+              {growOnAdd ? (
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {Children.toArray(children).map((child) => (
+                    <motion.div
+                      key={(child as ReactElement).key}
+                      layout
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      {child}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              ) : (
+                children
+              )}
             </motion.div>
           </AnimatePresence>
         </div>

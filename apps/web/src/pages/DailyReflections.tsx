@@ -406,6 +406,7 @@ export default function DailyReflections() {
           items={filtered}
           pageSize={REFLECTIONS_PAGE_SIZE}
           centerList
+          growOnAdd
           className="space-y-sm"
         >
           {(pageReflections) =>

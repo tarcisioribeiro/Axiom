@@ -219,7 +219,7 @@ export function CourseForm({
               value={watch('platform')}
               onValueChange={(v) => setValue('platform', v)}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.platform}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -241,7 +241,7 @@ export function CourseForm({
               value={watch('category')}
               onValueChange={(v) => setValue('category', v)}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.category}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -332,6 +332,7 @@ export function CourseForm({
                   unit="h"
                   value={field.value}
                   onChange={field.onChange}
+                  aria-invalid={!!errors.estimated_hours}
                 />
               )}
             />

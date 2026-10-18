@@ -243,6 +243,141 @@ def build_pdf_response(
     return response
 
 
+def build_grouped_pdf_response(
+    title: str,
+    meta: Dict[str, str],
+    groups: List[Dict[str, Any]],
+    filename: str,
+    empty_message: str = "Nenhum registro encontrado.",
+) -> HttpResponse:
+    """
+    Build a PDF response organized as titled sections of item "cards",
+    instead of a single table — useful for agenda-style exports.
+
+    Parameters
+    ----------
+    title : str
+        Report title.
+    meta : dict
+        ``user_name`` and/or ``period`` shown in the header.
+    groups : list of dict
+        Each group is ``{"heading": str, "items": [{"title": str,
+        "lines": [str, ...]}]}``. ``title``/``lines`` support ReportLab's
+        minimal markup (e.g. ``<b>...</b>``).
+    filename : str
+        Suggested download filename (without extension; .pdf appended).
+    empty_message : str
+        Shown when ``groups`` is empty.
+
+    Returns
+    -------
+    HttpResponse
+        Response with content-type application/pdf.
+    """
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=18 * mm,
+        leftMargin=18 * mm,
+        topMargin=20 * mm,
+        bottomMargin=20 * mm,
+    )
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        "ReportTitle",
+        parent=styles["Heading1"],
+        fontSize=16,
+        spaceAfter=4,
+        textColor=colors.HexColor("#1a1a2e"),
+    )
+    meta_style = ParagraphStyle(
+        "MetaInfo",
+        parent=styles["Normal"],
+        fontSize=9,
+        textColor=colors.HexColor("#555555"),
+        spaceAfter=2,
+    )
+    heading_style = ParagraphStyle(
+        "GroupHeading",
+        parent=styles["Normal"],
+        fontSize=11,
+        fontName="Helvetica-Bold",
+        textColor=colors.white,
+        leading=14,
+    )
+    item_title_style = ParagraphStyle(
+        "ItemTitle",
+        parent=styles["Normal"],
+        fontSize=10,
+        fontName="Helvetica-Bold",
+        textColor=colors.HexColor("#1a1a2e"),
+        spaceAfter=1,
+    )
+    item_line_style = ParagraphStyle(
+        "ItemLine",
+        parent=styles["Normal"],
+        fontSize=9,
+        textColor=colors.HexColor("#444444"),
+        leftIndent=4,
+        spaceAfter=0,
+    )
+    empty_style = ParagraphStyle(
+        "EmptyMessage",
+        parent=styles["Normal"],
+        fontSize=10,
+        textColor=colors.HexColor("#777777"),
+    )
+
+    story: List[Any] = []
+    story.append(Paragraph(title, title_style))
+    if meta.get("user_name"):
+        story.append(Paragraph(f"Usuário: {meta['user_name']}", meta_style))
+    if meta.get("period"):
+        story.append(Paragraph(f"Período: {meta['period']}", meta_style))
+    story.append(Spacer(1, 6 * mm))
+
+    if not groups:
+        story.append(Paragraph(empty_message, empty_style))
+
+    for group in groups:
+        heading_tbl = Table(
+            [[Paragraph(group["heading"], heading_style)]],
+            colWidths=[doc.width],
+        )
+        heading_tbl.setStyle(
+            TableStyle(
+                [
+                    (
+                        "BACKGROUND",
+                        (0, 0),
+                        (-1, -1),
+                        colors.HexColor("#2c3e50"),
+                    ),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ]
+            )
+        )
+        story.append(heading_tbl)
+        story.append(Spacer(1, 2 * mm))
+        for item in group["items"]:
+            story.append(Paragraph(item["title"], item_title_style))
+            for line in item["lines"]:
+                story.append(Paragraph(line, item_line_style))
+            story.append(Spacer(1, 3 * mm))
+        story.append(Spacer(1, 4 * mm))
+
+    doc.build(story)
+
+    buffer.seek(0)
+    response = HttpResponse(buffer.read(), content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{filename}.pdf"'
+    return response
+
+
 def format_decimal(value: Any) -> str:
     """Format a Decimal or numeric value as a Brazilian Real string."""
     try:
