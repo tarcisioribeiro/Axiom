@@ -347,8 +347,10 @@ export default function Webhooks() {
             />
           ) : (
             <PaginatedSlide
+              key={`${searchTerm}-${statusFilter}-${eventFilter}`}
               items={filteredWebhooks}
               pageSize={LIST_PAGE_SIZE}
+              growOnAdd
               className="gap-md grid"
             >
               {(pageItems) => (

@@ -11,7 +11,6 @@ import {
 import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -159,141 +158,133 @@ export default function WeeklyPlanning() {
   if (isLoading) return <LoadingState />;
 
   return (
-    <AnimatedPage>
-      <PageContainer>
-        <div className="mb-md gap-md flex flex-wrap items-center">
-          <PageHeader title={t('weeklyPlanning.title')} icon={<Calendar />} />
+    <PageContainer>
+      <div className="mb-md gap-md flex flex-wrap items-center">
+        <PageHeader title={t('weeklyPlanning.title')} icon={<Calendar />} />
 
-          <div className="flex min-w-0 flex-1 justify-center">
-            {Object.values(loadByDate).some((load) => load > OVERLOAD_MINUTES) && (
-              <div className="border-warning/30 bg-warning/5 px-sm py-xs gap-sm flex items-center rounded-lg border">
-                <AlertTriangle className="text-warning h-4 w-4 shrink-0" />
-                <p className="text-warning text-xs">
-                  <strong>{t('weeklyPlanning.overloadWarningTitle')}:</strong>{' '}
-                  {t('weeklyPlanning.overloadWarning', {
-                    time: formatMinutes(OVERLOAD_MINUTES),
-                  })}
-                </p>
-              </div>
-            )}
-          </div>
-
-          <span className="text-muted-foreground text-sm">{weekLabel}</span>
+        <div className="flex min-w-0 flex-1 justify-center">
+          {Object.values(loadByDate).some((load) => load > OVERLOAD_MINUTES) && (
+            <div className="border-warning/30 bg-warning/5 px-sm py-xs gap-sm flex items-center rounded-lg border">
+              <AlertTriangle className="text-warning h-4 w-4 shrink-0" />
+              <p className="text-warning text-xs">
+                <strong>{t('weeklyPlanning.overloadWarningTitle')}:</strong>{' '}
+                {t('weeklyPlanning.overloadWarning', {
+                  time: formatMinutes(OVERLOAD_MINUTES),
+                })}
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* 7-day grid */}
-        <div className="gap-md grid grid-cols-1 sm:h-[calc(100dvh-13rem)] sm:grid-cols-7">
-          {days.map((day) => {
-            const key = formatLocalDate(day);
-            const dayInsts = instancesByDate[key] ?? [];
-            const load = loadByDate[key] ?? 0;
-            const isOverloaded = load > OVERLOAD_MINUTES;
-            const isToday = key === today;
-            const dayCompleted = dayInsts.filter(
-              (i) => i.status === 'completed'
-            ).length;
-            const dayTotal = dayInsts.length;
-            const dayPct =
-              dayTotal > 0 ? Math.round((dayCompleted / dayTotal) * 100) : 0;
+        <span className="text-muted-foreground text-sm">{weekLabel}</span>
+      </div>
 
-            return (
-              <Card key={key} className="flex min-h-0 flex-col">
-                <CardHeader className="pb-xs pt-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p
-                        className={cn(
-                          'text-xs font-semibold tracking-wide uppercase',
-                          isToday ? 'text-primary' : 'text-muted-foreground'
-                        )}
-                      >
-                        {day.toLocaleDateString(i18n.language, { weekday: 'short' })}
-                      </p>
-                      <div className="gap-xs flex items-center">
-                        <p
-                          className={cn(
-                            'text-base font-bold',
-                            isToday && 'text-primary'
-                          )}
-                        >
-                          {day.getDate()}
-                        </p>
-                        {isToday && (
-                          <Badge variant="default" className="text-2xs px-xs py-0">
-                            {t('weeklyPlanning.today')}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      {isOverloaded && (
-                        <AlertTriangle
-                          className="mb-xs text-warning h-4 w-4"
-                          aria-label={t('weeklyPlanning.overloadedDay')}
-                        />
-                      )}
-                      {dayTotal > 0 && (
-                        <p className="text-muted-foreground text-xs font-medium">
-                          {dayCompleted}/{dayTotal}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+      {/* 7-day grid */}
+      <div className="gap-md grid grid-cols-1 sm:h-[calc(100dvh-13rem)] sm:grid-cols-7">
+        {days.map((day) => {
+          const key = formatLocalDate(day);
+          const dayInsts = instancesByDate[key] ?? [];
+          const load = loadByDate[key] ?? 0;
+          const isOverloaded = load > OVERLOAD_MINUTES;
+          const isToday = key === today;
+          const dayCompleted = dayInsts.filter((i) => i.status === 'completed').length;
+          const dayTotal = dayInsts.length;
+          const dayPct = dayTotal > 0 ? Math.round((dayCompleted / dayTotal) * 100) : 0;
 
-                  {/* Per-day completion progress */}
-                  {dayTotal > 0 && (
-                    <div className="bg-muted h-1 w-full overflow-hidden rounded-full">
-                      <div
-                        className={cn(
-                          'h-full rounded-full transition',
-                          dayPct >= 100
-                            ? 'bg-success'
-                            : dayPct >= 60
-                              ? 'bg-primary'
-                              : 'bg-muted-foreground/30'
-                        )}
-                        style={{ width: `${dayPct}%` }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Load bar */}
-                  <div className="gap-xs flex items-center">
-                    <div
+          return (
+            <Card key={key} className="flex min-h-0 flex-col">
+              <CardHeader className="pb-xs pt-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p
                       className={cn(
-                        'h-1 flex-1 rounded-full',
-                        isOverloaded ? 'bg-warning/30' : 'bg-muted'
+                        'text-xs font-semibold tracking-wide uppercase',
+                        isToday ? 'text-primary' : 'text-muted-foreground'
                       )}
                     >
-                      <div
-                        className={cn(
-                          'h-full rounded-full transition',
-                          isOverloaded ? 'bg-warning' : 'bg-primary/40'
-                        )}
-                        style={{
-                          width: `${Math.min(100, (load / OVERLOAD_MINUTES) * 100)}%`,
-                        }}
-                      />
-                    </div>
-                    <span className="text-muted-foreground shrink-0 text-xs">
-                      {formatMinutes(load)}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="gap-xs p-sm flex min-h-0 flex-1 flex-col overflow-y-auto pt-0">
-                  {dayInsts.length === 0 ? (
-                    <p className="text-muted-foreground/50 text-center text-xs">
-                      {t('weeklyPlanning.noTasks')}
+                      {day.toLocaleDateString(i18n.language, { weekday: 'short' })}
                     </p>
-                  ) : (
-                    dayInsts.map((inst) => <TaskPill key={inst.id} instance={inst} />)
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </PageContainer>
-    </AnimatedPage>
+                    <div className="gap-xs flex items-center">
+                      <p
+                        className={cn('text-base font-bold', isToday && 'text-primary')}
+                      >
+                        {day.getDate()}
+                      </p>
+                      {isToday && (
+                        <Badge variant="default" className="text-2xs px-xs py-0">
+                          {t('weeklyPlanning.today')}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {isOverloaded && (
+                      <AlertTriangle
+                        className="mb-xs text-warning h-4 w-4"
+                        aria-label={t('weeklyPlanning.overloadedDay')}
+                      />
+                    )}
+                    {dayTotal > 0 && (
+                      <p className="text-muted-foreground text-xs font-medium">
+                        {dayCompleted}/{dayTotal}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Per-day completion progress */}
+                {dayTotal > 0 && (
+                  <div className="bg-muted h-1 w-full overflow-hidden rounded-full">
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition',
+                        dayPct >= 100
+                          ? 'bg-success'
+                          : dayPct >= 60
+                            ? 'bg-primary'
+                            : 'bg-muted-foreground/30'
+                      )}
+                      style={{ width: `${dayPct}%` }}
+                    />
+                  </div>
+                )}
+
+                {/* Load bar */}
+                <div className="gap-xs flex items-center">
+                  <div
+                    className={cn(
+                      'h-1 flex-1 rounded-full',
+                      isOverloaded ? 'bg-warning/30' : 'bg-muted'
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition',
+                        isOverloaded ? 'bg-warning' : 'bg-primary/40'
+                      )}
+                      style={{
+                        width: `${Math.min(100, (load / OVERLOAD_MINUTES) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-muted-foreground shrink-0 text-xs">
+                    {formatMinutes(load)}
+                  </span>
+                </div>
+              </CardHeader>
+              <CardContent className="gap-xs p-sm flex min-h-0 flex-1 flex-col overflow-y-auto pt-0">
+                {dayInsts.length === 0 ? (
+                  <p className="text-muted-foreground/50 text-center text-xs">
+                    {t('weeklyPlanning.noTasks')}
+                  </p>
+                ) : (
+                  dayInsts.map((inst) => <TaskPill key={inst.id} instance={inst} />)
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </PageContainer>
   );
 }

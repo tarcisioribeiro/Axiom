@@ -814,6 +814,13 @@ class CourseSerializer(serializers.ModelSerializer):
     completed_lessons = serializers.IntegerField(read_only=True)
     progress_percentage = serializers.FloatField(read_only=True)
     invested_hours = serializers.FloatField(read_only=True)
+    estimated_hours = serializers.DecimalField(
+        max_digits=6,
+        decimal_places=1,
+        coerce_to_string=False,
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = Course
@@ -848,6 +855,14 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class CourseCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer para criação/atualização de cursos."""
+
+    estimated_hours = serializers.DecimalField(
+        max_digits=6,
+        decimal_places=1,
+        coerce_to_string=False,
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = Course

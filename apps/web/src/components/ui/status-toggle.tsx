@@ -34,7 +34,7 @@ export function StatusToggle({
             disabled={disabled}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'duration-fast flex-1 rounded px-3 py-1.5 text-sm font-medium transition-all',
+              'duration-fast flex-1 rounded px-3 py-1.5 text-sm font-medium transition',
               isActive
                 ? SEMANTIC_ACCENT_ACTIVE_CLASS[opt.accentColor ?? 'default']
                 : 'text-muted-foreground hover:text-foreground',

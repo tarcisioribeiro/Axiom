@@ -660,7 +660,10 @@ function SummaryTile({
   onClick: () => void;
 }) {
   return (
-    <Card className="cursor-pointer" {...clickableProps(onClick)}>
+    <Card
+      className="cursor-pointer transition active:scale-[0.96]"
+      {...clickableProps(onClick)}
+    >
       <div className="p-md">
         <div className="gap-sm flex items-center">
           {icon}
@@ -686,7 +689,10 @@ function SectionTile({
   onClick: () => void;
 }) {
   return (
-    <Card className="cursor-pointer" {...clickableProps(onClick)}>
+    <Card
+      className="cursor-pointer transition active:scale-[0.96]"
+      {...clickableProps(onClick)}
+    >
       <div className="p-md flex items-center justify-between">
         <div className="gap-sm flex items-center">
           <Icon className="text-muted-foreground h-4 w-4" />

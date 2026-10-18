@@ -138,6 +138,7 @@ export function ExpenseSplitsModal({
               items={splits}
               pageSize={LIST_PAGE_SIZE}
               pinNav={false}
+              growOnAdd
               className="space-y-xs"
             >
               {(pageSplits) =>

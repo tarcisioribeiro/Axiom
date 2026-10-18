@@ -52,7 +52,6 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { Can } from '@/components/common/Can';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -866,787 +865,777 @@ export default function WorkoutPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <AnimatedPage>
-      <PageContainer>
-        <PageHeader
-          title={t(TAB_HEADERS[activeTab].titleKey)}
-          icon={TAB_HEADERS[activeTab].icon}
-          actions={
-            activeTab === 'sessions' ? (
-              <Can action="add">
-                <Button onClick={() => setDialog({ type: 'new-session' })}>
-                  <Plus className="h-4 w-4" />
-                  {t('pages.workoutSessions.newSessionBtn')}
-                </Button>
-              </Can>
-            ) : activeTab === 'plans' ? (
-              <Can action="add">
-                <Button onClick={() => setDialog({ type: 'new-plan' })}>
-                  <Plus className="h-4 w-4" />
-                  {t('pages.workoutPlans.newPlanBtn')}
-                </Button>
-              </Can>
-            ) : activeTab === 'exercises' ? (
-              <Can action="add">
-                <Button onClick={() => setDialog({ type: 'new-catalog-exercise' })}>
-                  <Plus className="h-4 w-4" />
-                  {t('pages.exercises.newBtn')}
-                </Button>
-              </Can>
-            ) : undefined
-          }
-        />
+    <PageContainer>
+      <PageHeader
+        title={t(TAB_HEADERS[activeTab].titleKey)}
+        icon={TAB_HEADERS[activeTab].icon}
+        actions={
+          activeTab === 'sessions' ? (
+            <Can action="add">
+              <Button onClick={() => setDialog({ type: 'new-session' })}>
+                <Plus className="h-4 w-4" />
+                {t('pages.workoutSessions.newSessionBtn')}
+              </Button>
+            </Can>
+          ) : activeTab === 'plans' ? (
+            <Can action="add">
+              <Button onClick={() => setDialog({ type: 'new-plan' })}>
+                <Plus className="h-4 w-4" />
+                {t('pages.workoutPlans.newPlanBtn')}
+              </Button>
+            </Can>
+          ) : activeTab === 'exercises' ? (
+            <Can action="add">
+              <Button onClick={() => setDialog({ type: 'new-catalog-exercise' })}>
+                <Plus className="h-4 w-4" />
+                {t('pages.exercises.newBtn')}
+              </Button>
+            </Can>
+          ) : undefined
+        }
+      />
 
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
-          className="flex flex-1 flex-col"
-        >
-          <TabsList className="mb-lg w-full">
-            <TabsTrigger value="today" className="gap-xs flex-1">
-              <Flame className="h-4 w-4" />
-              {t('pages.workoutHub.todayPlan')}
-            </TabsTrigger>
-            <TabsTrigger value="sessions" className="gap-xs flex-1">
-              <Zap className="h-4 w-4" />
-              {t('pages.workoutPlans.tabSessions')}
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="gap-xs flex-1">
-              <CalendarDays className="h-4 w-4" />
-              {t('pages.workoutPlans.tabCalendar')}
-            </TabsTrigger>
-            <TabsTrigger value="plans" className="gap-xs flex-1">
-              <ClipboardList className="h-4 w-4" />
-              {t('pages.workoutPlans.tabPlans')}
-            </TabsTrigger>
-            <TabsTrigger value="exercises" className="gap-xs flex-1">
-              <Dumbbell className="h-4 w-4" />
-              {t('pages.workoutPlans.tabExercises')}
-            </TabsTrigger>
-          </TabsList>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as (typeof TABS)[number])}
+        className="flex flex-1 flex-col"
+      >
+        <TabsList className="mb-lg w-full">
+          <TabsTrigger value="today" className="gap-xs flex-1">
+            <Flame className="h-4 w-4" />
+            {t('pages.workoutHub.todayPlan')}
+          </TabsTrigger>
+          <TabsTrigger value="sessions" className="gap-xs flex-1">
+            <Zap className="h-4 w-4" />
+            {t('pages.workoutPlans.tabSessions')}
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="gap-xs flex-1">
+            <CalendarDays className="h-4 w-4" />
+            {t('pages.workoutPlans.tabCalendar')}
+          </TabsTrigger>
+          <TabsTrigger value="plans" className="gap-xs flex-1">
+            <ClipboardList className="h-4 w-4" />
+            {t('pages.workoutPlans.tabPlans')}
+          </TabsTrigger>
+          <TabsTrigger value="exercises" className="gap-xs flex-1">
+            <Dumbbell className="h-4 w-4" />
+            {t('pages.workoutPlans.tabExercises')}
+          </TabsTrigger>
+        </TabsList>
 
-          {/* ── Hoje ──────────────────────────────────────────────────── */}
-          <TabsContent value="today" className="mt-0 flex-1">
-            <TodayPlanTab activePlans={activePlans} plansLoading={plansLoading} t={t} />
-          </TabsContent>
+        {/* ── Hoje ──────────────────────────────────────────────────── */}
+        <TabsContent value="today" className="mt-0 flex-1">
+          <TodayPlanTab activePlans={activePlans} plansLoading={plansLoading} t={t} />
+        </TabsContent>
 
-          {/* ── Sessões ─────────────────────────────────────────────────── */}
-          <TabsContent value="sessions" className="mt-0 flex-1">
-            {sessionsLoading ? (
-              <LoadingState />
-            ) : sessions.length === 0 ? (
-              <EmptyState
-                title={t('pages.workoutSessions.emptySessions')}
-                icon={<Dumbbell className="h-8 w-8" />}
-              />
-            ) : (
-              <>
-                <FilterBar
-                  className="mb-lg"
-                  hasActiveFilters={hasSessionFilters}
-                  onClear={clearSessionFilters}
-                  activeFilters={[
-                    ...(sessionStartDate
-                      ? [
-                          {
-                            key: 'startDate',
-                            label: `${t('pages.workoutSessions.filterDateFrom')}: ${formatDate(sessionStartDate)}`,
-                            onRemove: () => setSessionStartDate(undefined),
-                          },
-                        ]
-                      : []),
-                    ...(sessionEndDate
-                      ? [
-                          {
-                            key: 'endDate',
-                            label: `${t('pages.workoutSessions.filterDateTo')}: ${formatDate(sessionEndDate)}`,
-                            onRemove: () => setSessionEndDate(undefined),
-                          },
-                        ]
-                      : []),
-                  ]}
+        {/* ── Sessões ─────────────────────────────────────────────────── */}
+        <TabsContent value="sessions" className="mt-0 flex-1">
+          {sessionsLoading ? (
+            <LoadingState />
+          ) : sessions.length === 0 ? (
+            <EmptyState
+              title={t('pages.workoutSessions.emptySessions')}
+              icon={<Dumbbell className="h-8 w-8" />}
+            />
+          ) : (
+            <>
+              <FilterBar
+                className="mb-lg"
+                hasActiveFilters={hasSessionFilters}
+                onClear={clearSessionFilters}
+                activeFilters={[
+                  ...(sessionStartDate
+                    ? [
+                        {
+                          key: 'startDate',
+                          label: `${t('pages.workoutSessions.filterDateFrom')}: ${formatDate(sessionStartDate)}`,
+                          onRemove: () => setSessionStartDate(undefined),
+                        },
+                      ]
+                    : []),
+                  ...(sessionEndDate
+                    ? [
+                        {
+                          key: 'endDate',
+                          label: `${t('pages.workoutSessions.filterDateTo')}: ${formatDate(sessionEndDate)}`,
+                          onRemove: () => setSessionEndDate(undefined),
+                        },
+                      ]
+                    : []),
+                ]}
+              >
+                <FilterField
+                  label={t('common.filterLabels.period')}
+                  icon={CalendarDays}
                 >
-                  <FilterField
-                    label={t('common.filterLabels.period')}
-                    icon={CalendarDays}
-                  >
-                    <DateRangeFilter
-                      startDate={sessionStartDate}
-                      endDate={sessionEndDate}
-                      onStartChange={setSessionStartDate}
-                      onEndChange={setSessionEndDate}
-                    />
-                  </FilterField>
-                </FilterBar>
-
-                {filteredSessions.length === 0 ? (
-                  <EmptyState
-                    title={t('pages.workoutSessions.emptySessions')}
-                    icon={<Dumbbell className="h-8 w-8" />}
+                  <DateRangeFilter
+                    startDate={sessionStartDate}
+                    endDate={sessionEndDate}
+                    onStartChange={setSessionStartDate}
+                    onEndChange={setSessionEndDate}
                   />
-                ) : (
-                  <PaginatedSlide
-                    key={`${sessionStartDate ? formatLocalDate(sessionStartDate) : ''}|${sessionEndDate ? formatLocalDate(sessionEndDate) : ''}`}
-                    items={filteredSessions}
-                    pageSize={SESSIONS_PAGE_SIZE}
-                    centerList
-                    className="space-y-sm"
-                  >
-                    {(pageSessions) =>
-                      pageSessions.map((session) => (
-                        <SessionCard
-                          key={session.id}
-                          session={session}
-                          onView={() => setDialog({ type: 'view-session', session })}
-                          onEdit={() => setDialog({ type: 'edit-session', session })}
-                          onDelete={() => void handleDeleteSession(session)}
-                          t={t}
-                        />
-                      ))
-                    }
-                  </PaginatedSlide>
-                )}
-              </>
-            )}
-          </TabsContent>
+                </FilterField>
+              </FilterBar>
 
-          {/* ── Calendário ──────────────────────────────────────────────── */}
-          <TabsContent value="calendar" className="mt-0 flex-1">
-            {/* Calendário + detalhe do dia centralizados na altura livre */}
-            <div className="page-fill flex flex-1 flex-col justify-center">
-              {plansLoading ? <LoadingState /> : <WorkoutCalendar plans={plans} />}
-            </div>
-          </TabsContent>
-
-          {/* ── Planos ──────────────────────────────────────────────────── */}
-          <TabsContent value="plans" className="mt-0 flex-1">
-            {plansLoading ? (
-              <LoadingState />
-            ) : plans.length === 0 ? (
-              <EmptyState
-                title={t('pages.workoutPlans.emptyPlans')}
-                icon={<Dumbbell className="h-8 w-8" />}
-              />
-            ) : (
-              <>
-                <FilterBar
-                  className="mb-lg"
-                  hasActiveFilters={hasPlanFilters}
-                  onClear={clearPlanFilters}
-                  activeFilters={[
-                    ...(planCategoryFilter !== 'all'
-                      ? [
-                          {
-                            key: 'category',
-                            label: `${t('pages.workoutPlans.category')}: ${t(`pages.workoutPlans.categories.${planCategoryFilter}`)}`,
-                            onRemove: () => setPlanCategoryFilter('all'),
-                          },
-                        ]
-                      : []),
-                    ...(planStatusFilter !== 'all'
-                      ? [
-                          {
-                            key: 'status',
-                            label: `${t('common.fields.status')}: ${
-                              planStatusFilter === 'active'
-                                ? t('pages.workoutPlans.active')
-                                : t('pages.workoutPlans.inactive')
-                            }`,
-                            onRemove: () => setPlanStatusFilter('all'),
-                          },
-                        ]
-                      : []),
-                  ]}
+              {filteredSessions.length === 0 ? (
+                <EmptyState
+                  title={t('pages.workoutSessions.emptySessions')}
+                  icon={<Dumbbell className="h-8 w-8" />}
+                />
+              ) : (
+                <PaginatedSlide
+                  key={`${sessionStartDate ? formatLocalDate(sessionStartDate) : ''}|${sessionEndDate ? formatLocalDate(sessionEndDate) : ''}`}
+                  items={filteredSessions}
+                  pageSize={SESSIONS_PAGE_SIZE}
+                  centerList
+                  className="space-y-sm"
                 >
-                  <FilterField label={t('common.fields.category')} icon={Tag}>
-                    <Select
-                      value={planCategoryFilter}
-                      onValueChange={(v) =>
-                        setPlanCategoryFilter(v as WorkoutCategory | 'all')
-                      }
-                    >
-                      <SelectTrigger
-                        className="w-44"
-                        aria-label={t('pages.workoutPlans.allCategories')}
-                        startIcon={<Activity className="h-3.5 w-3.5" />}
-                      >
-                        <SelectValue
-                          placeholder={t('pages.workoutPlans.allCategories')}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          {t('pages.workoutPlans.allCategories')}
-                        </SelectItem>
-                        {WORKOUT_CATEGORIES.map((key) => {
-                          const CatIcon = WORKOUT_CATEGORY_ICONS[key];
-                          return (
-                            <SelectItem
-                              key={key}
-                              value={key}
-                              icon={
-                                CatIcon ? <CatIcon className="h-4 w-4" /> : undefined
-                              }
-                            >
-                              {t(`pages.workoutPlans.categories.${key}`)}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </FilterField>
-                  <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
-                    <Select
-                      value={planStatusFilter}
-                      onValueChange={(v) =>
-                        setPlanStatusFilter(v as 'all' | 'active' | 'inactive')
-                      }
-                    >
-                      <SelectTrigger
-                        className="w-36"
-                        aria-label={t('pages.workoutPlans.allStatus')}
-                        startIcon={<CircleDot className="h-3.5 w-3.5" />}
-                      >
-                        <SelectValue placeholder={t('pages.workoutPlans.allStatus')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          {t('pages.workoutPlans.allStatus')}
-                        </SelectItem>
-                        <SelectItem
-                          value="active"
-                          icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
-                        >
-                          {t('pages.workoutPlans.active')}
-                        </SelectItem>
-                        <SelectItem
-                          value="inactive"
-                          icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
-                        >
-                          {t('pages.workoutPlans.inactive')}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FilterField>
-                </FilterBar>
-
-                {filteredPlans.length === 0 ? (
-                  <EmptyState
-                    title={t('pages.workoutPlans.emptyPlans')}
-                    icon={<Dumbbell className="h-8 w-8" />}
-                  />
-                ) : (
-                  <PaginatedSlide
-                    key={`${planCategoryFilter}|${planStatusFilter}`}
-                    items={filteredPlans}
-                    pageSize={planColumns * PLANS_ROWS_PER_PAGE}
-                    centerList
-                    className="gap-md grid sm:grid-cols-2 lg:grid-cols-3"
-                  >
-                    {(pagePlans) =>
-                      pagePlans.map((plan) => (
-                        <PlanCard
-                          key={plan.id}
-                          plan={plan}
-                          onOpen={() => setViewPlanId(plan.id)}
-                          onEdit={() => setDialog({ type: 'edit-plan', plan })}
-                          onDelete={() => handleDeletePlan(plan)}
-                          t={t}
-                        />
-                      ))
-                    }
-                  </PaginatedSlide>
-                )}
-              </>
-            )}
-          </TabsContent>
-
-          {/* ── Exercícios (catálogo) ────────────────────────────────────── */}
-          <TabsContent value="exercises" className="mt-0 flex-1">
-            {catalogExercises.length === 0 ? (
-              <EmptyState
-                title={t('pages.exercises.empty')}
-                icon={<Dumbbell className="h-8 w-8" />}
-              />
-            ) : (
-              <>
-                <FilterBar
-                  className="mb-lg"
-                  hasActiveFilters={
-                    !!exerciseSearch ||
-                    exerciseTypeFilter !== 'all' ||
-                    exerciseMuscleFilter !== 'all' ||
-                    exerciseCategoryFilter !== 'all'
+                  {(pageSessions) =>
+                    pageSessions.map((session) => (
+                      <SessionCard
+                        key={session.id}
+                        session={session}
+                        onView={() => setDialog({ type: 'view-session', session })}
+                        onEdit={() => setDialog({ type: 'edit-session', session })}
+                        onDelete={() => void handleDeleteSession(session)}
+                        t={t}
+                      />
+                    ))
                   }
-                  onClear={() => {
-                    setExerciseSearch('');
-                    setExerciseTypeFilter('all');
-                    setExerciseMuscleFilter('all');
-                    setExerciseCategoryFilter('all');
-                  }}
-                  activeFilters={[
-                    ...(exerciseCategoryFilter !== 'all'
-                      ? [
-                          {
-                            key: 'category',
-                            label: `${t('pages.exercises.fieldCategory')}: ${t(`pages.workoutPlans.categories.${exerciseCategoryFilter}`)}`,
-                            onRemove: () => setExerciseCategoryFilter('all'),
-                          },
-                        ]
-                      : []),
-                    ...(exerciseTypeFilter !== 'all'
-                      ? [
-                          {
-                            key: 'type',
-                            label: `${t('pages.exercises.allTypes')}: ${t(`pages.workoutPlans.muscleChips.${exerciseTypeFilter}`)}`,
-                            onRemove: () => setExerciseTypeFilter('all'),
-                          },
-                        ]
-                      : []),
-                    ...(exerciseMuscleFilter !== 'all'
-                      ? [
-                          {
-                            key: 'muscle',
-                            label: `${t('pages.exercises.allMuscles')}: ${t(`pages.workoutPlans.muscleChips.${exerciseMuscleFilter}`)}`,
-                            onRemove: () => setExerciseMuscleFilter('all'),
-                          },
-                        ]
-                      : []),
-                  ]}
-                >
-                  <FilterField label={t('common.filterLabels.search')} icon={Search}>
-                    <SearchInput
-                      placeholder={t('pages.exercises.searchPlaceholder')}
-                      value={exerciseSearch}
-                      onValueChange={setExerciseSearch}
-                      className="w-44"
-                    />
-                  </FilterField>
-                  <FilterField label={t('common.fields.category')} icon={Tag}>
-                    <Select
-                      value={exerciseCategoryFilter}
-                      onValueChange={setExerciseCategoryFilter}
-                    >
-                      <SelectTrigger
-                        className="w-44"
-                        aria-label={t('pages.exercises.allCategories')}
-                        startIcon={<Activity className="h-3.5 w-3.5" />}
-                      >
-                        <SelectValue placeholder={t('pages.exercises.allCategories')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          {t('pages.exercises.allCategories')}
-                        </SelectItem>
-                        {WORKOUT_CATEGORIES.map((key) => {
-                          const CatIcon = WORKOUT_CATEGORY_ICONS[key];
-                          return (
-                            <SelectItem
-                              key={key}
-                              value={key}
-                              icon={
-                                CatIcon ? <CatIcon className="h-4 w-4" /> : undefined
-                              }
-                            >
-                              {t(`pages.workoutPlans.categories.${key}`)}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </FilterField>
-                  <FilterField label={t('common.fields.type')} icon={Shapes}>
-                    <Select
-                      value={exerciseTypeFilter}
-                      onValueChange={setExerciseTypeFilter}
-                    >
-                      <SelectTrigger
-                        className="w-44"
-                        aria-label={t('pages.exercises.allTypes')}
-                        startIcon={<Dumbbell className="h-3.5 w-3.5" />}
-                      >
-                        <SelectValue placeholder={t('pages.exercises.allTypes')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          {t('pages.exercises.allTypes')}
-                        </SelectItem>
-                        {EXERCISE_TYPE_FILTER_KEYS.map((key) => (
-                          <SelectItem key={key} value={key}>
-                            {t(`pages.workoutPlans.muscleChips.${key}`)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FilterField>
-                  <FilterField label={t('common.filterLabels.muscle')} icon={Dumbbell}>
-                    <Select
-                      value={exerciseMuscleFilter}
-                      onValueChange={setExerciseMuscleFilter}
-                    >
-                      <SelectTrigger
-                        className="w-44"
-                        aria-label={t('pages.exercises.allMuscles')}
-                        startIcon={<Layers className="h-3.5 w-3.5" />}
-                      >
-                        <SelectValue placeholder={t('pages.exercises.allMuscles')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          {t('pages.exercises.allMuscles')}
-                        </SelectItem>
-                        {EXERCISE_MUSCLE_FILTER_KEYS.map((key) => (
-                          <SelectItem key={key} value={key}>
-                            {t(`pages.workoutPlans.muscleChips.${key}`)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FilterField>
-                </FilterBar>
+                </PaginatedSlide>
+              )}
+            </>
+          )}
+        </TabsContent>
 
-                {filteredCatalogExercises.length === 0 ? (
-                  <EmptyState
-                    title={t('pages.exercises.noResults')}
-                    icon={<Dumbbell className="h-8 w-8" />}
-                  />
-                ) : (
-                  <PaginatedSlide
-                    // Filtro novo → remonta e volta à página 1
-                    key={`${exerciseSearch}|${exerciseCategoryFilter}|${exerciseTypeFilter}|${exerciseMuscleFilter}`}
-                    items={filteredCatalogExercises}
-                    pageSize={catalogColumns * CATALOG_ROWS_PER_PAGE}
-                    centerList
-                    className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                  >
-                    {(pageExercises) =>
-                      pageExercises.map((exercise) => (
-                        <ExerciseCatalogCard
-                          key={exercise.id}
-                          exercise={exercise}
-                          onEdit={() =>
-                            setDialog({ type: 'edit-catalog-exercise', exercise })
-                          }
-                          onDelete={() => handleDeleteCatalogExercise(exercise)}
-                          onChangeImage={() => setImagePickerExercise(exercise)}
-                        />
-                      ))
+        {/* ── Calendário ──────────────────────────────────────────────── */}
+        <TabsContent value="calendar" className="mt-0 flex-1">
+          {/* Calendário + detalhe do dia centralizados na altura livre */}
+          <div className="page-fill flex flex-1 flex-col justify-center">
+            {plansLoading ? <LoadingState /> : <WorkoutCalendar plans={plans} />}
+          </div>
+        </TabsContent>
+
+        {/* ── Planos ──────────────────────────────────────────────────── */}
+        <TabsContent value="plans" className="mt-0 flex-1">
+          {plansLoading ? (
+            <LoadingState />
+          ) : plans.length === 0 ? (
+            <EmptyState
+              title={t('pages.workoutPlans.emptyPlans')}
+              icon={<Dumbbell className="h-8 w-8" />}
+            />
+          ) : (
+            <>
+              <FilterBar
+                className="mb-lg"
+                hasActiveFilters={hasPlanFilters}
+                onClear={clearPlanFilters}
+                activeFilters={[
+                  ...(planCategoryFilter !== 'all'
+                    ? [
+                        {
+                          key: 'category',
+                          label: `${t('pages.workoutPlans.category')}: ${t(`pages.workoutPlans.categories.${planCategoryFilter}`)}`,
+                          onRemove: () => setPlanCategoryFilter('all'),
+                        },
+                      ]
+                    : []),
+                  ...(planStatusFilter !== 'all'
+                    ? [
+                        {
+                          key: 'status',
+                          label: `${t('common.fields.status')}: ${
+                            planStatusFilter === 'active'
+                              ? t('pages.workoutPlans.active')
+                              : t('pages.workoutPlans.inactive')
+                          }`,
+                          onRemove: () => setPlanStatusFilter('all'),
+                        },
+                      ]
+                    : []),
+                ]}
+              >
+                <FilterField label={t('common.fields.category')} icon={Tag}>
+                  <Select
+                    value={planCategoryFilter}
+                    onValueChange={(v) =>
+                      setPlanCategoryFilter(v as WorkoutCategory | 'all')
                     }
-                  </PaginatedSlide>
-                )}
-              </>
-            )}
-          </TabsContent>
-        </Tabs>
+                  >
+                    <SelectTrigger
+                      className="w-44"
+                      aria-label={t('pages.workoutPlans.allCategories')}
+                      startIcon={<Activity className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue
+                        placeholder={t('pages.workoutPlans.allCategories')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.workoutPlans.allCategories')}
+                      </SelectItem>
+                      {WORKOUT_CATEGORIES.map((key) => {
+                        const CatIcon = WORKOUT_CATEGORY_ICONS[key];
+                        return (
+                          <SelectItem
+                            key={key}
+                            value={key}
+                            icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                          >
+                            {t(`pages.workoutPlans.categories.${key}`)}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </FilterField>
+                <FilterField label={t('common.fields.status')} icon={CheckCircle2}>
+                  <Select
+                    value={planStatusFilter}
+                    onValueChange={(v) =>
+                      setPlanStatusFilter(v as 'all' | 'active' | 'inactive')
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-36"
+                      aria-label={t('pages.workoutPlans.allStatus')}
+                      startIcon={<CircleDot className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.workoutPlans.allStatus')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.workoutPlans.allStatus')}
+                      </SelectItem>
+                      <SelectItem
+                        value="active"
+                        icon={<TASK_STATUS_ICONS.active className="h-4 w-4" />}
+                      >
+                        {t('pages.workoutPlans.active')}
+                      </SelectItem>
+                      <SelectItem
+                        value="inactive"
+                        icon={<TASK_STATUS_ICONS.inactive className="h-4 w-4" />}
+                      >
+                        {t('pages.workoutPlans.inactive')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FilterField>
+              </FilterBar>
 
-        {/* ── Divisões do plano ─────────────────────────────────────────── */}
-        {/* Antes do Dialog principal: os formulários abertos daqui empilham por cima */}
-        <Dialog
-          open={!!viewedPlan}
-          onOpenChange={(open) => {
-            if (open) return;
-            setViewPlanId(null);
-            setViewDayId(null);
-          }}
-        >
-          <DialogContent className="max-w-5xl">
-            {viewedPlan && (
-              <>
-                <DialogHeader>
-                  <DialogTitle className="gap-sm flex items-center">
-                    <ClipboardList
-                      className="text-primary h-4 w-4 shrink-0"
-                      aria-hidden="true"
+              {filteredPlans.length === 0 ? (
+                <EmptyState
+                  title={t('pages.workoutPlans.emptyPlans')}
+                  icon={<Dumbbell className="h-8 w-8" />}
+                />
+              ) : (
+                <PaginatedSlide
+                  key={`${planCategoryFilter}|${planStatusFilter}`}
+                  items={filteredPlans}
+                  pageSize={planColumns * PLANS_ROWS_PER_PAGE}
+                  centerList
+                  className="gap-md grid sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  {(pagePlans) =>
+                    pagePlans.map((plan) => (
+                      <PlanCard
+                        key={plan.id}
+                        plan={plan}
+                        onOpen={() => setViewPlanId(plan.id)}
+                        onEdit={() => setDialog({ type: 'edit-plan', plan })}
+                        onDelete={() => handleDeletePlan(plan)}
+                        t={t}
+                      />
+                    ))
+                  }
+                </PaginatedSlide>
+              )}
+            </>
+          )}
+        </TabsContent>
+
+        {/* ── Exercícios (catálogo) ────────────────────────────────────── */}
+        <TabsContent value="exercises" className="mt-0 flex-1">
+          {catalogExercises.length === 0 ? (
+            <EmptyState
+              title={t('pages.exercises.empty')}
+              icon={<Dumbbell className="h-8 w-8" />}
+            />
+          ) : (
+            <>
+              <FilterBar
+                className="mb-lg"
+                hasActiveFilters={
+                  !!exerciseSearch ||
+                  exerciseTypeFilter !== 'all' ||
+                  exerciseMuscleFilter !== 'all' ||
+                  exerciseCategoryFilter !== 'all'
+                }
+                onClear={() => {
+                  setExerciseSearch('');
+                  setExerciseTypeFilter('all');
+                  setExerciseMuscleFilter('all');
+                  setExerciseCategoryFilter('all');
+                }}
+                activeFilters={[
+                  ...(exerciseCategoryFilter !== 'all'
+                    ? [
+                        {
+                          key: 'category',
+                          label: `${t('pages.exercises.fieldCategory')}: ${t(`pages.workoutPlans.categories.${exerciseCategoryFilter}`)}`,
+                          onRemove: () => setExerciseCategoryFilter('all'),
+                        },
+                      ]
+                    : []),
+                  ...(exerciseTypeFilter !== 'all'
+                    ? [
+                        {
+                          key: 'type',
+                          label: `${t('pages.exercises.allTypes')}: ${t(`pages.workoutPlans.muscleChips.${exerciseTypeFilter}`)}`,
+                          onRemove: () => setExerciseTypeFilter('all'),
+                        },
+                      ]
+                    : []),
+                  ...(exerciseMuscleFilter !== 'all'
+                    ? [
+                        {
+                          key: 'muscle',
+                          label: `${t('pages.exercises.allMuscles')}: ${t(`pages.workoutPlans.muscleChips.${exerciseMuscleFilter}`)}`,
+                          onRemove: () => setExerciseMuscleFilter('all'),
+                        },
+                      ]
+                    : []),
+                ]}
+              >
+                <FilterField label={t('common.filterLabels.search')} icon={Search}>
+                  <SearchInput
+                    placeholder={t('pages.exercises.searchPlaceholder')}
+                    value={exerciseSearch}
+                    onValueChange={setExerciseSearch}
+                    className="w-44"
+                  />
+                </FilterField>
+                <FilterField label={t('common.fields.category')} icon={Tag}>
+                  <Select
+                    value={exerciseCategoryFilter}
+                    onValueChange={setExerciseCategoryFilter}
+                  >
+                    <SelectTrigger
+                      className="w-44"
+                      aria-label={t('pages.exercises.allCategories')}
+                      startIcon={<Activity className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.exercises.allCategories')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.exercises.allCategories')}
+                      </SelectItem>
+                      {WORKOUT_CATEGORIES.map((key) => {
+                        const CatIcon = WORKOUT_CATEGORY_ICONS[key];
+                        return (
+                          <SelectItem
+                            key={key}
+                            value={key}
+                            icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                          >
+                            {t(`pages.workoutPlans.categories.${key}`)}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </FilterField>
+                <FilterField label={t('common.fields.type')} icon={Shapes}>
+                  <Select
+                    value={exerciseTypeFilter}
+                    onValueChange={setExerciseTypeFilter}
+                  >
+                    <SelectTrigger
+                      className="w-44"
+                      aria-label={t('pages.exercises.allTypes')}
+                      startIcon={<Dumbbell className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.exercises.allTypes')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.exercises.allTypes')}
+                      </SelectItem>
+                      {EXERCISE_TYPE_FILTER_KEYS.map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {t(`pages.workoutPlans.muscleChips.${key}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FilterField>
+                <FilterField label={t('common.filterLabels.muscle')} icon={Dumbbell}>
+                  <Select
+                    value={exerciseMuscleFilter}
+                    onValueChange={setExerciseMuscleFilter}
+                  >
+                    <SelectTrigger
+                      className="w-44"
+                      aria-label={t('pages.exercises.allMuscles')}
+                      startIcon={<Layers className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.exercises.allMuscles')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.exercises.allMuscles')}
+                      </SelectItem>
+                      {EXERCISE_MUSCLE_FILTER_KEYS.map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {t(`pages.workoutPlans.muscleChips.${key}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FilterField>
+              </FilterBar>
+
+              {filteredCatalogExercises.length === 0 ? (
+                <EmptyState
+                  title={t('pages.exercises.noResults')}
+                  icon={<Dumbbell className="h-8 w-8" />}
+                />
+              ) : (
+                <PaginatedSlide
+                  // Filtro novo → remonta e volta à página 1
+                  key={`${exerciseSearch}|${exerciseCategoryFilter}|${exerciseTypeFilter}|${exerciseMuscleFilter}`}
+                  items={filteredCatalogExercises}
+                  pageSize={catalogColumns * CATALOG_ROWS_PER_PAGE}
+                  centerList
+                  className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                >
+                  {(pageExercises) =>
+                    pageExercises.map((exercise) => (
+                      <ExerciseCatalogCard
+                        key={exercise.id}
+                        exercise={exercise}
+                        onEdit={() =>
+                          setDialog({ type: 'edit-catalog-exercise', exercise })
+                        }
+                        onDelete={() => handleDeleteCatalogExercise(exercise)}
+                        onChangeImage={() => setImagePickerExercise(exercise)}
+                      />
+                    ))
+                  }
+                </PaginatedSlide>
+              )}
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* ── Divisões do plano ─────────────────────────────────────────── */}
+      {/* Antes do Dialog principal: os formulários abertos daqui empilham por cima */}
+      <Dialog
+        open={!!viewedPlan}
+        onOpenChange={(open) => {
+          if (open) return;
+          setViewPlanId(null);
+          setViewDayId(null);
+        }}
+      >
+        <DialogContent className="max-w-5xl">
+          {viewedPlan && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="gap-sm flex items-center">
+                  <ClipboardList
+                    className="text-primary h-4 w-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                  {viewedPlan.name}
+                </DialogTitle>
+                <DialogDescription>
+                  {viewedPlan.day_count} {t('pages.workoutPlans.days')} ·{' '}
+                  {viewedPlan.exercise_count} {t('pages.workoutPlans.exercises')}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="px-xs py-xs space-y-md">
+                {viewedPlan.description && (
+                  <p className="text-muted-foreground text-sm">
+                    {viewedPlan.description}
+                  </p>
+                )}
+                <PlanDaysList
+                  plan={viewedPlan}
+                  onOpenDay={(day) => setViewDayId(day.id)}
+                  t={t}
+                />
+              </div>
+              <DialogCloseFooter>
+                <Can action="add">
+                  <Button
+                    onClick={() =>
+                      setDialog({ type: 'new-day', planId: viewedPlan.id })
+                    }
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t('pages.workoutPlans.newDayBtn')}
+                  </Button>
+                </Can>
+              </DialogCloseFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Exercícios da divisão (por cima do modal do plano) ──────────── */}
+      <Dialog open={!!viewedDay} onOpenChange={(open) => !open && setViewDayId(null)}>
+        <DialogContent className="max-w-5xl">
+          {viewedDay && (
+            <>
+              <DialogHeader>
+                <div className="gap-sm flex items-start justify-between">
+                  <div className="min-w-0">
+                    <DialogTitle className="gap-sm flex items-center">
+                      <span className="text-primary">
+                        {getMuscleIcon(viewedDay.muscle_groups)}
+                      </span>
+                      {viewedDay.name}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {viewedDay.muscle_groups && `${viewedDay.muscle_groups} · `}
+                      {viewedDay.exercise_count} {t('pages.workoutPlans.exercises')}
+                    </DialogDescription>
+                  </div>
+                  <div className="gap-xs flex shrink-0">
+                    <Can action="change">
+                      <Button
+                        aria-label={t('common.actions.edit')}
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDialog({ type: 'edit-day', day: viewedDay })}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </Can>
+                    <Can action="delete">
+                      <Button
+                        aria-label={t('common.actions.delete')}
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteDay(viewedDay)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </Can>
+                  </div>
+                </div>
+              </DialogHeader>
+              <div className="pr-xs">
+                <div>
+                  {viewedDay.exercises && viewedDay.exercises.length > 0 ? (
+                    <ExerciseList
+                      exercises={viewedDay.exercises}
+                      onEdit={(ex) =>
+                        setDialog({
+                          type: 'edit-exercise',
+                          exercise: ex,
+                          day: viewedDay,
+                        })
+                      }
+                      onDelete={handleDeleteExercise}
                     />
-                    {viewedPlan.name}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {viewedPlan.day_count} {t('pages.workoutPlans.days')} ·{' '}
-                    {viewedPlan.exercise_count} {t('pages.workoutPlans.exercises')}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="px-xs py-xs space-y-md">
-                  {viewedPlan.description && (
-                    <p className="text-muted-foreground text-sm">
-                      {viewedPlan.description}
+                  ) : (
+                    <p className="py-lg text-muted-foreground text-center text-sm">
+                      {t('pages.workoutPlans.noExercises')}
                     </p>
                   )}
-                  <PlanDaysList
-                    plan={viewedPlan}
-                    onOpenDay={(day) => setViewDayId(day.id)}
-                    t={t}
-                  />
                 </div>
-                <DialogCloseFooter>
-                  <Can action="add">
-                    <Button
-                      onClick={() =>
-                        setDialog({ type: 'new-day', planId: viewedPlan.id })
-                      }
-                    >
-                      <Plus className="h-4 w-4" />
-                      {t('pages.workoutPlans.newDayBtn')}
-                    </Button>
-                  </Can>
-                </DialogCloseFooter>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
+              </div>
+              <DialogCloseFooter>
+                <Can action="add">
+                  <Button
+                    onClick={() => setDialog({ type: 'add-exercise', day: viewedDay })}
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t('pages.workoutPlans.addExerciseBtn')}
+                  </Button>
+                </Can>
+              </DialogCloseFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
-        {/* ── Exercícios da divisão (por cima do modal do plano) ──────────── */}
-        <Dialog open={!!viewedDay} onOpenChange={(open) => !open && setViewDayId(null)}>
-          <DialogContent className="max-w-5xl">
-            {viewedDay && (
-              <>
-                <DialogHeader>
-                  <div className="gap-sm flex items-start justify-between">
-                    <div className="min-w-0">
-                      <DialogTitle className="gap-sm flex items-center">
-                        <span className="text-primary">
-                          {getMuscleIcon(viewedDay.muscle_groups)}
-                        </span>
-                        {viewedDay.name}
-                      </DialogTitle>
-                      <DialogDescription>
-                        {viewedDay.muscle_groups && `${viewedDay.muscle_groups} · `}
-                        {viewedDay.exercise_count} {t('pages.workoutPlans.exercises')}
-                      </DialogDescription>
-                    </div>
-                    <div className="gap-xs flex shrink-0">
-                      <Can action="change">
-                        <Button
-                          aria-label={t('common.actions.edit')}
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            setDialog({ type: 'edit-day', day: viewedDay })
-                          }
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Can>
-                      <Can action="delete">
-                        <Button
-                          aria-label={t('common.actions.delete')}
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteDay(viewedDay)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </Can>
-                    </div>
-                  </div>
-                </DialogHeader>
-                <div className="pr-xs">
-                  <div>
-                    {viewedDay.exercises && viewedDay.exercises.length > 0 ? (
-                      <ExerciseList
-                        exercises={viewedDay.exercises}
-                        onEdit={(ex) =>
-                          setDialog({
-                            type: 'edit-exercise',
-                            exercise: ex,
-                            day: viewedDay,
-                          })
-                        }
-                        onDelete={handleDeleteExercise}
-                      />
-                    ) : (
-                      <p className="py-lg text-muted-foreground text-center text-sm">
-                        {t('pages.workoutPlans.noExercises')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <DialogCloseFooter>
-                  <Can action="add">
-                    <Button
-                      onClick={() =>
-                        setDialog({ type: 'add-exercise', day: viewedDay })
-                      }
-                    >
-                      <Plus className="h-4 w-4" />
-                      {t('pages.workoutPlans.addExerciseBtn')}
-                    </Button>
-                  </Can>
-                </DialogCloseFooter>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
+      {/* ── Dialog ──────────────────────────────────────────────────────── */}
+      <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
+        <DialogContent
+          className={
+            isExerciseDialog || dialog?.type === 'view-session'
+              ? 'max-w-5xl'
+              : isSessionDialog
+                ? 'max-w-4xl'
+                : dialog?.type === 'new-day' || dialog?.type === 'edit-day'
+                  ? 'max-w-2xl'
+                  : 'max-w-xl'
+          }
+        >
+          <DialogHeader>
+            <DialogTitle
+              mode={
+                dialog?.type.startsWith('edit')
+                  ? 'edit'
+                  : dialog?.type.startsWith('new') || dialog?.type === 'add-exercise'
+                    ? 'create'
+                    : undefined
+              }
+              className={cn(
+                dialog?.type === 'view-session' && 'gap-sm flex items-center'
+              )}
+            >
+              {dialog?.type === 'view-session' && (
+                <Dumbbell className="text-primary h-5 w-5" />
+              )}
+              {dialogTitle()}
+            </DialogTitle>
+            <DialogDescription>{dialogDesc()}</DialogDescription>
+          </DialogHeader>
 
-        {/* ── Dialog ──────────────────────────────────────────────────────── */}
-        <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
-          <DialogContent
-            className={
-              isExerciseDialog || dialog?.type === 'view-session'
-                ? 'max-w-5xl'
-                : isSessionDialog
-                  ? 'max-w-4xl'
-                  : dialog?.type === 'new-day' || dialog?.type === 'edit-day'
-                    ? 'max-w-2xl'
-                    : 'max-w-xl'
-            }
-          >
-            <DialogHeader>
-              <DialogTitle
-                mode={
-                  dialog?.type.startsWith('edit')
-                    ? 'edit'
-                    : dialog?.type.startsWith('new') || dialog?.type === 'add-exercise'
-                      ? 'create'
-                      : undefined
+          {(dialog?.type === 'new-plan' || dialog?.type === 'edit-plan') && (
+            <WorkoutPlanForm
+              plan={dialog.type === 'edit-plan' ? dialog.plan : undefined}
+              ownerId={ownerId}
+              onSubmit={async (data) => {
+                if (dialog.type === 'edit-plan') {
+                  await updatePlanMutation.mutateAsync({ id: dialog.plan.id, data });
+                } else {
+                  await createPlanMutation.mutateAsync(data);
                 }
-                className={cn(
-                  dialog?.type === 'view-session' && 'gap-sm flex items-center'
-                )}
-              >
-                {dialog?.type === 'view-session' && (
-                  <Dumbbell className="text-primary h-5 w-5" />
-                )}
-                {dialogTitle()}
-              </DialogTitle>
-              <DialogDescription>{dialogDesc()}</DialogDescription>
-            </DialogHeader>
+              }}
+              onCancel={() => setDialog(null)}
+              isLoading={createPlanMutation.isPending || updatePlanMutation.isPending}
+            />
+          )}
 
-            {(dialog?.type === 'new-plan' || dialog?.type === 'edit-plan') && (
-              <WorkoutPlanForm
-                plan={dialog.type === 'edit-plan' ? dialog.plan : undefined}
-                ownerId={ownerId}
-                onSubmit={async (data) => {
-                  if (dialog.type === 'edit-plan') {
-                    await updatePlanMutation.mutateAsync({ id: dialog.plan.id, data });
-                  } else {
-                    await createPlanMutation.mutateAsync(data);
-                  }
-                }}
-                onCancel={() => setDialog(null)}
-                isLoading={createPlanMutation.isPending || updatePlanMutation.isPending}
-              />
-            )}
-
-            {(dialog?.type === 'new-day' || dialog?.type === 'edit-day') && (
-              <WorkoutDayForm
-                day={dialog.type === 'edit-day' ? dialog.day : undefined}
-                planId={dialog.type === 'new-day' ? dialog.planId : dialog.day.plan}
-                ownerId={ownerId}
-                onSubmit={async (dayData) => {
-                  if (dialog.type === 'edit-day') {
-                    await updateDayMutation.mutateAsync({
-                      id: dialog.day.id,
-                      dayData: dayData,
-                    });
-                  } else {
-                    await createDayMutation.mutateAsync(dayData);
-                  }
-                }}
-                onCancel={() => setDialog(null)}
-                isLoading={createDayMutation.isPending || updateDayMutation.isPending}
-              />
-            )}
-
-            {(dialog?.type === 'add-exercise' || dialog?.type === 'edit-exercise') && (
-              <WorkoutExerciseModal
-                bodyWeightKg={latestBodyWeightKg}
-                exercises={catalogExercises.filter(
-                  (ex) =>
-                    ex.category ===
-                      plans.find((p) => p.id === dialog.day.plan)?.category ||
-                    (dialog.type === 'edit-exercise' &&
-                      ex.id === dialog.exercise.exercise)
-                )}
-                existing={dialog.type === 'edit-exercise' ? dialog.exercise : undefined}
-                nextOrder={dialog.day.exercises?.length ?? 0}
-                onSubmit={async (data) => {
-                  if (dialog.type === 'edit-exercise') {
-                    await editExerciseMutation.mutateAsync({
-                      id: dialog.exercise.id,
-                      data: { ...data, workout_day: dialog.day.id },
-                    });
-                  } else {
-                    await addExerciseMutation.mutateAsync({
-                      ...data,
-                      workout_day: dialog.day.id,
-                    });
-                  }
-                }}
-                onCancel={() => setDialog(null)}
-                isLoading={
-                  addExerciseMutation.isPending || editExerciseMutation.isPending
+          {(dialog?.type === 'new-day' || dialog?.type === 'edit-day') && (
+            <WorkoutDayForm
+              day={dialog.type === 'edit-day' ? dialog.day : undefined}
+              planId={dialog.type === 'new-day' ? dialog.planId : dialog.day.plan}
+              ownerId={ownerId}
+              onSubmit={async (dayData) => {
+                if (dialog.type === 'edit-day') {
+                  await updateDayMutation.mutateAsync({
+                    id: dialog.day.id,
+                    dayData: dayData,
+                  });
+                } else {
+                  await createDayMutation.mutateAsync(dayData);
                 }
-              />
-            )}
+              }}
+              onCancel={() => setDialog(null)}
+              isLoading={createDayMutation.isPending || updateDayMutation.isPending}
+            />
+          )}
 
-            {dialog?.type === 'view-session' && (
-              <SessionDetails session={dialog.session} t={t} />
-            )}
-
-            {(dialog?.type === 'new-session' || dialog?.type === 'edit-session') && (
-              <WorkoutSessionForm
-                workoutDays={allDaysList}
-                ownerId={ownerId}
-                session={dialog.type === 'edit-session' ? dialog.session : undefined}
-                bodyWeightKg={latestBodyWeightKg}
-                onSubmit={async (data) => {
-                  if (dialog.type === 'edit-session') {
-                    await updateSessionMutation.mutateAsync({
-                      id: dialog.session.id,
-                      data,
-                      original: dialog.session,
-                    });
-                  } else {
-                    await createSessionMutation.mutateAsync(data);
-                  }
-                }}
-                onCancel={() => setDialog(null)}
-                isLoading={
-                  createSessionMutation.isPending || updateSessionMutation.isPending
+          {(dialog?.type === 'add-exercise' || dialog?.type === 'edit-exercise') && (
+            <WorkoutExerciseModal
+              bodyWeightKg={latestBodyWeightKg}
+              exercises={catalogExercises.filter(
+                (ex) =>
+                  ex.category ===
+                    plans.find((p) => p.id === dialog.day.plan)?.category ||
+                  (dialog.type === 'edit-exercise' &&
+                    ex.id === dialog.exercise.exercise)
+              )}
+              existing={dialog.type === 'edit-exercise' ? dialog.exercise : undefined}
+              nextOrder={dialog.day.exercises?.length ?? 0}
+              onSubmit={async (data) => {
+                if (dialog.type === 'edit-exercise') {
+                  await editExerciseMutation.mutateAsync({
+                    id: dialog.exercise.id,
+                    data: { ...data, workout_day: dialog.day.id },
+                  });
+                } else {
+                  await addExerciseMutation.mutateAsync({
+                    ...data,
+                    workout_day: dialog.day.id,
+                  });
                 }
-              />
-            )}
+              }}
+              onCancel={() => setDialog(null)}
+              isLoading={
+                addExerciseMutation.isPending || editExerciseMutation.isPending
+              }
+            />
+          )}
 
-            {(dialog?.type === 'new-catalog-exercise' ||
-              dialog?.type === 'edit-catalog-exercise') && (
-              <ExerciseCatalogForm
-                exercise={
-                  dialog.type === 'edit-catalog-exercise' ? dialog.exercise : undefined
-                }
-                onSubmit={async (data) => {
-                  if (dialog.type === 'edit-catalog-exercise') {
-                    await updateCatalogExerciseMutation.mutateAsync({
-                      id: dialog.exercise.id,
-                      data,
-                    });
-                  } else {
-                    await createCatalogExerciseMutation.mutateAsync(data);
-                  }
-                }}
-                onCancel={() => setDialog(null)}
-                isLoading={
-                  createCatalogExerciseMutation.isPending ||
-                  updateCatalogExerciseMutation.isPending
-                }
-              />
-            )}
-          </DialogContent>
-        </Dialog>
+          {dialog?.type === 'view-session' && (
+            <SessionDetails session={dialog.session} t={t} />
+          )}
 
-        <ExerciseDatasetPicker
-          open={!!imagePickerExercise}
-          onOpenChange={(open) => !open && setImagePickerExercise(null)}
-          onSelect={(entry) => {
-            if (!imagePickerExercise) return;
-            setExerciseImageMutation.mutate({
-              id: imagePickerExercise.id,
-              datasetEntryId: entry.id,
-            });
-          }}
-        />
-      </PageContainer>
-    </AnimatedPage>
+          {(dialog?.type === 'new-session' || dialog?.type === 'edit-session') && (
+            <WorkoutSessionForm
+              workoutDays={allDaysList}
+              ownerId={ownerId}
+              session={dialog.type === 'edit-session' ? dialog.session : undefined}
+              bodyWeightKg={latestBodyWeightKg}
+              onSubmit={async (data) => {
+                if (dialog.type === 'edit-session') {
+                  await updateSessionMutation.mutateAsync({
+                    id: dialog.session.id,
+                    data,
+                    original: dialog.session,
+                  });
+                } else {
+                  await createSessionMutation.mutateAsync(data);
+                }
+              }}
+              onCancel={() => setDialog(null)}
+              isLoading={
+                createSessionMutation.isPending || updateSessionMutation.isPending
+              }
+            />
+          )}
+
+          {(dialog?.type === 'new-catalog-exercise' ||
+            dialog?.type === 'edit-catalog-exercise') && (
+            <ExerciseCatalogForm
+              exercise={
+                dialog.type === 'edit-catalog-exercise' ? dialog.exercise : undefined
+              }
+              onSubmit={async (data) => {
+                if (dialog.type === 'edit-catalog-exercise') {
+                  await updateCatalogExerciseMutation.mutateAsync({
+                    id: dialog.exercise.id,
+                    data,
+                  });
+                } else {
+                  await createCatalogExerciseMutation.mutateAsync(data);
+                }
+              }}
+              onCancel={() => setDialog(null)}
+              isLoading={
+                createCatalogExerciseMutation.isPending ||
+                updateCatalogExerciseMutation.isPending
+              }
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <ExerciseDatasetPicker
+        open={!!imagePickerExercise}
+        onOpenChange={(open) => !open && setImagePickerExercise(null)}
+        onSelect={(entry) => {
+          if (!imagePickerExercise) return;
+          setExerciseImageMutation.mutate({
+            id: imagePickerExercise.id,
+            datasetEntryId: entry.id,
+          });
+        }}
+      />
+    </PageContainer>
   );
 }
 

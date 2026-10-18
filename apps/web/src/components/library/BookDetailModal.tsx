@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   AlignLeft,
   BookMarked,
@@ -24,7 +25,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Can } from '@/components/common/Can';
@@ -56,6 +57,7 @@ import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ACTION_COLOR } from '@/lib/action-colors';
+import { transitions } from '@/lib/animations/transitions';
 import { formatDate } from '@/lib/formatters';
 import { HIGHLIGHT_TYPE_KEY, highlightBg } from '@/lib/highlight-colors';
 import { cn } from '@/lib/utils';
@@ -85,24 +87,41 @@ const EMPTY_SUMMARIES: Summary[] = [];
 
 type DetailTab = 'info' | 'highlights' | 'readings' | 'summaries';
 
-/** Painel de aba empilhado: o inativo continua no grid (mantém a altura), invisível. */
+// Ordem de exibição das abas, usada para calcular a direção do slide ao trocar.
+const TAB_ORDER: DetailTab[] = ['info', 'readings', 'summaries', 'highlights'];
+
+/**
+ * Painel de aba empilhado: o inativo continua no grid (mantém a altura), invisível.
+ * O ativo entra com fade + slide horizontal, igual ao padrão de `TabsContent`
+ * (components/ui/tabs.tsx), mas sem desmontar os demais.
+ */
 function StackPanel({
   active,
+  direction,
   children,
 }: {
   active: boolean;
+  direction: number;
   children: React.ReactNode;
 }) {
+  const reduced = useReducedMotion();
   return (
     <div
-      className={cn(
-        'min-w-0 [grid-area:1/1]',
-        active ? 'animate-fade-in' : 'invisible'
-      )}
+      className={cn('min-w-0 [grid-area:1/1]', !active && 'invisible')}
       aria-hidden={!active}
       inert={!active}
     >
-      {children}
+      {active ? (
+        <motion.div
+          initial={reduced ? false : { opacity: 0, x: 24 * direction }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={transitions.normal}
+        >
+          {children}
+        </motion.div>
+      ) : (
+        children
+      )}
     </div>
   );
 }
@@ -204,6 +223,15 @@ export function BookDetailModal({
   initialTab = 'info',
 }: BookDetailModalProps) {
   const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
+  // Direção do slide ao trocar de aba: 1 = entra pela direita, -1 = pela esquerda.
+  const [tabDirection, setTabDirection] = useState(0);
+  const tabIndicatorId = useId();
+
+  const handleTabChange = (tab: DetailTab) => {
+    if (tab === activeTab) return;
+    setTabDirection(Math.sign(TAB_ORDER.indexOf(tab) - TAB_ORDER.indexOf(activeTab)));
+    setActiveTab(tab);
+  };
 
   // Highlights state
   // Destaque: o mesmo modal inclui (highlight undefined) e edita.
@@ -294,6 +322,7 @@ export function BookDetailModal({
     setLastResetKey({ open, initialTab });
     if (open) {
       setActiveTab(initialTab);
+      setTabDirection(0);
     } else {
       setHighlightDialog({ open: false });
       setIsReadingFormOpen(false);
@@ -557,13 +586,20 @@ export function BookDetailModal({
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`gap-sm px-sm py-sm flex flex-1 items-center justify-center rounded text-xs font-medium transition-colors ${
+              onClick={() => handleTabChange(tab.id)}
+              className={`gap-sm px-sm py-sm relative isolate flex flex-1 items-center justify-center rounded text-xs font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
+              {activeTab === tab.id && (
+                <motion.span
+                  layoutId={`${tabIndicatorId}-tab-indicator`}
+                  className="bg-primary absolute inset-0 -z-10 rounded"
+                  transition={transitions.normal}
+                />
+              )}
               {tab.icon}
               {tab.label}
             </button>
@@ -574,7 +610,7 @@ export function BookDetailModal({
             do maior (Informações) em todas as abas, sem altura fixa. */}
         <div className="grid">
           {/* Info tab */}
-          <StackPanel active={activeTab === 'info'}>
+          <StackPanel active={activeTab === 'info'} direction={tabDirection}>
             <>
               {/* Top section: cover + main info */}
               <div className="gap-lg flex">
@@ -779,7 +815,7 @@ export function BookDetailModal({
           </StackPanel>
 
           {/* Highlights tab */}
-          <StackPanel active={activeTab === 'highlights'}>
+          <StackPanel active={activeTab === 'highlights'} direction={tabDirection}>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-sm font-medium">
@@ -867,7 +903,7 @@ export function BookDetailModal({
           </StackPanel>
 
           {/* Readings tab */}
-          <StackPanel active={activeTab === 'readings'}>
+          <StackPanel active={activeTab === 'readings'} direction={tabDirection}>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-sm font-medium">
@@ -945,7 +981,7 @@ export function BookDetailModal({
           </StackPanel>
 
           {/* Summaries tab */}
-          <StackPanel active={activeTab === 'summaries'}>
+          <StackPanel active={activeTab === 'summaries'} direction={tabDirection}>
             <div className="space-y-3">
               <div className="gap-sm flex flex-wrap items-center justify-between">
                 <span className="text-muted-foreground text-sm font-medium">

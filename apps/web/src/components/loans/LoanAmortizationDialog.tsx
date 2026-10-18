@@ -2,6 +2,7 @@ import { Calculator, TrendingDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -67,52 +68,60 @@ export function LoanAmortizationDialog({
         {!amortization ? (
           <EmptyState title={t('pages.loans.amortization.noData')} />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground border-b text-left">
-                  <th className="pb-sm pr-3">#</th>
-                  <th className="pb-sm pr-3">
-                    {t('pages.loans.amortization.dueDate')}
-                  </th>
-                  <th className="pb-sm pr-3 text-right">
-                    {t('pages.loans.amortization.payment')}
-                  </th>
-                  <th className="pb-sm pr-3 text-right">
-                    {t('pages.loans.amortization.principal')}
-                  </th>
-                  <th className="pb-sm pr-3 text-right">
-                    {t('pages.loans.amortization.interest')}
-                  </th>
-                  <th className="pb-sm text-right">
-                    {t('pages.loans.amortization.balance')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {amortization.schedule.map((entry) => (
-                  <tr key={entry.installment} className="border-b last:border-0">
-                    <td className="py-xs pr-3">{entry.installment}</td>
-                    <td className="py-xs pr-3">
-                      {formatDate(entry.due_date, 'dd/MM/yyyy')}
-                    </td>
-                    <td className="py-xs pr-3 text-right">
-                      {formatCurrency(entry.payment)}
-                    </td>
-                    <td className="py-xs pr-3 text-right">
-                      {formatCurrency(entry.principal)}
-                    </td>
-                    <td className="py-xs pr-3 text-right">
-                      {formatCurrency(entry.interest)}
-                    </td>
-                    <td className="py-xs text-right">
-                      {formatCurrency(entry.balance)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <PaginatedSlide
+            items={amortization.schedule}
+            pageSize={LIST_PAGE_SIZE}
+            pinNav={false}
+          >
+            {(pageItems) => (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground border-b text-left">
+                      <th className="pb-sm pr-3">#</th>
+                      <th className="pb-sm pr-3">
+                        {t('pages.loans.amortization.dueDate')}
+                      </th>
+                      <th className="pb-sm pr-3 text-right">
+                        {t('pages.loans.amortization.payment')}
+                      </th>
+                      <th className="pb-sm pr-3 text-right">
+                        {t('pages.loans.amortization.principal')}
+                      </th>
+                      <th className="pb-sm pr-3 text-right">
+                        {t('pages.loans.amortization.interest')}
+                      </th>
+                      <th className="pb-sm text-right">
+                        {t('pages.loans.amortization.balance')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pageItems.map((entry) => (
+                      <tr key={entry.installment} className="border-b last:border-0">
+                        <td className="py-xs pr-3">{entry.installment}</td>
+                        <td className="py-xs pr-3">
+                          {formatDate(entry.due_date, 'dd/MM/yyyy')}
+                        </td>
+                        <td className="py-xs pr-3 text-right">
+                          {formatCurrency(entry.payment)}
+                        </td>
+                        <td className="py-xs pr-3 text-right">
+                          {formatCurrency(entry.principal)}
+                        </td>
+                        <td className="py-xs pr-3 text-right">
+                          {formatCurrency(entry.interest)}
+                        </td>
+                        <td className="py-xs text-right">
+                          {formatCurrency(entry.balance)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </PaginatedSlide>
         )}
         <DialogCloseFooter />
       </DialogContent>

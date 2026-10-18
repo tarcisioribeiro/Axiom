@@ -23,7 +23,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -952,7 +951,7 @@ export default function KnowledgeGraph() {
   };
 
   return (
-    <AnimatedPage>
+    <>
       <PageContainer>
         <PageHeader
           title={t('pages.knowledgeGraph.title')}
@@ -1313,6 +1312,6 @@ export default function KnowledgeGraph() {
         }}
         isLoading={createLinkMutation.isPending}
       />
-    </AnimatedPage>
+    </>
   );
 }
