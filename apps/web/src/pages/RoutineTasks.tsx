@@ -18,7 +18,6 @@ import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { type z } from 'zod';
 
 import { Can } from '@/components/common/Can';
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -62,7 +61,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getTaskCategoryColor } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
-import { type routineTaskSchema } from '@/lib/validations';
+import type { RoutineTaskFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import {
   routineTasksService,
@@ -70,8 +69,6 @@ import {
 } from '@/services/routine-tasks-service';
 import { TASK_CATEGORIES, type RoutineTask } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
-
-type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
 
 const LIST_PAGE_SIZE = 5;
 const ROUTINE_TABS = ['tasks', 'focus-blocks'] as const;

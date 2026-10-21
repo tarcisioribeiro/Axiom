@@ -25,7 +25,7 @@ import {
   X,
   ShieldAlert,
 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -76,7 +76,7 @@ import { useToast } from '@/hooks/use-toast';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { getPasswordScore, useStrengthScorer } from '@/lib/password-strength';
 import { cn, copyToClipboard } from '@/lib/utils';
-import { passwordSchema } from '@/lib/validations';
+import { makePasswordSchema } from '@/lib/validations';
 import { hibpService } from '@/services/hibp-service';
 import { membersService } from '@/services/members-service';
 import { passwordsService } from '@/services/passwords-service';
@@ -157,6 +157,7 @@ function PasswordsContent() {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
+  const passwordSchema = useMemo(() => makePasswordSchema(t), [t]);
 
   const {
     register,

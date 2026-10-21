@@ -31,7 +31,6 @@ import {
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { type z } from 'zod';
 
 import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -75,13 +74,11 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
-import { type goalSchema } from '@/lib/validations';
+import type { GoalFormData } from '@/lib/validations';
 import { goalsService } from '@/services/goals-service';
 import { routineTasksService } from '@/services/routine-tasks-service';
 import type { Goal, RoutineTask, GoalFormData as GoalApiFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
-
-type GoalFormData = z.infer<typeof goalSchema>;
 
 const AUTO_GOAL_TYPES = ['consecutive_days', 'total_days', 'avoid_habit'];
 

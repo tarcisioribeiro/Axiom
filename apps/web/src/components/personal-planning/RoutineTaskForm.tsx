@@ -14,10 +14,9 @@ import {
   Save,
   X,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { type z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -49,7 +48,7 @@ import { useScreenAccess } from '@/hooks/use-screen-access';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { cn, formatLocalDate } from '@/lib/utils';
-import { routineTaskSchema } from '@/lib/validations';
+import { makeRoutineTaskSchema, type RoutineTaskFormData } from '@/lib/validations';
 import { booksService } from '@/services/books-service';
 import { membersService } from '@/services/members-service';
 import { hydrationGoalService, mealTypeService } from '@/services/nutrition-service';
@@ -63,8 +62,6 @@ import {
   UNIT_CHOICES,
   type RoutineTask,
 } from '@/types';
-
-type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
 
 interface RoutineTaskFormProps {
   task?: RoutineTask;
@@ -80,6 +77,7 @@ export function RoutineTaskForm({
   isLoading = false,
 }: RoutineTaskFormProps) {
   const { t } = useTranslation();
+  const routineTaskSchema = useMemo(() => makeRoutineTaskSchema(t), [t]);
 
   const {
     control,

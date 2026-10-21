@@ -52,12 +52,17 @@ import type {
 } from '@/types';
 import type { IconComponent } from '@/types/icon';
 
-const makeSkillSchema = (nameRequired: string) =>
+const makeSkillSchema = (messages: {
+  name: string;
+  category: string;
+  proficiency: string;
+  status: string;
+}) =>
   z.object({
-    name: z.string().trim().min(1, nameRequired),
-    category: z.string().min(1),
-    proficiency: z.string().min(1),
-    status: z.string().min(1),
+    name: z.string().trim().min(1, messages.name),
+    category: z.string().min(1, messages.category),
+    proficiency: z.string().min(1, messages.proficiency),
+    status: z.string().min(1, messages.status),
     notes: z.string().optional().nullable(),
     owner: z.number(),
   });
@@ -181,9 +186,18 @@ export function SkillForm({
 
   const skillSchema = useMemo(
     () =>
-      makeSkillSchema(
-        t('common.fieldRequired', { field: t('pages.skills.form.nameLabel') })
-      ),
+      makeSkillSchema({
+        name: t('common.fieldRequired', { field: t('pages.skills.form.nameLabel') }),
+        category: t('common.fieldRequired', {
+          field: t('pages.skills.form.categoryLabel'),
+        }),
+        proficiency: t('common.fieldRequired', {
+          field: t('pages.skills.form.proficiencyLabel'),
+        }),
+        status: t('common.fieldRequired', {
+          field: t('pages.skills.form.statusLabel'),
+        }),
+      }),
     [t]
   );
 

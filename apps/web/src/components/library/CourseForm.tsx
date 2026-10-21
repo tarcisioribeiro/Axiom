@@ -57,13 +57,14 @@ const makeCourseSchema = (messages: {
   platform: string;
   category: string;
   status: string;
+  url: string;
 }) =>
   z.object({
     title: z.string().min(1, messages.title),
     platform: z.string().min(1, messages.platform),
     category: z.string().min(1, messages.category),
     description: z.string().optional().nullable(),
-    url: z.string().url().optional().or(z.literal('')).nullable(),
+    url: z.string().url(messages.url).optional().or(z.literal('')).nullable(),
     estimated_hours: z.number().positive().optional().nullable(),
     status: z.string().min(1, messages.status),
     start_date: z.string().optional().nullable(),
@@ -144,6 +145,9 @@ export function CourseForm({
         }),
         status: t('common.fieldRequired', {
           field: t('pages.courses.form.statusLabel'),
+        }),
+        url: t('common.fieldInvalidFormat', {
+          field: t('pages.courses.form.urlLabel'),
         }),
       }),
     [t]

@@ -46,7 +46,7 @@ import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
-import { expenseSchema } from '@/lib/validations';
+import { makeExpenseSchema } from '@/lib/validations';
 import { accountsService } from '@/services/accounts-service';
 import { automationRulesService } from '@/services/automation-rules-service';
 import type { CategorySuggestion } from '@/services/expenses-service';
@@ -135,6 +135,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const [isLoadingAiSuggestion, setIsLoadingAiSuggestion] = useState(false);
   const merchantDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiSuggestionAbortRef = useRef<AbortController | null>(null);
+  const expenseSchema = useMemo(() => makeExpenseSchema(t), [t]);
 
   const {
     register,

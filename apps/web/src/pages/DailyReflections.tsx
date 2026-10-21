@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { z } from 'zod';
 
 import { Can } from '@/components/common/Can';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
@@ -50,12 +49,10 @@ import {
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import type { dailyReflectionSchema } from '@/lib/validations';
+import type { DailyReflectionFormData } from '@/lib/validations';
 import { dailyReflectionsService } from '@/services/daily-reflections-service';
 import { MOOD_CHOICES, type DailyReflection } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
-
-type DailyReflectionFormData = z.infer<typeof dailyReflectionSchema>;
 
 const MOOD_VARIANT: Record<
   string,
