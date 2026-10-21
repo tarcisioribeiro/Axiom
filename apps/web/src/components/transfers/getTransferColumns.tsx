@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { translate } from '@/config/constants';
 import { TRANSFER_STATUS_ICONS } from '@/config/icons';
 import { STATUS_VARIANTS, getTransferStatus } from '@/hooks/use-transfers-data';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import type { Transfer } from '@/types';
 
 export function getTransferColumns(t: TFunction): Column<Transfer>[] {
@@ -64,9 +64,7 @@ export function getTransferColumns(t: TFunction): Column<Transfer>[] {
       key: 'date',
       label: t('pages.transfers.columns.date'),
       render: (transfer) => (
-        <span className="text-sm">
-          {formatDate(transfer.date)} às {transfer.horary}
-        </span>
+        <span className="text-sm">{formatDateTime(transfer.date, transfer.horary)}</span>
       ),
     },
   ];

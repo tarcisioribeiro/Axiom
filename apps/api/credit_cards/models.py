@@ -314,7 +314,7 @@ class CreditCardPurchase(BaseModel):
     )
 
     class Meta:
-        ordering = ["-purchase_date", "-id"]
+        ordering = ["-purchase_date", "-purchase_time", "-id"]
         verbose_name = "Compra de Cartão"
         verbose_name_plural = "Compras de Cartão"
         indexes = [

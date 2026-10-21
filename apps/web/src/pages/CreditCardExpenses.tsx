@@ -374,10 +374,12 @@ export default function CreditCardExpenses({
         );
       }
     }
-    return filtered.sort(
-      (a, b) =>
-        new Date(b.purchase_date).getTime() - new Date(a.purchase_date).getTime()
-    );
+    return filtered.sort((a, b) => {
+      const dateDiff =
+        new Date(b.purchase_date).getTime() - new Date(a.purchase_date).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      return (b.purchase_time ?? '').localeCompare(a.purchase_time ?? '');
+    });
   }, [
     purchases,
     cardFilter,
