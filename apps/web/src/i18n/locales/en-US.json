@@ -2257,6 +2257,7 @@
       "period60": "60 days",
       "period90": "90 days",
       "noProjection": "No projection available",
+      "controlTitle": "Financial Control Dashboard",
       "totalBalance": "Total Balance",
       "monthExpenses": "Month Expenses",
       "monthRevenues": "Month Revenues",
@@ -2368,10 +2369,6 @@
       "selectEvolutionPeriod": "Select evolution period",
       "selectCard": "Select card",
       "selectBill": "Select bill",
-      "weeklyInsight": {
-        "title": "Weekly Insight",
-        "openAssistant": "Ask the Assistant"
-      },
       "anomalies": {
         "title": "Anomalous Spending",
         "subtitle": "Categories with spending above historical average",
@@ -2381,9 +2378,6 @@
         "zScore": "Z-Score",
         "aboveAverage": "above average"
       },
-      "greetingMorning": "Good morning",
-      "greetingAfternoon": "Good afternoon",
-      "greetingEvening": "Good evening",
       "surplusThisMonth": "Surplus of {{amount}} this month",
       "deficitThisMonth": "Deficit of {{amount}} this month",
       "exportStatement": "Export Statement",

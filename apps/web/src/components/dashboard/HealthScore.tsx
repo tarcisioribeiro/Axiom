@@ -99,7 +99,8 @@ function DimensionBar({
           })}
         </div>
         <span className="text-muted-foreground tabular-nums">
-          {value.score.toFixed(1)} / {value.max}
+          {Number.isInteger(value.score) ? value.score : value.score.toFixed(1)} /{' '}
+          {value.max}
         </span>
       </div>
       <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">

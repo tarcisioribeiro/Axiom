@@ -2306,6 +2306,7 @@
       "period60": "60 dias",
       "period90": "90 dias",
       "noProjection": "Nenhuma projeção disponível",
+      "controlTitle": "Dashboard de Controle Financeiro",
       "totalBalance": "Saldo Total",
       "monthExpenses": "Despesas do Mês",
       "monthRevenues": "Receitas do Mês",
@@ -2417,10 +2418,6 @@
       "selectEvolutionPeriod": "Selecionar período de evolução",
       "selectCard": "Selecionar cartão",
       "selectBill": "Selecionar fatura",
-      "weeklyInsight": {
-        "title": "Insight Semanal",
-        "openAssistant": "Perguntar ao Assistente"
-      },
       "anomalies": {
         "title": "Gastos Anômalos",
         "subtitle": "Categorias com gastos acima da média histórica",
@@ -2437,9 +2434,6 @@
         "difference": "Diferença",
         "unmatchedEntries": "Entradas Não Conciliadas"
       },
-      "greetingMorning": "Bom dia",
-      "greetingAfternoon": "Boa tarde",
-      "greetingEvening": "Boa noite",
       "surplusThisMonth": "Superávit de {{amount}} este mês",
       "deficitThisMonth": "Déficit de {{amount}} este mês",
       "exportStatement": "Exportar Extrato",
