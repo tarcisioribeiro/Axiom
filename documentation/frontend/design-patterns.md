@@ -157,6 +157,7 @@ Há três tipos de modal:
 - **[regra]** Telas com filtro e busca usam `FilterBar` + `SearchInput`, como no Controle Financeiro.
 - **[regra]** Filtros ocupam toda a largura, com rótulo acima de cada um: cada campo do `FilterBar` vai dentro de `<FilterField label=...>` (rótulo `text-xs` centralizado, campos alinhados pela base; botões como "Favoritos" sem rótulo). Rótulos genéricos em `common.filterLabels.*` / `common.fields.*`.
 - **[regra]** Entre o `FilterBar` e o conteúdo abaixo (lista, tabela, grade ou `EmptyState`) há sempre 24 px: pai com `space-y-lg` (o `PageContainer` já tem) ou `className="mb-lg"` no `FilterBar`. Nunca `mb-md`/`space-y-md` (no Tailwind 4 o `mb-*` do filho sobrescreve o `space-y` do pai) nem conteúdo colado, como num `TabsContent` ou fragmento sem espaçamento (16/10/2026).
+- **[pontual]** Despesas e Receitas não passam `activeFilters` ao `FilterBar`: sem chips de filtro ativo (categoria, status, período) abaixo da barra. O botão "Limpar filtros" continua (21/10/2026).
 
 ## 7. Tabelas
 

@@ -123,48 +123,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
 
       {embedded && <TransactionsTabsNav />}
 
-      <FilterBar
-        hasActiveFilters={hasActiveFilters}
-        onClear={clearFilters}
-        activeFilters={[
-          ...(categoryFilter !== 'all'
-            ? [
-                {
-                  key: 'category',
-                  label: `${t('pages.revenues.allCategories')}: ${REVENUE_CATEGORIES_CANONICAL.find((c) => c.key === categoryFilter)?.label ?? categoryFilter}`,
-                  onRemove: () => setCategoryFilter('all'),
-                },
-              ]
-            : []),
-          ...(statusFilter !== 'all'
-            ? [
-                {
-                  key: 'status',
-                  label: `${t('common.fields.status')}: ${statusFilter === 'paid' ? t('common.status.paid') : t('common.status.pending')}`,
-                  onRemove: () => setStatusFilter('all'),
-                },
-              ]
-            : []),
-          ...(startDate
-            ? [
-                {
-                  key: 'startDate',
-                  label: `${t('pages.revenues.dateFrom')}: ${formatDate(startDate)}`,
-                  onRemove: () => setStartDate(undefined),
-                },
-              ]
-            : []),
-          ...(endDate
-            ? [
-                {
-                  key: 'endDate',
-                  label: `${t('pages.revenues.dateTo')}: ${formatDate(endDate)}`,
-                  onRemove: () => setEndDate(undefined),
-                },
-              ]
-            : []),
-        ]}
-      >
+      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.revenues.searchPlaceholder')}
