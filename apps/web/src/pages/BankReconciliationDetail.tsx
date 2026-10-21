@@ -614,44 +614,6 @@ export default function BankReconciliationDetail() {
         className="mb-lg"
         hasActiveFilters={hasActiveFilters}
         onClear={clearFilters}
-        activeFilters={[
-          ...(statusFilter !== 'all'
-            ? [
-                {
-                  key: 'status',
-                  label: `${t('common.fields.status')}: ${t(`pages.bankReconciliation.detail.status${statusFilter.charAt(0).toUpperCase()}${statusFilter.slice(1)}`)}`,
-                  onRemove: () => setStatusFilter('all'),
-                },
-              ]
-            : []),
-          ...(transactionTypeFilter !== 'all'
-            ? [
-                {
-                  key: 'type',
-                  label: `${t('pages.bankReconciliation.detail.allTypes')}: ${t(`pages.bankReconciliation.detail.${transactionTypeFilter}`)}`,
-                  onRemove: () => setTransactionTypeFilter('all'),
-                },
-              ]
-            : []),
-          ...(startDate
-            ? [
-                {
-                  key: 'startDate',
-                  label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
-                  onRemove: () => setStartDate(undefined),
-                },
-              ]
-            : []),
-          ...(endDate
-            ? [
-                {
-                  key: 'endDate',
-                  label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
-                  onRemove: () => setEndDate(undefined),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput

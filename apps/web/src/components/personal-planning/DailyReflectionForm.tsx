@@ -1,10 +1,9 @@
 /* eslint-disable react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarDays, MessageSquare, Smile, Save, X } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { type z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -22,11 +21,12 @@ import { MOOD_ICONS } from '@/config/icons';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
-import { dailyReflectionSchema } from '@/lib/validations';
+import {
+  makeDailyReflectionSchema,
+  type DailyReflectionFormData,
+} from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import { MOOD_CHOICES, type DailyReflection } from '@/types';
-
-type DailyReflectionFormData = z.infer<typeof dailyReflectionSchema>;
 
 interface DailyReflectionFormProps {
   reflection?: DailyReflection;
@@ -45,6 +45,7 @@ export function DailyReflectionForm({
   isLoading = false,
 }: DailyReflectionFormProps) {
   const { t } = useTranslation();
+  const dailyReflectionSchema = useMemo(() => makeDailyReflectionSchema(t), [t]);
   const {
     register,
     handleSubmit,

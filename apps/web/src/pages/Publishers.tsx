@@ -326,17 +326,6 @@ export default function Publishers() {
           setSearchTerm('');
           setCountryFilter('all');
         }}
-        activeFilters={[
-          ...(countryFilter !== 'all'
-            ? [
-                {
-                  key: 'country',
-                  label: `${t('pages.publishers.allCountries')}: ${t(`pages.publishers.countries.${countryFilter}`)}`,
-                  onRemove: () => setCountryFilter('all'),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput

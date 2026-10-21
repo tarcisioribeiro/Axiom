@@ -147,26 +147,26 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    LINK_FIELDS = ("related_loan", "related_payable", "fixed_expense_template")
+    LINK_FIELDS = ("related_loan", "related_payable")
 
     def _validate_link_exclusivity(self, attrs):
         """
-        Requisito 8 (decisão 5.1): no fluxo manual, uma Expense só pode ser
-        vinculada a um de related_loan/related_payable/fixed_expense_template
-        por vez.
+        Requisito 8 (decisão 5.1): no fluxo manual, uma Expense só pode estar
+        vinculada a um empréstimo OU a uma conta a pagar, nunca aos dois —
+        são os únicos campos que disparam a baixa de parcela em
+        `mark_next_installment_paid_on_expense_payed` (expenses/signals.py),
+        e uma despesa não paga as duas dívidas ao mesmo tempo.
 
-        Expenses auto-geradas por bulk_generate_fixed_expenses legitimamente
-        nascem com dois vínculos (fixed_expense_template + related_loan/
-        related_payable herdados do template — expenses/services.py) porque
-        esse pipeline grava direto via ORM, sem passar por este serializer.
+        `fixed_expense_template` fica de fora dessa checagem: é só a
+        referência de onde a despesa foi gerada (sem efeito no pagamento) e
+        legitimamente coexiste com related_loan/related_payable em despesas
+        criadas por bulk_generate_fixed_expenses (expenses/services.py).
 
-        O bug corrigido aqui: qualquer PUT/PATCH subsequente nessas mesmas
-        despesas (ex.: marcar `payed=True` para confirmar o pagamento da
-        parcela) reavaliava os DOIS vínculos já existentes — mesmo sem o
-        request tocar neles — e rejeitava a atualização para sempre. Por
-        isso só contamos um campo como parte do conflito quando o valor
+        Só contamos um campo como parte do conflito quando o valor
         efetivamente MUDA em relação ao que já estava salvo; vínculos
-        antigos e não tocados pelo request não são reavaliados.
+        antigos e não tocados pelo request não são reavaliados (evita que um
+        PATCH que só altera `payed`, por exemplo, seja rejeitado por
+        vínculos antigos que o request nem tocou).
         """
         submitted = {}
         changed = False
@@ -185,8 +185,8 @@ class ExpenseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {
                     "related_loan": (
-                        "Só é possível vincular a um empréstimo, conta a"
-                        " pagar ou despesa fixa — nunca mais de um."
+                        "Só é possível vincular a um empréstimo ou a uma"
+                        " conta a pagar — nunca aos dois."
                     )
                 }
             )

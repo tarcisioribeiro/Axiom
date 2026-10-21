@@ -38,7 +38,6 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 
 import {
-  navItems,
   navModules,
   type NavModule,
   type NavSubItem,
@@ -71,10 +70,6 @@ interface ResolvedRoute {
  */
 function buildRouteIndex(): Record<string, ResolvedRoute> {
   const index: Record<string, ResolvedRoute> = {};
-
-  for (const item of navItems) {
-    index[item.href] = { labelKey: item.titleKey, icon: item.icon };
-  }
 
   for (const module of navModules) {
     const moduleHref = module.topItems?.[0]?.href ?? module.items?.[0]?.href;
@@ -273,21 +268,21 @@ export function useBreadcrumb() {
     const extra = resolved || tabbed ? undefined : resolveExtraRoute(pathname);
 
     if (resolved) {
-      if (resolved.moduleTitleKey) {
-        items.push({
-          label: t(resolved.moduleTitleKey),
-          icon: resolved.moduleIcon,
-          href: resolved.moduleHref,
-        });
-      }
-      if (resolved.subModuleTitleKey) {
-        items.push({
-          label: t(resolved.subModuleTitleKey),
-          icon: resolved.subModuleIcon,
-          href: resolved.moduleHref,
-        });
-      }
       if (pathname !== '/') {
+        if (resolved.moduleTitleKey) {
+          items.push({
+            label: t(resolved.moduleTitleKey),
+            icon: resolved.moduleIcon,
+            href: resolved.moduleHref,
+          });
+        }
+        if (resolved.subModuleTitleKey) {
+          items.push({
+            label: t(resolved.subModuleTitleKey),
+            icon: resolved.subModuleIcon,
+            href: resolved.moduleHref,
+          });
+        }
         items.push({ label: t(resolved.labelKey), icon: resolved.icon });
       }
     } else if (tabbed) {

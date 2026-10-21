@@ -53,7 +53,7 @@ import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { BILL_STATUS_ICONS, EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { usePayablesPage } from '@/hooks/use-payables-page';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { getMemberDisplayName, mapPayableToReceipt } from '@/lib/receipt-utils';
 import { cn } from '@/lib/utils';
@@ -208,44 +208,6 @@ export default function Payables({ embedded = false, headerTarget }: PayablesPro
       <FilterBar
         hasActiveFilters={!!searchTerm || hasExtraFilters}
         onClear={clearExtraFilters}
-        activeFilters={[
-          ...(statusFilter !== 'all'
-            ? [
-                {
-                  key: 'status',
-                  label: `${t('common.fields.status')}: ${translate('payableStatus', statusFilter)}`,
-                  onRemove: () => setStatusFilter('all'),
-                },
-              ]
-            : []),
-          ...(categoryFilter !== 'all'
-            ? [
-                {
-                  key: 'category',
-                  label: `${t('common.fields.category')}: ${EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === categoryFilter)?.label ?? categoryFilter}`,
-                  onRemove: () => setCategoryFilter('all'),
-                },
-              ]
-            : []),
-          ...(dueStartDate
-            ? [
-                {
-                  key: 'dueStartDate',
-                  label: `${t('common.fields.from')}: ${formatDate(dueStartDate)}`,
-                  onRemove: () => setDueStartDate(undefined),
-                },
-              ]
-            : []),
-          ...(dueEndDate
-            ? [
-                {
-                  key: 'dueEndDate',
-                  label: `${t('common.fields.to')}: ${formatDate(dueEndDate)}`,
-                  onRemove: () => setDueEndDate(undefined),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput

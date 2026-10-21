@@ -192,17 +192,6 @@ export default function Tags({
           setSearch('');
           setColorFilter('all');
         }}
-        activeFilters={[
-          ...(colorFilter !== 'all'
-            ? [
-                {
-                  key: 'color',
-                  label: `${t('pages.tags.allColors')}: ${t(`common.colorTokens.${colorFilter}`, colorFilter)}`,
-                  onRemove: () => setColorFilter('all'),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput

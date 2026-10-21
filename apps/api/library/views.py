@@ -2701,9 +2701,14 @@ class CourseSessionListCreateView(BaseListCreateView):
         return CourseSessionSerializer
 
     def perform_create(self, serializer):
-        serializer.save(
+        session = serializer.save(
             created_by=self.request.user, updated_by=self.request.user
         )
+        course = session.course
+        if course.status in ("paused", "not_started"):
+            course.status = "in_progress"
+            course.updated_by = self.request.user
+            course.save(update_fields=["status", "updated_by", "updated_at"])
 
 
 class CourseSessionRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):

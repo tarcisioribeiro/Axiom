@@ -11,6 +11,7 @@ import {
   Save,
   X,
 } from 'lucide-react';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -30,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ARCHIVE_CATEGORY_ICONS } from '@/config/icons';
 import { useToast } from '@/hooks/use-toast';
 import { notifyFormErrors } from '@/lib/form-errors';
-import { archiveSchema, type ArchiveFormData } from '@/lib/validations';
+import { makeArchiveSchema, type ArchiveFormData } from '@/lib/validations';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Archive, Member } from '@/types';
 
@@ -91,6 +92,7 @@ export function ArchiveForm({
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const archiveSchema = useMemo(() => makeArchiveSchema(t), [t]);
   const {
     register,
     handleSubmit,

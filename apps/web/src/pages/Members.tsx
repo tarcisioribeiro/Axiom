@@ -250,33 +250,6 @@ export default function Members() {
       <FilterBar
         hasActiveFilters={!!searchTerm || hasExtraFilters}
         onClear={clearAllFilters}
-        activeFilters={[
-          ...(statusFilter !== 'all'
-            ? [
-                {
-                  key: 'status',
-                  label: `${t('common.fields.status')}: ${
-                    statusFilter === 'active'
-                      ? t('common.status.active')
-                      : t('common.status.inactive')
-                  }`,
-                  onRemove: () => setStatusFilter('all'),
-                },
-              ]
-            : []),
-          ...(roleFilter !== 'all'
-            ? [
-                {
-                  key: 'role',
-                  label:
-                    roleFilter === 'creditor'
-                      ? t('common.fields.is_creditor')
-                      : t('common.fields.is_benefited'),
-                  onRemove: () => setRoleFilter('all'),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput

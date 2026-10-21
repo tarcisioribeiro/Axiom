@@ -160,7 +160,7 @@ class Revenue(BaseModel):
     )
 
     class Meta:
-        ordering = ["-date"]
+        ordering = ["-date", "-horary", "-id"]
         verbose_name = "Receita"
         verbose_name_plural = "Receitas"
         indexes = [

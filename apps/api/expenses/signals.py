@@ -187,6 +187,44 @@ def mark_next_installment_paid_on_expense_payed(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender="expenses.Expense")
+def unmark_installment_paid_on_expense_unpayed(sender, instance, **kwargs):
+    """
+    Reverte `mark_next_installment_paid_on_expense_payed`: quando uma
+    despesa vinculada a um empréstimo/conta a pagar volta de `payed=True`
+    para `payed=False`, desfaz a marcação da parcela que ela havia pago.
+
+    Sem isso, reabrir uma despesa paga por engano deixa a
+    LoanInstallment/PayableInstallment travada em `payed=True` para
+    sempre, mesmo com o valor pago agregado do Loan/Payable já recalculado
+    para menos por `update_payable_paid_value`/`update_loan_payed_value`.
+    """
+    if instance.payed or not getattr(instance, "_old_payed", False):
+        return
+    if not (instance.related_loan_id or instance.related_payable_id):
+        return
+
+    if instance.related_loan_id:
+        from loans.models import LoanInstallment
+
+        installment = LoanInstallment.objects.filter(
+            payment_expense=instance
+        ).first()
+    else:
+        from payables.models import PayableInstallment
+
+        installment = PayableInstallment.objects.filter(
+            payment_expense=instance
+        ).first()
+
+    if installment:
+        installment.payed = False
+        installment.payment_expense = None
+        installment.save(
+            update_fields=["payed", "payment_expense", "updated_at"]
+        )
+
+
+@receiver(post_save, sender="expenses.Expense")
 @receiver(post_delete, sender="expenses.Expense")
 def invalidate_dashboard_cache_on_expense(sender, instance, **kwargs):
     from dashboard.views import invalidate_user_dashboard_cache

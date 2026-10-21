@@ -16,6 +16,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from budgets.models import Budget
 from credit_cards.models import CreditCardInstallment
@@ -30,6 +31,22 @@ UPDATE = "update"  # já lançado; o valor será atualizado (reaplicação)
 EXISTING = "existing"  # já lançado; nada muda (primeira aplicação)
 SETTLED = "settled"  # já recebido/pago; nada muda
 BLOCKED = "blocked"  # cartão sem limite; não será lançado
+
+
+def plan_lock_reason(plan: MonthlyPlan) -> str | None:
+    """
+    None if the plan can be edited/applied; otherwise why it can't:
+    - "future": month/year hasn't started yet — only the current month is
+      editable.
+    - "already_applied": a past month whose plan was already applied.
+    """
+    today = timezone.localdate()
+    plan_key = (plan.year, plan.month)
+    if plan_key > (today.year, today.month):
+        return "future"
+    if plan_key < (today.year, today.month) and plan.applied_at:
+        return "already_applied"
+    return None
 
 
 def _override_value(override: dict, default: Decimal) -> Decimal:

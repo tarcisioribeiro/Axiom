@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { DecimalInput } from '@/components/ui/decimal-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -127,11 +128,11 @@ export function FoodForm({
       >
         <div className="space-y-sm">
           <div className="gap-sm grid grid-cols-2">
-            <div className="space-y-xs">
-              <label className="gap-xs text-foreground flex items-center text-xs font-medium">
+            <div className="space-y-sm">
+              <Label className="gap-xs flex items-center">
                 <Scale className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.nutritionFoods.servingSize', 'Tamanho da Porção')}
-              </label>
+              </Label>
               <Controller
                 control={control}
                 name="serving_size"
@@ -149,11 +150,11 @@ export function FoodForm({
                 )}
               />
             </div>
-            <div className="space-y-xs">
-              <label className="gap-xs text-foreground flex items-center text-xs font-medium">
+            <div className="space-y-sm">
+              <Label className="gap-xs flex items-center">
                 <Ruler className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.nutritionFoods.servingUnit', 'Unidade')}
-              </label>
+              </Label>
               <Controller
                 name="serving_unit"
                 control={control}
@@ -174,14 +175,14 @@ export function FoodForm({
               />
             </div>
           </div>
-          <div className="space-y-xs">
-            <label className="gap-xs text-foreground flex items-center text-xs font-medium">
+          <div className="space-y-sm">
+            <Label className="gap-xs flex items-center">
               <Flame className="text-muted-foreground h-3.5 w-3.5" />
               {t(
                 'pages.nutritionFoods.caloriesPerServing',
                 'Calorias (kcal) por Porção'
               )}
-            </label>
+            </Label>
             <Controller
               control={control}
               name="calories_per_serving"

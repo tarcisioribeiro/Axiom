@@ -2,7 +2,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { BookOpen, CalendarDays, Clock, FileText, Hash, Save, X } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -27,7 +27,7 @@ import { formatDate } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
 import { projectReading } from '@/lib/reading-projection';
 import { formatLocalDate } from '@/lib/utils';
-import { readingSchema, type ReadingFormData } from '@/lib/validations';
+import { makeReadingSchema, type ReadingFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import { readingsService } from '@/services/readings-service';
 import type { Reading, Book } from '@/types';
@@ -56,6 +56,7 @@ export function ReadingForm({
   lockSession = false,
 }: ReadingFormProps) {
   const { t } = useTranslation();
+  const readingSchema = useMemo(() => makeReadingSchema(t), [t]);
   const {
     control,
     register,

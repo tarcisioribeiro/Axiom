@@ -1,6 +1,16 @@
+import type { TFunction } from 'i18next';
 import { describe, it, expect } from 'vitest';
 
-import { accountEditSchema, accountSchema, expenseSchema } from '@/lib/validations';
+import {
+  makeAccountEditSchema,
+  makeAccountSchema,
+  makeExpenseSchema,
+} from '@/lib/validations';
+
+const t = ((key: string) => key) as TFunction;
+const accountSchema = makeAccountSchema(t);
+const accountEditSchema = makeAccountEditSchema(t);
+const expenseSchema = makeExpenseSchema(t);
 
 const baseExpense = {
   value: 100,

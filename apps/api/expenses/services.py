@@ -230,7 +230,7 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
                 description=fixed_exp.description,
                 total_value=item["value"],
                 purchase_date=expense_date,
-                purchase_time=timezone.now().time(),
+                purchase_time=timezone.localtime().time(),
                 category=fixed_exp.category,
                 card=fixed_exp.credit_card,
                 total_installments=1,
@@ -285,7 +285,9 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
                 description=fixed_exp.description,
                 value=item["value"],
                 date=expense_date,
-                horary=timezone.now().time(),
+                horary=timezone.localtime()
+                .time()
+                .replace(second=0, microsecond=0),
                 category=fixed_exp.category,
                 account=fixed_exp.account,
                 payed=False,

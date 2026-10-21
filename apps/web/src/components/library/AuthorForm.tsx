@@ -10,7 +10,7 @@ import {
   UserCircle,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -30,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { NATIONALITY_ICON } from '@/config/icons';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
-import { authorSchema } from '@/lib/validations';
+import { makeAuthorSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import { NATIONALITIES, ERAS } from '@/types';
 import type { Author, AuthorFormData } from '@/types';
@@ -55,6 +55,7 @@ export function AuthorForm({
     author?.photo ?? null
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const authorSchema = useMemo(() => makeAuthorSchema(t), [t]);
 
   const {
     control,

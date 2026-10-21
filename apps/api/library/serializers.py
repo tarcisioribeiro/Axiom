@@ -903,7 +903,7 @@ class CourseCreateUpdateSerializer(serializers.ModelSerializer):
                 not course
                 or not estimated_hours
                 or course.total_lessons == 0
-                or course.progress_percentage < 100
+                or course.completed_lessons < course.total_lessons
                 or course.invested_hours < estimated_hours
             ):
                 raise serializers.ValidationError(

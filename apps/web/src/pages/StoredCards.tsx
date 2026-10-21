@@ -272,22 +272,6 @@ function StoredCardsContent() {
             setShowFavoritesOnly(false);
             setFlagFilter('all');
           }}
-          activeFilters={[
-            ...(flagFilter !== 'all'
-              ? [
-                  {
-                    key: 'flag',
-                    label: `${t('pages.storedCards.allFlags')}: ${
-                      flagFilter === 'OTHER'
-                        ? t('pages.storedCards.otherBrand')
-                        : (CARD_FLAGS.find((f) => f.value === flagFilter)?.label ??
-                          flagFilter)
-                    }`,
-                    onRemove: () => setFlagFilter('all'),
-                  },
-                ]
-              : []),
-          ]}
         >
           <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput

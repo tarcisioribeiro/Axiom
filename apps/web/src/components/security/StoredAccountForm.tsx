@@ -32,8 +32,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { STORED_ACCOUNT_TYPE_ICONS, INSTITUTION_ICONS } from '@/config/icons';
 import { notifyFormErrors } from '@/lib/form-errors';
 import {
-  storedAccountEditSchema,
-  storedAccountSchema,
+  makeStoredAccountEditSchema,
+  makeStoredAccountSchema,
   type StoredBankAccountFormData,
 } from '@/lib/validations';
 import type { StoredBankAccount, Account, Member } from '@/types';
@@ -104,6 +104,10 @@ export function StoredAccountForm({
     );
   }, [bankSearch]);
 
+  const schema = useMemo(
+    () => (account ? makeStoredAccountEditSchema(t) : makeStoredAccountSchema(t)),
+    [t, account]
+  );
   const {
     register,
     handleSubmit,
@@ -111,7 +115,7 @@ export function StoredAccountForm({
     watch,
     formState: { errors },
   } = useForm<StoredBankAccountFormData>({
-    resolver: zodResolver(account ? storedAccountEditSchema : storedAccountSchema),
+    resolver: zodResolver(schema),
     defaultValues: account
       ? {
           name: account.name,

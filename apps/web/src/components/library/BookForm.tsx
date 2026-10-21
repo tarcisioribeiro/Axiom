@@ -15,7 +15,7 @@ import {
   User2,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -46,7 +46,7 @@ import { toast } from '@/hooks/use-toast';
 import { notifyFormErrors, serverFieldError } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
-import { bookSchema, type BookFormData } from '@/lib/validations';
+import { makeBookSchema, type BookFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import { BOOK_LANGUAGES, BOOK_GENRES, LITERARY_TYPES } from '@/types';
 import type { Book, Author, Publisher } from '@/types';
@@ -104,6 +104,7 @@ export function BookForm({
   const [endDateInvalid, setEndDateInvalid] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bookFileInputRef = useRef<HTMLInputElement>(null);
+  const bookSchema = useMemo(() => makeBookSchema(t), [t]);
 
   const {
     control,

@@ -5,7 +5,6 @@ import { Activity, CalendarDays, Tag, Target, Trophy, Save, X } from 'lucide-rea
 import { useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { type z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -26,7 +25,7 @@ import { notifyFormErrors } from '@/lib/form-errors';
 import { formatDate } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
-import { goalSchema } from '@/lib/validations';
+import { makeGoalSchema, type GoalFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import {
   GOAL_TYPE_CHOICES,
@@ -35,8 +34,6 @@ import {
   type Goal,
   type RoutineTask,
 } from '@/types';
-
-type GoalFormData = z.infer<typeof goalSchema>;
 
 const AUTO_GOAL_TYPES = new Set(['consecutive_days', 'total_days', 'avoid_habit']);
 
@@ -56,6 +53,7 @@ export function GoalForm({
   isLoading = false,
 }: GoalFormProps) {
   const { t } = useTranslation();
+  const goalSchema = useMemo(() => makeGoalSchema(t), [t]);
   const {
     control,
     register,
