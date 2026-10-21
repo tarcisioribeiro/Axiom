@@ -64,6 +64,12 @@ const PAYMENT_FREQUENCIES = [
 ];
 const LOAN_STATUSES = ['active', 'paid', 'defaulted', 'cancelled'];
 
+type BalanceAlertTone = 'warning' | 'destructive';
+const BALANCE_ALERT_TONES: Record<BalanceAlertTone, string> = {
+  warning: 'border-warning/30 bg-warning/10 text-warning',
+  destructive: 'border-destructive/30 bg-destructive/10 text-destructive',
+};
+
 interface LoanFormProps {
   loan: Loan | undefined;
   accounts: Account[];
@@ -180,6 +186,25 @@ export function LoanForm({
     formData.value,
     accounts,
   ]);
+
+  const balanceAlert = useMemo((): { tone: BalanceAlertTone; text: string } | null => {
+    if (!balanceInfo || formData.value <= 0) return null;
+    return !balanceInfo.canPay
+      ? {
+          tone: 'destructive',
+          text: t('common.balance.insufficientEvenWithOverdraft', {
+            available: formatCurrency(balanceInfo.available.toFixed(2)),
+          }),
+        }
+      : {
+          tone: 'warning',
+          text: t('common.balance.overdraftWarningDesc', {
+            balance: formatCurrency(balanceInfo.balance.toFixed(2)),
+            overdraft: formatCurrency(balanceInfo.overdraft.toFixed(2)),
+            total: formatCurrency(balanceInfo.available.toFixed(2)),
+          }),
+        };
+  }, [balanceInfo, formData.value, t]);
 
   // Próximo e Salvar passam pela validação nativa do formulário (campos
   // `required` da etapa atual). Salvar antes da última etapa avisa e avança.
@@ -726,28 +751,27 @@ export function LoanForm({
         </FormSection>
       )}
 
-      {balanceInfo && formData.value > 0 && (
+      {/* Alerta de saldo: espaço sempre reservado para o modal não mudar de altura */}
+      <div
+        className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
+          balanceAlert ? BALANCE_ALERT_TONES[balanceAlert.tone] : 'invisible'
+        }`}
+      >
         <div
-          className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
-            !balanceInfo.canPay
-              ? 'border-destructive/30 bg-destructive/10 text-destructive'
-              : 'border-warning/30 bg-warning/10 text-warning'
-          }`}
+          key={balanceAlert ? `${balanceAlert.tone}-${balanceAlert.text}` : 'empty'}
+          className="animate-fade-in flex items-start gap-2"
         >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            {!balanceInfo.canPay
-              ? t('common.balance.insufficientEvenWithOverdraft', {
-                  available: formatCurrency(balanceInfo.available.toFixed(2)),
-                })
-              : t('common.balance.overdraftWarningDesc', {
-                  balance: formatCurrency(balanceInfo.balance.toFixed(2)),
-                  overdraft: formatCurrency(balanceInfo.overdraft.toFixed(2)),
-                  total: formatCurrency(balanceInfo.available.toFixed(2)),
-                })}
+            {balanceAlert?.text ??
+              t('common.balance.overdraftWarningDesc', {
+                balance: formatCurrency('0'),
+                overdraft: formatCurrency('0'),
+                total: formatCurrency('0'),
+              })}
           </p>
         </div>
-      )}
+      </div>
 
       {!isEditing && (
         <StepNav

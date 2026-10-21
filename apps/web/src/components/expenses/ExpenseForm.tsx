@@ -826,15 +826,20 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           balanceAlert ? BALANCE_ALERT_TONES[balanceAlert.tone] : 'invisible'
         }`}
       >
-        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-        <p>
-          {balanceAlert?.text ??
-            t('common.balance.overdraftWarningDesc', {
-              balance: formatCurrency('0'),
-              overdraft: formatCurrency('0'),
-              total: formatCurrency('0'),
-            })}
-        </p>
+        <div
+          key={balanceAlert ? `${balanceAlert.tone}-${balanceAlert.text}` : 'empty'}
+          className="animate-fade-in flex items-start gap-2"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            {balanceAlert?.text ??
+              t('common.balance.overdraftWarningDesc', {
+                balance: formatCurrency('0'),
+                overdraft: formatCurrency('0'),
+                total: formatCurrency('0'),
+              })}
+          </p>
+        </div>
       </div>
 
       <div className="dialog-footer gap-sm pt-md flex justify-end border-t">

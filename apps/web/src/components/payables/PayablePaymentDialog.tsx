@@ -44,6 +44,13 @@ import { payableInstallmentsService } from '@/services/payable-installments-serv
 import type { Account, Payable } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
+type BalanceAlertTone = 'info' | 'warning' | 'destructive';
+const BALANCE_ALERT_TONES: Record<BalanceAlertTone, string> = {
+  info: 'border-info/30 bg-info/10 text-info',
+  warning: 'border-warning/30 bg-warning/10 text-warning',
+  destructive: 'border-destructive/30 bg-destructive/10 text-destructive',
+};
+
 interface PayablePaymentDialogProps {
   payable: Payable | null;
   accounts: Account[];
@@ -119,6 +126,56 @@ export function PayablePaymentDialog({
   }, [form.account, form.value, projectedBalance, accounts, isFutureDate, scheduled]);
 
   const isValueExceedsRemaining = parseFloat(form.value) > remaining;
+
+  const balanceAlert = ((): { tone: BalanceAlertTone; text: string } | null => {
+    if ((isFutureDate || scheduled) && form.account && form.value) {
+      if (isLoadingProjected)
+        return { tone: 'info', text: t('common.balance.loadingProjected') };
+      if (futureBalanceInfo && !futureBalanceInfo.canPay)
+        return {
+          tone: 'destructive',
+          text: t('common.balance.insufficientEvenWithOverdraft', {
+            available: formatCurrency(futureBalanceInfo.available.toFixed(2)),
+          }),
+        };
+      if (futureBalanceInfo?.isUsingOverdraft)
+        return {
+          tone: 'warning',
+          text: t('common.balance.overdraftWarningDesc', {
+            balance: formatCurrency(futureBalanceInfo.balance.toFixed(2)),
+            overdraft: formatCurrency(futureBalanceInfo.overdraft.toFixed(2)),
+            total: formatCurrency(futureBalanceInfo.available.toFixed(2)),
+          }),
+        };
+      return {
+        tone: 'info',
+        text:
+          projectedBalance !== null
+            ? t('common.balance.projectedOn', {
+                date: formatDate(form.date),
+                balance: formatCurrency(projectedBalance),
+              })
+            : t('common.balance.projectedUnavailable'),
+      };
+    }
+    if (balanceInfo && parseFloat(form.value) > 0)
+      return !balanceInfo.canPay
+        ? {
+            tone: 'destructive',
+            text: t('common.balance.insufficientEvenWithOverdraft', {
+              available: formatCurrency(balanceInfo.available.toFixed(2)),
+            }),
+          }
+        : {
+            tone: 'warning',
+            text: t('common.balance.overdraftWarningDesc', {
+              balance: formatCurrency(balanceInfo.balance.toFixed(2)),
+              overdraft: formatCurrency(balanceInfo.overdraft.toFixed(2)),
+              total: formatCurrency(balanceInfo.available.toFixed(2)),
+            }),
+          };
+    return null;
+  })();
 
   const handleSubmit = async () => {
     if (!payable) return;
@@ -305,68 +362,27 @@ export function PayablePaymentDialog({
             </div>
           )}
 
-          {/* Saldo projetado ou alerta para data futura / agendamento */}
-          {(isFutureDate || scheduled) && form.account && form.value && (
+          {/* Alerta de saldo: espaço sempre reservado para o modal não mudar de altura */}
+          <div
+            className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
+              balanceAlert ? BALANCE_ALERT_TONES[balanceAlert.tone] : 'invisible'
+            }`}
+          >
             <div
-              className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
-                futureBalanceInfo && !futureBalanceInfo.canPay
-                  ? 'border-destructive/30 bg-destructive/10 text-destructive'
-                  : futureBalanceInfo?.isUsingOverdraft
-                    ? 'border-warning/30 bg-warning/10 text-warning'
-                    : 'border-info/30 bg-info/10 text-info'
-              }`}
+              key={balanceAlert ? `${balanceAlert.tone}-${balanceAlert.text}` : 'empty'}
+              className="animate-fade-in flex items-start gap-2"
             >
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <p>
-                {isLoadingProjected
-                  ? t('common.balance.loadingProjected')
-                  : futureBalanceInfo && !futureBalanceInfo.canPay
-                    ? t('common.balance.insufficientEvenWithOverdraft', {
-                        available: formatCurrency(
-                          futureBalanceInfo.available.toFixed(2)
-                        ),
-                      })
-                    : futureBalanceInfo?.isUsingOverdraft
-                      ? t('common.balance.overdraftWarningDesc', {
-                          balance: formatCurrency(futureBalanceInfo.balance.toFixed(2)),
-                          overdraft: formatCurrency(
-                            futureBalanceInfo.overdraft.toFixed(2)
-                          ),
-                          total: formatCurrency(futureBalanceInfo.available.toFixed(2)),
-                        })
-                      : projectedBalance !== null
-                        ? t('common.balance.projectedOn', {
-                            date: formatDate(form.date),
-                            balance: formatCurrency(projectedBalance),
-                          })
-                        : t('common.balance.projectedUnavailable')}
+                {balanceAlert?.text ??
+                  t('common.balance.overdraftWarningDesc', {
+                    balance: formatCurrency('0'),
+                    overdraft: formatCurrency('0'),
+                    total: formatCurrency('0'),
+                  })}
               </p>
             </div>
-          )}
-
-          {/* Alerta de saldo insuficiente (pagamento imediato) */}
-          {balanceInfo && parseFloat(form.value) > 0 && (
-            <div
-              className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
-                !balanceInfo.canPay
-                  ? 'border-destructive/30 bg-destructive/10 text-destructive'
-                  : 'border-warning/30 bg-warning/10 text-warning'
-              }`}
-            >
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>
-                {!balanceInfo.canPay
-                  ? t('common.balance.insufficientEvenWithOverdraft', {
-                      available: formatCurrency(balanceInfo.available.toFixed(2)),
-                    })
-                  : t('common.balance.overdraftWarningDesc', {
-                      balance: formatCurrency(balanceInfo.balance.toFixed(2)),
-                      overdraft: formatCurrency(balanceInfo.overdraft.toFixed(2)),
-                      total: formatCurrency(balanceInfo.available.toFixed(2)),
-                    })}
-              </p>
-            </div>
-          )}
+          </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
