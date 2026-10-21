@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { COURSE_STATUS_ICONS } from '@/config/icons';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { cn, formatLocalDate, parseLocalDate } from '@/lib/utils';
 import type {
@@ -141,7 +142,9 @@ export function CourseForm({
         category: t('common.fieldRequired', {
           field: t('pages.courses.form.categoryLabel'),
         }),
-        status: t('common.fieldRequired', { field: t('pages.courses.form.statusLabel') }),
+        status: t('common.fieldRequired', {
+          field: t('pages.courses.form.statusLabel'),
+        }),
       }),
     [t]
   );
@@ -311,11 +314,20 @@ export function CourseForm({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {t(`pages.courses.status.${s}`)}
-                      </SelectItem>
-                    ))}
+                    {STATUSES.map((s) => {
+                      const StatusIcon = COURSE_STATUS_ICONS[s];
+                      return (
+                        <SelectItem
+                          key={s}
+                          value={s}
+                          icon={
+                            StatusIcon ? <StatusIcon className="h-4 w-4" /> : undefined
+                          }
+                        >
+                          {t(`pages.courses.status.${s}`)}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               )}

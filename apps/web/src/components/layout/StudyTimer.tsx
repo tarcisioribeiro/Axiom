@@ -1,6 +1,16 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { BookOpen, GraduationCap, X, Play, Pause, Square, Timer } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  BookOpen,
+  GraduationCap,
+  X,
+  Play,
+  Pause,
+  Square,
+  Timer,
+  RotateCcw,
+} from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -62,6 +72,18 @@ function saveState(mode: StudyTimerMode, s: PersistedState) {
   } catch {
     // ignore
   }
+}
+
+const COURSE_STATUS_ORDER: Record<string, number> = {
+  in_progress: 0,
+  paused: 1,
+  not_started: 2,
+};
+
+function sortCoursesByStatus(courses: Course[]): Course[] {
+  return courses
+    .filter((c) => c.status in COURSE_STATUS_ORDER)
+    .sort((a, b) => COURSE_STATUS_ORDER[a.status] - COURSE_STATUS_ORDER[b.status]);
 }
 
 function formatElapsed(seconds: number) {
@@ -140,7 +162,7 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
     } else {
       void coursesService
         .getAll()
-        .then((items) => setCourses(items.filter((c) => c.status === 'in_progress')))
+        .then((items) => setCourses(sortCoursesByStatus(items)))
         .catch(() => {});
     }
   }, [isOpen, isReading]);
@@ -255,117 +277,148 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
           hiddenByNav && !isOpen && 'pointer-events-none scale-75 opacity-0'
         )}
       >
-        {isOpen && (
-          <div className="mb-sm bg-card w-72 rounded-lg border shadow-lg">
-            {/* Header */}
-            <div className="px-md py-sm flex items-center justify-between border-b">
-              <div className="gap-sm flex items-center">
-                <Timer className="text-category-intellect h-4 w-4" />
-                <span className="text-sm font-semibold">{title}</span>
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              className="mb-sm bg-card w-72 rounded-lg border shadow-lg"
+            >
+              {/* Header */}
+              <div className="px-md py-sm flex items-center justify-between border-b">
+                <div className="gap-sm flex items-center">
+                  <Timer className="text-category-intellect h-4 w-4" />
+                  <span className="text-sm font-semibold">{title}</span>
+                </div>
+                <PlainButton
+                  onClick={() => setIsOpen(false)}
+                  className="p-xs text-muted-foreground hover:text-foreground rounded"
+                  aria-label={t('common.actions.close')}
+                >
+                  <X className="h-4 w-4" />
+                </PlainButton>
               </div>
-              <PlainButton
-                onClick={() => setIsOpen(false)}
-                className="p-xs text-muted-foreground hover:text-foreground rounded"
-                aria-label={t('common.actions.close')}
-              >
-                <X className="h-4 w-4" />
-              </PlainButton>
-            </div>
 
-            <div className="space-y-sm p-md">
-              {/* Resource selector */}
-              <Select
-                disabled={isActive}
-                value={state.resourceId ? String(state.resourceId) : ''}
-                onValueChange={(v) => updateState({ resourceId: parseInt(v, 10) })}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue
-                    placeholder={t(
-                      isReading
-                        ? 'pages.libraryDashboard.studyTimerSelectBook'
-                        : 'pages.libraryDashboard.studyTimerSelectCourse'
+              <div className="space-y-sm p-md">
+                {/* Resource selector */}
+                <Select
+                  disabled={isActive}
+                  value={state.resourceId ? String(state.resourceId) : ''}
+                  onValueChange={(v) => updateState({ resourceId: parseInt(v, 10) })}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue
+                      placeholder={t(
+                        isReading
+                          ? 'pages.libraryDashboard.studyTimerSelectBook'
+                          : 'pages.libraryDashboard.studyTimerSelectCourse'
+                      )}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {options.map((o) => (
+                      <SelectItem key={o.id} value={String(o.id)}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Timer display */}
+                <div className="text-center text-3xl font-bold tracking-tight tabular-nums">
+                  {formatElapsed(state.elapsed)}
+                </div>
+
+                {/* Controls */}
+                <div className="gap-sm flex items-center justify-center overflow-hidden">
+                  <AnimatePresence mode="wait" initial={false}>
+                    {state.phase === 'idle' && (
+                      <motion.div
+                        key="idle"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="gap-sm flex items-center justify-center"
+                      >
+                        <Button
+                          size="sm"
+                          disabled={!canStart}
+                          onClick={() => void handleStart()}
+                          className="bg-category-intellect hover:bg-category-intellect/90 text-white dark:text-black"
+                        >
+                          <Play className="h-3.5 w-3.5" />
+                          {t('pages.libraryDashboard.studyTimerStart')}
+                        </Button>
+                      </motion.div>
                     )}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {options.map((o) => (
-                    <SelectItem key={o.id} value={String(o.id)}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Timer display */}
-              <div className="text-center text-3xl font-bold tracking-tight tabular-nums">
-                {formatElapsed(state.elapsed)}
-              </div>
-
-              {/* Controls */}
-              <div className="gap-sm flex items-center justify-center">
-                {state.phase === 'idle' && (
+                    {state.phase === 'running' && (
+                      <motion.div
+                        key="running"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="gap-sm flex items-center justify-center"
+                      >
+                        <Button size="sm" variant="outline" onClick={handlePause}>
+                          <Pause className="h-3.5 w-3.5" />
+                          {t('pages.libraryDashboard.studyTimerPause')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={isBusy}
+                          onClick={() => void handleStop()}
+                        >
+                          <Square className="h-3.5 w-3.5" />
+                          {t('pages.libraryDashboard.studyTimerStop')}
+                        </Button>
+                      </motion.div>
+                    )}
+                    {state.phase === 'paused' && (
+                      <motion.div
+                        key="paused"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="gap-sm flex items-center justify-center"
+                      >
+                        <Button
+                          size="sm"
+                          onClick={() => void handleStart()}
+                          className="bg-category-intellect hover:bg-category-intellect/90 text-white dark:text-black"
+                        >
+                          <Play className="h-3.5 w-3.5" />
+                          {t('pages.libraryDashboard.studyTimerResume')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={isBusy}
+                          onClick={() => void handleStop()}
+                        >
+                          <Square className="h-3.5 w-3.5" />
+                          {t('pages.libraryDashboard.studyTimerStop')}
+                        </Button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                {isActive && (
                   <Button
+                    variant="ghost"
                     size="sm"
-                    disabled={!canStart}
-                    onClick={() => void handleStart()}
-                    className="bg-category-intellect hover:bg-category-intellect/90 text-white dark:text-black"
+                    onClick={handleReset}
+                    className="text-muted-foreground hover:text-foreground w-full"
                   >
-                    <Play className="h-3.5 w-3.5" />
-                    {t('pages.libraryDashboard.studyTimerStart')}
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    {t('pages.libraryDashboard.studyTimerCancel')}
                   </Button>
                 )}
-                {state.phase === 'running' && (
-                  <>
-                    <Button size="sm" variant="outline" onClick={handlePause}>
-                      <Pause className="h-3.5 w-3.5" />
-                      {t('pages.libraryDashboard.studyTimerPause')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      disabled={isBusy}
-                      onClick={() => void handleStop()}
-                    >
-                      <Square className="h-3.5 w-3.5" />
-                      {t('pages.libraryDashboard.studyTimerStop')}
-                    </Button>
-                  </>
-                )}
-                {state.phase === 'paused' && (
-                  <>
-                    <Button
-                      size="sm"
-                      onClick={() => void handleStart()}
-                      className="bg-category-intellect hover:bg-category-intellect/90 text-white dark:text-black"
-                    >
-                      <Play className="h-3.5 w-3.5" />
-                      {t('pages.libraryDashboard.studyTimerResume')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      disabled={isBusy}
-                      onClick={() => void handleStop()}
-                    >
-                      <Square className="h-3.5 w-3.5" />
-                      {t('pages.libraryDashboard.studyTimerStop')}
-                    </Button>
-                  </>
-                )}
               </div>
-              {isActive && (
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="text-muted-foreground hover:text-foreground w-full text-center text-xs"
-                >
-                  {t('pages.libraryDashboard.studyTimerCancel')}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* FAB button */}
         <button

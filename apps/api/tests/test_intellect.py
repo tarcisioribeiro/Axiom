@@ -389,6 +389,36 @@ class CourseSessionListCreateTest(BaseIntellectTestCase):
         response = self.client.get(url, {"course": self.course.pk})
         self.assertEqual(response.data["count"], 1)
 
+    def test_create_session_on_paused_course_sets_in_progress(self):
+        self.course.status = "paused"
+        self.course.save(update_fields=["status"])
+        url = reverse("course-session-list-create")
+        payload = {
+            "course": self.course.pk,
+            "session_date": str(date.today()),
+            "duration_minutes": 60,
+            "owner": self.member.pk,
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.course.refresh_from_db()
+        self.assertEqual(self.course.status, "in_progress")
+
+    def test_create_session_on_not_started_course_sets_in_progress(self):
+        self.course.status = "not_started"
+        self.course.save(update_fields=["status"])
+        url = reverse("course-session-list-create")
+        payload = {
+            "course": self.course.pk,
+            "session_date": str(date.today()),
+            "duration_minutes": 60,
+            "owner": self.member.pk,
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.course.refresh_from_db()
+        self.assertEqual(self.course.status, "in_progress")
+
 
 class CourseSessionDetailTest(BaseIntellectTestCase):
     def setUp(self):

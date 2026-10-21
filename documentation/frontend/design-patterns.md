@@ -179,6 +179,7 @@ Há três tipos de modal:
 - **[regra]** Diálogo com tabela/cronograma longo (parcelas, amortização) pagina com `PaginatedSlide pinNav={false}` em vez de listar tudo sem paginação nem transição (18/10/2026: `RecalculationPreviewDialog`, `LoanAmortizationDialog`, `InstallmentsPlanDialog`).
 - **[regra]** Animações indesejadas são removidas (ex.: giro de número em contador, tela piscando).
 - **[pontual]** Animação na troca entre senha e 2FA, ao abrir campos de data e horário e ao ocultar o widget do agente.
+- **[pontual]** Widget de timer de estudo (`StudyTimer.tsx`): a troca de controles por fase (Iniciar → Pausar/Encerrar → Retomar/Encerrar) anima com fade + leve scale (`AnimatePresence mode="wait"`, chave pela fase). "Descartar" é um `Button` `variant="ghost"` `size="sm"` com ícone `RotateCcw`, não mais um texto solto (21/10/2026).
 
 ## 9. Tema, cores e tipografia
 
