@@ -304,6 +304,7 @@
     "notificationPreferences": "Notifications",
     "dashboard": "Dashboard",
     "modules": {
+      "system": "System",
       "planning": "Personal Planning",
       "finance": "Financial Control",
       "security": "Security",

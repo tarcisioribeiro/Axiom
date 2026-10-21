@@ -25,7 +25,6 @@ import {
 import { PlainButton } from '@/components/ui/plain-button';
 import { Tooltip } from '@/components/ui/tooltip';
 import {
-  navItems,
   navModules,
   filterNavModules,
   getAllModuleItems,
@@ -149,7 +148,7 @@ function NavLink({ item, isCollapsed, indent = 'md', onClick }: NavLinkProps) {
 export const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { hasPermission, user, logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const { isOpen, isCollapsed, close, toggleCollapsed } = useSidebar();
   const isMobile = useIsMobile();
   const { icon } = useThemeAssets();
@@ -173,11 +172,6 @@ export const Sidebar = () => {
 
   const visibleModules = filterNavModules(navModules, (item) =>
     can(screenForPath(item.href))
-  );
-
-  const filteredNavItems = navItems.filter(
-    (item) =>
-      !item.permission || hasPermission(item.permission.appName, item.permission.action)
   );
 
   // Auto-expand the active module + submodule on route change
@@ -423,10 +417,6 @@ export const Sidebar = () => {
   // ── Desktop collapsed icon grid ─────────────────────────────────────────────
   const collapsedNav = (
     <div className="gap-xs py-xs flex flex-col items-center">
-      {filteredNavItems.map((item) => (
-        <NavLink key={item.href} item={item} isCollapsed={true} />
-      ))}
-      <div className="my-xs border-border/40 w-8 border-t" />
       {visibleModules.map((module) => renderModule(module))}
     </div>
   );
@@ -486,12 +476,6 @@ export const Sidebar = () => {
           collapsedNav
         ) : (
           <div className="space-y-sm">
-            {filteredNavItems.map((item) => (
-              <NavLink key={item.href} item={item} isCollapsed={false} />
-            ))}
-
-            <div className="my-sm border-border/40 border-t" />
-
             {visibleModules.map((module) => renderModule(module))}
           </div>
         )}

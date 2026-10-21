@@ -46,12 +46,24 @@ describe('useBreadcrumb', () => {
     ]);
   });
 
-  it('resolve um item do menu principal (fora dos módulos)', () => {
+  it('resolve um item do submódulo Sistema', () => {
     const { result } = renderHook(() => useBreadcrumb(), {
       wrapper: wrapper('/webhooks'),
     });
 
-    expect(labels(result.current.breadcrumbs)).toEqual(['Início', 'Webhooks']);
+    expect(labels(result.current.breadcrumbs)).toEqual([
+      'Início',
+      'Sistema',
+      'Webhooks',
+    ]);
+  });
+
+  it('não duplica o módulo Sistema na própria página Início', () => {
+    const { result } = renderHook(() => useBreadcrumb(), {
+      wrapper: wrapper('/'),
+    });
+
+    expect(labels(result.current.breadcrumbs)).toEqual(['Início']);
   });
 
   it('casa o detalhe de conciliação bancária por prefixo, ignorando o :importId', () => {
