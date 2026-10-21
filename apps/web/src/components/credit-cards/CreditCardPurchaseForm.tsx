@@ -224,7 +224,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
       noValidate
     >
       <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-        <div className="space-y-sm md:col-span-2">
+        <div className="space-y-sm">
           <Label className="gap-xs flex items-center" htmlFor="description">
             <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.creditCardExpenses.form.descriptionLabel')}
@@ -238,9 +238,27 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
 
         <div className="space-y-sm">
+          <Label className="gap-xs flex items-center" htmlFor="merchant">
+            <Store className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.creditCardExpenses.form.merchantLabel')}
+          </Label>
+          <Input
+            id="merchant"
+            {...register('merchant')}
+            placeholder={t('pages.creditCardExpenses.form.merchantPlaceholder')}
+            disabled={isLoading}
+          />
+        </div>
+
+        <div className="space-y-sm">
           <Label className="gap-xs flex items-center" htmlFor="total_value">
             <Wallet className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.creditCardExpenses.form.totalValueLabel')}
+            {isEditMode && (
+              <span className="text-warning text-xs font-normal">
+                {t('pages.creditCardExpenses.form.totalValueLocked')}
+              </span>
+            )}
           </Label>
           <Controller
             name="total_value"
@@ -257,11 +275,6 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
               />
             )}
           />
-          {isEditMode && (
-            <p className="text-warning text-xs">
-              {t('pages.creditCardExpenses.form.totalValueLocked')}
-            </p>
-          )}
         </div>
 
         <div className="space-y-sm">
@@ -271,7 +284,10 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           </Label>
           <Select
             value={watchedCategory || ''}
-            onValueChange={(v) => setValue('category', v)}
+            onValueChange={(v) => {
+              if (!v) return;
+              setValue('category', v);
+            }}
           >
             <SelectTrigger>
               {watchedCategory ? (
@@ -321,29 +337,48 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
 
         <div className="space-y-sm">
-          <Label className="gap-xs flex items-center" htmlFor="purchase_time">
-            <Clock className="text-muted-foreground h-3.5 w-3.5" />
-            {t('pages.creditCardExpenses.form.purchaseTimeLabel')}
-          </Label>
-          <TimePicker
-            value={watchedPurchaseTime}
-            onChange={(t) => setValue('purchase_time', t ?? '')}
-            disabled={isLoading}
-          />
-        </div>
-
-        <div className="space-y-sm">
           <Label className="gap-xs flex items-center">
             <CreditCardIcon className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.creditCardExpenses.form.cardLabel')}
+            {isEditMode && (
+              <span className="text-warning text-xs font-normal">
+                {t('pages.creditCardExpenses.form.cardLocked')}
+              </span>
+            )}
           </Label>
           <Select
             value={watchedCard?.toString() || ''}
-            onValueChange={(v) => setValue('card', parseInt(v))}
+            onValueChange={(v) => {
+              if (!v) return;
+              setValue('card', parseInt(v));
+            }}
             disabled={isEditMode}
           >
             <SelectTrigger>
-              <SelectValue placeholder={t('common.actions.select')} />
+              {watchedCard ? (
+                (() => {
+                  const selected = creditCards.find((c) => c.id === watchedCard);
+                  if (!selected) {
+                    return <SelectValue placeholder={t('common.actions.select')} />;
+                  }
+                  const { last4, hasNumber, brandName } = getCardDisplayInfo(selected);
+                  return (
+                    <span className="gap-sm flex items-center">
+                      <span className="font-medium">{selected.name}</span>
+                      <span className="text-sm">
+                        {hasNumber
+                          ? `**** ${last4}`
+                          : t('pages.creditCardExpenses.form.noCardNumber')}
+                      </span>
+                      <Badge variant="secondary" className="text-xs">
+                        {brandName}
+                      </Badge>
+                    </span>
+                  );
+                })()
+              ) : (
+                <SelectValue placeholder={t('common.actions.select')} />
+              )}
             </SelectTrigger>
             <SelectContent>
               {creditCards.map((c) => {
@@ -368,11 +403,6 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
               })}
             </SelectContent>
           </Select>
-          {isEditMode && (
-            <p className="text-warning text-xs">
-              {t('pages.creditCardExpenses.form.cardLocked')}
-            </p>
-          )}
           {/* Limite disponível: espaço reservado até escolher o cartão */}
           {!isEditMode && (
             <div
@@ -402,9 +432,26 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
 
         <div className="space-y-sm">
+          <Label className="gap-xs flex items-center" htmlFor="purchase_time">
+            <Clock className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.creditCardExpenses.form.purchaseTimeLabel')}
+          </Label>
+          <TimePicker
+            value={watchedPurchaseTime}
+            onChange={(t) => setValue('purchase_time', t ?? '')}
+            disabled={isLoading}
+          />
+        </div>
+
+        <div className="space-y-sm">
           <Label className="gap-xs flex items-center" htmlFor="total_installments">
             <Hash className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.creditCardExpenses.form.installmentsLabel')}
+            {isEditMode && (
+              <span className="text-warning text-xs font-normal">
+                {t('pages.creditCardExpenses.form.installmentsLocked')}
+              </span>
+            )}
           </Label>
           <Controller
             control={control}
@@ -444,24 +491,6 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
               )}
             </div>
           )}
-          {isEditMode && (
-            <p className="text-warning text-xs">
-              {t('pages.creditCardExpenses.form.installmentsLocked')}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-sm">
-          <Label className="gap-xs flex items-center" htmlFor="merchant">
-            <Store className="text-muted-foreground h-3.5 w-3.5" />
-            {t('pages.creditCardExpenses.form.merchantLabel')}
-          </Label>
-          <Input
-            id="merchant"
-            {...register('merchant')}
-            placeholder={t('pages.creditCardExpenses.form.merchantPlaceholder')}
-            disabled={isLoading}
-          />
         </div>
 
         <div className="space-y-sm md:col-span-2">

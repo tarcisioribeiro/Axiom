@@ -1120,7 +1120,7 @@ export default function CreditCardExpenses({
       </AnimatePresence>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle mode={selectedPurchase ? 'edit' : 'create'}>
               {selectedPurchase
