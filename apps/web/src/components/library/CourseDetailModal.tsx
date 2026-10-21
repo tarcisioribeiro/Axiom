@@ -915,11 +915,15 @@ export function AddSessionForm({
               />
             </SelectTrigger>
             <SelectContent>
-              {modules.map((m) => (
-                <SelectItem key={m.id} value={String(m.id)}>
-                  {m.title}
-                </SelectItem>
-              ))}
+              {modules.map((m) => {
+                const isComplete =
+                  m.total_lessons > 0 && m.completed_lessons === m.total_lessons;
+                return (
+                  <SelectItem key={m.id} value={String(m.id)} disabled={isComplete}>
+                    {m.title} ({m.completed_lessons}/{m.total_lessons})
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -1081,9 +1085,12 @@ export function CourseSessionsModal({ course, open, onClose }: CourseModalProps)
                                 });
                                 const count = entry?.payload.count;
                                 if (typeof count !== 'number') return hoursStr;
-                                const countStr = t('pages.courses.sessions.countValue', {
-                                  count,
-                                });
+                                const countStr = t(
+                                  'pages.courses.sessions.countValue',
+                                  {
+                                    count,
+                                  }
+                                );
                                 return `${countStr} · ${hoursStr}`;
                               }}
                               nameFormatter={() => t('pages.courses.studyHours.hours')}
@@ -1168,7 +1175,7 @@ export function CourseSessionsModal({ course, open, onClose }: CourseModalProps)
       </Dialog>
 
       <Dialog open={formOpen && !!c} onOpenChange={(v) => !v && setFormOpen(false)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle mode="create">
               {t('pages.courses.sessions.newTitle')}
