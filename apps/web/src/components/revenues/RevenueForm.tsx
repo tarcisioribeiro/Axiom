@@ -300,13 +300,6 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {selectedAccount && (
-              <p className="text-muted-foreground text-xs">
-                {t('common.fields.balance_info', {
-                  value: formatCurrency(selectedAccount.available_balance),
-                })}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
