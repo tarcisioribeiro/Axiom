@@ -215,7 +215,7 @@ export function CourseDetailModal({ course, open, onClose }: CourseModalProps) {
                 {
                   label: t('pages.courses.stats.investedHours'),
                   value: t('pages.courses.hoursValue', {
-                    hours: c.invested_hours.toFixed(1),
+                    hours: Number(c.invested_hours.toFixed(1)),
                   }),
                 },
                 {
@@ -1109,7 +1109,7 @@ export function CourseSessionsModal({ course, open, onClose }: CourseModalProps)
                   )}
                   <p className="text-muted-foreground text-sm">
                     {t('pages.courses.sessions.totalHours', {
-                      hours: totalHours.toFixed(1),
+                      hours: Number(totalHours.toFixed(1)),
                     })}
                   </p>
                   <PaginatedSlide

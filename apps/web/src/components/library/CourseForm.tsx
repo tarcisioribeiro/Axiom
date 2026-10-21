@@ -269,11 +269,9 @@ export function CourseForm({
         </div>
 
         <div className="space-y-sm">
-          <Label htmlFor="url">
-            <div className="gap-xs flex items-center">
-              <ExternalLink className="h-3.5 w-3.5" />
-              {t('pages.courses.form.urlLabel')}
-            </div>
+          <Label htmlFor="url" className="gap-xs flex items-center">
+            <ExternalLink className="h-3.5 w-3.5" />
+            {t('pages.courses.form.urlLabel')}
           </Label>
           <Input
             id="url"
@@ -325,11 +323,9 @@ export function CourseForm({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="estimated_hours">
-              <div className="gap-xs flex items-center">
-                <Clock className="h-3.5 w-3.5" />
-                {t('pages.courses.form.estimatedHoursLabel')}
-              </div>
+            <Label htmlFor="estimated_hours" className="gap-xs flex items-center">
+              <Clock className="h-3.5 w-3.5" />
+              {t('pages.courses.form.estimatedHoursLabel')}
             </Label>
             <Controller
               control={control}

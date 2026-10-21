@@ -175,6 +175,16 @@ class CourseDetailTest(BaseIntellectTestCase):
         self.assertEqual(response.data["completed_lessons"], 1)
         self.assertEqual(response.data["progress_percentage"], 50.0)
 
+    def test_progress_percentage_based_on_hours_when_estimated_hours_set(self):
+        course = self._make_course(estimated_hours=10)
+        module = self._make_module(course)
+        self._make_lesson(module, is_completed=False)
+        self._make_session(course, duration_minutes=300)  # 5h de 10h estimadas
+        url = reverse("course-detail", args=[course.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.data["completed_lessons"], 0)
+        self.assertEqual(response.data["progress_percentage"], 50.0)
+
 
 # ---------------------------------------------------------------------------
 # Course Module CRUD
