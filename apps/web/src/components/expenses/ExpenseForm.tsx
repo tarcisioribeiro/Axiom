@@ -725,7 +725,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     setValue('related_loan', v === 'none' ? null : parseInt(v));
                     if (v !== 'none') {
                       setValue('related_payable', null);
-                      setValue('fixed_expense_template', null);
                     }
                   }}
                   disabled={isLoading}
@@ -757,7 +756,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     setValue('related_payable', v === 'none' ? null : parseInt(v));
                     if (v !== 'none') {
                       setValue('related_loan', null);
-                      setValue('fixed_expense_template', null);
                     }
                   }}
                   disabled={isLoading}
@@ -791,10 +789,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       'fixed_expense_template',
                       v === 'none' ? null : parseInt(v)
                     );
-                    if (v !== 'none') {
-                      setValue('related_loan', null);
-                      setValue('related_payable', null);
-                    }
                   }}
                   disabled={isLoading}
                 >
