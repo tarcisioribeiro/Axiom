@@ -311,6 +311,7 @@
     },
     "submodules": {
       "registrations": "Registrations",
+      "goalsRules": "Goals & Rules",
       "records": "Records",
       "insights": "Overview",
       "books": "Collection",

@@ -173,6 +173,13 @@ export const navModules: NavModule[] = [
             icon: CreditCard,
           },
           { titleKey: 'nav.items.members', href: '/members', icon: Users },
+        ],
+      },
+      {
+        id: 'finance-goals-rules',
+        titleKey: 'nav.submodules.goalsRules',
+        icon: Target,
+        items: [
           { titleKey: 'nav.items.budgets', href: '/budgets', icon: PiggyBank },
           {
             titleKey: 'nav.items.financialGoals',

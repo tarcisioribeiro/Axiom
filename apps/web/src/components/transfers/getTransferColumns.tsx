@@ -64,7 +64,9 @@ export function getTransferColumns(t: TFunction): Column<Transfer>[] {
       key: 'date',
       label: t('pages.transfers.columns.date'),
       render: (transfer) => (
-        <span className="text-sm">{formatDateTime(transfer.date, transfer.horary)}</span>
+        <span className="text-sm">
+          {formatDateTime(transfer.date, transfer.horary)}
+        </span>
       ),
     },
   ];
