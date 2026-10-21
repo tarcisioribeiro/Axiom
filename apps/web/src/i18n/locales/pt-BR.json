@@ -7519,6 +7519,8 @@
     "noFixedExpenses": "Nenhuma despesa fixa cadastrada",
     "noBills": "Nenhuma fatura para este mês",
     "noBudgetSuggestions": "Sem histórico suficiente para sugestões",
+    "lockedFuture": "Este mês ainda não começou. A edição só é permitida entre o primeiro e o último dia do mês vigente.",
+    "lockedApplied": "O planejamento deste mês já foi aplicado. Os campos não podem mais ser editados, mas você ainda pode reaplicar para relançar itens pendentes.",
     "reapplyPlan": "Reaplicar Plano",
     "applyConfirmTitle": "Aplicar Plano Mensal?",
     "applyConfirmDescription": "Isso irá gerar os lançamentos fixos e criar os orçamentos definidos para {{month}}.",

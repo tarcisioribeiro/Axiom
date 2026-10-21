@@ -7488,6 +7488,8 @@
     "noFixedExpenses": "No fixed expenses registered",
     "noBills": "No bills for this month",
     "noBudgetSuggestions": "Not enough history for suggestions",
+    "lockedFuture": "This month hasn't started yet. Editing is only allowed between the first and last day of the current month.",
+    "lockedApplied": "This month's plan has already been applied. Fields can no longer be edited, but you can still re-apply to launch pending items.",
     "reapplyPlan": "Re-apply Plan",
     "applyConfirmTitle": "Apply Monthly Plan?",
     "applyConfirmDescription": "This will generate fixed entries and create the defined budgets for {{month}}.",
