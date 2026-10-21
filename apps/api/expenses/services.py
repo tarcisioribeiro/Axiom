@@ -285,7 +285,9 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
                 description=fixed_exp.description,
                 value=item["value"],
                 date=expense_date,
-                horary=timezone.now().time(),
+                horary=timezone.localtime()
+                .time()
+                .replace(second=0, microsecond=0),
                 category=fixed_exp.category,
                 account=fixed_exp.account,
                 payed=False,

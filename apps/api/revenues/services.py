@@ -81,7 +81,9 @@ def bulk_generate_fixed_revenues(month, revenue_values, user, upsert=False):
             description=fixed_rev.description,
             value=item["value"],
             date=revenue_date,
-            horary=timezone.now().time(),
+            horary=timezone.localtime()
+            .time()
+            .replace(second=0, microsecond=0),
             category=fixed_rev.category,
             account=fixed_rev.account,
             received=False,
