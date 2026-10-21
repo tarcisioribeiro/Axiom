@@ -293,7 +293,7 @@ export function DataTable<T>({
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  <AnimatePresence initial={false}>
+                  <AnimatePresence initial={false} mode="popLayout">
                     {rows.map((item, index) => {
                       const key = keyExtractor(item);
                       const isDeleting = deletingKeys?.has(key);
