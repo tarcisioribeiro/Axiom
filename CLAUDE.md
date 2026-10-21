@@ -67,7 +67,7 @@ Axiom/
 
 **Mudanças visuais**: antes de implementar qualquer mudança visual (layout, espaçamento, posição de elementos, cores, animação, tabelas, modais, etc.), leia `documentation/frontend/design-patterns.md` e descreva como a tela vai ficar (antes → depois) para o usuário confirmar, antes de editar o código. Isso vale mesmo quando o pedido já parece específico — o documento registra decisões anteriores do product owner que a mudança pode contradizer sem querer. Depois de aplicar uma mudança visual nova e confirmada, atualize esse documento com o padrão resultante.
 
-**Testar mudança visual no navegador**: quando a alteração for puramente visual (frontend/web) e o usuário pedir para testá-la, faça o build do frontend com:
+**Testar mudança visual no navegador**: só faça o rebuild do frontend e só teste com a extensão claude-in-chrome quando o usuário pedir explicitamente isso, para aquela ocasião — nunca por iniciativa própria, mesmo que a mudança pareça exigir validação visual. Quando pedido, faça o build do frontend com:
 ```bash
 docker compose -f infra/docker/docker-compose.yml --project-directory . up frontend --build -d && docker system prune -af
 ```

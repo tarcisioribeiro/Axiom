@@ -21,7 +21,7 @@ import {
   Tag,
   X,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -51,21 +51,27 @@ import type {
 } from '@/types';
 import type { IconComponent } from '@/types/icon';
 
-const courseSchema = z.object({
-  title: z.string().min(1),
-  platform: z.string().min(1),
-  category: z.string().min(1),
-  description: z.string().optional().nullable(),
-  url: z.string().url().optional().or(z.literal('')).nullable(),
-  estimated_hours: z.number().positive().optional().nullable(),
-  status: z.string().min(1),
-  start_date: z.string().optional().nullable(),
-  end_date: z.string().optional().nullable(),
-  study_weekdays: z.array(z.number()),
-  owner: z.number(),
-});
+const makeCourseSchema = (messages: {
+  title: string;
+  platform: string;
+  category: string;
+  status: string;
+}) =>
+  z.object({
+    title: z.string().min(1, messages.title),
+    platform: z.string().min(1, messages.platform),
+    category: z.string().min(1, messages.category),
+    description: z.string().optional().nullable(),
+    url: z.string().url().optional().or(z.literal('')).nullable(),
+    estimated_hours: z.number().positive().optional().nullable(),
+    status: z.string().min(1, messages.status),
+    start_date: z.string().optional().nullable(),
+    end_date: z.string().optional().nullable(),
+    study_weekdays: z.array(z.number()),
+    owner: z.number(),
+  });
 
-type CourseFormValues = z.infer<typeof courseSchema>;
+type CourseFormValues = z.infer<ReturnType<typeof makeCourseSchema>>;
 
 interface CourseFormProps {
   course?: Course;
@@ -104,15 +110,16 @@ const CATEGORY_ICONS: Record<IntellectCategory, IconComponent> = {
   other: MoreHorizontal,
 };
 const STATUSES: CourseStatus[] = ['not_started', 'in_progress', 'completed', 'paused'];
-// 0 = segunda … 6 = domingo (mesma convenção do backend)
-const WEEKDAYS = [
-  'monday',
-  'tuesday',
-  'wednesday',
-  'thursday',
-  'friday',
-  'saturday',
-  'sunday',
+// índice: 0 = segunda … 6 = domingo (mesma convenção do backend)
+// exibição: domingo primeiro, sábado por último
+const WEEKDAYS: [string, number][] = [
+  ['sunday', 6],
+  ['monday', 0],
+  ['tuesday', 1],
+  ['wednesday', 2],
+  ['thursday', 3],
+  ['friday', 4],
+  ['saturday', 5],
 ];
 
 export function CourseForm({
@@ -124,6 +131,21 @@ export function CourseForm({
 }: CourseFormProps) {
   const { t } = useTranslation();
 
+  const courseSchema = useMemo(
+    () =>
+      makeCourseSchema({
+        title: t('common.fieldRequired', { field: t('pages.courses.form.titleLabel') }),
+        platform: t('common.fieldRequired', {
+          field: t('pages.courses.form.platformLabel'),
+        }),
+        category: t('common.fieldRequired', {
+          field: t('pages.courses.form.categoryLabel'),
+        }),
+        status: t('common.fieldRequired', { field: t('pages.courses.form.statusLabel') }),
+      }),
+    [t]
+  );
+
   const {
     control,
     register,
@@ -131,43 +153,22 @@ export function CourseForm({
     setValue,
     watch,
     formState: { errors },
-    reset,
   } = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
-      title: '',
-      platform: 'udemy',
-      category: 'technology',
-      description: null,
-      url: null,
-      estimated_hours: null,
-      status: 'not_started',
-      start_date: course ? null : formatLocalDate(new Date()),
-      end_date: null,
-      study_weekdays: [],
-      owner: ownerId,
+      title: course?.title ?? '',
+      platform: course?.platform ?? 'udemy',
+      category: course?.category ?? 'technology',
+      description: course?.description ?? null,
+      url: course?.url ?? null,
+      estimated_hours: course?.estimated_hours ?? null,
+      status: course?.status ?? 'not_started',
+      start_date: course?.start_date ?? (course ? null : formatLocalDate(new Date())),
+      end_date: course?.end_date ?? null,
+      study_weekdays: course?.study_weekdays ?? [],
+      owner: course?.owner ?? ownerId,
     },
   });
-
-  useEffect(() => {
-    if (course) {
-      reset({
-        title: course.title,
-        platform: course.platform,
-        category: course.category,
-        description: course.description ?? null,
-        url: course.url ?? null,
-        estimated_hours: course.estimated_hours ?? null,
-        status: course.status,
-        start_date: course.start_date ?? null,
-        end_date: course.end_date ?? null,
-        study_weekdays: course.study_weekdays ?? [],
-        owner: course.owner,
-      });
-    } else {
-      reset({ ...watch(), owner: ownerId });
-    }
-  }, [course, ownerId, reset, watch]);
 
   const handleFormSubmit = async (values: CourseFormValues) => {
     await onSubmit({
@@ -215,21 +216,24 @@ export function CourseForm({
               <MonitorPlay className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.courses.form.platformLabel')}
             </Label>
-            <Select
-              value={watch('platform')}
-              onValueChange={(v) => setValue('platform', v)}
-            >
-              <SelectTrigger aria-invalid={!!errors.platform}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PLATFORMS.map((p) => (
-                  <SelectItem key={p} value={p}>
-                    {t(`pages.courses.platform.${p}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              control={control}
+              name="platform"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger aria-invalid={!!errors.platform}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PLATFORMS.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {t(`pages.courses.platform.${p}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
 
           <div className="space-y-sm">
@@ -237,27 +241,30 @@ export function CourseForm({
               <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.courses.form.categoryLabel')}
             </Label>
-            <Select
-              value={watch('category')}
-              onValueChange={(v) => setValue('category', v)}
-            >
-              <SelectTrigger aria-invalid={!!errors.category}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((c) => {
-                  const Icon = CATEGORY_ICONS[c];
-                  return (
-                    <SelectItem key={c} value={c}>
-                      <div className="gap-xs flex items-center">
-                        <Icon className="text-category-intellect h-3.5 w-3.5" />
-                        {t(`pages.courses.category.${c}`)}
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            <Controller
+              control={control}
+              name="category"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger aria-invalid={!!errors.category}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => {
+                      const Icon = CATEGORY_ICONS[c];
+                      return (
+                        <SelectItem key={c} value={c}>
+                          <div className="gap-xs flex items-center">
+                            <Icon className="text-category-intellect h-3.5 w-3.5" />
+                            {t(`pages.courses.category.${c}`)}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
         </div>
 
@@ -297,21 +304,24 @@ export function CourseForm({
               <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.courses.form.statusLabel')}
             </Label>
-            <Select
-              value={watch('status')}
-              onValueChange={(v) => setValue('status', v)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUSES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {t(`pages.courses.status.${s}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              control={control}
+              name="status"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger aria-invalid={!!errors.status}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {t(`pages.courses.status.${s}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
 
           <div className="space-y-sm">
@@ -368,7 +378,7 @@ export function CourseForm({
             {t('pages.courses.form.studyWeekdaysLabel')}
           </Label>
           <div className="gap-xs flex flex-wrap justify-center">
-            {WEEKDAYS.map((wd, i) => {
+            {WEEKDAYS.map(([wd, i]) => {
               const selected = studyDays.includes(i);
               return (
                 <button

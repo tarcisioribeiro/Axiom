@@ -562,6 +562,7 @@ export default function Courses() {
             </VisuallyHidden>
           </DialogHeader>
           <CourseForm
+            key={editingCourse?.id ?? 'new'}
             course={editingCourse ?? undefined}
             ownerId={member?.id ?? 0}
             onSubmit={handleSubmit}
