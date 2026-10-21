@@ -3874,6 +3874,8 @@
         "notesPlaceholder": "e.g. Reviewed the module",
         "totalHours": "Total: {{hours}}h",
         "needsLesson": "Add at least one lesson to the course before logging study sessions.",
+        "countValue_one": "{{count}} session",
+        "countValue_other": "{{count}} sessions",
         "moduleLabel": "Module",
         "modulePlaceholder": "Select",
         "lessonLabel": "Completed lesson",

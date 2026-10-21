@@ -3942,6 +3942,8 @@
         "notesPlaceholder": "Ex.: Revisei o módulo",
         "totalHours": "Total: {{hours}}h",
         "needsLesson": "Cadastre ao menos uma aula do curso antes de registrar sessões de estudo.",
+        "countValue_one": "{{count}} sessão",
+        "countValue_other": "{{count}} sessões",
         "moduleLabel": "Módulo",
         "modulePlaceholder": "Selecione",
         "lessonLabel": "Aula concluída",

@@ -34,7 +34,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -1001,23 +1001,24 @@ export function CourseSessionsModal({ course, open, onClose }: CourseModalProps)
 
   const totalHours = sessions.reduce((sum, s) => sum + s.duration_hours, 0);
 
-  const weeklyHoursData = useMemo(() => {
-    const weeks: Record<string, number> = {};
+  const dailyStudyData = useMemo(() => {
+    const days: Record<string, { hours: number; count: number }> = {};
     sessions.forEach((s) => {
-      const d = parseLocalDate(s.session_date) ?? new Date(s.session_date);
-      const monday = new Date(d);
-      monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-      const key = formatLocalDate(monday);
-      weeks[key] = (weeks[key] ?? 0) + s.duration_hours;
+      const bucket = (days[s.session_date] ??= { hours: 0, count: 0 });
+      bucket.hours += s.duration_hours;
+      bucket.count += 1;
     });
-    return Object.entries(weeks)
+    return Object.entries(days)
       .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-8)
-      .map(([date, hours]) => ({
-        week: formatDate(date, 'dd/MM'),
+      .slice(-14)
+      .map(([date, { hours, count }]) => ({
+        day: formatDate(date, 'dd/MM'),
         hours: Math.round(hours * 10) / 10,
+        count,
       }));
   }, [sessions]);
+
+  const sessionsOldestFirst = useMemo(() => [...sessions].reverse(), [sessions]);
 
   const openNewSession = () => {
     // Regra do backend: ao menos uma aula antes das sessões — aviso em toast (§2.1).
@@ -1053,14 +1054,14 @@ export function CourseSessionsModal({ course, open, onClose }: CourseModalProps)
                 />
               ) : (
                 <div className="space-y-md">
-                  {weeklyHoursData.length > 1 && (
+                  {dailyStudyData.length > 1 && (
                     <ResponsiveContainer width="100%" height={110}>
-                      <BarChart
-                        data={weeklyHoursData}
+                      <LineChart
+                        data={dailyStudyData}
                         margin={{ top: 2, right: 4, left: -20, bottom: 0 }}
                       >
                         <XAxis
-                          dataKey="week"
+                          dataKey="day"
                           tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                           tickLine={false}
                           axisLine={false}
@@ -1071,22 +1072,32 @@ export function CourseSessionsModal({ course, open, onClose }: CourseModalProps)
                           axisLine={false}
                         />
                         <Tooltip
-                          cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
+                          cursor={{ stroke: 'hsl(var(--muted))', opacity: 0.3 }}
                           content={
                             <EnhancedTooltip
-                              formatter={(value) =>
-                                t('pages.courses.hoursValue', { hours: Number(value) })
-                              }
+                              formatter={(value, entry) => {
+                                const hoursStr = t('pages.courses.hoursValue', {
+                                  hours: Number(value),
+                                });
+                                const count = entry?.payload.count;
+                                if (typeof count !== 'number') return hoursStr;
+                                const countStr = t('pages.courses.sessions.countValue', {
+                                  count,
+                                });
+                                return `${countStr} · ${hoursStr}`;
+                              }}
                               nameFormatter={() => t('pages.courses.studyHours.hours')}
                             />
                           }
                         />
-                        <Bar
+                        <Line
                           dataKey="hours"
-                          fill="hsl(var(--category-intellect))"
-                          radius={[3, 3, 0, 0]}
+                          stroke="hsl(var(--category-intellect))"
+                          strokeWidth={2}
+                          dot={{ r: 3, fill: 'hsl(var(--category-intellect))' }}
+                          activeDot={{ r: 4 }}
                         />
-                      </BarChart>
+                      </LineChart>
                     </ResponsiveContainer>
                   )}
                   <p className="text-muted-foreground text-sm">
@@ -1095,7 +1106,7 @@ export function CourseSessionsModal({ course, open, onClose }: CourseModalProps)
                     })}
                   </p>
                   <PaginatedSlide
-                    items={sessions}
+                    items={sessionsOldestFirst}
                     pageSize={LIST_PAGE_SIZE}
                     pinNav={false}
                     growOnAdd
