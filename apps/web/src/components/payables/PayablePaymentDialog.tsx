@@ -251,7 +251,7 @@ export function PayablePaymentDialog({
 
   return (
     <Dialog open={!!payable} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle icon={Wallet}>{t('pages.payables.payment.title')}</DialogTitle>
           <DialogDescription>
@@ -364,15 +364,15 @@ export function PayablePaymentDialog({
 
           {/* Alerta de saldo: espaço sempre reservado para o modal não mudar de altura */}
           <div
-            className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
+            className={`p-sm flex items-center justify-center gap-2 rounded-md border text-sm ${
               balanceAlert ? BALANCE_ALERT_TONES[balanceAlert.tone] : 'invisible'
             }`}
           >
             <div
               key={balanceAlert ? `${balanceAlert.tone}-${balanceAlert.text}` : 'empty'}
-              className="animate-fade-in flex items-start gap-2"
+              className="animate-fade-in flex items-center justify-center gap-2"
             >
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <AlertCircle className="h-4 w-4 shrink-0" />
               <p>
                 {balanceAlert?.text ??
                   t('common.balance.overdraftWarningDesc', {

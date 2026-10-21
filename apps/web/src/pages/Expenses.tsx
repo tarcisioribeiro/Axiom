@@ -332,7 +332,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle mode={selectedExpense ? 'edit' : 'create'}>
               {selectedExpense

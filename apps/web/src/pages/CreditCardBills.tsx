@@ -697,7 +697,7 @@ export default function CreditCardBills({
       </Dialog>
 
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle className="gap-sm flex items-center">
               <Wallet className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />

@@ -262,7 +262,11 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Seção: Informações */}
-      <FormSection title={t('common.form.sections.basicInfo')} icon={FileText}>
+      <FormSection
+        title={t('common.form.sections.basicInfo')}
+        icon={FileText}
+        contentClassName="gap-md grid grid-cols-1 sm:grid-cols-[2fr_1fr]"
+      >
         <div className="space-y-sm">
           <Label className="gap-xs flex items-center">
             <FileText className="text-muted-foreground h-3.5 w-3.5" />
@@ -274,30 +278,36 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             disabled={isLoading}
           />
         </div>
-      </FormSection>
 
-      {/* Seção: Tipo de Transferência */}
-      <FormSection title={t('pages.transfers.form.typeLabel')} icon={ArrowRight}>
-        <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
-          {Object.entries(TRANSLATIONS.transferTypes).map(([k, v]) => {
-            const Icon = TRANSFER_TYPE_ICONS[k] ?? ArrowLeftRight;
-            return (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setValue('category', k)}
-                disabled={k === 'withdrawal' && !walletAccount}
-                className={`p-sm flex flex-col items-center gap-1 rounded-lg border text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                  watchedCategory === k
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border/70 bg-muted/20 text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                <span>{v}</span>
-              </button>
-            );
-          })}
+        <div className="space-y-sm">
+          <Label className="gap-xs flex items-center">
+            <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.transfers.form.typeLabel')}
+          </Label>
+          <Select
+            value={watchedCategory}
+            onValueChange={(v) => setValue('category', v)}
+            disabled={isLoading}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(TRANSLATIONS.transferTypes).map(([k, v]) => {
+                const Icon = TRANSFER_TYPE_ICONS[k] ?? ArrowLeftRight;
+                return (
+                  <SelectItem
+                    key={k}
+                    value={k}
+                    disabled={k === 'withdrawal' && !walletAccount}
+                    icon={<Icon className="h-4 w-4" />}
+                  >
+                    {v}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
       </FormSection>
 
@@ -449,15 +459,15 @@ export const TransferForm: React.FC<TransferFormProps> = ({
 
       {/* Alerta de saldo: espaço sempre reservado para o modal não mudar de altura */}
       <div
-        className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
+        className={`p-sm flex items-center justify-center gap-2 rounded-md border text-sm ${
           balanceAlert ? BALANCE_ALERT_TONES[balanceAlert.tone] : 'invisible'
         }`}
       >
         <div
           key={balanceAlert ? `${balanceAlert.tone}-${balanceAlert.text}` : 'empty'}
-          className="animate-fade-in flex items-start gap-2"
+          className="animate-fade-in flex items-center justify-center gap-2"
         >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <AlertCircle className="h-4 w-4 shrink-0" />
           <p>
             {balanceAlert?.text ??
               t('common.balance.overdraftWarningDesc', {

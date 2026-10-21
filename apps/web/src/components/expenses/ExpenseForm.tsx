@@ -822,15 +822,15 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       {/* Alerta de saldo: espaço sempre reservado para o modal não mudar de altura */}
       <div
-        className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
+        className={`p-sm flex items-center justify-center gap-2 rounded-md border text-sm ${
           balanceAlert ? BALANCE_ALERT_TONES[balanceAlert.tone] : 'invisible'
         }`}
       >
         <div
           key={balanceAlert ? `${balanceAlert.tone}-${balanceAlert.text}` : 'empty'}
-          className="animate-fade-in flex items-start gap-2"
+          className="animate-fade-in flex items-center justify-center gap-2"
         >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <AlertCircle className="h-4 w-4 shrink-0" />
           <p>
             {balanceAlert?.text ??
               t('common.balance.overdraftWarningDesc', {

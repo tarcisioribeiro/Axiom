@@ -573,7 +573,7 @@ export default function Loans() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className={selectedLoan ? 'max-w-5xl' : 'max-w-2xl'}>
+        <DialogContent className={selectedLoan ? 'max-w-5xl' : 'max-w-3xl'}>
           <DialogHeader>
             <DialogTitle mode={selectedLoan ? 'edit' : 'create'}>
               {selectedLoan ? t('pages.loans.editTitle') : t('pages.loans.newTitle')}
