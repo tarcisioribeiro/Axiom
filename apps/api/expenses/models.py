@@ -246,7 +246,11 @@ class Expense(BaseModel):
     )
 
     class Meta:
-        ordering = ["-date"]
+        ordering = [
+            "-date",
+            models.F("horary").desc(nulls_last=True),
+            "-id",
+        ]
         verbose_name = "Despesa"
         verbose_name_plural = "Despesas"
         indexes = [

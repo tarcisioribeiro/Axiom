@@ -299,17 +299,6 @@ export default function Accounts() {
           setSearchTerm('');
           setTypeFilter('all');
         }}
-        activeFilters={[
-          ...(typeFilter !== 'all'
-            ? [
-                {
-                  key: 'type',
-                  label: `${t('common.fields.type')}: ${translate('accountTypes', typeFilter)}`,
-                  onRemove: () => setTypeFilter('all'),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput

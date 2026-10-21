@@ -360,26 +360,6 @@ function ArchivesContent() {
             setCategoryFilter('all');
             setTypeFilter('all');
           }}
-          activeFilters={[
-            ...(categoryFilter !== 'all'
-              ? [
-                  {
-                    key: 'category',
-                    label: `${t('common.fields.category')}: ${t(`pages.archives.categories.${categoryFilter}`)}`,
-                    onRemove: () => setCategoryFilter('all'),
-                  },
-                ]
-              : []),
-            ...(typeFilter !== 'all'
-              ? [
-                  {
-                    key: 'type',
-                    label: `${t('common.fields.type')}: ${t(`pages.archives.types.${typeFilter}`)}`,
-                    onRemove: () => setTypeFilter('all'),
-                  },
-                ]
-              : []),
-          ]}
         >
           <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput

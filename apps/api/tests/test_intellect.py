@@ -175,6 +175,16 @@ class CourseDetailTest(BaseIntellectTestCase):
         self.assertEqual(response.data["completed_lessons"], 1)
         self.assertEqual(response.data["progress_percentage"], 50.0)
 
+    def test_progress_percentage_based_on_hours_when_estimated_hours_set(self):
+        course = self._make_course(estimated_hours=10)
+        module = self._make_module(course)
+        self._make_lesson(module, is_completed=False)
+        self._make_session(course, duration_minutes=300)  # 5h de 10h estimadas
+        url = reverse("course-detail", args=[course.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.data["completed_lessons"], 0)
+        self.assertEqual(response.data["progress_percentage"], 50.0)
+
 
 # ---------------------------------------------------------------------------
 # Course Module CRUD
@@ -378,6 +388,36 @@ class CourseSessionListCreateTest(BaseIntellectTestCase):
         url = reverse("course-session-list-create")
         response = self.client.get(url, {"course": self.course.pk})
         self.assertEqual(response.data["count"], 1)
+
+    def test_create_session_on_paused_course_sets_in_progress(self):
+        self.course.status = "paused"
+        self.course.save(update_fields=["status"])
+        url = reverse("course-session-list-create")
+        payload = {
+            "course": self.course.pk,
+            "session_date": str(date.today()),
+            "duration_minutes": 60,
+            "owner": self.member.pk,
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.course.refresh_from_db()
+        self.assertEqual(self.course.status, "in_progress")
+
+    def test_create_session_on_not_started_course_sets_in_progress(self):
+        self.course.status = "not_started"
+        self.course.save(update_fields=["status"])
+        url = reverse("course-session-list-create")
+        payload = {
+            "course": self.course.pk,
+            "session_date": str(date.today()),
+            "duration_minutes": 60,
+            "owner": self.member.pk,
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.course.refresh_from_db()
+        self.assertEqual(self.course.status, "in_progress")
 
 
 class CourseSessionDetailTest(BaseIntellectTestCase):

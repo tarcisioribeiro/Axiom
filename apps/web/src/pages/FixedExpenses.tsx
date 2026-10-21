@@ -286,39 +286,7 @@ export default function FixedExpenses({
 
   return (
     <Wrapper embedded={embedded}>
-      <FilterBar
-        hasActiveFilters={hasActiveFilters}
-        onClear={clearFilters}
-        activeFilters={[
-          ...(categoryFilter !== 'all'
-            ? [
-                {
-                  key: 'category',
-                  label: `${t('pages.fixedExpenses.allCategories')}: ${EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === categoryFilter)?.label ?? categoryFilter}`,
-                  onRemove: () => setCategoryFilter('all'),
-                },
-              ]
-            : []),
-          ...(accountFilter !== 'all'
-            ? [
-                {
-                  key: 'account',
-                  label: `${t('pages.fixedExpenses.allAccounts')}: ${accounts.find((a) => String(a.id) === accountFilter)?.account_name ?? accountFilter}`,
-                  onRemove: () => setAccountFilter('all'),
-                },
-              ]
-            : []),
-          ...(statusFilter !== 'all'
-            ? [
-                {
-                  key: 'status',
-                  label: `${t('common.fields.status')}: ${statusFilter === 'active' ? t('common.status.active') : t('common.status.inactive')}`,
-                  onRemove: () => setStatusFilter('all'),
-                },
-              ]
-            : []),
-        ]}
-      >
+      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.fixedExpenses.searchPlaceholder')}

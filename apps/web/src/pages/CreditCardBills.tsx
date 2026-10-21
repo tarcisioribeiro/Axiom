@@ -486,26 +486,6 @@ export default function CreditCardBills({
           setDueDateStart(undefined);
           setDueDateEnd(undefined);
         }}
-        activeFilters={[
-          ...(dueDateStart
-            ? [
-                {
-                  key: 'dueDateStart',
-                  label: `${t('common.fields.from')}: ${formatDate(dueDateStart)}`,
-                  onRemove: () => setDueDateStart(undefined),
-                },
-              ]
-            : []),
-          ...(dueDateEnd
-            ? [
-                {
-                  key: 'dueDateEnd',
-                  label: `${t('common.fields.to')}: ${formatDate(dueDateEnd)}`,
-                  onRemove: () => setDueDateEnd(undefined),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.card')} icon={CreditCardIcon}>
           <Select value={cardFilter} onValueChange={setCardFilter}>
@@ -697,7 +677,7 @@ export default function CreditCardBills({
       </Dialog>
 
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle className="gap-sm flex items-center">
               <Wallet className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />

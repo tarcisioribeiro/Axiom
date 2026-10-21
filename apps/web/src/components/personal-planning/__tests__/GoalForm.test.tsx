@@ -135,7 +135,7 @@ describe('GoalForm', () => {
 
     await waitFor(() => {
       expect(toast).toHaveBeenCalledWith(
-        expect.objectContaining({ title: expect.stringMatching(/mínimo 3/i) })
+        expect.objectContaining({ title: expect.stringMatching(/mínimo de 3/i) })
       );
     });
     expect(titleInput).toHaveAttribute('aria-invalid', 'true');

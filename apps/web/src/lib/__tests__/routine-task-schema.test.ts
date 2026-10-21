@@ -1,6 +1,10 @@
+import type { TFunction } from 'i18next';
 import { describe, expect, it } from 'vitest';
 
-import { routineTaskSchema } from '@/lib/validations';
+import { makeRoutineTaskSchema } from '@/lib/validations';
+
+const t = ((key: string) => key) as TFunction;
+const routineTaskSchema = makeRoutineTaskSchema(t);
 
 const base = {
   name: 'Ler',

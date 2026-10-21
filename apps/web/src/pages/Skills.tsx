@@ -410,26 +410,6 @@ export default function Skills() {
           setStatusFilter('all');
           setCategoryFilter('all');
         }}
-        activeFilters={[
-          ...(statusFilter !== 'all'
-            ? [
-                {
-                  key: 'status',
-                  label: `${t('pages.skills.allStatus')}: ${t(`pages.skills.status.${statusFilter}`)}`,
-                  onRemove: () => setStatusFilter('all'),
-                },
-              ]
-            : []),
-          ...(categoryFilter !== 'all'
-            ? [
-                {
-                  key: 'category',
-                  label: `${t('pages.skills.allCategories')}: ${t(`pages.skills.category.${categoryFilter}`)}`,
-                  onRemove: () => setCategoryFilter('all'),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
@@ -495,64 +475,72 @@ export default function Skills() {
       {/* Content */}
       {isLoading ? (
         <LoadingState />
-      ) : viewMode === 'radar' ? (
-        <div className="gap-md grid lg:grid-cols-2">
-          <SkillsRadarChart skills={filteredSkills} />
-          <PaginatedSlide
-            items={filteredSkills}
-            pageSize={LIST_PAGE_SIZE}
-            pinNav={false}
-            className="space-y-sm"
-          >
-            {(pageItems) =>
-              pageItems.map((skill) => (
-                <div
-                  key={skill.id}
-                  className="border-border bg-card px-md py-sm flex items-center justify-between rounded-lg border"
-                >
-                  <div className="gap-sm flex items-center">
-                    <ProficiencyDots level={skill.proficiency_level} />
-                    <span className="text-sm font-medium">{skill.name}</span>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    {t(`pages.skills.category.${skill.category}`)}
-                  </Badge>
-                </div>
-              ))
-            }
-          </PaginatedSlide>
-        </div>
-      ) : filteredSkills.length === 0 ? (
-        <EmptyState
-          title={
-            search || statusFilter !== 'all' || categoryFilter !== 'all'
-              ? t('pages.skills.emptySearch')
-              : t('pages.skills.emptyState')
-          }
-          icon={<Brain className="text-muted-foreground h-10 w-10" />}
-        />
       ) : (
-        <AnimatePresence>
-          <PaginatedSlide
-            key={`${search}-${statusFilter}-${categoryFilter}`}
-            items={filteredSkills}
-            pageSize={GRID_PAGE_SIZE}
-            className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
-          >
-            {(pageItems) =>
-              pageItems.map((skill) => (
-                <SkillCard
-                  key={skill.id}
-                  skill={skill}
-                  onOpen={setDetailSkill}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onViewHistory={(s) => setHistorySkill(s)}
-                />
-              ))
-            }
-          </PaginatedSlide>
-        </AnimatePresence>
+        <motion.div
+          key={viewMode}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {viewMode === 'radar' ? (
+            <div className="gap-md grid lg:grid-cols-2">
+              <SkillsRadarChart skills={filteredSkills} />
+              <PaginatedSlide
+                items={filteredSkills}
+                pageSize={LIST_PAGE_SIZE}
+                pinNav={false}
+                className="space-y-sm"
+              >
+                {(pageItems) =>
+                  pageItems.map((skill) => (
+                    <div
+                      key={skill.id}
+                      className="border-border bg-card px-md py-sm flex items-center justify-between rounded-lg border"
+                    >
+                      <div className="gap-sm flex items-center">
+                        <ProficiencyDots level={skill.proficiency_level} />
+                        <span className="text-sm font-medium">{skill.name}</span>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {t(`pages.skills.category.${skill.category}`)}
+                      </Badge>
+                    </div>
+                  ))
+                }
+              </PaginatedSlide>
+            </div>
+          ) : filteredSkills.length === 0 ? (
+            <EmptyState
+              title={
+                search || statusFilter !== 'all' || categoryFilter !== 'all'
+                  ? t('pages.skills.emptySearch')
+                  : t('pages.skills.emptyState')
+              }
+              icon={<Brain className="text-muted-foreground h-10 w-10" />}
+            />
+          ) : (
+            <AnimatePresence>
+              <PaginatedSlide
+                key={`${search}-${statusFilter}-${categoryFilter}`}
+                items={filteredSkills}
+                pageSize={GRID_PAGE_SIZE}
+                className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+              >
+                {(pageItems) =>
+                  pageItems.map((skill) => (
+                    <SkillCard
+                      key={skill.id}
+                      skill={skill}
+                      onOpen={setDetailSkill}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onViewHistory={(s) => setHistorySkill(s)}
+                    />
+                  ))
+                }
+              </PaginatedSlide>
+            </AnimatePresence>
+          )}
+        </motion.div>
       )}
 
       {/* Skill Form Dialog */}
@@ -577,6 +565,7 @@ export default function Skills() {
             </VisuallyHidden>
           </DialogHeader>
           <SkillForm
+            key={editingSkill?.id ?? 'new'}
             skill={editingSkill ?? undefined}
             ownerId={member?.id ?? 0}
             onSubmit={handleSubmit}

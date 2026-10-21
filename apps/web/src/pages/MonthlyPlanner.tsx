@@ -164,6 +164,7 @@ interface ActualExpenseItem {
 
 interface MonthlyPlanSummary {
   plan: MonthlyPlan;
+  lock_reason: 'future' | 'already_applied' | null;
   fixed_revenues: FixedRevenueItem[];
   fixed_expenses: FixedExpenseItem[];
   credit_card_bills: CreditCardBillItem[];
@@ -301,6 +302,7 @@ function EditableFixedItem({
   settledLabel,
   forceDisabled,
   debtName,
+  disabled,
   onToggle,
   onValueChange,
 }: {
@@ -320,6 +322,8 @@ function EditableFixedItem({
   /** Name of the Loan/Payable this fixed expense is the installment of,
    * when it comes from a debt payment plan. */
   debtName?: string | null;
+  /** Plan is locked (future month or already-applied past month): read-only. */
+  disabled?: boolean;
   onToggle: (id: number, enabled: boolean) => void;
   onValueChange: (id: number, value: string) => void;
 }) {
@@ -338,7 +342,7 @@ function EditableFixedItem({
       <Checkbox
         checked={enabled}
         onCheckedChange={(checked) => onToggle(id, !!checked)}
-        disabled={forceDisabled || locked}
+        disabled={forceDisabled || locked || disabled}
         className="shrink-0"
       />
       <div className="min-w-0 flex-1">
@@ -370,7 +374,7 @@ function EditableFixedItem({
       <MoneyInput
         value={displayValue}
         onChange={(v) => onValueChange(id, v)}
-        disabled={!enabled || locked}
+        disabled={!enabled || locked || disabled}
         className="h-7 w-32 shrink-0 text-right text-sm"
       />
     </div>
@@ -382,11 +386,14 @@ function BillItem({
   enabled,
   onToggle,
   isInsufficient,
+  disabled,
 }: {
   bill: CreditCardBillItem;
   enabled: boolean;
   onToggle: (id: number, enabled: boolean) => void;
   isInsufficient?: boolean;
+  /** Plan is locked (future month or already-applied past month): read-only. */
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const isPaid = bill.status === 'paid';
@@ -401,6 +408,7 @@ function BillItem({
       <Checkbox
         checked={enabled}
         onCheckedChange={(checked) => onToggle(bill.id, !!checked)}
+        disabled={disabled}
         className="shrink-0"
       />
       <div className="min-w-0 flex-1">
@@ -450,6 +458,7 @@ function ExtraItemRow({
   onToggle,
   onRemove,
   removeLabel,
+  disabled,
 }: {
   item: ExtraItem;
   index: number;
@@ -457,6 +466,8 @@ function ExtraItemRow({
   onToggle: (idx: number, enabled: boolean) => void;
   onRemove: (idx: number) => void;
   removeLabel: string;
+  /** Plan is locked (future month or already-applied past month): read-only. */
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const enabled = item.enabled !== false;
@@ -471,25 +482,27 @@ function ExtraItemRow({
       <Checkbox
         checked={enabled}
         onCheckedChange={(checked) => onToggle(index, !!checked)}
+        disabled={disabled}
         className="shrink-0"
       />
       <Input
         value={item.description}
         onChange={(e) => onChange(index, 'description', e.target.value)}
         placeholder={t('monthlyPlanner.descriptionPlaceholder')}
-        disabled={!enabled}
+        disabled={!enabled || disabled}
         className="h-8 flex-1 text-sm"
       />
       <MoneyInput
         value={item.value}
         onChange={(v) => onChange(index, 'value', v)}
-        disabled={!enabled}
+        disabled={!enabled || disabled}
         className="h-8 w-32 text-right text-sm"
       />
       <Button
         variant="ghost"
         size="sm"
         onClick={() => onRemove(index)}
+        disabled={disabled}
         className="text-destructive hover:text-destructive h-8 w-8 p-0"
         aria-label={removeLabel}
       >
@@ -560,6 +573,7 @@ function ExtraItemsList({
   onAdd,
   removeLabel,
   addLabel,
+  disabled,
 }: {
   items: ExtraItem[];
   onChange: React.ComponentProps<typeof ExtraItemRow>['onChange'];
@@ -568,6 +582,8 @@ function ExtraItemsList({
   onAdd: () => void;
   removeLabel: string;
   addLabel: string;
+  /** Plan is locked (future month or already-applied past month): read-only. */
+  disabled?: boolean;
 }) {
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(items.length / LIST_PAGE_SIZE));
@@ -593,6 +609,7 @@ function ExtraItemsList({
                 onToggle={onToggle}
                 onRemove={onRemove}
                 removeLabel={removeLabel}
+                disabled={disabled}
               />
             ))}
           </PageSlide>
@@ -605,6 +622,7 @@ function ExtraItemsList({
           onAdd();
           setPage(Infinity);
         }}
+        disabled={disabled}
         className="gap-xs w-full text-xs"
       >
         <Plus className="h-3 w-3" />
@@ -1194,6 +1212,8 @@ export default function MonthlyPlanner({
 
   const data = summaryQuery.data;
   const isApplied = Boolean(data?.plan.applied_at);
+  const lockReason = data?.lock_reason ?? null;
+  const isLocked = Boolean(lockReason);
 
   const totalFixed = (data?.fixed_revenues ?? []).reduce((acc, r) => {
     const ov = r.already_received ? undefined : fixedRevenueOverrides[String(r.id)];
@@ -1324,7 +1344,12 @@ export default function MonthlyPlanner({
           <Can action="apply_plan">
             <Button
               onClick={() => void handleApply()}
-              disabled={applyMutation.isPending || isLoadingPreview || !planId}
+              disabled={
+                applyMutation.isPending ||
+                isLoadingPreview ||
+                !planId ||
+                lockReason === 'future'
+              }
               size="sm"
               variant={isApplied ? 'outline' : 'default'}
             >
@@ -1344,6 +1369,19 @@ export default function MonthlyPlanner({
   return (
     <Wrapper>
       {headerTarget ? createPortal(header, headerTarget) : header}
+
+      {lockReason && (
+        <div className="mb-lg gap-xs border-warning/30 bg-warning/5 p-sm text-warning flex items-start rounded-md border text-sm">
+          <AlertTriangle className="mt-[2px] h-4 w-4 shrink-0" />
+          <span>
+            {t(
+              lockReason === 'future'
+                ? 'monthlyPlanner.lockedFuture'
+                : 'monthlyPlanner.lockedApplied'
+            )}
+          </span>
+        </div>
+      )}
 
       {/* Resumo: só o valor principal; o detalhamento abre num modal. */}
       <div className="mb-lg gap-md grid grid-cols-2 lg:grid-cols-4">
@@ -1556,6 +1594,7 @@ export default function MonthlyPlanner({
                       }
                       onToggle={toggleFixedRevenue}
                       onValueChange={updateFixedRevenueValue}
+                      disabled={isLocked}
                     />
                   )}
                 />
@@ -1574,6 +1613,7 @@ export default function MonthlyPlanner({
                   onAdd={addExtraRevenue}
                   removeLabel={t('monthlyPlanner.removeItem')}
                   addLabel={t('monthlyPlanner.addItem')}
+                  disabled={isLocked}
                 />
               </CardSubSection>
             </div>
@@ -1659,6 +1699,7 @@ export default function MonthlyPlanner({
                       debtName={e.related_loan_name ?? e.related_payable_name}
                       onToggle={toggleFixedExpense}
                       onValueChange={updateFixedExpenseValue}
+                      disabled={isLocked}
                     />
                   )}
                 />
@@ -1676,6 +1717,7 @@ export default function MonthlyPlanner({
                   onAdd={addExtraExpense}
                   removeLabel={t('monthlyPlanner.removeItem')}
                   addLabel={t('monthlyPlanner.addItem')}
+                  disabled={isLocked}
                 />
               </CardSubSection>
             </div>
@@ -1696,6 +1738,7 @@ export default function MonthlyPlanner({
                       enabled={billOverrides[String(b.id)] !== false}
                       onToggle={toggleBill}
                       isInsufficient={billInsufficientMap[b.id] === true}
+                      disabled={isLocked}
                     />
                   )}
                 />
@@ -1801,6 +1844,7 @@ export default function MonthlyPlanner({
                           onCheckedChange={(checked) =>
                             toggleBudgetCategory(cat, !!checked)
                           }
+                          disabled={isLocked}
                           className="shrink-0"
                         />
                         <span className="truncate text-xs font-medium">
@@ -1819,7 +1863,7 @@ export default function MonthlyPlanner({
                       value={currentOverride}
                       onChange={(v) => updateBudgetOverride(cat, v, catActual)}
                       className="h-7 text-right text-sm"
-                      disabled={isDisabled}
+                      disabled={isDisabled || isLocked}
                     />
                     {currentOverride !== '' &&
                       !isNaN(parseFloat(currentOverride)) &&

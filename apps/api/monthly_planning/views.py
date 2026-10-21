@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.db.models import QuerySet, Sum
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -18,7 +19,12 @@ from credit_cards.models import CreditCardBill, CreditCardInstallment
 from expenses.models import Expense, FixedExpense
 from monthly_planning.models import MonthlyPlan
 from monthly_planning.serializers import MonthlyPlanSerializer
-from monthly_planning.services import CREATE, UPDATE, build_apply_preview
+from monthly_planning.services import (
+    CREATE,
+    UPDATE,
+    build_apply_preview,
+    plan_lock_reason,
+)
 from revenues.models import FixedRevenue, Revenue
 from vaults.models import Vault
 
@@ -419,6 +425,7 @@ class MonthlyPlanSummaryView(APIView):
         return Response(
             {
                 "plan": MonthlyPlanSerializer(plan).data,
+                "lock_reason": plan_lock_reason(plan),
                 "fixed_revenues": _fixed_revenues_data(
                     user, date_from, date_to
                 ),
@@ -460,6 +467,10 @@ class MonthlyPlanDetailView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_update(self, serializer: Any) -> None:
+        if plan_lock_reason(serializer.instance):
+            raise ValidationError(
+                {"error": "Este planejamento não pode mais ser editado."}
+            )
         serializer.save(updated_by=self.request.user)
 
     def perform_destroy(self, instance: Any) -> None:
@@ -488,6 +499,16 @@ class MonthlyPlanApplyView(APIView):
             return Response(
                 {"error": "Plan not found"},
                 status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Lançar/relançar um mês passado já aplicado continua permitido —
+        # é a forma de corrigir itens ainda não liquidados (ver
+        # test_reapply_does_not_change_settled_launches, que já protege os
+        # itens "settled" um a um). Só o mês futuro bloqueia o lançamento.
+        if plan_lock_reason(plan) == "future":
+            return Response(
+                {"error": "Este planejamento ainda não pode ser aplicado."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Mesma lista da prévia: respeita itens desmarcados, valores

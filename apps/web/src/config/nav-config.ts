@@ -46,6 +46,7 @@ import {
   Sunrise,
   ScrollText,
   Webhook,
+  Settings2,
 } from 'lucide-react';
 
 import type { IconComponent } from '@/types/icon';
@@ -73,23 +74,20 @@ export interface NavModule {
   topItems?: NavSubItem[];
 }
 
-export interface NavItem {
-  titleKey: string;
-  href: string;
-  icon: IconComponent;
-  permission?: { appName: string; action: string };
-}
-
 /** Painel de permissões no /admin (staff e superuser). */
 export const PERMISSIONS_PATH = '/admin/permissions';
 
-export const navItems: NavItem[] = [
-  { titleKey: 'nav.home', href: '/', icon: Home },
-  { titleKey: 'nav.agents', href: '/agents', icon: BotMessageSquare },
-  { titleKey: 'nav.webhooks', href: '/webhooks', icon: Webhook },
-];
-
 export const navModules: NavModule[] = [
+  {
+    id: 'system',
+    titleKey: 'nav.modules.system',
+    icon: Settings2,
+    items: [
+      { titleKey: 'nav.home', href: '/', icon: Home },
+      { titleKey: 'nav.agents', href: '/agents', icon: BotMessageSquare },
+      { titleKey: 'nav.webhooks', href: '/webhooks', icon: Webhook },
+    ],
+  },
   {
     id: 'planning',
     titleKey: 'nav.modules.planning',
@@ -173,6 +171,13 @@ export const navModules: NavModule[] = [
             icon: CreditCard,
           },
           { titleKey: 'nav.items.members', href: '/members', icon: Users },
+        ],
+      },
+      {
+        id: 'finance-goals-rules',
+        titleKey: 'nav.submodules.goalsRules',
+        icon: Target,
+        items: [
           { titleKey: 'nav.items.budgets', href: '/budgets', icon: PiggyBank },
           {
             titleKey: 'nav.items.financialGoals',

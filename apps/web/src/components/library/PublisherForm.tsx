@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Building2, CalendarDays, Globe, Save, X } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -20,7 +20,7 @@ import {
 import { COUNTRY_ICON } from '@/config/icons';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
-import { publisherSchema, type PublisherFormData } from '@/lib/validations';
+import { makePublisherSchema, type PublisherFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import { COUNTRIES } from '@/types';
 import type { Publisher } from '@/types';
@@ -39,6 +39,7 @@ export function PublisherForm({
   isLoading = false,
 }: PublisherFormProps) {
   const { t } = useTranslation();
+  const publisherSchema = useMemo(() => makePublisherSchema(t), [t]);
   const {
     control,
     register,

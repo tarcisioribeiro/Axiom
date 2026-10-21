@@ -768,6 +768,71 @@ class ExpenseFixedExpenseLinkSignalTest(TestCase):
         self.assertTrue(first.payed)
         self.assertTrue(second.payed)
 
+    def test_reopening_payable_expense_unmarks_its_installment(self):
+        """payed=True -> False reverts the installment that expense had
+        marked as paid (unmark_installment_paid_on_expense_unpayed)."""
+        from payables.models import PayableInstallment
+
+        payable = self._make_payable_with_installments()
+        expense = _make_expense(
+            self.account, value="100.00", payed=True, related_payable=payable
+        )
+        first = PayableInstallment.objects.get(
+            payable=payable, installment_number=1
+        )
+        self.assertTrue(first.payed)
+        self.assertEqual(first.payment_expense_id, expense.id)
+
+        expense.payed = False
+        expense.save(update_fields=["payed"])
+
+        first.refresh_from_db()
+        self.assertFalse(first.payed)
+        self.assertIsNone(first.payment_expense_id)
+
+    def test_reopening_loan_expense_unmarks_its_installment(self):
+        from loans.models import LoanInstallment
+
+        loan = self._make_loan_with_installments()
+        expense = _make_expense(
+            self.account, value="100.00", payed=True, related_loan=loan
+        )
+        first = LoanInstallment.objects.get(loan=loan, installment_number=1)
+        self.assertTrue(first.payed)
+
+        expense.payed = False
+        expense.save(update_fields=["payed"])
+
+        first.refresh_from_db()
+        self.assertFalse(first.payed)
+        self.assertIsNone(first.payment_expense_id)
+
+    def test_reopening_expense_does_not_unmark_other_installments(self):
+        """Only the installment this specific expense marked paid is
+        reverted — a second installment paid by a different expense stays
+        paid."""
+        from payables.models import PayableInstallment
+
+        payable = self._make_payable_with_installments()
+        first_expense = _make_expense(
+            self.account, value="100.00", payed=True, related_payable=payable
+        )
+        _make_expense(
+            self.account, value="100.00", payed=True, related_payable=payable
+        )
+
+        first_expense.payed = False
+        first_expense.save(update_fields=["payed"])
+
+        first = PayableInstallment.objects.get(
+            payable=payable, installment_number=1
+        )
+        second = PayableInstallment.objects.get(
+            payable=payable, installment_number=2
+        )
+        self.assertFalse(first.payed)
+        self.assertTrue(second.payed)
+
 
 # ---------------------------------------------------------------------------
 # expenses/signals.py (auto-categorization)

@@ -60,6 +60,13 @@ const TRANSFER_TYPE_ICONS: Record<string, IconComponent> = {
 
 const WALLET_ACCOUNT_TYPE = 'CM';
 
+type BalanceAlertTone = 'info' | 'warning' | 'destructive';
+const BALANCE_ALERT_TONES: Record<BalanceAlertTone, string> = {
+  info: 'border-info/30 bg-info/10 text-info',
+  warning: 'border-warning/30 bg-warning/10 text-warning',
+  destructive: 'border-destructive/30 bg-destructive/10 text-destructive',
+};
+
 export const TransferForm: React.FC<TransferFormProps> = ({
   transfer,
   accounts,
@@ -199,15 +206,67 @@ export const TransferForm: React.FC<TransferFormProps> = ({
     setValue('destiny_account', origin);
   };
 
-  const originAccount = accounts.find((a) => a.id === watchedOriginAccount);
-  const destinyAccount = accounts.find((a) => a.id === watchedDestinyAccount);
   const formattedValue =
     (watchedValue ?? 0) > 0 ? formatCurrency(watchedValue ?? 0) : null;
+
+  const balanceAlert = ((): { tone: BalanceAlertTone; text: string } | null => {
+    if (isFutureDate && !!watchedOriginAccount && watchedValue > 0) {
+      if (isLoadingProjected)
+        return { tone: 'info', text: t('common.balance.loadingProjected') };
+      if (futureBalanceInfo && !futureBalanceInfo.canPay)
+        return {
+          tone: 'destructive',
+          text: t('common.balance.insufficientEvenWithOverdraft', {
+            available: formatCurrency(futureBalanceInfo.available.toFixed(2)),
+          }),
+        };
+      if (futureBalanceInfo?.isUsingOverdraft)
+        return {
+          tone: 'warning',
+          text: t('common.balance.overdraftWarningDesc', {
+            balance: formatCurrency(futureBalanceInfo.balance.toFixed(2)),
+            overdraft: formatCurrency(futureBalanceInfo.overdraft.toFixed(2)),
+            total: formatCurrency(futureBalanceInfo.available.toFixed(2)),
+          }),
+        };
+      return {
+        tone: 'info',
+        text:
+          projectedBalance !== null
+            ? t('common.balance.projectedOn', {
+                date: formatDate(watchedDate),
+                balance: formatCurrency(projectedBalance),
+              })
+            : t('common.balance.projectedUnavailable'),
+      };
+    }
+    if (balanceInfo && watchedValue > 0)
+      return !balanceInfo.canPay
+        ? {
+            tone: 'destructive',
+            text: t('common.balance.insufficientEvenWithOverdraft', {
+              available: formatCurrency(balanceInfo.available.toFixed(2)),
+            }),
+          }
+        : {
+            tone: 'warning',
+            text: t('common.balance.overdraftWarningDesc', {
+              balance: formatCurrency(balanceInfo.balance.toFixed(2)),
+              overdraft: formatCurrency(balanceInfo.overdraft.toFixed(2)),
+              total: formatCurrency(balanceInfo.available.toFixed(2)),
+            }),
+          };
+    return null;
+  })();
 
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Seção: Informações */}
-      <FormSection title={t('common.form.sections.basicInfo')} icon={FileText}>
+      <FormSection
+        title={t('common.form.sections.basicInfo')}
+        icon={FileText}
+        contentClassName="gap-md grid grid-cols-1 sm:grid-cols-[2fr_1fr]"
+      >
         <div className="space-y-sm">
           <Label className="gap-xs flex items-center">
             <FileText className="text-muted-foreground h-3.5 w-3.5" />
@@ -219,30 +278,36 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             disabled={isLoading}
           />
         </div>
-      </FormSection>
 
-      {/* Seção: Tipo de Transferência */}
-      <FormSection title={t('pages.transfers.form.typeLabel')} icon={ArrowRight}>
-        <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
-          {Object.entries(TRANSLATIONS.transferTypes).map(([k, v]) => {
-            const Icon = TRANSFER_TYPE_ICONS[k] ?? ArrowLeftRight;
-            return (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setValue('category', k)}
-                disabled={k === 'withdrawal' && !walletAccount}
-                className={`p-sm flex flex-col items-center gap-1 rounded-lg border text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                  watchedCategory === k
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border/70 bg-muted/20 text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                <span>{v}</span>
-              </button>
-            );
-          })}
+        <div className="space-y-sm">
+          <Label className="gap-xs flex items-center">
+            <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
+            {t('pages.transfers.form.typeLabel')}
+          </Label>
+          <Select
+            value={watchedCategory}
+            onValueChange={(v) => setValue('category', v)}
+            disabled={isLoading}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(TRANSLATIONS.transferTypes).map(([k, v]) => {
+                const Icon = TRANSFER_TYPE_ICONS[k] ?? ArrowLeftRight;
+                return (
+                  <SelectItem
+                    key={k}
+                    value={k}
+                    disabled={k === 'withdrawal' && !walletAccount}
+                    icon={<Icon className="h-4 w-4" />}
+                  >
+                    {v}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
       </FormSection>
 
@@ -276,13 +341,6 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {originAccount && (
-              <p
-                className={`text-xs ${parseFloat(originAccount.available_balance) >= (watchedValue ?? 0) ? 'text-success' : 'text-destructive'}`}
-              >
-                {formatCurrency(originAccount.available_balance)}
-              </p>
-            )}
           </div>
 
           <div className="gap-xs flex flex-col items-center">
@@ -322,16 +380,14 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                   : regularAccounts.filter((a) => a.id !== watchedOriginAccount)
                 ).map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
-                    {a.account_name}
+                    <span>{a.account_name}</span>
+                    <span className="text-muted-foreground ml-2 text-xs">
+                      {formatCurrency(a.available_balance)}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {destinyAccount && (
-              <p className="text-muted-foreground text-xs">
-                {formatCurrency(destinyAccount.available_balance)}
-              </p>
-            )}
           </div>
         </div>
       </div>
@@ -401,62 +457,27 @@ export const TransferForm: React.FC<TransferFormProps> = ({
         </div>
       </FormSection>
 
-      {/* Alertas de saldo */}
-      {isFutureDate && watchedOriginAccount && watchedValue > 0 && (
+      {/* Alerta de saldo: espaço sempre reservado para o modal não mudar de altura */}
+      <div
+        className={`p-sm flex items-center justify-center gap-2 rounded-md border text-sm ${
+          balanceAlert ? BALANCE_ALERT_TONES[balanceAlert.tone] : 'invisible'
+        }`}
+      >
         <div
-          className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
-            futureBalanceInfo && !futureBalanceInfo.canPay
-              ? 'border-destructive/30 bg-destructive/10 text-destructive'
-              : futureBalanceInfo?.isUsingOverdraft
-                ? 'border-warning/30 bg-warning/10 text-warning'
-                : 'border-info/30 bg-info/10 text-info'
-          }`}
+          key={balanceAlert ? `${balanceAlert.tone}-${balanceAlert.text}` : 'empty'}
+          className="animate-fade-in flex items-center justify-center gap-2"
         >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <AlertCircle className="h-4 w-4 shrink-0" />
           <p>
-            {isLoadingProjected
-              ? t('common.balance.loadingProjected')
-              : futureBalanceInfo && !futureBalanceInfo.canPay
-                ? t('common.balance.insufficientEvenWithOverdraft', {
-                    available: formatCurrency(futureBalanceInfo.available.toFixed(2)),
-                  })
-                : futureBalanceInfo?.isUsingOverdraft
-                  ? t('common.balance.overdraftWarningDesc', {
-                      balance: formatCurrency(futureBalanceInfo.balance.toFixed(2)),
-                      overdraft: formatCurrency(futureBalanceInfo.overdraft.toFixed(2)),
-                      total: formatCurrency(futureBalanceInfo.available.toFixed(2)),
-                    })
-                  : projectedBalance !== null
-                    ? t('common.balance.projectedOn', {
-                        date: formatDate(watchedDate),
-                        balance: formatCurrency(projectedBalance),
-                      })
-                    : t('common.balance.projectedUnavailable')}
+            {balanceAlert?.text ??
+              t('common.balance.overdraftWarningDesc', {
+                balance: formatCurrency('0'),
+                overdraft: formatCurrency('0'),
+                total: formatCurrency('0'),
+              })}
           </p>
         </div>
-      )}
-      {balanceInfo && watchedValue > 0 && (
-        <div
-          className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
-            !balanceInfo.canPay
-              ? 'border-destructive/30 bg-destructive/10 text-destructive'
-              : 'border-warning/30 bg-warning/10 text-warning'
-          }`}
-        >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>
-            {!balanceInfo.canPay
-              ? t('common.balance.insufficientEvenWithOverdraft', {
-                  available: formatCurrency(balanceInfo.available.toFixed(2)),
-                })
-              : t('common.balance.overdraftWarningDesc', {
-                  balance: formatCurrency(balanceInfo.balance.toFixed(2)),
-                  overdraft: formatCurrency(balanceInfo.overdraft.toFixed(2)),
-                  total: formatCurrency(balanceInfo.available.toFixed(2)),
-                })}
-          </p>
-        </div>
-      )}
+      </div>
 
       <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>

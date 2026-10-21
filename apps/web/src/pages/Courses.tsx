@@ -15,7 +15,7 @@ import {
   Tag,
   Timer,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -80,6 +80,13 @@ const STATUS_FILTER_KEYS: (CourseStatus | 'all')[] = [
   'completed',
   'paused',
 ];
+
+const COURSE_STATUS_ORDER: Record<CourseStatus, number> = {
+  in_progress: 0,
+  paused: 1,
+  not_started: 2,
+  completed: 3,
+};
 
 const CATEGORY_FILTER_KEYS: (IntellectCategory | 'all')[] = [
   'all',
@@ -262,6 +269,14 @@ export default function Courses() {
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
+  const sortedCourses = useMemo(
+    () =>
+      [...courses].sort(
+        (a, b) => COURSE_STATUS_ORDER[a.status] - COURSE_STATUS_ORDER[b.status]
+      ),
+    [courses]
+  );
+
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['courses'] });
 
   const createMutation = useMutation({
@@ -360,35 +375,6 @@ export default function Courses() {
           setCategoryFilter('all');
           setPlatformFilter('all');
         }}
-        activeFilters={[
-          ...(statusFilter !== 'all'
-            ? [
-                {
-                  key: 'status',
-                  label: `${t('common.fields.status')}: ${t(`pages.courses.filters.${statusFilter}`)}`,
-                  onRemove: () => setStatusFilter('all'),
-                },
-              ]
-            : []),
-          ...(categoryFilter !== 'all'
-            ? [
-                {
-                  key: 'category',
-                  label: `${t('common.fields.category')}: ${t(`pages.courses.category.${categoryFilter}`)}`,
-                  onRemove: () => setCategoryFilter('all'),
-                },
-              ]
-            : []),
-          ...(platformFilter !== 'all'
-            ? [
-                {
-                  key: 'platform',
-                  label: `${t('pages.courses.form.platformLabel')}: ${t(`pages.courses.platform.${platformFilter}`)}`,
-                  onRemove: () => setPlatformFilter('all'),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
@@ -500,7 +486,7 @@ export default function Courses() {
         <AnimatePresence>
           <PaginatedSlide
             key={`${statusFilter}-${categoryFilter}-${platformFilter}-${search}`}
-            items={courses}
+            items={sortedCourses}
             pageSize={GRID_PAGE_SIZE}
             className="gap-md grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
           >
@@ -550,6 +536,7 @@ export default function Courses() {
             </VisuallyHidden>
           </DialogHeader>
           <CourseForm
+            key={editingCourse?.id ?? 'new'}
             course={editingCourse ?? undefined}
             ownerId={member?.id ?? 0}
             onSubmit={handleSubmit}

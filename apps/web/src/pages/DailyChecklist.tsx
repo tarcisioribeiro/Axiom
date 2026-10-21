@@ -838,34 +838,7 @@ export default function DailyChecklist({
               />
             ) : (
               <>
-                <FilterBar
-                  hasActiveFilters={hasActiveFilters}
-                  onClear={clearFilters}
-                  activeFilters={[
-                    ...(categoryFilter !== 'all'
-                      ? [
-                          {
-                            key: 'category',
-                            label: `${t('pages.dailyChecklist.allCategories')}: ${translate('taskCategories', categoryFilter)}`,
-                            onRemove: () => setCategoryFilter('all'),
-                          },
-                        ]
-                      : []),
-                    ...(statusFilter !== 'all'
-                      ? [
-                          {
-                            key: 'status',
-                            label: `${t('common.fields.status')}: ${
-                              statusFilter === 'completed'
-                                ? t('pages.dailyChecklist.done')
-                                : t('common.status.pending')
-                            }`,
-                            onRemove: () => setStatusFilter('all'),
-                          },
-                        ]
-                      : []),
-                  ]}
-                >
+                <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
                   <FilterField label={t('common.fields.category')} icon={Tag}>
                     <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                       <SelectTrigger

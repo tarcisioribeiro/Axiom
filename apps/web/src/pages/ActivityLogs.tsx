@@ -45,7 +45,6 @@ import {
 } from '@/components/ui/select';
 import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { activityLogsService } from '@/services/activity-logs-service';
 import type { ActivityLog } from '@/types';
@@ -254,39 +253,7 @@ export default function ActivityLogs() {
         />
       ) : (
         <>
-          <FilterBar
-            hasActiveFilters={hasActiveFilters}
-            onClear={clearFilters}
-            activeFilters={[
-              ...(actionFilter !== 'all'
-                ? [
-                    {
-                      key: 'action',
-                      label: `${t('pages.activityLogs.allActions')}: ${t(`pages.adminLogs.actions.${actionFilter}`)}`,
-                      onRemove: () => setActionFilter('all'),
-                    },
-                  ]
-                : []),
-              ...(startDate
-                ? [
-                    {
-                      key: 'startDate',
-                      label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
-                      onRemove: () => setStartDate(undefined),
-                    },
-                  ]
-                : []),
-              ...(endDate
-                ? [
-                    {
-                      key: 'endDate',
-                      label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
-                      onRemove: () => setEndDate(undefined),
-                    },
-                  ]
-                : []),
-            ]}
-          >
+          <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
             <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput
                 placeholder={t('pages.activityLogs.searchPlaceholder')}

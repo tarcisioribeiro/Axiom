@@ -115,7 +115,7 @@ class Transfer(BaseModel):
     )
 
     class Meta:
-        ordering = ["-id"]
+        ordering = ["-date", "-horary", "-id"]
         verbose_name = "Transferência"
         verbose_name_plural = "Transferências"
 

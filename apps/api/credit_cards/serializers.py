@@ -508,6 +508,7 @@ class CreditCardPurchaseSerializer(serializers.ModelSerializer):
     installment_value = serializers.DecimalField(
         max_digits=12, decimal_places=2, coerce_to_string=False, read_only=True
     )
+    purchase_time = serializers.TimeField(format="%H:%M")
     installments = CreditCardInstallmentNestedSerializer(
         many=True, read_only=True
     )

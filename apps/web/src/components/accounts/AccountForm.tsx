@@ -11,7 +11,7 @@ import {
   Wallet,
   X,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -36,8 +36,8 @@ import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
 import {
-  accountEditSchema,
-  accountSchema,
+  makeAccountEditSchema,
+  makeAccountSchema,
   type AccountFormData,
 } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
@@ -61,6 +61,10 @@ export const AccountForm: React.FC<AccountFormProps> = ({
   fieldErrors,
 }) => {
   const { t } = useTranslation();
+  const schema = useMemo(
+    () => (account ? makeAccountEditSchema(t) : makeAccountSchema(t)),
+    [t, account]
+  );
   const {
     register,
     handleSubmit,
@@ -69,7 +73,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
     watch,
     formState: { errors },
   } = useForm<AccountFormData>({
-    resolver: zodResolver(account ? accountEditSchema : accountSchema),
+    resolver: zodResolver(schema),
     defaultValues: account
       ? {
           account_name: account.account_name,

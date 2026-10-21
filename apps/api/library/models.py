@@ -854,19 +854,22 @@ class Course(BaseModel):
         ).count()
 
     @property
-    def progress_percentage(self):
-        total = self.total_lessons
-        if total == 0:
-            return 0.0
-        return round((self.completed_lessons / total) * 100, 1)
-
-    @property
     def invested_hours(self):
         result = CourseSession.objects.filter(
             course=self, deleted_at__isnull=True
         ).aggregate(total=Sum("duration_minutes"))
         minutes = result["total"] or 0
         return round(minutes / 60, 1)
+
+    @property
+    def progress_percentage(self):
+        if self.estimated_hours:
+            pct = (self.invested_hours / float(self.estimated_hours)) * 100
+            return min(round(pct, 1), 100.0)
+        total = self.total_lessons
+        if total == 0:
+            return 0.0
+        return round((self.completed_lessons / total) * 100, 1)
 
 
 # ============================================================================

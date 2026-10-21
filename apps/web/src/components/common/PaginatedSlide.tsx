@@ -138,21 +138,26 @@ export function PageSlide({
     meta.current = { growOnAdd, pageSize, pageItemCount };
   });
   const listRef = useRef<HTMLDivElement>(null);
+  // Mede o conteúdo (contentRef), nunca o próprio `list` — ele recebe a
+  // min-height calculada, e observá-lo criaria um loop de realimentação
+  // (a min-height infla a altura observada, que infla a próxima min-height).
+  const contentRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const list = listRef.current;
-    if (!list) return;
+    const content = contentRef.current;
+    if (!list || !content) return;
     list.style.minHeight = '';
     const observer = new ResizeObserver(() => {
       const { growOnAdd, pageSize, pageItemCount } = meta.current;
       const projected =
         growOnAdd && pageSize && pageItemCount
-          ? (list.offsetHeight / pageItemCount) * pageSize
+          ? (content.offsetHeight / pageItemCount) * pageSize
           : 0;
       const current = parseFloat(list.style.minHeight) || 0;
-      const next = Math.max(current, list.offsetHeight, projected);
+      const next = Math.max(current, content.offsetHeight, projected);
       if (next > current) list.style.minHeight = `${next}px`;
     });
-    observer.observe(list);
+    observer.observe(content);
     return () => observer.disconnect();
   }, [resetKey]);
 
@@ -169,6 +174,7 @@ export function PageSlide({
         <div ref={listRef} className="overflow-hidden">
           <AnimatePresence mode="wait" initial={false} custom={last.direction}>
             <motion.div
+              ref={contentRef}
               key={page}
               custom={last.direction}
               variants={slideVariants}

@@ -20,7 +20,7 @@ import {
   Type,
   X,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -52,12 +52,17 @@ import type {
 } from '@/types';
 import type { IconComponent } from '@/types/icon';
 
-const makeSkillSchema = (nameRequired: string) =>
+const makeSkillSchema = (messages: {
+  name: string;
+  category: string;
+  proficiency: string;
+  status: string;
+}) =>
   z.object({
-    name: z.string().trim().min(1, nameRequired),
-    category: z.string().min(1),
-    proficiency: z.string().min(1),
-    status: z.string().min(1),
+    name: z.string().trim().min(1, messages.name),
+    category: z.string().min(1, messages.category),
+    proficiency: z.string().min(1, messages.proficiency),
+    status: z.string().min(1, messages.status),
     notes: z.string().optional().nullable(),
     owner: z.number(),
   });
@@ -169,8 +174,8 @@ export function SkillForm({
 }: SkillFormProps) {
   const { t } = useTranslation();
 
-  const [selectedCourses, setSelectedCourses] = useState<number[]>(
-    skill?.courses.map((c) => c.id) ?? []
+  const [selectedCourses, setSelectedCourses] = useState<number[]>(() =>
+    skill ? skill.courses.map((c) => c.id) : []
   );
 
   const { data: courses = [] } = useQuery({
@@ -181,9 +186,18 @@ export function SkillForm({
 
   const skillSchema = useMemo(
     () =>
-      makeSkillSchema(
-        t('common.fieldRequired', { field: t('pages.skills.form.nameLabel') })
-      ),
+      makeSkillSchema({
+        name: t('common.fieldRequired', { field: t('pages.skills.form.nameLabel') }),
+        category: t('common.fieldRequired', {
+          field: t('pages.skills.form.categoryLabel'),
+        }),
+        proficiency: t('common.fieldRequired', {
+          field: t('pages.skills.form.proficiencyLabel'),
+        }),
+        status: t('common.fieldRequired', {
+          field: t('pages.skills.form.statusLabel'),
+        }),
+      }),
     [t]
   );
 
@@ -193,43 +207,18 @@ export function SkillForm({
     setValue,
     setError,
     watch,
-    reset,
     formState: { errors },
   } = useForm<SkillFormValues>({
     resolver: zodResolver(skillSchema),
     defaultValues: {
-      name: '',
-      category: 'technology',
-      proficiency: 'beginner',
-      status: 'learning',
-      notes: null,
-      owner: ownerId,
+      name: skill?.name ?? '',
+      category: skill?.category ?? 'technology',
+      proficiency: skill?.proficiency ?? 'beginner',
+      status: skill?.status ?? 'learning',
+      notes: skill?.notes ?? null,
+      owner: skill?.owner ?? ownerId,
     },
   });
-
-  useEffect(() => {
-    if (skill) {
-      reset({
-        name: skill.name,
-        category: skill.category,
-        proficiency: skill.proficiency,
-        status: skill.status,
-        notes: skill.notes ?? null,
-        owner: skill.owner,
-      });
-      setSelectedCourses(skill.courses.map((c) => c.id));
-    } else {
-      reset({
-        name: '',
-        category: 'technology',
-        proficiency: 'beginner',
-        status: 'learning',
-        notes: null,
-        owner: ownerId,
-      });
-      setSelectedCourses([]);
-    }
-  }, [skill, ownerId, reset]);
 
   const handleCourseToggle = (courseId: number) => {
     setSelectedCourses((prev) =>
@@ -384,30 +373,28 @@ export function SkillForm({
               ))}
             </SelectContent>
           </Select>
-          {selectedCourses.length > 0 && (
-            <div className="mt-sm gap-sm flex flex-wrap">
-              {selectedCourses.map((courseId) => {
-                const course = courses.find((c) => c.id === courseId);
-                return course ? (
-                  <Badge key={courseId} variant="secondary">
-                    {course.title}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveCourse(courseId)}
-                      aria-label={t('pages.skills.form.removeCourse', {
-                        name: course.title,
-                      })}
-                      className="ml-xs h-4 w-4"
-                    >
-                      <X className="h-3 w-3" aria-hidden="true" />
-                    </Button>
-                  </Badge>
-                ) : null;
-              })}
-            </div>
-          )}
+          <div className="mt-sm gap-sm flex min-h-[1.375rem] flex-wrap">
+            {selectedCourses.map((courseId) => {
+              const course = courses.find((c) => c.id === courseId);
+              return course ? (
+                <Badge key={courseId} variant="secondary">
+                  {course.title}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveCourse(courseId)}
+                    aria-label={t('pages.skills.form.removeCourse', {
+                      name: course.title,
+                    })}
+                    className="ml-xs h-4 w-4"
+                  >
+                    <X className="h-3 w-3" aria-hidden="true" />
+                  </Button>
+                </Badge>
+              ) : null;
+            })}
+          </div>
         </div>
       </FormSection>
 

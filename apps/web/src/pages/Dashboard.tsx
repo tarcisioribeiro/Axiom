@@ -24,7 +24,6 @@ import { motion } from 'framer-motion';
 import {
   Activity,
   AlertTriangle,
-  BotMessageSquare,
   Calculator,
   CalendarDays,
   CreditCard,
@@ -37,7 +36,6 @@ import {
 } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -66,7 +64,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { translate } from '@/config/constants';
-import { GREETING_ICONS } from '@/config/icons';
 import { useDismissedAlerts } from '@/hooks/use-dismissed-alerts';
 import { useToast } from '@/hooks/use-toast';
 import { itemVariants } from '@/lib/animations';
@@ -76,7 +73,6 @@ import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { dashboardService } from '@/services/dashboard-service';
 import { expensesService } from '@/services/expenses-service';
-import { notificationsService } from '@/services/notifications-service';
 import { revenuesService } from '@/services/revenues-service';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -90,25 +86,8 @@ const BUDGET_PAGE_SIZE = 5;
 
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
   const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
   const user = useAuthStore((s) => s.user);
-
-  const greeting = useMemo(() => {
-    const hour = new Date().getHours();
-    if (hour < 12)
-      return {
-        icon: GREETING_ICONS.morning,
-        text: t('pages.dashboard.greetingMorning'),
-      };
-    if (hour < 18)
-      return {
-        icon: GREETING_ICONS.afternoon,
-        text: t('pages.dashboard.greetingAfternoon'),
-      };
-    return { icon: GREETING_ICONS.evening, text: t('pages.dashboard.greetingEvening') };
-  }, [t]);
-  const displayName = user?.first_name || user?.username || '';
 
   // Filter state
   const [alertsModalOpen, setAlertsModalOpen] = useState(false);
@@ -225,17 +204,6 @@ export default function Dashboard() {
     staleTime: STALE_TIMES.CATEGORY_BREAKDOWN,
     refetchOnWindowFocus: false,
     enabled: anomaliesInView,
-  });
-
-  const weeklyInsightQuery = useQuery({
-    queryKey: ['dashboard', 'weeklyInsight'],
-    queryFn: async () => {
-      const all = await notificationsService.getAll();
-      const insights = all.filter((n) => n.notification_type === 'agent_insight');
-      return insights.length > 0 ? insights[0] : null;
-    },
-    staleTime: STALE_TIMES.DASHBOARD_STATS,
-    refetchOnWindowFocus: false,
   });
 
   // ── Derived data ───────────────────────────────────────────────────────────
@@ -487,7 +455,7 @@ export default function Dashboard() {
     <PageContainer>
       {/* 1. PageHeader */}
       <PageHeader
-        title={`${greeting.text}${displayName ? `, ${displayName}` : ''}`}
+        title={t('pages.dashboard.controlTitle')}
         icon={<LayoutDashboard />}
         actions={
           financialAlerts.length > 0 && (
@@ -534,7 +502,6 @@ export default function Dashboard() {
               compact
               centered
               accentColor="green"
-              onClick={() => navigate('/transactions')}
             />
             <StatCard
               title={t('pages.dashboard.monthExpenses')}
@@ -543,7 +510,6 @@ export default function Dashboard() {
               compact
               centered
               accentColor="red"
-              onClick={() => navigate('/transactions')}
             />
             <StatCard
               title={t('pages.dashboard.creditLimit')}
@@ -552,54 +518,10 @@ export default function Dashboard() {
               compact
               centered
               accentColor="blue"
-              onClick={() => navigate('/credit-cards')}
             />
           </div>
         </div>
       </CollapsibleSection>
-
-      {/* 8. Insight Semanal do Assistente */}
-      {weeklyInsightQuery.data && (
-        <motion.div variants={itemVariants} initial="hidden" animate="visible">
-          <Card>
-            <CardHeader className="pb-sm">
-              <div className="gap-sm flex items-center justify-between">
-                <div className="gap-sm flex items-center">
-                  <div className="bg-primary/10 p-sm rounded-lg">
-                    <Sparkles className="text-primary h-4 w-4" />
-                  </div>
-                  <CardTitle as="h2" className="text-base">
-                    {t('pages.dashboard.weeklyInsight.title')}
-                  </CardTitle>
-                  {!weeklyInsightQuery.data.is_read && (
-                    <span className="bg-primary h-2 w-2 rounded-full" />
-                  )}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/agents')}
-                  className="gap-xs text-primary hover:text-primary text-xs"
-                >
-                  <BotMessageSquare aria-hidden="true" />
-                  {t('pages.dashboard.weeklyInsight.openAssistant')}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-sm whitespace-pre-wrap">
-                {weeklyInsightQuery.data.message}
-              </p>
-              <p className="mt-sm text-muted-foreground text-xs">
-                {new Date(weeklyInsightQuery.data.created_at).toLocaleDateString(
-                  undefined,
-                  { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
-                )}
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
 
       <CollapsibleSection
         title={t('pages.dashboard.sectionAdvancedAnalysis')}

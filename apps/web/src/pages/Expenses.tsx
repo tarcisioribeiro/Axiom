@@ -129,48 +129,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
 
       {embedded && <TransactionsTabsNav />}
 
-      <FilterBar
-        hasActiveFilters={hasActiveFilters}
-        onClear={clearFilters}
-        activeFilters={[
-          ...(categoryFilter !== 'all'
-            ? [
-                {
-                  key: 'category',
-                  label: `${t('pages.expenses.allCategories')}: ${EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === categoryFilter)?.label ?? categoryFilter}`,
-                  onRemove: () => setCategoryFilter('all'),
-                },
-              ]
-            : []),
-          ...(statusFilter !== 'all'
-            ? [
-                {
-                  key: 'status',
-                  label: `${t('common.fields.status')}: ${statusFilter === 'paid' ? t('common.status.paid') : t('common.status.pending')}`,
-                  onRemove: () => setStatusFilter('all'),
-                },
-              ]
-            : []),
-          ...(startDate
-            ? [
-                {
-                  key: 'startDate',
-                  label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
-                  onRemove: () => setStartDate(undefined),
-                },
-              ]
-            : []),
-          ...(endDate
-            ? [
-                {
-                  key: 'endDate',
-                  label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
-                  onRemove: () => setEndDate(undefined),
-                },
-              ]
-            : []),
-        ]}
-      >
+      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.expenses.searchPlaceholder')}
@@ -373,7 +332,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle mode={selectedExpense ? 'edit' : 'create'}>
               {selectedExpense

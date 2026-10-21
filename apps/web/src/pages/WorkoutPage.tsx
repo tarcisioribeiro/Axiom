@@ -943,26 +943,6 @@ export default function WorkoutPage() {
                 className="mb-lg"
                 hasActiveFilters={hasSessionFilters}
                 onClear={clearSessionFilters}
-                activeFilters={[
-                  ...(sessionStartDate
-                    ? [
-                        {
-                          key: 'startDate',
-                          label: `${t('pages.workoutSessions.filterDateFrom')}: ${formatDate(sessionStartDate)}`,
-                          onRemove: () => setSessionStartDate(undefined),
-                        },
-                      ]
-                    : []),
-                  ...(sessionEndDate
-                    ? [
-                        {
-                          key: 'endDate',
-                          label: `${t('pages.workoutSessions.filterDateTo')}: ${formatDate(sessionEndDate)}`,
-                          onRemove: () => setSessionEndDate(undefined),
-                        },
-                      ]
-                    : []),
-                ]}
               >
                 <FilterField
                   label={t('common.filterLabels.period')}
@@ -1031,30 +1011,6 @@ export default function WorkoutPage() {
                 className="mb-lg"
                 hasActiveFilters={hasPlanFilters}
                 onClear={clearPlanFilters}
-                activeFilters={[
-                  ...(planCategoryFilter !== 'all'
-                    ? [
-                        {
-                          key: 'category',
-                          label: `${t('pages.workoutPlans.category')}: ${t(`pages.workoutPlans.categories.${planCategoryFilter}`)}`,
-                          onRemove: () => setPlanCategoryFilter('all'),
-                        },
-                      ]
-                    : []),
-                  ...(planStatusFilter !== 'all'
-                    ? [
-                        {
-                          key: 'status',
-                          label: `${t('common.fields.status')}: ${
-                            planStatusFilter === 'active'
-                              ? t('pages.workoutPlans.active')
-                              : t('pages.workoutPlans.inactive')
-                          }`,
-                          onRemove: () => setPlanStatusFilter('all'),
-                        },
-                      ]
-                    : []),
-                ]}
               >
                 <FilterField label={t('common.fields.category')} icon={Tag}>
                   <Select
@@ -1180,35 +1136,6 @@ export default function WorkoutPage() {
                   setExerciseMuscleFilter('all');
                   setExerciseCategoryFilter('all');
                 }}
-                activeFilters={[
-                  ...(exerciseCategoryFilter !== 'all'
-                    ? [
-                        {
-                          key: 'category',
-                          label: `${t('pages.exercises.fieldCategory')}: ${t(`pages.workoutPlans.categories.${exerciseCategoryFilter}`)}`,
-                          onRemove: () => setExerciseCategoryFilter('all'),
-                        },
-                      ]
-                    : []),
-                  ...(exerciseTypeFilter !== 'all'
-                    ? [
-                        {
-                          key: 'type',
-                          label: `${t('pages.exercises.allTypes')}: ${t(`pages.workoutPlans.muscleChips.${exerciseTypeFilter}`)}`,
-                          onRemove: () => setExerciseTypeFilter('all'),
-                        },
-                      ]
-                    : []),
-                  ...(exerciseMuscleFilter !== 'all'
-                    ? [
-                        {
-                          key: 'muscle',
-                          label: `${t('pages.exercises.allMuscles')}: ${t(`pages.workoutPlans.muscleChips.${exerciseMuscleFilter}`)}`,
-                          onRemove: () => setExerciseMuscleFilter('all'),
-                        },
-                      ]
-                    : []),
-                ]}
               >
                 <FilterField label={t('common.filterLabels.search')} icon={Search}>
                   <SearchInput

@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { BookOpen, Plus, Tag, Target, Trash2, Save, X } from 'lucide-react';
-import { startTransition, useEffect, useState } from 'react';
+import { startTransition, useEffect, useMemo, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -26,7 +26,7 @@ import {
 import { BOOK_LITERARY_TYPE_ICONS } from '@/config/icons';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
-import { readingGoalSchema, type ReadingGoalFormData } from '@/lib/validations';
+import { makeReadingGoalSchema, type ReadingGoalFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import type { LiteraryTypeGoal, ReadingGoal } from '@/types';
 
@@ -60,6 +60,7 @@ export function ReadingGoalModal({
 }: ReadingGoalModalProps) {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
+  const readingGoalSchema = useMemo(() => makeReadingGoalSchema(t), [t]);
 
   const {
     control,

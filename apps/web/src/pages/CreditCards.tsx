@@ -326,30 +326,7 @@ export default function CreditCards({
   return (
     <Wrapper embedded={embedded}>
       {creditCards.length > 0 && (
-        <FilterBar
-          hasActiveFilters={hasActiveFilters}
-          onClear={clearFilters}
-          activeFilters={[
-            ...(flagFilter !== 'all'
-              ? [
-                  {
-                    key: 'flag',
-                    label: `${t('pages.creditCards.form.flagLabel')}: ${translate('cardBrands', flagFilter)}`,
-                    onRemove: () => setFlagFilter('all'),
-                  },
-                ]
-              : []),
-            ...(statusFilter !== 'all'
-              ? [
-                  {
-                    key: 'status',
-                    label: `${t('common.fields.status')}: ${statusFilter === 'active' ? t('common.status.active') : t('common.status.inactive')}`,
-                    onRemove: () => setStatusFilter('all'),
-                  },
-                ]
-              : []),
-          ]}
-        >
+        <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
           <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput
               placeholder={t('pages.creditCards.searchPlaceholder')}

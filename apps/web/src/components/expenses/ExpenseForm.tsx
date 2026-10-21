@@ -46,7 +46,7 @@ import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
-import { expenseSchema } from '@/lib/validations';
+import { makeExpenseSchema } from '@/lib/validations';
 import { accountsService } from '@/services/accounts-service';
 import { automationRulesService } from '@/services/automation-rules-service';
 import type { CategorySuggestion } from '@/services/expenses-service';
@@ -135,6 +135,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const [isLoadingAiSuggestion, setIsLoadingAiSuggestion] = useState(false);
   const merchantDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiSuggestionAbortRef = useRef<AbortController | null>(null);
+  const expenseSchema = useMemo(() => makeExpenseSchema(t), [t]);
 
   const {
     register,
@@ -725,7 +726,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     setValue('related_loan', v === 'none' ? null : parseInt(v));
                     if (v !== 'none') {
                       setValue('related_payable', null);
-                      setValue('fixed_expense_template', null);
                     }
                   }}
                   disabled={isLoading}
@@ -757,7 +757,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     setValue('related_payable', v === 'none' ? null : parseInt(v));
                     if (v !== 'none') {
                       setValue('related_loan', null);
-                      setValue('fixed_expense_template', null);
                     }
                   }}
                   disabled={isLoading}
@@ -791,10 +790,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       'fixed_expense_template',
                       v === 'none' ? null : parseInt(v)
                     );
-                    if (v !== 'none') {
-                      setValue('related_loan', null);
-                      setValue('related_payable', null);
-                    }
                   }}
                   disabled={isLoading}
                 >
@@ -822,19 +817,24 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       {/* Alerta de saldo: espaço sempre reservado para o modal não mudar de altura */}
       <div
-        className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
+        className={`p-sm flex items-center justify-center gap-2 rounded-md border text-sm ${
           balanceAlert ? BALANCE_ALERT_TONES[balanceAlert.tone] : 'invisible'
         }`}
       >
-        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-        <p>
-          {balanceAlert?.text ??
-            t('common.balance.overdraftWarningDesc', {
-              balance: formatCurrency('0'),
-              overdraft: formatCurrency('0'),
-              total: formatCurrency('0'),
-            })}
-        </p>
+        <div
+          key={balanceAlert ? `${balanceAlert.tone}-${balanceAlert.text}` : 'empty'}
+          className="animate-fade-in flex items-center justify-center gap-2"
+        >
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <p>
+            {balanceAlert?.text ??
+              t('common.balance.overdraftWarningDesc', {
+                balance: formatCurrency('0'),
+                overdraft: formatCurrency('0'),
+                total: formatCurrency('0'),
+              })}
+          </p>
+        </div>
       </div>
 
       <div className="dialog-footer gap-sm pt-md flex justify-end border-t">

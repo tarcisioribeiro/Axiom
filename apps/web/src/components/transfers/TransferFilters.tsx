@@ -12,7 +12,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TRANSFER_STATUS_ICONS } from '@/config/icons';
-import { formatDate } from '@/lib/formatters';
 import type { Account } from '@/types';
 
 interface TransferFiltersProps {
@@ -48,51 +47,8 @@ export function TransferFilters({
 }: TransferFiltersProps) {
   const { t } = useTranslation();
 
-  const activeFilters = [
-    ...(statusFilter !== 'all'
-      ? [
-          {
-            key: 'status',
-            label: `${t('common.fields.status')}: ${t(`common.status.${statusFilter}`)}`,
-            onRemove: () => onStatusChange('all'),
-          },
-        ]
-      : []),
-    ...(accountFilter !== 'all'
-      ? [
-          {
-            key: 'account',
-            label: `${t('common.fields.account')}: ${accounts.find((a) => a.id.toString() === accountFilter)?.account_name ?? accountFilter}`,
-            onRemove: () => onAccountChange('all'),
-          },
-        ]
-      : []),
-    ...(startDate
-      ? [
-          {
-            key: 'startDate',
-            label: `${t('pages.transfers.dateFrom')}: ${formatDate(startDate)}`,
-            onRemove: () => onStartDateChange(undefined),
-          },
-        ]
-      : []),
-    ...(endDate
-      ? [
-          {
-            key: 'endDate',
-            label: `${t('pages.transfers.dateTo')}: ${formatDate(endDate)}`,
-            onRemove: () => onEndDateChange(undefined),
-          },
-        ]
-      : []),
-  ];
-
   return (
-    <FilterBar
-      hasActiveFilters={hasActiveFilters}
-      onClear={onClear}
-      activeFilters={activeFilters}
-    >
+    <FilterBar hasActiveFilters={hasActiveFilters} onClear={onClear}>
       <FilterField label={t('common.filterLabels.search')} icon={Search}>
         <SearchInput
           placeholder={t('pages.transfers.searchPlaceholder')}

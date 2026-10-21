@@ -12,6 +12,7 @@ import {
   Save,
   X,
 } from 'lucide-react';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -30,8 +31,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { CARD_FLAG_ICON } from '@/config/icons';
 import { notifyFormErrors } from '@/lib/form-errors';
 import {
-  storedCardEditSchema,
-  storedCardSchema,
+  makeStoredCardEditSchema,
+  makeStoredCardSchema,
   type StoredCreditCardFormData,
 } from '@/lib/validations';
 import { CARD_FLAGS } from '@/types';
@@ -66,6 +67,10 @@ export function StoredCardForm({
   isLoading = false,
 }: StoredCardFormProps) {
   const { t } = useTranslation();
+  const schema = useMemo(
+    () => (card ? makeStoredCardEditSchema(t) : makeStoredCardSchema(t)),
+    [t, card]
+  );
   const {
     register,
     handleSubmit,
@@ -73,7 +78,7 @@ export function StoredCardForm({
     watch,
     formState: { errors },
   } = useForm<StoredCreditCardFormData>({
-    resolver: zodResolver(card ? storedCardEditSchema : storedCardSchema),
+    resolver: zodResolver(schema),
     defaultValues: card
       ? {
           name: card.name,

@@ -970,25 +970,7 @@ export default function AutomationRules({
         />
       ) : (
         <>
-          <FilterBar
-            hasActiveFilters={hasActiveFilters}
-            onClear={clearFilters}
-            activeFilters={[
-              ...(statusFilter !== 'all'
-                ? [
-                    {
-                      key: 'status',
-                      label: `${t('common.fields.status')}: ${
-                        statusFilter === 'active'
-                          ? t('pages.automationRules.active')
-                          : t('pages.automationRules.inactive')
-                      }`,
-                      onRemove: () => setStatusFilter('all'),
-                    },
-                  ]
-                : []),
-            ]}
-          >
+          <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
             <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput
                 placeholder={t('pages.automationRules.searchPlaceholder')}
