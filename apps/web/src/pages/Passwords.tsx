@@ -5,6 +5,8 @@ import {
   AtSign,
   Check,
   Copy,
+  Eye,
+  EyeOff,
   FileText,
   Globe,
   Key,
@@ -65,11 +67,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { FieldRow, Rule } from '@/components/user-profile/PasswordSection';
+import { PasswordStrength } from '@/components/user-profile/PasswordStrength';
 import { PASSWORD_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { useToast } from '@/hooks/use-toast';
 import { notifyFormErrors } from '@/lib/form-errors';
+import { getPasswordScore, useStrengthScorer } from '@/lib/password-strength';
 import { cn, copyToClipboard } from '@/lib/utils';
 import { passwordSchema } from '@/lib/validations';
 import { hibpService } from '@/services/hibp-service';
@@ -141,6 +146,11 @@ function PasswordsContent() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirmInvalid, setConfirmInvalid] = useState(false);
+  const strengthScorer = useStrengthScorer();
   const [sharingPassword, setSharingPassword] = useState<Password | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const autoHideInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -173,6 +183,7 @@ function PasswordsContent() {
 
   const watchedCategory = useWatch({ control, name: 'category' });
   const watchedTotpEnabled = useWatch({ control, name: 'totp_enabled' });
+  const watchedPassword = useWatch({ control, name: 'password' });
 
   const { data: pageData, isLoading } = useQuery({
     queryKey: ['passwords'],
@@ -266,6 +277,10 @@ function PasswordsContent() {
       return;
     }
     setSelectedPassword(undefined);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setConfirmPassword('');
+    setConfirmInvalid(false);
     reset({
       title: '',
       site: '',
@@ -280,6 +295,10 @@ function PasswordsContent() {
 
   const handleEdit = (password: Password) => {
     setSelectedPassword(password);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setConfirmPassword('');
+    setConfirmInvalid(false);
     reset({
       title: password.title,
       site: password.site || '',
@@ -292,6 +311,11 @@ function PasswordsContent() {
       totp_secret: '',
     });
     setIsDialogOpen(true);
+    // Mostra a senha atual como referência ao editar (§4: revelar não pede
+    // confirmação extra, o cofre já está desbloqueado).
+    if (can('reveal') && !revealedPasswords.has(password.id)) {
+      void handleReveal(password.id);
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -409,6 +433,12 @@ function PasswordsContent() {
       const message = t('common.fieldRequired', { field: t('auth.login.password') });
       setError('password', { message });
       toast({ title: message, variant: 'destructive' });
+      return;
+    }
+
+    if (data.password && data.password !== confirmPassword) {
+      setConfirmInvalid(true);
+      toast({ title: t('auth.register.passwordsMismatch'), variant: 'destructive' });
       return;
     }
 
@@ -705,7 +735,7 @@ function PasswordsContent() {
         />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle mode={selectedPassword ? 'edit' : 'create'}>
                 {selectedPassword
@@ -723,31 +753,33 @@ function PasswordsContent() {
               onSubmit={rhfHandleSubmit(onFormSubmit, notifyFormErrors)}
               className="space-y-md"
             >
-              <div className="space-y-sm">
-                <Label className="gap-xs flex items-center" htmlFor="title">
-                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('common.fields.title')} *
-                </Label>
-                <Input
-                  id="title"
-                  {...register('title')}
-                  aria-invalid={!!errors.title}
-                  placeholder={t('pages.passwords.titlePlaceholder')}
-                />
-              </div>
+              <div className="gap-md grid grid-cols-2">
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center" htmlFor="title">
+                    <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('common.fields.title')} *
+                  </Label>
+                  <Input
+                    id="title"
+                    {...register('title')}
+                    aria-invalid={!!errors.title}
+                    placeholder={t('pages.passwords.titlePlaceholder')}
+                  />
+                </div>
 
-              <div className="space-y-sm">
-                <Label className="gap-xs flex items-center" htmlFor="site">
-                  <Globe className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('common.fields.site')}
-                </Label>
-                <Input
-                  id="site"
-                  type="url"
-                  {...register('site')}
-                  aria-invalid={!!errors.site}
-                  placeholder={t('pages.passwords.sitePlaceholder')}
-                />
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center" htmlFor="site">
+                    <Globe className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('common.fields.site')}
+                  </Label>
+                  <Input
+                    id="site"
+                    type="url"
+                    {...register('site')}
+                    aria-invalid={!!errors.site}
+                    placeholder={t('pages.passwords.sitePlaceholder')}
+                  />
+                </div>
               </div>
 
               <div className="space-y-sm">
@@ -763,37 +795,136 @@ function PasswordsContent() {
                 />
               </div>
 
-              <div className="space-y-sm">
-                <Label className="gap-xs flex items-center" htmlFor="password">
-                  <Lock className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('auth.login.password')} {selectedPassword ? '' : '*'}
-                </Label>
-                <div className="gap-sm flex">
-                  <Input
-                    id="password"
-                    type="password"
-                    {...register('password')}
-                    aria-invalid={!!errors.password}
-                    placeholder={
-                      selectedPassword
-                        ? t('pages.passwords.keepCurrentPassword')
-                        : '••••••••'
-                    }
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="shrink-0"
-                    onClick={() => {
-                      setGeneratedPassword('');
-                      setIsGeneratorOpen(true);
-                    }}
-                    aria-label={t('pages.passwords.generatePassword')}
-                  >
-                    <Wand2 className="h-4 w-4" />
-                  </Button>
+              {selectedPassword && can('reveal') && (
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <Lock className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('userProfile.security.currentPassword')}
+                  </Label>
+                  <div className="bg-muted/30 p-md rounded-lg border">
+                    <code className="text-sm">
+                      {revealedPasswords.get(selectedPassword.id) ?? '••••••••'}
+                    </code>
+                  </div>
                 </div>
+              )}
+
+              <FieldRow
+                field={
+                  <div className="space-y-sm">
+                    <Label className="gap-xs flex items-center" htmlFor="password">
+                      <Lock className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('auth.login.password')} {selectedPassword ? '' : '*'}
+                    </Label>
+                    <div className="gap-sm flex">
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        {...register('password')}
+                        aria-invalid={!!errors.password}
+                        placeholder={
+                          selectedPassword
+                            ? t('pages.passwords.keepCurrentPassword')
+                            : '••••••••'
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() => setShowPassword((v) => !v)}
+                        aria-label={t(
+                          showPassword
+                            ? 'auth.login.hidePassword'
+                            : 'auth.login.showPassword'
+                        )}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() => {
+                          setGeneratedPassword('');
+                          setIsGeneratorOpen(true);
+                        }}
+                        aria-label={t('pages.passwords.generatePassword')}
+                      >
+                        <Wand2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                }
+                aside={
+                  watchedPassword && (
+                    <PasswordStrength
+                      score={getPasswordScore(watchedPassword, strengthScorer)}
+                    />
+                  )
+                }
+              />
+
+              <div className={cn(!watchedPassword && 'invisible')}>
+                <FieldRow
+                  field={
+                    <div className="space-y-sm">
+                      <Label
+                        className="gap-xs flex items-center"
+                        htmlFor="confirmPassword"
+                      >
+                        <Lock className="text-muted-foreground h-3.5 w-3.5" />
+                        {t('userProfile.security.confirmPassword')}
+                      </Label>
+                      <div className="gap-sm flex">
+                        <Input
+                          id="confirmPassword"
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          value={confirmPassword}
+                          onChange={(e) => {
+                            setConfirmPassword(e.target.value);
+                            setConfirmInvalid(false);
+                          }}
+                          aria-invalid={confirmInvalid}
+                          placeholder="••••••••"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0"
+                          onClick={() => setShowConfirmPassword((v) => !v)}
+                          aria-label={t(
+                            showConfirmPassword
+                              ? 'auth.login.hidePassword'
+                              : 'auth.login.showPassword'
+                          )}
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  }
+                  aside={
+                    confirmPassword && (
+                      <ul>
+                        <Rule ok={watchedPassword === confirmPassword}>
+                          {t('userProfile.security.rules.matches')}
+                        </Rule>
+                      </ul>
+                    )
+                  }
+                />
               </div>
 
               <div className="space-y-sm">
@@ -925,6 +1056,8 @@ function PasswordsContent() {
                     return;
                   }
                   setValue('password', generatedPassword);
+                  setConfirmPassword(generatedPassword);
+                  setConfirmInvalid(false);
                   setIsGeneratorOpen(false);
                 }}
               >

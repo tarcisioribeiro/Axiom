@@ -29,7 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCurrentScreen } from '@/hooks/use-screen-access';
 import { ACTION_COLOR } from '@/lib/action-colors';
 import { formatDate } from '@/lib/formatters';
@@ -161,129 +161,159 @@ export function PasswordDetailModal({
             )}
           </TabsList>
 
-          <TabsContent value="details" className="space-y-md mt-md">
-            <div className="gap-md grid grid-cols-2">
-              <div className="min-w-0">
-                <p className="gap-xs text-muted-foreground flex items-center text-xs">
-                  <Tag className="h-3.5 w-3.5" />
-                  {t('common.fields.category')}
-                </p>
-                <Badge
-                  variant="outline"
-                  className={cn('mt-xs text-xs', catConfig.badge)}
-                >
-                  {t(`pages.passwords.categories.${password.category}`, {
-                    defaultValue: password.category_display,
-                  })}
-                </Badge>
-              </div>
-              {fields.map(({ icon: Icon, label, value }) => (
-                <div key={label} className="min-w-0">
+          {/* Painéis empilhados na mesma célula do grid (§2.3): o modal tem a
+              altura do maior painel, sem mudar de tamanho ao trocar de aba. */}
+          <div className="mt-md grid">
+            <div
+              className={cn(
+                'space-y-md min-w-0 [grid-area:1/1]',
+                tab !== 'details' && 'invisible'
+              )}
+              inert={tab !== 'details'}
+            >
+              <div className="gap-md grid grid-cols-2">
+                <div className="min-w-0">
                   <p className="gap-xs text-muted-foreground flex items-center text-xs">
-                    <Icon className="h-3.5 w-3.5" />
-                    {label}
+                    <Tag className="h-3.5 w-3.5" />
+                    {t('common.fields.category')}
                   </p>
-                  <p className="truncate font-semibold" title={value}>
-                    {value}
-                  </p>
-                </div>
-              ))}
-              <div className="min-w-0">
-                <p className="gap-xs text-muted-foreground flex items-center text-xs">
-                  <Globe className="h-3.5 w-3.5" />
-                  {t('common.fields.site')}
-                </p>
-                {password.site ? (
-                  <a
-                    href={password.site}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="gap-xs text-primary flex min-w-0 items-center font-semibold hover:underline"
+                  <Badge
+                    variant="outline"
+                    className={cn('mt-xs text-xs', catConfig.badge)}
                   >
-                    <span className="truncate">{password.site}</span>
-                    <ExternalLink className="h-3 w-3 shrink-0" />
-                  </a>
-                ) : (
-                  <p className="font-semibold">—</p>
-                )}
+                    {t(`pages.passwords.categories.${password.category}`, {
+                      defaultValue: password.category_display,
+                    })}
+                  </Badge>
+                </div>
+                {fields.map(({ icon: Icon, label, value }) => (
+                  <div key={label} className="min-w-0">
+                    <p className="gap-xs text-muted-foreground flex items-center text-xs">
+                      <Icon className="h-3.5 w-3.5" />
+                      {label}
+                    </p>
+                    <p className="truncate font-semibold" title={value}>
+                      {value}
+                    </p>
+                  </div>
+                ))}
+                <div className="min-w-0">
+                  <p className="gap-xs text-muted-foreground flex items-center text-xs">
+                    <Globe className="h-3.5 w-3.5" />
+                    {t('common.fields.site')}
+                  </p>
+                  {password.site ? (
+                    <a
+                      href={password.site}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="gap-xs text-primary flex min-w-0 items-center font-semibold hover:underline"
+                    >
+                      <span className="truncate">{password.site}</span>
+                      <ExternalLink className="h-3 w-3 shrink-0" />
+                    </a>
+                  ) : (
+                    <p className="font-semibold">—</p>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div className="bg-muted/30 p-md rounded-lg border">
-              <p className="gap-xs mb-xs text-muted-foreground flex items-center text-xs">
-                <Lock className="h-3.5 w-3.5" />
-                {t('auth.login.password')}
-                {countdown !== undefined && (
-                  <span className="ml-auto">
-                    {t('pages.passwords.autoHideIn', { seconds: countdown })}
-                  </span>
-                )}
-              </p>
-              <div className="gap-sm flex items-center">
-                <code className="min-w-0 flex-1 truncate text-sm">
-                  {revealedPassword ?? '••••••••'}
-                </code>
-              </div>
-            </div>
-
-            {password.totp_enabled && (
               <div className="bg-muted/30 p-md rounded-lg border">
                 <p className="gap-xs mb-xs text-muted-foreground flex items-center text-xs">
-                  <Shield className="h-3.5 w-3.5" />
-                  TOTP (2FA)
+                  <Lock className="h-3.5 w-3.5" />
+                  {t('auth.login.password')}
+                  {countdown !== undefined && (
+                    <span className="ml-auto">
+                      {t('pages.passwords.autoHideIn', { seconds: countdown })}
+                    </span>
+                  )}
                 </p>
-                {revealedTotp ? (
-                  <TOTPCode
-                    code={revealedTotp.code}
-                    expiresAt={revealedTotp.expiresAt}
-                  />
-                ) : (
-                  <code className="text-muted-foreground text-sm">••• •••</code>
+                <div className="gap-sm flex items-center">
+                  <code className="min-w-0 flex-1 truncate text-sm">
+                    {revealedPassword ?? '••••••••'}
+                  </code>
+                </div>
+              </div>
+
+              {password.totp_enabled && (
+                <div className="bg-muted/30 p-md rounded-lg border">
+                  <p className="gap-xs mb-xs text-muted-foreground flex items-center text-xs">
+                    <Shield className="h-3.5 w-3.5" />
+                    TOTP (2FA)
+                  </p>
+                  {revealedTotp ? (
+                    <TOTPCode
+                      code={revealedTotp.code}
+                      expiresAt={revealedTotp.expiresAt}
+                    />
+                  ) : (
+                    <code className="text-muted-foreground text-sm">••• •••</code>
+                  )}
+                </div>
+              )}
+
+              {password.notes && (
+                <div className="min-w-0">
+                  <p className="gap-xs text-muted-foreground flex items-center text-xs">
+                    <FileText className="h-3.5 w-3.5" />
+                    {t('common.fields.notes')}
+                  </p>
+                  <p className="text-sm">{password.notes}</p>
+                </div>
+              )}
+            </div>
+
+            {canReveal && (
+              <div
+                className={cn(
+                  'min-w-0 [grid-area:1/1]',
+                  tab !== 'history' && 'invisible'
                 )}
-              </div>
-            )}
-
-            {password.notes && (
-              <div className="min-w-0">
-                <p className="gap-xs text-muted-foreground flex items-center text-xs">
-                  <FileText className="h-3.5 w-3.5" />
-                  {t('common.fields.notes')}
-                </p>
-                <p className="text-sm">{password.notes}</p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="history" className="mt-md">
-            {history.length === 0 ? (
-              <EmptyState title={t('pages.passwords.noHistory')} icon={<History />} />
-            ) : (
-              <PaginatedSlide
-                items={history}
-                pageSize={LIST_PAGE_SIZE}
-                pinNav={false}
-                className="space-y-sm"
+                inert={tab !== 'history'}
               >
-                {(pageItems) =>
-                  pageItems.map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="px-md py-sm gap-sm flex items-center rounded-lg border"
+                {/* Reserva a altura de uma página cheia (5 linhas) + navegação,
+                  para o vazio e a lista paginada terem a mesma altura (§2.5). */}
+                <div
+                  className={cn(
+                    'flex min-h-[17rem] flex-col',
+                    history.length === 0 && 'justify-center'
+                  )}
+                >
+                  {history.length === 0 ? (
+                    <EmptyState
+                      title={t('pages.passwords.noHistory')}
+                      icon={<History />}
+                    />
+                  ) : (
+                    <PaginatedSlide
+                      items={history}
+                      pageSize={LIST_PAGE_SIZE}
+                      pinNav={false}
+                      className="space-y-sm"
                     >
-                      <Lock className="text-muted-foreground h-4 w-4 shrink-0" />
-                      <span className="flex-1 text-sm">••••••••</span>
-                      <span className="text-muted-foreground text-xs">
-                        {formatDate(entry.created_at, 'dd/MM/yyyy HH:mm')}
-                        {entry.changed_by_username
-                          ? ` · ${entry.changed_by_username}`
-                          : ''}
-                      </span>
-                    </div>
-                  ))
-                }
-              </PaginatedSlide>
+                      {(pageItems) =>
+                        pageItems.map((entry) => (
+                          <div
+                            key={entry.id}
+                            className="px-md py-sm gap-sm flex items-center rounded-lg border"
+                          >
+                            <Lock className="text-muted-foreground h-4 w-4 shrink-0" />
+                            <span className="flex-1 text-sm">••••••••</span>
+                            <span className="text-muted-foreground text-xs">
+                              {formatDate(entry.created_at, 'dd/MM/yyyy HH:mm')}
+                              {entry.changed_by_username
+                                ? ` · ${entry.changed_by_username}`
+                                : ''}
+                            </span>
+                          </div>
+                        ))
+                      }
+                    </PaginatedSlide>
+                  )}
+                </div>
+              </div>
             )}
-          </TabsContent>
+          </div>
         </Tabs>
 
         <DialogCloseFooter>
