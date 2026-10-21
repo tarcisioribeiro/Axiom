@@ -615,30 +615,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
       {headerTarget ? createPortal(header, headerTarget) : header}
 
       {goals.length > 0 && (
-        <FilterBar
-          hasActiveFilters={hasActiveFilters}
-          onClear={clearFilters}
-          activeFilters={[
-            ...(statusFilter !== 'all'
-              ? [
-                  {
-                    key: 'status',
-                    label: `${t('common.fields.status')}: ${t(`pages.goals.form.statusOptions.${statusFilter}`)}`,
-                    onRemove: () => setStatusFilter('all'),
-                  },
-                ]
-              : []),
-            ...(typeFilter !== 'all'
-              ? [
-                  {
-                    key: 'type',
-                    label: `${t('pages.goals.allTypes')}: ${t(`pages.goals.goalTypes.${typeFilter}`)}`,
-                    onRemove: () => setTypeFilter('all'),
-                  },
-                ]
-              : []),
-          ]}
-        >
+        <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
           <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput
               placeholder={t('pages.goals.searchPlaceholder')}

@@ -501,43 +501,7 @@ export default function RoutineTasks({
         </TabsList>
 
         <TabsContent value="tasks" className="space-y-lg mt-0">
-          <FilterBar
-            hasActiveFilters={hasActiveFilters}
-            onClear={clearFilters}
-            activeFilters={[
-              ...(categoryFilter !== 'all'
-                ? [
-                    {
-                      key: 'category',
-                      label: `${t('pages.routineTasks.columns.category')}: ${translate('taskCategories', categoryFilter)}`,
-                      onRemove: () => setCategoryFilter('all'),
-                    },
-                  ]
-                : []),
-              ...(statusFilter !== 'all'
-                ? [
-                    {
-                      key: 'status',
-                      label: `${t('pages.routineTasks.columns.status')}: ${
-                        statusFilter === 'active'
-                          ? t('pages.routineTasks.statusActive')
-                          : t('pages.routineTasks.statusInactive')
-                      }`,
-                      onRemove: () => setStatusFilter('all'),
-                    },
-                  ]
-                : []),
-              ...(priorityFilter !== 'all'
-                ? [
-                    {
-                      key: 'priority',
-                      label: `${t('pages.routineTasks.columns.priority')}: ${t(`pages.routineTasks.form.priorityOptions.${priorityFilter}`)}`,
-                      onRemove: () => setPriorityFilter('all'),
-                    },
-                  ]
-                : []),
-            ]}
-          >
+          <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
             <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput
                 placeholder={t('pages.routineTasks.searchPlaceholder')}
@@ -667,21 +631,6 @@ export default function RoutineTasks({
               setBlockSearchTerm('');
               setBlockStatusFilter('all');
             }}
-            activeFilters={
-              blockStatusFilter !== 'all'
-                ? [
-                    {
-                      key: 'status',
-                      label: `${t('pages.routineTasks.columns.status')}: ${
-                        blockStatusFilter === 'active'
-                          ? t('common.status.active')
-                          : t('common.status.inactive')
-                      }`,
-                      onRemove: () => setBlockStatusFilter('all'),
-                    },
-                  ]
-                : []
-            }
           >
             <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput

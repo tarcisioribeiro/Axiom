@@ -270,7 +270,10 @@ export default function Courses() {
   });
 
   const sortedCourses = useMemo(
-    () => [...courses].sort((a, b) => COURSE_STATUS_ORDER[a.status] - COURSE_STATUS_ORDER[b.status]),
+    () =>
+      [...courses].sort(
+        (a, b) => COURSE_STATUS_ORDER[a.status] - COURSE_STATUS_ORDER[b.status]
+      ),
     [courses]
   );
 
@@ -372,35 +375,6 @@ export default function Courses() {
           setCategoryFilter('all');
           setPlatformFilter('all');
         }}
-        activeFilters={[
-          ...(statusFilter !== 'all'
-            ? [
-                {
-                  key: 'status',
-                  label: `${t('common.fields.status')}: ${t(`pages.courses.filters.${statusFilter}`)}`,
-                  onRemove: () => setStatusFilter('all'),
-                },
-              ]
-            : []),
-          ...(categoryFilter !== 'all'
-            ? [
-                {
-                  key: 'category',
-                  label: `${t('common.fields.category')}: ${t(`pages.courses.category.${categoryFilter}`)}`,
-                  onRemove: () => setCategoryFilter('all'),
-                },
-              ]
-            : []),
-          ...(platformFilter !== 'all'
-            ? [
-                {
-                  key: 'platform',
-                  label: `${t('pages.courses.form.platformLabel')}: ${t(`pages.courses.platform.${platformFilter}`)}`,
-                  onRemove: () => setPlatformFilter('all'),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput

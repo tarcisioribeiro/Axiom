@@ -1,6 +1,6 @@
 # Padrões de design do frontend web
 
-**Documento oficial** · versão 1.12 · 18/10/2026
+**Documento oficial** · versão 1.13 · 21/10/2026
 
 Padrões de UI/UX definidos pelo product owner desde 25/08/2026. Toda mudança visual no frontend web segue este documento. Quando um pedido contradiz uma regra, a regra é atualizada aqui primeiro.
 
@@ -157,7 +157,7 @@ Há três tipos de modal:
 - **[regra]** Telas com filtro e busca usam `FilterBar` + `SearchInput`, como no Controle Financeiro.
 - **[regra]** Filtros ocupam toda a largura, com rótulo acima de cada um: cada campo do `FilterBar` vai dentro de `<FilterField label=...>` (rótulo `text-xs` centralizado, campos alinhados pela base; botões como "Favoritos" sem rótulo). Rótulos genéricos em `common.filterLabels.*` / `common.fields.*`.
 - **[regra]** Entre o `FilterBar` e o conteúdo abaixo (lista, tabela, grade ou `EmptyState`) há sempre 24 px: pai com `space-y-lg` (o `PageContainer` já tem) ou `className="mb-lg"` no `FilterBar`. Nunca `mb-md`/`space-y-md` (no Tailwind 4 o `mb-*` do filho sobrescreve o `space-y` do pai) nem conteúdo colado, como num `TabsContent` ou fragmento sem espaçamento (16/10/2026).
-- **[pontual]** Despesas e Receitas não passam `activeFilters` ao `FilterBar`: sem chips de filtro ativo (categoria, status, período) abaixo da barra. O botão "Limpar filtros" continua (21/10/2026).
+- **[regra]** Nenhuma tela mostra chips de filtro ativo (categoria, status, período etc.) abaixo da barra. O `FilterBar` não tem mais suporte a isso (prop `activeFilters` removida do componente); o botão "Limpar filtros" continua (21/10/2026).
 
 ## 7. Tabelas
 

@@ -696,26 +696,6 @@ function CheckinTab({
               setCheckinStartDate(undefined);
               setCheckinEndDate(undefined);
             }}
-            activeFilters={[
-              ...(checkinStartDate
-                ? [
-                    {
-                      key: 'startDate',
-                      label: `${t('common.fields.from')}: ${format(checkinStartDate, 'dd/MM/yyyy')}`,
-                      onRemove: () => setCheckinStartDate(undefined),
-                    },
-                  ]
-                : []),
-              ...(checkinEndDate
-                ? [
-                    {
-                      key: 'endDate',
-                      label: `${t('common.fields.to')}: ${format(checkinEndDate, 'dd/MM/yyyy')}`,
-                      onRemove: () => setCheckinEndDate(undefined),
-                    },
-                  ]
-                : []),
-            ]}
           >
             <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
               <DateRangeFilter
@@ -1135,26 +1115,6 @@ function CrisisTab({
               setCrisisStartDate(undefined);
               setCrisisEndDate(undefined);
             }}
-            activeFilters={[
-              ...(crisisStartDate
-                ? [
-                    {
-                      key: 'startDate',
-                      label: `${t('common.fields.from')}: ${format(crisisStartDate, 'dd/MM/yyyy')}`,
-                      onRemove: () => setCrisisStartDate(undefined),
-                    },
-                  ]
-                : []),
-              ...(crisisEndDate
-                ? [
-                    {
-                      key: 'endDate',
-                      label: `${t('common.fields.to')}: ${format(crisisEndDate, 'dd/MM/yyyy')}`,
-                      onRemove: () => setCrisisEndDate(undefined),
-                    },
-                  ]
-                : []),
-            ]}
           >
             <FilterField label={t('common.filterLabels.period')} icon={CalendarDays}>
               <DateRangeFilter
@@ -1289,17 +1249,6 @@ function LibraryTab() {
       <FilterBar
         hasActiveFilters={selectedCategory !== 'all'}
         onClear={() => setSelectedCategory('all')}
-        activeFilters={[
-          ...(selectedCategory !== 'all'
-            ? [
-                {
-                  key: 'category',
-                  label: `${t('pages.emotionalWellness.library.categoryLabel')}: ${categories.find((c) => c.value === selectedCategory)?.label ?? selectedCategory}`,
-                  onRemove: () => setSelectedCategory('all'),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.fields.category')} icon={Tag}>
           <Select

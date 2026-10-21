@@ -181,24 +181,7 @@ export default function Vaults() {
         />
       ) : (
         <>
-          <FilterBar
-            hasActiveFilters={hasActiveFilters}
-            onClear={clearFilters}
-            activeFilters={[
-              ...(accountFilter !== 'all'
-                ? [
-                    {
-                      key: 'account',
-                      label: `${t('pages.vaults.allAccounts')}: ${
-                        accounts.find((a) => String(a.id) === accountFilter)
-                          ?.account_name ?? accountFilter
-                      }`,
-                      onRemove: () => setAccountFilter('all'),
-                    },
-                  ]
-                : []),
-            ]}
-          >
+          <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
             <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput
                 placeholder={t('pages.vaults.searchPlaceholder')}

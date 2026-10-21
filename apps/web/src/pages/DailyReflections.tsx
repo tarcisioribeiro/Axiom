@@ -49,7 +49,6 @@ import {
 } from '@/components/ui/select';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import type { dailyReflectionSchema } from '@/lib/validations';
 import { dailyReflectionsService } from '@/services/daily-reflections-service';
@@ -319,39 +318,7 @@ export default function DailyReflections() {
       />
 
       {/* Filtros */}
-      <FilterBar
-        hasActiveFilters={hasActiveFilters}
-        onClear={clearFilters}
-        activeFilters={[
-          ...(moodFilter !== 'all'
-            ? [
-                {
-                  key: 'mood',
-                  label: t(`common.mood.${moodFilter}`),
-                  onRemove: () => setMoodFilter('all'),
-                },
-              ]
-            : []),
-          ...(startDate
-            ? [
-                {
-                  key: 'startDate',
-                  label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
-                  onRemove: () => setStartDate(undefined),
-                },
-              ]
-            : []),
-          ...(endDate
-            ? [
-                {
-                  key: 'endDate',
-                  label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
-                  onRemove: () => setEndDate(undefined),
-                },
-              ]
-            : []),
-        ]}
-      >
+      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
             placeholder={t('pages.dailyReflections.searchPlaceholder')}

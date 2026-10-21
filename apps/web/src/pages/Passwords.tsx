@@ -508,17 +508,6 @@ function PasswordsContent() {
             setShowFavoritesOnly(false);
             setCategoryFilter('all');
           }}
-          activeFilters={[
-            ...(categoryFilter !== 'all'
-              ? [
-                  {
-                    key: 'category',
-                    label: `${t('common.fields.category')}: ${t(`pages.passwords.categories.${categoryFilter}`)}`,
-                    onRemove: () => setCategoryFilter('all'),
-                  },
-                ]
-              : []),
-          ]}
         >
           <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput

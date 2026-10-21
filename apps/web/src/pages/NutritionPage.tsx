@@ -751,21 +751,6 @@ export default function NutritionPage() {
                   setMealTypeSearch('');
                   setMealTypeStatusFilter('all');
                 }}
-                activeFilters={[
-                  ...(mealTypeStatusFilter !== 'all'
-                    ? [
-                        {
-                          key: 'status',
-                          label: `${t('common.fields.status')}: ${
-                            mealTypeStatusFilter === 'active'
-                              ? t('pages.nutritionMealTypes.active')
-                              : t('pages.nutritionMealTypes.inactive')
-                          }`,
-                          onRemove: () => setMealTypeStatusFilter('all'),
-                        },
-                      ]
-                    : []),
-                ]}
               >
                 <FilterField label={t('common.filterLabels.search')} icon={Search}>
                   <SearchInput

@@ -289,29 +289,6 @@ export default function Budgets() {
           setCategoryFilter('all');
           setMemberFilter('all');
         }}
-        activeFilters={[
-          ...(categoryFilter !== 'all'
-            ? [
-                {
-                  key: 'category',
-                  label: `${t('common.fields.category')}: ${translate('expenseCategories', categoryFilter)}`,
-                  onRemove: () => setCategoryFilter('all'),
-                },
-              ]
-            : []),
-          ...(memberFilter !== 'all'
-            ? [
-                {
-                  key: 'member',
-                  label: `${t('pages.budgets.member')} ${
-                    members.find((m) => String(m.id) === memberFilter)?.name ??
-                    memberFilter
-                  }`,
-                  onRemove: () => setMemberFilter('all'),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput

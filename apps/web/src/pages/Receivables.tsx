@@ -52,7 +52,7 @@ import {
 import { BILL_STATUS_ICONS, REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
@@ -243,44 +243,6 @@ export default function Receivables({
           setStartDate(undefined);
           setEndDate(undefined);
         }}
-        activeFilters={[
-          ...(statusFilter !== 'all'
-            ? [
-                {
-                  key: 'status',
-                  label: `${t('common.fields.status')}: ${t(`pages.receivables.status.${statusFilter}`)}`,
-                  onRemove: () => setStatusFilter('all'),
-                },
-              ]
-            : []),
-          ...(categoryFilter !== 'all'
-            ? [
-                {
-                  key: 'category',
-                  label: `${t('pages.receivables.allCategories')}: ${translate('revenueCategories', categoryFilter)}`,
-                  onRemove: () => setCategoryFilter('all'),
-                },
-              ]
-            : []),
-          ...(startDate
-            ? [
-                {
-                  key: 'startDate',
-                  label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
-                  onRemove: () => setStartDate(undefined),
-                },
-              ]
-            : []),
-          ...(endDate
-            ? [
-                {
-                  key: 'endDate',
-                  label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
-                  onRemove: () => setEndDate(undefined),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput

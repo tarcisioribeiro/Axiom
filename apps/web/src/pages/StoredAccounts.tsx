@@ -334,26 +334,6 @@ function StoredAccountsContent() {
             setAccountTypeFilter('all');
             setInstitutionFilter('all');
           }}
-          activeFilters={[
-            ...(accountTypeFilter !== 'all'
-              ? [
-                  {
-                    key: 'accountType',
-                    label: `${t('pages.storedAccounts.allTypes')}: ${t(`pages.storedAccounts.accountTypes.${accountTypeFilter}`)}`,
-                    onRemove: () => setAccountTypeFilter('all'),
-                  },
-                ]
-              : []),
-            ...(institutionFilter !== 'all'
-              ? [
-                  {
-                    key: 'institution',
-                    label: `${t('pages.storedAccounts.allInstitutions')}: ${translate('institutions', institutionFilter)}`,
-                    onRemove: () => setInstitutionFilter('all'),
-                  },
-                ]
-              : []),
-          ]}
         >
           <FilterField label={t('common.filterLabels.search')} icon={Search}>
             <SearchInput

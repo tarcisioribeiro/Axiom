@@ -343,17 +343,6 @@ export default function Authors() {
           setSearchTerm('');
           setNationalityFilter('all');
         }}
-        activeFilters={[
-          ...(nationalityFilter !== 'all'
-            ? [
-                {
-                  key: 'nationality',
-                  label: `${t('pages.authors.nationalityFilterLabel')}: ${t(`pages.authors.nationalities.${nationalityFilter}`)}`,
-                  onRemove: () => setNationalityFilter('all'),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput

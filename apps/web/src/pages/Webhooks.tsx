@@ -257,33 +257,6 @@ export default function Webhooks() {
             className="mb-lg"
             hasActiveFilters={hasActiveFilters}
             onClear={clearFilters}
-            activeFilters={[
-              ...(statusFilter !== 'all'
-                ? [
-                    {
-                      key: 'status',
-                      label: `${t('common.fields.status')}: ${
-                        statusFilter === 'active'
-                          ? t('common.status.active')
-                          : t('common.status.inactive')
-                      }`,
-                      onRemove: () => setStatusFilter('all'),
-                    },
-                  ]
-                : []),
-              ...(eventFilter !== 'all'
-                ? [
-                    {
-                      key: 'event',
-                      label: `${t('webhooks.allEvents')}: ${
-                        events?.find((ev) => ev.value === eventFilter)?.label ??
-                        eventFilter
-                      }`,
-                      onRemove: () => setEventFilter('all'),
-                    },
-                  ]
-                : []),
-            ]}
           >
             <FilterField label={t('common.filterLabels.search')} icon={Search}>
               <SearchInput

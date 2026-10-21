@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
 import {
   Award,
@@ -181,26 +180,6 @@ export default function Journey() {
                   className="mb-lg"
                   hasActiveFilters={hasActiveFilters}
                   onClear={clearFilters}
-                  activeFilters={[
-                    ...(startDate
-                      ? [
-                          {
-                            key: 'startDate',
-                            label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
-                            onRemove: () => setStartDate(undefined),
-                          },
-                        ]
-                      : []),
-                    ...(endDate
-                      ? [
-                          {
-                            key: 'endDate',
-                            label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
-                            onRemove: () => setEndDate(undefined),
-                          },
-                        ]
-                      : []),
-                  ]}
                 >
                   <FilterField
                     label={t('common.filterLabels.period')}

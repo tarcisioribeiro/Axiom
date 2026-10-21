@@ -486,26 +486,6 @@ export default function CreditCardBills({
           setDueDateStart(undefined);
           setDueDateEnd(undefined);
         }}
-        activeFilters={[
-          ...(dueDateStart
-            ? [
-                {
-                  key: 'dueDateStart',
-                  label: `${t('common.fields.from')}: ${formatDate(dueDateStart)}`,
-                  onRemove: () => setDueDateStart(undefined),
-                },
-              ]
-            : []),
-          ...(dueDateEnd
-            ? [
-                {
-                  key: 'dueDateEnd',
-                  label: `${t('common.fields.to')}: ${formatDate(dueDateEnd)}`,
-                  onRemove: () => setDueDateEnd(undefined),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.card')} icon={CreditCardIcon}>
           <Select value={cardFilter} onValueChange={setCardFilter}>

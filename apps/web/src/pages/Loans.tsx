@@ -63,7 +63,7 @@ import {
 } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS, LOAN_STATUS_ICONS } from '@/config/icons';
 import { useLoansPage } from '@/hooks/use-loans-page';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatCurrency } from '@/lib/formatters';
 import { getMemberDisplayName, mapLoanToReceipt } from '@/lib/receipt-utils';
 import { cn } from '@/lib/utils';
 import { loanInstallmentsService } from '@/services/loan-installments-service';
@@ -220,53 +220,6 @@ export default function Loans() {
       <FilterBar
         hasActiveFilters={!!searchTerm || hasExtraFilters}
         onClear={clearExtraFilters}
-        activeFilters={[
-          ...(roleFilter !== 'all'
-            ? [
-                {
-                  key: 'role',
-                  label: t(`pages.loans.filter.${roleFilter}`),
-                  onRemove: () => setRoleFilter('all'),
-                },
-              ]
-            : []),
-          ...(statusFilter !== 'all'
-            ? [
-                {
-                  key: 'status',
-                  label: `${t('common.fields.status')}: ${translate('loanStatus', statusFilter)}`,
-                  onRemove: () => setStatusFilter('all'),
-                },
-              ]
-            : []),
-          ...(categoryFilter !== 'all'
-            ? [
-                {
-                  key: 'category',
-                  label: `${t('common.fields.category')}: ${EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === categoryFilter)?.label ?? categoryFilter}`,
-                  onRemove: () => setCategoryFilter('all'),
-                },
-              ]
-            : []),
-          ...(dueStartDate
-            ? [
-                {
-                  key: 'dueStartDate',
-                  label: `${t('common.fields.from')}: ${formatDate(dueStartDate)}`,
-                  onRemove: () => setDueStartDate(undefined),
-                },
-              ]
-            : []),
-          ...(dueEndDate
-            ? [
-                {
-                  key: 'dueEndDate',
-                  label: `${t('common.fields.to')}: ${formatDate(dueEndDate)}`,
-                  onRemove: () => setDueEndDate(undefined),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput

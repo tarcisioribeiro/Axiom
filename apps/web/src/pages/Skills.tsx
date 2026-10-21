@@ -410,26 +410,6 @@ export default function Skills() {
           setStatusFilter('all');
           setCategoryFilter('all');
         }}
-        activeFilters={[
-          ...(statusFilter !== 'all'
-            ? [
-                {
-                  key: 'status',
-                  label: `${t('pages.skills.allStatus')}: ${t(`pages.skills.status.${statusFilter}`)}`,
-                  onRemove: () => setStatusFilter('all'),
-                },
-              ]
-            : []),
-          ...(categoryFilter !== 'all'
-            ? [
-                {
-                  key: 'category',
-                  label: `${t('pages.skills.allCategories')}: ${t(`pages.skills.category.${categoryFilter}`)}`,
-                  onRemove: () => setCategoryFilter('all'),
-                },
-              ]
-            : []),
-        ]}
       >
         <FilterField label={t('common.filterLabels.search')} icon={Search}>
           <SearchInput
