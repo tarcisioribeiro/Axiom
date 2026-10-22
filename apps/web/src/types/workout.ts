@@ -85,6 +85,7 @@ export interface WorkoutDay {
   default_duration_minutes?: number | null;
   exercises: WorkoutExercise[];
   exercise_count: number;
+  category: WorkoutCategory;
   owner: number;
   created_at: string;
   updated_at: string;
@@ -120,6 +121,16 @@ export interface WorkoutExercise {
   set_targets: SetTarget[];
   order: number;
   notes?: string | null;
+  execution_count?: number | null;
+  duration_seconds?: number | null;
+  is_lateral: boolean;
+  avg_speed?: string | null;
+  incline_percent?: string | null;
+  has_speed_intervals: boolean;
+  interval_seconds?: number | null;
+  interval_count?: number | null;
+  interval_speed_high?: string | null;
+  interval_speed_low?: string | null;
   owner: number;
   created_at: string;
   updated_at: string;
@@ -138,6 +149,16 @@ export interface WorkoutExerciseFormData {
   set_targets: SetTarget[];
   order: number;
   notes?: string | null;
+  execution_count?: number | null;
+  duration_seconds?: number | null;
+  is_lateral?: boolean;
+  avg_speed?: string | null;
+  incline_percent?: string | null;
+  has_speed_intervals?: boolean;
+  interval_seconds?: number | null;
+  interval_count?: number | null;
+  interval_speed_high?: string | null;
+  interval_speed_low?: string | null;
   owner: number;
 }
 
@@ -181,6 +202,16 @@ export interface WorkoutSessionExercise {
   load_target?: string | null;
   load_target_unit: string;
   order: number;
+  execution_count_target?: number | null;
+  duration_target_seconds?: number | null;
+  is_lateral: boolean;
+  avg_speed_target?: string | null;
+  incline_target_percent?: string | null;
+  has_speed_intervals: boolean;
+  interval_target_seconds?: number | null;
+  interval_count_target?: number | null;
+  interval_speed_high_target?: string | null;
+  interval_speed_low_target?: string | null;
   sets: WorkoutSessionSet[];
   owner: number;
   created_at: string;
@@ -197,6 +228,16 @@ export interface WorkoutSessionExerciseFormData {
   load_target?: string | null;
   load_target_unit?: string;
   order: number;
+  execution_count_target?: number | null;
+  duration_target_seconds?: number | null;
+  is_lateral?: boolean;
+  avg_speed_target?: string | null;
+  incline_target_percent?: string | null;
+  has_speed_intervals?: boolean;
+  interval_target_seconds?: number | null;
+  interval_count_target?: number | null;
+  interval_speed_high_target?: string | null;
+  interval_speed_low_target?: string | null;
   owner: number;
 }
 
@@ -209,6 +250,9 @@ export interface WorkoutSessionSet {
   load_unit: string;
   load_unit_display: string;
   reps_done?: number | null;
+  duration_seconds?: number | null;
+  avg_speed?: string | null;
+  incline_percent?: string | null;
   completed: boolean;
   notes?: string | null;
   owner: number;
@@ -222,6 +266,9 @@ export interface WorkoutSessionSetFormData {
   load?: string | null;
   load_unit: string;
   reps_done?: number | null;
+  duration_seconds?: number | null;
+  avg_speed?: string | null;
+  incline_percent?: string | null;
   completed: boolean;
   notes?: string | null;
   owner: number;

@@ -5633,7 +5633,18 @@
       "perSetTitle": "Carga e repetições por série",
       "setLabel": "Série",
       "repsShort": "Reps",
-      "tabCalendar": "Calendário"
+      "tabCalendar": "Calendário",
+      "executionCount": "Quantidade de Execuções",
+      "executionDurationSeconds": "Tempo de Execução (s)",
+      "exerciseDurationSeconds": "Tempo do Exercício (s)",
+      "isLateral": "Lateral",
+      "avgSpeed": "Velocidade Média",
+      "inclinePercent": "Inclinação",
+      "hasSpeedIntervals": "Alternância de Velocidade",
+      "intervalSeconds": "Tempo de Cada Intervalo (s)",
+      "intervalCount": "Quantidade de Alternâncias",
+      "intervalSpeedHigh": "Velocidade do Tiro",
+      "intervalSpeedLow": "Velocidade da Recuperação"
     },
     "exercises": {
       "title": "Exercícios",
@@ -5709,6 +5720,7 @@
       "exerciseNamePlaceholder": "Nome do exercício",
       "setsSection": "Séries",
       "addSet": "Adicionar Série",
+      "addExecution": "Adicionar Execução",
       "setNumber": "Série",
       "load": "Carga",
       "loadUnit": "Unidade",

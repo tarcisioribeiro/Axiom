@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,8 +39,8 @@ import { ExerciseThumbnail } from '@/components/workout/ExerciseThumbnail';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { notifyFormErrors } from '@/lib/form-errors';
-import { formatLocalDate } from '@/lib/utils';
-import type { WorkoutDay, WorkoutSession } from '@/types/workout';
+import { cn, formatLocalDate } from '@/lib/utils';
+import type { WorkoutCategory, WorkoutDay, WorkoutSession } from '@/types/workout';
 
 // 'bw' só existe no form: a série salva peso corporal como carga em branco
 const LOAD_UNITS = ['bw', 'kg', 'lb'] as const;
@@ -71,6 +72,9 @@ interface SessionSetValues {
   load: string;
   load_unit: string;
   reps_done: string;
+  duration_seconds: string;
+  avg_speed: string;
+  incline_percent: string;
   completed: boolean;
   notes: string;
 }
@@ -87,6 +91,16 @@ interface SessionExerciseValues {
   load_target: string;
   load_target_unit: string;
   order: number;
+  execution_count_target: number | null;
+  duration_target_seconds: number | null;
+  is_lateral: boolean;
+  avg_speed_target: string;
+  incline_target_percent: string;
+  has_speed_intervals: boolean;
+  interval_target_seconds: number | null;
+  interval_count_target: number | null;
+  interval_speed_high_target: string;
+  interval_speed_low_target: string;
   sets: SessionSetValues[];
 }
 
@@ -116,7 +130,10 @@ function newSet(
   setNumber: number,
   load = '',
   loadUnit = 'kg',
-  repsDone = ''
+  repsDone = '',
+  durationSeconds = '',
+  avgSpeed = '',
+  inclinePercent = ''
 ): SessionSetValues {
   const bodyweight = loadUnit === 'bw';
   return {
@@ -124,6 +141,9 @@ function newSet(
     load: bodyweight ? '' : load,
     load_unit: loadUnit,
     reps_done: repsDone,
+    duration_seconds: durationSeconds,
+    avg_speed: avgSpeed,
+    incline_percent: inclinePercent,
     completed: true,
     notes: '',
   };
@@ -195,6 +215,16 @@ export function WorkoutSessionForm({
               load_target: ex.load_target ?? '',
               load_target_unit: ex.load_target_unit || 'kg',
               order: ex.order,
+              execution_count_target: ex.execution_count_target ?? null,
+              duration_target_seconds: ex.duration_target_seconds ?? null,
+              is_lateral: ex.is_lateral ?? false,
+              avg_speed_target: ex.avg_speed_target ?? '',
+              incline_target_percent: ex.incline_target_percent ?? '',
+              has_speed_intervals: ex.has_speed_intervals ?? false,
+              interval_target_seconds: ex.interval_target_seconds ?? null,
+              interval_count_target: ex.interval_count_target ?? null,
+              interval_speed_high_target: ex.interval_speed_high_target ?? '',
+              interval_speed_low_target: ex.interval_speed_low_target ?? '',
               sets: [...ex.sets]
                 .sort((a, b) => a.set_number - b.set_number)
                 .map((s) => ({
@@ -203,6 +233,10 @@ export function WorkoutSessionForm({
                   load: fmt(s.load),
                   load_unit: s.load ? s.load_unit : 'bw',
                   reps_done: s.reps_done != null ? String(s.reps_done) : '',
+                  duration_seconds:
+                    s.duration_seconds != null ? String(s.duration_seconds) : '',
+                  avg_speed: s.avg_speed ?? '',
+                  incline_percent: s.incline_percent ?? '',
                   completed: s.completed,
                   notes: s.notes ?? '',
                 })),
@@ -262,6 +296,8 @@ export function WorkoutSessionForm({
   };
 
   const selectedDayId = watch('workout_day');
+  const selectedCategory: WorkoutCategory =
+    workoutDays.find((d) => String(d.id) === selectedDayId)?.category ?? 'resistance';
   // Sessão sempre vinculada a uma divisão (sem sessão avulsa)
   register('workout_day', {
     validate: (v) =>
@@ -283,6 +319,10 @@ export function WorkoutSessionForm({
     if (selectedDayId) {
       const day = workoutDays.find((d) => String(d.id) === selectedDayId);
       if (day?.exercises && day.exercises.length > 0) {
+        // Resistência: uma linha por série planejada. Mobilidade/cardio não
+        // usam séries — uma linha única já pré-preenchida com os alvos.
+        const setCount = (ex: (typeof day.exercises)[number]) =>
+          day.category === 'resistance' ? ex.sets : 1;
         const preloaded: SessionExerciseValues[] = day.exercises.map((ex, idx) => ({
           exercise: ex.id,
           exercise_name: ex.name,
@@ -294,12 +334,29 @@ export function WorkoutSessionForm({
           load_target: ex.load ?? '',
           load_target_unit: ex.load_unit || 'kg',
           order: idx,
-          sets: Array.from({ length: ex.sets }, (_, i) =>
+          execution_count_target: ex.execution_count ?? null,
+          duration_target_seconds: ex.duration_seconds ?? null,
+          is_lateral: ex.is_lateral,
+          avg_speed_target: ex.avg_speed ?? '',
+          incline_target_percent: ex.incline_percent ?? '',
+          has_speed_intervals: ex.has_speed_intervals,
+          interval_target_seconds: ex.interval_seconds ?? null,
+          interval_count_target: ex.interval_count ?? null,
+          interval_speed_high_target: ex.interval_speed_high ?? '',
+          interval_speed_low_target: ex.interval_speed_low ?? '',
+          sets: Array.from({ length: setCount(ex) }, (_, i) =>
             newSet(
               i + 1,
               fmt(ex.set_targets?.[i]?.load ?? ex.load),
               ex.load_unit || 'kg',
-              String(ex.set_targets?.[i]?.reps ?? ex.reps_min)
+              String(
+                day.category === 'mobility'
+                  ? (ex.execution_count ?? '')
+                  : (ex.set_targets?.[i]?.reps ?? ex.reps_min)
+              ),
+              ex.duration_seconds != null ? String(ex.duration_seconds) : '',
+              ex.avg_speed ?? '',
+              ex.incline_percent ?? ''
             )
           ),
         }));
@@ -456,6 +513,7 @@ export function WorkoutSessionForm({
                   // índice muda após remover um exercício pulado
                   key={`${exerciseFields[step].fieldKey}-${step}`}
                   exIdx={step}
+                  category={selectedCategory}
                   control={control}
                   register={register}
                   watch={watch}
@@ -549,6 +607,7 @@ export function WorkoutSessionForm({
 
 interface ExerciseBlockProps {
   exIdx: number;
+  category: WorkoutCategory;
   control: ReturnType<typeof useForm<WorkoutSessionFormValues>>['control'];
   register: ReturnType<typeof useForm<WorkoutSessionFormValues>>['register'];
   watch: ReturnType<typeof useForm<WorkoutSessionFormValues>>['watch'];
@@ -558,8 +617,16 @@ interface ExerciseBlockProps {
   bodyweightLabel: string;
 }
 
+// Grade de colunas da linha de registro, por categoria (nº + campos + remover)
+const BLOCK_GRID_COLS: Record<WorkoutCategory, string> = {
+  resistance: 'grid-cols-[2rem_1fr_1.5fr_1fr_2rem]',
+  mobility: 'grid-cols-[2rem_1fr_1fr_2rem]',
+  cardio: 'grid-cols-[2rem_1fr_1fr_1fr_2rem]',
+};
+
 function ExerciseBlock({
   exIdx,
+  category,
   control,
   register,
   watch,
@@ -578,6 +645,25 @@ function ExerciseBlock({
     keyName: 'fieldKey',
   });
 
+  const isLateral = watch(`exercises.${exIdx}.is_lateral`);
+  const hasSpeedIntervals = watch(`exercises.${exIdx}.has_speed_intervals`);
+  const intervalTarget = watch(`exercises.${exIdx}.interval_target_seconds`);
+  const intervalCountTarget = watch(`exercises.${exIdx}.interval_count_target`);
+  const intervalSpeedHighTarget = watch(
+    `exercises.${exIdx}.interval_speed_high_target`
+  );
+  const intervalSpeedLowTarget = watch(`exercises.${exIdx}.interval_speed_low_target`);
+  const intervalBadge = [
+    intervalCountTarget ? `${intervalCountTarget}x` : null,
+    intervalTarget ? `${intervalTarget}s` : null,
+    intervalSpeedHighTarget || intervalSpeedLowTarget
+      ? `${intervalSpeedHighTarget || '–'}/${intervalSpeedLowTarget || '–'} km/h`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  const gridCols = BLOCK_GRID_COLS[category];
+
   return (
     <div className="space-y-sm border-primary/40 border-l-primary bg-card p-sm rounded-md border border-l-2">
       <div className="gap-sm flex items-center">
@@ -589,14 +675,47 @@ function ExerciseBlock({
         <span className="flex-1 font-medium">
           {watch(`exercises.${exIdx}.exercise_name`)}
         </span>
+        {category === 'mobility' && isLateral && (
+          <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
+            {t('pages.workoutPlans.isLateral')}
+          </span>
+        )}
+        {category === 'cardio' && hasSpeedIntervals && (
+          <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
+            {t('pages.workoutPlans.hasSpeedIntervals')}
+            {intervalBadge ? `: ${intervalBadge}` : ''}
+          </span>
+        )}
       </div>
 
       <div className="space-y-xs">
-        <div className="gap-xs px-xs text-muted-foreground grid grid-cols-[2rem_1fr_1.5fr_1fr_2rem] text-xs font-medium">
+        <div
+          className={cn(
+            'gap-xs px-xs text-muted-foreground grid text-xs font-medium',
+            gridCols
+          )}
+        >
           <span>{t('pages.workoutSessions.setNumber')}</span>
-          <span>{t('pages.workoutSessions.load')}</span>
-          <span>{t('pages.workoutSessions.loadUnit')}</span>
-          <span>{t('pages.workoutSessions.repsDone')}</span>
+          {category === 'resistance' && (
+            <>
+              <span>{t('pages.workoutSessions.load')}</span>
+              <span>{t('pages.workoutSessions.loadUnit')}</span>
+              <span>{t('pages.workoutSessions.repsDone')}</span>
+            </>
+          )}
+          {category === 'mobility' && (
+            <>
+              <span>{t('pages.workoutPlans.executionCount')}</span>
+              <span>{t('pages.workoutPlans.executionDurationSeconds')}</span>
+            </>
+          )}
+          {category === 'cardio' && (
+            <>
+              <span>{t('pages.workoutPlans.avgSpeed')}</span>
+              <span>{t('pages.workoutPlans.inclinePercent')}</span>
+              <span>{t('pages.workoutPlans.exerciseDurationSeconds')}</span>
+            </>
+          )}
           <span />
         </div>
         {setFields.map((setField, sIdx) => {
@@ -606,52 +725,137 @@ function ExerciseBlock({
           return (
             <div
               key={setField.fieldKey}
-              className="gap-xs grid grid-cols-[2rem_1fr_1.5fr_1fr_2rem] items-center"
+              className={cn('gap-xs grid items-center', gridCols)}
             >
               <span className="text-muted-foreground text-center text-xs font-medium">
                 {sIdx + 1}
               </span>
-              <Input
-                type="text"
-                inputMode="decimal"
-                disabled={isBodyweight}
-                placeholder={isBodyweight ? '—' : fmt('0')}
-                {...register(loadPath, {
-                  onBlur: (e: React.FocusEvent<HTMLInputElement>) =>
-                    setValue(loadPath, fmt(e.target.value)),
-                })}
-              />
-              <Select
-                value={watch(unitPath)}
-                onValueChange={(v) => {
-                  setValue(unitPath, v);
-                  if (v === 'bw') setValue(loadPath, '');
-                }}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LOAD_UNITS.map((u) => (
-                    <SelectItem key={u} value={u}>
-                      {u === 'bw' ? bodyweightLabel : t(`units.${u}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Controller
-                control={control}
-                name={`exercises.${exIdx}.sets.${sIdx}.reps_done`}
-                render={({ field }) => (
-                  <NumberStepper
-                    optional
-                    aria-label={t('pages.workoutSessions.repsDone')}
-                    value={field.value === '' ? null : Number(field.value)}
-                    onChange={(v) => field.onChange(v === null ? '' : String(v))}
-                    className="w-full"
+
+              {category === 'resistance' && (
+                <>
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    disabled={isBodyweight}
+                    placeholder={isBodyweight ? '—' : fmt('0')}
+                    {...register(loadPath, {
+                      onBlur: (e: React.FocusEvent<HTMLInputElement>) =>
+                        setValue(loadPath, fmt(e.target.value)),
+                    })}
                   />
-                )}
-              />
+                  <Select
+                    value={watch(unitPath)}
+                    onValueChange={(v) => {
+                      setValue(unitPath, v);
+                      if (v === 'bw') setValue(loadPath, '');
+                    }}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LOAD_UNITS.map((u) => (
+                        <SelectItem key={u} value={u}>
+                          {u === 'bw' ? bodyweightLabel : t(`units.${u}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Controller
+                    control={control}
+                    name={`exercises.${exIdx}.sets.${sIdx}.reps_done`}
+                    render={({ field }) => (
+                      <NumberStepper
+                        optional
+                        aria-label={t('pages.workoutSessions.repsDone')}
+                        value={field.value === '' ? null : Number(field.value)}
+                        onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                        className="w-full"
+                      />
+                    )}
+                  />
+                </>
+              )}
+
+              {category === 'mobility' && (
+                <>
+                  <Controller
+                    control={control}
+                    name={`exercises.${exIdx}.sets.${sIdx}.reps_done`}
+                    render={({ field }) => (
+                      <NumberStepper
+                        optional
+                        aria-label={t('pages.workoutPlans.executionCount')}
+                        value={field.value === '' ? null : Number(field.value)}
+                        onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                        className="w-full"
+                      />
+                    )}
+                  />
+                  <Controller
+                    control={control}
+                    name={`exercises.${exIdx}.sets.${sIdx}.duration_seconds`}
+                    render={({ field }) => (
+                      <NumberStepper
+                        optional
+                        aria-label={t('pages.workoutPlans.executionDurationSeconds')}
+                        value={field.value === '' ? null : Number(field.value)}
+                        onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                        className="w-full"
+                      />
+                    )}
+                  />
+                </>
+              )}
+
+              {category === 'cardio' && (
+                <>
+                  <Controller
+                    control={control}
+                    name={`exercises.${exIdx}.sets.${sIdx}.avg_speed`}
+                    render={({ field }) => (
+                      <DecimalInput
+                        decimals={1}
+                        step={0.5}
+                        placeholder="0"
+                        unit="km/h"
+                        aria-label={t('pages.workoutPlans.avgSpeed')}
+                        value={field.value}
+                        onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                      />
+                    )}
+                  />
+                  <Controller
+                    control={control}
+                    name={`exercises.${exIdx}.sets.${sIdx}.incline_percent`}
+                    render={({ field }) => (
+                      <DecimalInput
+                        decimals={1}
+                        step={0.5}
+                        placeholder="0"
+                        unit="%"
+                        aria-label={t('pages.workoutPlans.inclinePercent')}
+                        value={field.value}
+                        onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                      />
+                    )}
+                  />
+                  <Controller
+                    control={control}
+                    name={`exercises.${exIdx}.sets.${sIdx}.duration_seconds`}
+                    render={({ field }) => (
+                      <NumberStepper
+                        optional
+                        aria-label={t('pages.workoutPlans.exerciseDurationSeconds')}
+                        value={field.value === '' ? null : Number(field.value)}
+                        onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                        className="w-full"
+                      />
+                    )}
+                  />
+                </>
+              )}
+
               <Button
                 aria-label={t('common.actions.remove')}
                 type="button"
@@ -676,13 +880,22 @@ function ExerciseBlock({
                 setFields.length + 1,
                 fmt(watch(`exercises.${exIdx}.load_target`)),
                 watch(`exercises.${exIdx}.load_target_unit`) || 'kg',
-                String(watch(`exercises.${exIdx}.reps_target_min`) ?? '')
+                String(
+                  category === 'mobility'
+                    ? (watch(`exercises.${exIdx}.execution_count_target`) ?? '')
+                    : (watch(`exercises.${exIdx}.reps_target_min`) ?? '')
+                ),
+                String(watch(`exercises.${exIdx}.duration_target_seconds`) ?? ''),
+                watch(`exercises.${exIdx}.avg_speed_target`) ?? '',
+                watch(`exercises.${exIdx}.incline_target_percent`) ?? ''
               )
             )
           }
         >
           <Plus className="h-3 w-3" />
-          {t('pages.workoutSessions.addSet')}
+          {category === 'resistance'
+            ? t('pages.workoutSessions.addSet')
+            : t('pages.workoutSessions.addExecution')}
         </Button>
       </div>
     </div>

@@ -190,6 +190,41 @@ function formatSetTargets(ex: WorkoutExercise): string | null {
   return `${reps} · ${loads} ${ex.load_unit}`;
 }
 
+/** Badge de mobilidade/cardio ("5× · 30s" ou "8 km/h · 2% · 1800s"). */
+function formatExerciseMetrics(
+  ex: WorkoutExercise,
+  category: WorkoutCategory,
+  t: (key: string) => string
+): string | null {
+  if (category === 'mobility') {
+    const parts: string[] = [];
+    if (ex.execution_count) parts.push(`${ex.execution_count}×`);
+    if (ex.duration_seconds) parts.push(`${ex.duration_seconds}s`);
+    if (ex.is_lateral) parts.push(t('pages.workoutPlans.isLateral'));
+    return parts.length > 0 ? parts.join(' · ') : null;
+  }
+  if (category === 'cardio') {
+    const parts: string[] = [];
+    if (ex.avg_speed) parts.push(`${ex.avg_speed} km/h`);
+    if (ex.incline_percent) parts.push(`${ex.incline_percent}%`);
+    if (ex.duration_seconds) parts.push(`${ex.duration_seconds}s`);
+    if (ex.has_speed_intervals) {
+      const interval = [
+        ex.interval_count ? `${ex.interval_count}x` : null,
+        ex.interval_seconds ? `${ex.interval_seconds}s` : null,
+        ex.interval_speed_high || ex.interval_speed_low
+          ? `${ex.interval_speed_high || '–'}/${ex.interval_speed_low || '–'} km/h`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' ');
+      if (interval) parts.push(interval);
+    }
+    return parts.length > 0 ? parts.join(' · ') : null;
+  }
+  return null;
+}
+
 function getMuscleIcon(muscleGroups?: string | null): ReactNode {
   if (!muscleGroups) return <Dumbbell className="h-4 w-4" />;
   const mg = muscleGroups.toLowerCase();
@@ -454,6 +489,16 @@ export default function WorkoutPage() {
       set_targets: SetTarget[];
       order: number;
       notes: string | null;
+      execution_count: number | null;
+      duration_seconds: number | null;
+      is_lateral: boolean;
+      avg_speed: string | null;
+      incline_percent: string | null;
+      has_speed_intervals: boolean;
+      interval_seconds: number | null;
+      interval_count: number | null;
+      interval_speed_high: string | null;
+      interval_speed_low: string | null;
     }) =>
       workoutExerciseService.create({
         ...data,
@@ -494,6 +539,16 @@ export default function WorkoutPage() {
         set_targets: SetTarget[];
         order: number;
         notes: string | null;
+        execution_count: number | null;
+        duration_seconds: number | null;
+        is_lateral: boolean;
+        avg_speed: string | null;
+        incline_percent: string | null;
+        has_speed_intervals: boolean;
+        interval_seconds: number | null;
+        interval_count: number | null;
+        interval_speed_high: string | null;
+        interval_speed_low: string | null;
       };
     }) =>
       workoutExerciseService.update(id, {
@@ -552,12 +607,25 @@ export default function WorkoutPage() {
       load_target: string;
       load_target_unit: string;
       order: number;
+      execution_count_target: number | null;
+      duration_target_seconds: number | null;
+      is_lateral: boolean;
+      avg_speed_target: string;
+      incline_target_percent: string;
+      has_speed_intervals: boolean;
+      interval_target_seconds: number | null;
+      interval_count_target: number | null;
+      interval_speed_high_target: string;
+      interval_speed_low_target: string;
       sets: Array<{
         id?: number;
         set_number: number;
         load: string;
         load_unit: string;
         reps_done: string;
+        duration_seconds: string;
+        avg_speed: string;
+        incline_percent: string;
         completed: boolean;
         notes: string;
       }>;
@@ -595,6 +663,16 @@ export default function WorkoutPage() {
           load_target: ex.load_target || undefined,
           load_target_unit: ex.load_target_unit,
           order: exIdx,
+          execution_count_target: ex.execution_count_target,
+          duration_target_seconds: ex.duration_target_seconds,
+          is_lateral: ex.is_lateral,
+          avg_speed_target: ex.avg_speed_target || undefined,
+          incline_target_percent: ex.incline_target_percent || undefined,
+          has_speed_intervals: ex.has_speed_intervals,
+          interval_target_seconds: ex.interval_target_seconds,
+          interval_count_target: ex.interval_count_target,
+          interval_speed_high_target: ex.interval_speed_high_target || undefined,
+          interval_speed_low_target: ex.interval_speed_low_target || undefined,
           owner: ownerId,
         };
 
@@ -623,6 +701,9 @@ export default function WorkoutPage() {
               load: s.load || null,
               load_unit: s.load_unit,
               reps_done: s.reps_done ? Number(s.reps_done) : undefined,
+              duration_seconds: s.duration_seconds ? Number(s.duration_seconds) : null,
+              avg_speed: s.avg_speed || null,
+              incline_percent: s.incline_percent || null,
               completed: s.completed,
               notes: s.notes || undefined,
               owner: ownerId,
@@ -1364,6 +1445,7 @@ export default function WorkoutPage() {
                   {viewedDay.exercises && viewedDay.exercises.length > 0 ? (
                     <ExerciseList
                       exercises={viewedDay.exercises}
+                      category={viewedDay.category}
                       onEdit={(ex) =>
                         setDialog({
                           type: 'edit-exercise',
@@ -1399,13 +1481,15 @@ export default function WorkoutPage() {
       <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
         <DialogContent
           className={
-            isExerciseDialog || dialog?.type === 'view-session'
-              ? 'max-w-5xl'
-              : isSessionDialog
-                ? 'max-w-4xl'
-                : dialog?.type === 'new-day' || dialog?.type === 'edit-day'
-                  ? 'max-w-2xl'
-                  : 'max-w-xl'
+            isExerciseDialog
+              ? 'max-w-6xl'
+              : dialog?.type === 'view-session'
+                ? 'max-w-5xl'
+                : isSessionDialog
+                  ? 'max-w-4xl'
+                  : dialog?.type === 'new-day' || dialog?.type === 'edit-day'
+                    ? 'max-w-2xl'
+                    : 'max-w-xl'
           }
         >
           <DialogHeader>
@@ -1467,6 +1551,9 @@ export default function WorkoutPage() {
 
           {(dialog?.type === 'add-exercise' || dialog?.type === 'edit-exercise') && (
             <WorkoutExerciseModal
+              category={
+                plans.find((p) => p.id === dialog.day.plan)?.category ?? 'resistance'
+              }
               bodyWeightKg={latestBodyWeightKg}
               exercises={catalogExercises.filter(
                 (ex) =>
@@ -1851,11 +1938,13 @@ function ExerciseCatalogForm({
 function SortableExerciseItem({
   ex,
   idx,
+  category,
   onEdit,
   onDelete,
 }: {
   ex: WorkoutExercise;
   idx: number;
+  category: WorkoutCategory;
   onEdit?: (ex: WorkoutExercise) => void;
   onDelete?: (ex: WorkoutExercise) => void;
 }) {
@@ -1905,18 +1994,24 @@ function SortableExerciseItem({
               </span>
             )
           )}
-          {ex.sets > 0 ? (
-            <>
-              <span className="bg-primary/15 px-xs text-primary rounded-full py-px text-xs font-semibold">
-                {ex.sets}×
-              </span>
+          {category === 'resistance' ? (
+            ex.sets > 0 ? (
+              <>
+                <span className="bg-primary/15 px-xs text-primary rounded-full py-px text-xs font-semibold">
+                  {ex.sets}×
+                </span>
+                <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
+                  {ex.reps_min}–{ex.reps_max}
+                </span>
+              </>
+            ) : (
               <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
-                {ex.reps_min}–{ex.reps_max}
+                {t('pages.workoutPlans.noSets')}
               </span>
-            </>
+            )
           ) : (
-            <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
-              {t('pages.workoutPlans.noSets')}
+            <span className="bg-primary/15 px-xs text-primary rounded-full py-px text-xs font-semibold">
+              {formatExerciseMetrics(ex, category, t) ?? t('pages.workoutPlans.noSets')}
             </span>
           )}
           {ex.rest_seconds != null && ex.rest_seconds > 0 && (
@@ -1961,10 +2056,12 @@ function SortableExerciseItem({
 
 function ExerciseList({
   exercises,
+  category,
   onEdit,
   onDelete,
 }: {
   exercises: WorkoutExercise[];
+  category: WorkoutCategory;
   onEdit?: (ex: WorkoutExercise) => void;
   onDelete?: (ex: WorkoutExercise) => void;
 }) {
@@ -2023,6 +2120,7 @@ function ExerciseList({
               key={ex.id}
               ex={ex}
               idx={idx}
+              category={category}
               onEdit={onEdit}
               onDelete={onDelete}
             />
@@ -2538,15 +2636,25 @@ function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
                     <span className="text-sm">{ex.name}</span>
                   </div>
                   <div className="gap-sm text-muted-foreground flex items-center text-xs">
-                    {ex.sets > 0 ? (
-                      <span>
-                        {ex.sets}×
-                        {ex.reps_min === ex.reps_max
-                          ? ex.reps_min
-                          : `${ex.reps_min}–${ex.reps_max}`}
-                      </span>
+                    {openDay?.category === 'resistance' ? (
+                      ex.sets > 0 ? (
+                        <span>
+                          {ex.sets}×
+                          {ex.reps_min === ex.reps_max
+                            ? ex.reps_min
+                            : `${ex.reps_min}–${ex.reps_max}`}
+                        </span>
+                      ) : (
+                        <span>{t('pages.workoutPlans.noSets')}</span>
+                      )
                     ) : (
-                      <span>{t('pages.workoutPlans.noSets')}</span>
+                      <span>
+                        {formatExerciseMetrics(
+                          ex,
+                          openDay?.category ?? 'resistance',
+                          t
+                        ) ?? t('pages.workoutPlans.noSets')}
+                      </span>
                     )}
                     {(formatSetTargets(ex) ?? formatExerciseLoad(ex, t)) && (
                       <span className="text-foreground font-medium">

@@ -258,6 +258,69 @@ class WorkoutImprovementsTest(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    # --- Campos específicos de mobilidade/cardio --------------------------
+
+    def test_workout_day_exposes_plan_category(self):
+        _, day = self._plan("cardio", [])
+        response = self.client.get(
+            reverse("workout-day-detail", kwargs={"pk": day.pk})
+        )
+        self.assertEqual(response.data["category"], "cardio")
+
+    def test_mobility_exercise_fields_round_trip(self):
+        plan, day = self._plan("mobility", [])
+        stretch = Exercise.objects.create(
+            name="Alongamento", category="mobility", owner=self.member
+        )
+        response = self.client.post(
+            reverse("workout-exercise-list-create"),
+            {
+                "workout_day": day.pk,
+                "exercise": stretch.pk,
+                "name": "Alongamento",
+                "owner": self.member.pk,
+                "execution_count": 5,
+                "duration_seconds": 30,
+                "is_lateral": True,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["execution_count"], 5)
+        self.assertEqual(response.data["duration_seconds"], 30)
+        self.assertTrue(response.data["is_lateral"])
+
+    def test_cardio_exercise_fields_round_trip(self):
+        plan, day = self._plan("cardio", [])
+        run = Exercise.objects.create(
+            name="Corrida", category="cardio", owner=self.member
+        )
+        response = self.client.post(
+            reverse("workout-exercise-list-create"),
+            {
+                "workout_day": day.pk,
+                "exercise": run.pk,
+                "name": "Corrida",
+                "owner": self.member.pk,
+                "avg_speed": "9.5",
+                "incline_percent": "1.5",
+                "duration_seconds": 1800,
+                "has_speed_intervals": True,
+                "interval_seconds": 60,
+                "interval_count": 8,
+                "interval_speed_high": "14.0",
+                "interval_speed_low": "6.0",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["avg_speed"], "9.5")
+        self.assertEqual(response.data["incline_percent"], "1.5")
+        self.assertEqual(response.data["duration_seconds"], 1800)
+        self.assertTrue(response.data["has_speed_intervals"])
+        self.assertEqual(response.data["interval_seconds"], 60)
+        self.assertEqual(response.data["interval_count"], 8)
+        self.assertEqual(response.data["interval_speed_high"], "14.0")
+        self.assertEqual(response.data["interval_speed_low"], "6.0")
+
 
 class WorkoutPlanUniqueNameTest(APITestCase):
     def setUp(self):
