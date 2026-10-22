@@ -27,6 +27,8 @@ export interface MealType {
   suggested_time?: string | null;
   order: number;
   is_active: boolean;
+  /** Dias da semana em que a refeição está ativa (0=Seg..6=Dom). Vazio = todos os dias. */
+  days_of_week: number[];
   /** Opção usada ao registrar pela tarefa; null = a de maior caloria. */
   default_menu_option?: number | null;
   options: MenuOption[];
@@ -40,6 +42,7 @@ export interface MealTypeFormData {
   suggested_time?: string | null;
   order: number;
   is_active: boolean;
+  days_of_week: number[];
   default_menu_option?: number | null;
   owner: number;
 }

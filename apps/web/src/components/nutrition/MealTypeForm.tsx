@@ -1,5 +1,6 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
+  Calendar,
   CheckCircle2,
   Clock,
   Moon,
@@ -31,6 +32,16 @@ import { useToast } from '@/hooks/use-toast';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { cn } from '@/lib/utils';
 import type { MealType, MealTypeFormData } from '@/types/nutrition';
+
+const WEEKDAYS = [
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+];
 
 interface MealTypeFormProps {
   mealType?: MealType;
@@ -108,6 +119,7 @@ export function MealTypeForm({
       suggested_time: mealType ? (mealType.suggested_time ?? '') : nowTime,
       order: mealType?.order ?? 0,
       is_active: mealType?.is_active ?? true,
+      days_of_week: mealType?.days_of_week ?? [],
       default_menu_option: mealType?.default_menu_option ?? null,
       owner: ownerId,
     },
@@ -120,6 +132,7 @@ export function MealTypeForm({
         suggested_time: mealType.suggested_time ?? '',
         order: mealType.order,
         is_active: mealType.is_active,
+        days_of_week: mealType.days_of_week,
         default_menu_option: mealType.default_menu_option ?? null,
         owner: ownerId,
       });
@@ -179,6 +192,37 @@ export function MealTypeForm({
               <span>{period.labelKey ? t(period.labelKey) : ''}</span>
             </div>
           )}
+        </div>
+      </FormSection>
+
+      {/* Dias da semana */}
+      <FormSection title={t('pages.nutritionMealTypes.daysOfWeek')} icon={Calendar}>
+        <div className="gap-xs flex flex-wrap justify-center">
+          {WEEKDAYS.map((wd, i) => {
+            const days = watch('days_of_week');
+            const selected = days.includes(i);
+            return (
+              <button
+                key={wd}
+                type="button"
+                aria-pressed={selected}
+                onClick={() =>
+                  setValue(
+                    'days_of_week',
+                    selected ? days.filter((d) => d !== i) : [...days, i].sort()
+                  )
+                }
+                className={cn(
+                  'px-sm py-xs rounded-full border text-xs font-medium transition',
+                  selected
+                    ? 'border-primary bg-primary/15 text-primary'
+                    : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary'
+                )}
+              >
+                {t(`pages.nutritionMealTypes.weekdays.${wd}`)}
+              </button>
+            );
+          })}
         </div>
       </FormSection>
 

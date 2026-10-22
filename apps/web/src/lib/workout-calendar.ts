@@ -1,6 +1,24 @@
-import type { WorkoutPlan, WorkoutSession } from '@/types/workout';
+import type { WorkoutCategory, WorkoutPlan, WorkoutSession } from '@/types/workout';
 
 export type WorkoutEventStatus = 'completed' | 'pending' | 'missed';
+
+/** Ordem de exibição das divisões ativas hoje: mobilidade, força, cardio. */
+export const DIVISION_CATEGORY_ORDER: Record<WorkoutCategory, number> = {
+  mobility: 0,
+  resistance: 1,
+  cardio: 2,
+};
+
+/** Dia da semana de hoje no padrão do backend (0=Seg...6=Dom). */
+export function getTodayWeekday(): number {
+  const jsDay = new Date().getDay();
+  return jsDay === 0 ? 6 : jsDay - 1;
+}
+
+/** Vazio = ativa todos os dias; senão precisa incluir o dia informado. */
+export function isDivisionActiveOn(daysOfWeek: number[], weekday: number): boolean {
+  return daysOfWeek.length === 0 || daysOfWeek.includes(weekday);
+}
 
 export interface WorkoutCalendarEvent {
   id: string;

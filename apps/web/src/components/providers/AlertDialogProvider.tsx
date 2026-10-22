@@ -54,9 +54,16 @@ export const AlertDialogProvider = () => {
 
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
-      <AlertDialogContent variant={variant} animation={animation} overlayBlur={blur}>
-        <AlertDialogHeader variant={variant} icon={icon} showIcon={showIcon}>
-          <AlertDialogTitle className="text-xl font-semibold">{title}</AlertDialogTitle>
+      <AlertDialogContent animation={animation} overlayBlur={blur}>
+        <AlertDialogHeader>
+          <AlertDialogTitle
+            className="text-xl font-semibold"
+            variant={variant}
+            icon={icon}
+            showIcon={showIcon}
+          >
+            {title}
+          </AlertDialogTitle>
           <AlertDialogDescription className="text-base">
             {description}
           </AlertDialogDescription>

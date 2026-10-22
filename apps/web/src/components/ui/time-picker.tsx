@@ -36,7 +36,10 @@ export function TimePicker({
   const { t } = useTranslation();
   const resolvedPlaceholder = placeholder ?? t('common.placeholders.time');
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [text, setText] = useState(value ?? '');
+  const [text, setText] = useState(() => {
+    const parsed = value ? parseTime(value) : undefined;
+    return parsed ? formatTime(parsed) : (value ?? '');
+  });
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<'hour' | 'minute'>('hour');
   const [draft, setDraft] = useState<Time>(now);
