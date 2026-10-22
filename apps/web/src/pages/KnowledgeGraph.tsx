@@ -48,7 +48,6 @@ import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { knowledgeGraphService } from '@/services/knowledge-graph-service';
 import { membersService } from '@/services/members-service';
-import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 import type { IconComponent } from '@/types/icon';
 import type {
   GraphLink,
@@ -593,8 +592,6 @@ export default function KnowledgeGraph() {
   const { showConfirm } = useAlertDialog();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const setHiddenByNav = useAgentWidgetStore((s) => s.setHiddenByNav);
-  useEffect(() => () => setHiddenByNav(false), [setHiddenByNav]);
 
   // Update canvas colors when theme changes
   useEffect(() => {
@@ -1188,11 +1185,7 @@ export default function KnowledgeGraph() {
             )}
 
             {/* Zoom controls */}
-            <div
-              className="bottom-md right-md gap-xs absolute flex flex-col"
-              onMouseEnter={() => setHiddenByNav(true)}
-              onMouseLeave={() => setHiddenByNav(false)}
-            >
+            <div className="bottom-md right-md gap-xs absolute flex flex-col">
               {(
                 [
                   ['export', t('pages.knowledgeGraph.exportPNG'), Download],

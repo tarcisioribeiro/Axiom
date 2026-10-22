@@ -1904,6 +1904,72 @@ class WorkoutExercise(BaseModel):
     )
     order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
     notes = models.TextField(null=True, blank=True, verbose_name="Observações")
+
+    # Mobilidade — sets/reps/load não se aplicam
+    execution_count = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Quantidade de Execuções",
+    )
+    duration_seconds = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Tempo de Execução/Duração (segundos)",
+        help_text=(
+            "Mobilidade: tempo de execução do exercício."
+            " Cardio: tempo total do exercício."
+        ),
+    )
+    is_lateral = models.BooleanField(
+        default=False,
+        verbose_name="Exercício Lateral",
+        help_text="Executado de um lado do corpo por vez.",
+    )
+
+    # Cardio — sets/reps/load não se aplicam
+    avg_speed = models.DecimalField(
+        max_digits=5,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Velocidade Média (km/h)",
+    )
+    incline_percent = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Inclinação (%)",
+    )
+    has_speed_intervals = models.BooleanField(
+        default=False,
+        verbose_name="Alternância de Velocidade",
+        help_text="Treino intervalado (ex: tiros/caminhada).",
+    )
+    interval_seconds = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Tempo de Cada Intervalo (segundos)",
+    )
+    interval_count = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Quantidade de Alternâncias",
+    )
+    interval_speed_high = models.DecimalField(
+        max_digits=5,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Velocidade do Tiro (km/h)",
+    )
+    interval_speed_low = models.DecimalField(
+        max_digits=5,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Velocidade da Recuperação (km/h)",
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -2035,6 +2101,56 @@ class WorkoutSessionExercise(BaseModel):
         verbose_name="Unidade da Carga Alvo",
     )
     order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+
+    # Snapshot dos alvos de mobilidade/cardio — ver WorkoutExercise
+    execution_count_target = models.PositiveIntegerField(
+        null=True, blank=True, verbose_name="Quantidade de Execuções Alvo"
+    )
+    duration_target_seconds = models.PositiveIntegerField(
+        null=True, blank=True, verbose_name="Tempo Alvo (segundos)"
+    )
+    is_lateral = models.BooleanField(
+        default=False, verbose_name="Exercício Lateral"
+    )
+    avg_speed_target = models.DecimalField(
+        max_digits=5,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Velocidade Média Alvo (km/h)",
+    )
+    incline_target_percent = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Inclinação Alvo (%)",
+    )
+    has_speed_intervals = models.BooleanField(
+        default=False, verbose_name="Alternância de Velocidade"
+    )
+    interval_target_seconds = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Tempo Alvo de Cada Intervalo (segundos)",
+    )
+    interval_count_target = models.PositiveIntegerField(
+        null=True, blank=True, verbose_name="Quantidade Alvo de Alternâncias"
+    )
+    interval_speed_high_target = models.DecimalField(
+        max_digits=5,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Velocidade Alvo do Tiro (km/h)",
+    )
+    interval_speed_low_target = models.DecimalField(
+        max_digits=5,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Velocidade Alvo da Recuperação (km/h)",
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -2082,7 +2198,32 @@ class WorkoutSessionSet(BaseModel):
         verbose_name="Unidade da Carga",
     )
     reps_done = models.PositiveIntegerField(
-        null=True, blank=True, verbose_name="Repetições Realizadas"
+        null=True,
+        blank=True,
+        verbose_name="Repetições Realizadas",
+        help_text=(
+            "Na mobilidade, representa a quantidade de execuções feitas."
+        ),
+    )
+    duration_seconds = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Tempo Realizado (segundos)",
+        help_text="Mobilidade: tempo de execução. Cardio: tempo do exercício.",
+    )
+    avg_speed = models.DecimalField(
+        max_digits=5,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Velocidade Média Realizada (km/h)",
+    )
+    incline_percent = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Inclinação Realizada (%)",
     )
     completed = models.BooleanField(
         default=True, verbose_name="Série Concluída"
@@ -2242,6 +2383,15 @@ class MealType(BaseModel):
         default=0, verbose_name="Ordem", help_text="Ordem de exibição"
     )
     is_active = models.BooleanField(default=True, verbose_name="Ativa")
+    days_of_week = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="Dias da Semana",
+        help_text=(
+            "Dias da semana em que esta refeição está ativa "
+            "(0=Seg, 6=Dom). Vazio = todos os dias."
+        ),
+    )
     default_menu_option = models.ForeignKey(
         "MenuOption",
         on_delete=models.SET_NULL,

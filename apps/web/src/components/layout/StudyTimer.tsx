@@ -34,12 +34,10 @@ import {
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import type { ReadingFormData } from '@/lib/validations';
 import { booksService } from '@/services/books-service';
 import { coursesService } from '@/services/courses-service';
 import { readingsService } from '@/services/readings-service';
-import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 import type { Book } from '@/types';
 import type { Course } from '@/types/intellect';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -99,8 +97,6 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const isReading = mode === 'reading';
-
-  const hiddenByNav = useAgentWidgetStore((s) => s.hiddenByNav);
 
   const [isOpen, setIsOpen] = useState(false);
   const [books, setBooks] = useState<Book[]>([]);
@@ -268,15 +264,7 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
   return (
     <>
       {/* Floating trigger */}
-      <div
-        className={cn(
-          'gap-sm fixed right-6 bottom-6 z-40 flex flex-col items-end transition',
-          // Fica fora do caminho quando o mouse está perto da paginação de
-          // uma lista (ver stores/agent-widget-store.ts), exceto com o
-          // painel aberto.
-          hiddenByNav && !isOpen && 'pointer-events-none scale-75 opacity-0'
-        )}
-      >
+      <div className="gap-sm fixed right-6 bottom-6 z-40 flex flex-col items-end transition">
         <AnimatePresence>
           {isOpen && (
             <motion.div
