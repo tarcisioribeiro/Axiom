@@ -2546,7 +2546,8 @@ function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
           )
           .sort(
             (a, b) =>
-              DIVISION_CATEGORY_ORDER[a.day.category] - DIVISION_CATEGORY_ORDER[b.day.category]
+              DIVISION_CATEGORY_ORDER[a.day.category] -
+              DIVISION_CATEGORY_ORDER[b.day.category]
           );
 
         if (todayDays.length === 0) {

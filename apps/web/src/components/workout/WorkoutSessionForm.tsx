@@ -311,7 +311,9 @@ export function WorkoutSessionForm({
       const aActive = isDivisionActiveOn(a.days_of_week, todayWeekday);
       const bActive = isDivisionActiveOn(b.days_of_week, todayWeekday);
       if (aActive !== bActive) return aActive ? -1 : 1;
-      return aActive ? DIVISION_CATEGORY_ORDER[a.category] - DIVISION_CATEGORY_ORDER[b.category] : 0;
+      return aActive
+        ? DIVISION_CATEGORY_ORDER[a.category] - DIVISION_CATEGORY_ORDER[b.category]
+        : 0;
     });
   }, [workoutDays]);
   // Sessão sempre vinculada a uma divisão (sem sessão avulsa)
