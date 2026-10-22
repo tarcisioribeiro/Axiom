@@ -696,6 +696,7 @@ export function WorkoutExerciseModal({
                   ) : (
                     <DecimalInput
                       decimals={1}
+                      step={0.5}
                       aria-label={`${t('pages.workoutPlans.setLabel')} ${i + 1} — ${t('pages.workoutPlans.load')}`}
                       placeholder={watch('load') || '0'}
                       value={setTargets[i]?.load}

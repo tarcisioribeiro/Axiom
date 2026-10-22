@@ -2608,7 +2608,7 @@ function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
 
       {/* Modal exercícios da divisão */}
       <Dialog open={!!openDay} onOpenChange={(open) => !open && setOpenDay(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle className="gap-sm flex items-center">
               <span className="text-primary shrink-0" aria-hidden="true">
@@ -2631,11 +2631,13 @@ function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
                   key={ex.id}
                   className="gap-sm px-md py-xs flex items-center justify-between"
                 >
-                  <div className="gap-sm flex items-center">
+                  <div className="gap-sm flex min-w-0 items-center">
                     <Dumbbell className="text-primary h-3.5 w-3.5 shrink-0" />
-                    <span className="text-sm">{ex.name}</span>
+                    <span className="truncate text-sm" title={ex.name}>
+                      {ex.name}
+                    </span>
                   </div>
-                  <div className="gap-sm text-muted-foreground flex items-center text-xs">
+                  <div className="gap-sm text-muted-foreground flex shrink-0 items-center text-xs whitespace-nowrap">
                     {openDay?.category === 'resistance' ? (
                       ex.sets > 0 ? (
                         <span>
