@@ -15,7 +15,7 @@ import {
   SkipForward,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -40,6 +40,11 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { notifyFormErrors } from '@/lib/form-errors';
 import { cn, formatLocalDate } from '@/lib/utils';
+import {
+  DIVISION_CATEGORY_ORDER,
+  getTodayWeekday,
+  isDivisionActiveOn,
+} from '@/lib/workout-calendar';
 import type { WorkoutCategory, WorkoutDay, WorkoutSession } from '@/types/workout';
 
 // 'bw' só existe no form: a série salva peso corporal como carga em branco
@@ -298,6 +303,17 @@ export function WorkoutSessionForm({
   const selectedDayId = watch('workout_day');
   const selectedCategory: WorkoutCategory =
     workoutDays.find((d) => String(d.id) === selectedDayId)?.category ?? 'resistance';
+
+  // Divisões ativas hoje primeiro (mobilidade > força > cardio); demais mantêm a ordem original
+  const sortedWorkoutDays = useMemo(() => {
+    const todayWeekday = getTodayWeekday();
+    return [...workoutDays].sort((a, b) => {
+      const aActive = isDivisionActiveOn(a.days_of_week, todayWeekday);
+      const bActive = isDivisionActiveOn(b.days_of_week, todayWeekday);
+      if (aActive !== bActive) return aActive ? -1 : 1;
+      return aActive ? DIVISION_CATEGORY_ORDER[a.category] - DIVISION_CATEGORY_ORDER[b.category] : 0;
+    });
+  }, [workoutDays]);
   // Sessão sempre vinculada a uma divisão (sem sessão avulsa)
   register('workout_day', {
     validate: (v) =>
@@ -440,7 +456,7 @@ export function WorkoutSessionForm({
                 />
               </SelectTrigger>
               <SelectContent>
-                {workoutDays.map((d) => (
+                {sortedWorkoutDays.map((d) => (
                   <SelectItem key={d.id} value={String(d.id)}>
                     {d.name}
                     {d.muscle_groups ? ` — ${d.muscle_groups}` : ''}

@@ -98,6 +98,11 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn, formatLocalDate } from '@/lib/utils';
+import {
+  DIVISION_CATEGORY_ORDER,
+  getTodayWeekday,
+  isDivisionActiveOn,
+} from '@/lib/workout-calendar';
 import { createWorkoutSession } from '@/lib/workout-session';
 import { membersService } from '@/services/members-service';
 import {
@@ -2514,9 +2519,7 @@ interface TodayPlanTabProps {
 }
 
 function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
-  // JS getDay(): 0=Sun,1=Mon,...,6=Sat → convert to Python convention 0=Mon,6=Sun
-  const jsDay = new Date().getDay();
-  const todayWeekday = jsDay === 0 ? 6 : jsDay - 1;
+  const todayWeekday = getTodayWeekday();
   const [openDay, setOpenDay] = useState<WorkoutDay | null>(null);
 
   if (plansLoading) return <LoadingState />;
@@ -2534,14 +2537,17 @@ function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
         }
 
         // Divisões de hoje de todos os planos ativos, numa lista paginada única
-        const todayDays = activePlans.flatMap((plan) =>
-          plan.days
-            .filter(
-              (day) =>
-                day.days_of_week.length === 0 || day.days_of_week.includes(todayWeekday)
-            )
-            .map((day) => ({ plan, day }))
-        );
+        // ordenada por categoria: mobilidade > força (resistance) > cardio
+        const todayDays = activePlans
+          .flatMap((plan) =>
+            plan.days
+              .filter((day) => isDivisionActiveOn(day.days_of_week, todayWeekday))
+              .map((day) => ({ plan, day }))
+          )
+          .sort(
+            (a, b) =>
+              DIVISION_CATEGORY_ORDER[a.day.category] - DIVISION_CATEGORY_ORDER[b.day.category]
+          );
 
         if (todayDays.length === 0) {
           return (

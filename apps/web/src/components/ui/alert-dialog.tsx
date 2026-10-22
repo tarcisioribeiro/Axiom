@@ -84,8 +84,14 @@ const AlertDialogContent = React.forwardRef<
 ));
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
 
-const AlertDialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col space-y-2 text-center sm:text-left', className)} {...props} />
+const AlertDialogHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn('flex flex-col space-y-2 text-center sm:text-left', className)}
+    {...props}
+  />
 );
 AlertDialogHeader.displayName = 'AlertDialogHeader';
 
@@ -119,8 +125,9 @@ const variantIconColors: Record<string, string> = {
   default: 'text-foreground',
 };
 
-interface AlertDialogTitleProps
-  extends React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title> {
+interface AlertDialogTitleProps extends React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Title
+> {
   icon?: IconComponent | React.ReactNode;
   variant?: 'default' | 'success' | 'warning' | 'destructive' | 'info';
   showIcon?: boolean;
@@ -129,31 +136,44 @@ interface AlertDialogTitleProps
 const AlertDialogTitle = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Title>,
   AlertDialogTitleProps
->(({ className, icon, variant = 'default', showIcon = true, children, ...props }, ref) => {
-  // Elemento JSX (<Icone />) é renderizado como veio; componente (Icone) —
-  // inclusive os do lucide, que são objetos forwardRef, não funções — vai inline.
-  const isElement = React.isValidElement(icon);
-  const Icon = icon ? (isElement ? null : (icon as IconComponent)) : variantIcons[variant];
+>(
+  (
+    { className, icon, variant = 'default', showIcon = true, children, ...props },
+    ref
+  ) => {
+    // Elemento JSX (<Icone />) é renderizado como veio; componente (Icone) —
+    // inclusive os do lucide, que são objetos forwardRef, não funções — vai inline.
+    const isElement = React.isValidElement(icon);
+    const Icon = icon
+      ? isElement
+        ? null
+        : (icon as IconComponent)
+      : variantIcons[variant];
 
-  return (
-    <AlertDialogPrimitive.Title
-      ref={ref}
-      className={cn('text-lg font-semibold', showIcon && 'gap-sm flex items-center', className)}
-      {...props}
-    >
-      {showIcon &&
-        (isElement ? (
-          icon
-        ) : Icon ? (
-          <Icon
-            className={cn('h-5 w-5 shrink-0', variantIconColors[variant])}
-            aria-hidden="true"
-          />
-        ) : null)}
-      {children}
-    </AlertDialogPrimitive.Title>
-  );
-});
+    return (
+      <AlertDialogPrimitive.Title
+        ref={ref}
+        className={cn(
+          'text-lg font-semibold',
+          showIcon && 'gap-sm flex items-center',
+          className
+        )}
+        {...props}
+      >
+        {showIcon &&
+          (isElement ? (
+            icon
+          ) : Icon ? (
+            <Icon
+              className={cn('h-5 w-5 shrink-0', variantIconColors[variant])}
+              aria-hidden="true"
+            />
+          ) : null)}
+        {children}
+      </AlertDialogPrimitive.Title>
+    );
+  }
+);
 AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName;
 
 const AlertDialogDescription = React.forwardRef<
