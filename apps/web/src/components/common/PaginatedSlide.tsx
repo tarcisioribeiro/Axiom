@@ -14,7 +14,6 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { slideVariants } from '@/lib/animations';
 import { cn } from '@/lib/utils';
-import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 
 interface PaginatedSlideProps<T> {
   items: T[];
@@ -228,17 +227,10 @@ function PaginationNav({
   className,
 }: PaginationNavProps) {
   const { t } = useTranslation();
-  // O widget do agente fica no canto inferior e pode cobrir a navegação.
-  const setAgentWidgetHidden = useAgentWidgetStore((s) => s.setHiddenByNav);
-  useEffect(() => () => setAgentWidgetHidden(false), [setAgentWidgetHidden]);
 
   if (totalPages <= 1) return null;
   return (
-    <div
-      className={cn('gap-sm flex items-center justify-center', className)}
-      onMouseEnter={() => setAgentWidgetHidden(true)}
-      onMouseLeave={() => setAgentWidgetHidden(false)}
-    >
+    <div className={cn('gap-sm flex items-center justify-center', className)}>
       <Button
         variant="outline"
         size="icon"
