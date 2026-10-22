@@ -5736,6 +5736,16 @@
       "mealTypeNamePlaceholder": "e.g. Breakfast",
       "suggestedTime": "Suggested Time",
       "mealTypeOrder": "Order",
+      "daysOfWeek": "Days of Week",
+      "weekdays": {
+        "monday": "Mon",
+        "tuesday": "Tue",
+        "wednesday": "Wed",
+        "thursday": "Thu",
+        "friday": "Fri",
+        "saturday": "Sat",
+        "sunday": "Sun"
+      },
       "mealTypeActive": "Active meal",
       "active": "Active",
       "inactive": "Inactive",

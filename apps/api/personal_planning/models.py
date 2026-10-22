@@ -2383,6 +2383,15 @@ class MealType(BaseModel):
         default=0, verbose_name="Ordem", help_text="Ordem de exibição"
     )
     is_active = models.BooleanField(default=True, verbose_name="Ativa")
+    days_of_week = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="Dias da Semana",
+        help_text=(
+            "Dias da semana em que esta refeição está ativa "
+            "(0=Seg, 6=Dom). Vazio = todos os dias."
+        ),
+    )
     default_menu_option = models.ForeignKey(
         "MenuOption",
         on_delete=models.SET_NULL,

@@ -5804,6 +5804,16 @@
       "mealTypeNamePlaceholder": "Ex.: Café da Manhã",
       "suggestedTime": "Horário Sugerido",
       "mealTypeOrder": "Ordem",
+      "daysOfWeek": "Dias da Semana",
+      "weekdays": {
+        "monday": "Seg",
+        "tuesday": "Ter",
+        "wednesday": "Qua",
+        "thursday": "Qui",
+        "friday": "Sex",
+        "saturday": "Sáb",
+        "sunday": "Dom"
+      },
       "mealTypeActive": "Refeição ativa",
       "active": "Ativa",
       "inactive": "Inativa",

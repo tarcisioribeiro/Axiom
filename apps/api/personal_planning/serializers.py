@@ -1450,6 +1450,7 @@ class MealTypeSerializer(serializers.ModelSerializer):
             "suggested_time",
             "order",
             "is_active",
+            "days_of_week",
             "default_menu_option",
             "options",
             "owner",
@@ -1509,6 +1510,7 @@ class MealTypeCreateUpdateSerializer(serializers.ModelSerializer):
             "suggested_time",
             "order",
             "is_active",
+            "days_of_week",
             "default_menu_option",
             "owner",
         ]
