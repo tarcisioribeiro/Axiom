@@ -306,6 +306,26 @@ class ReadingViewTest(BaseWithMemberTestCase):
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.read_status, "reading")
+
+    def test_create_reading_resumes_paused_book(self):
+        self.book.read_status = "paused"
+        self.book.save(update_fields=["read_status"])
+        url = reverse("reading-list-create")
+        response = self.client.post(
+            url,
+            {
+                "book": self.book.pk,
+                "reading_date": str(date.today()),
+                "reading_time": 30,
+                "pages_read": 20,
+                "owner": self.member.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.read_status, "reading")
 
 
 # ---------------------------------------------------------------------------

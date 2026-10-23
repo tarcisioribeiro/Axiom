@@ -9,6 +9,7 @@ import {
   toLocalDate,
   getErrorMessage,
   formatQuantity,
+  getTimeOfDay,
 } from '@/lib/utils';
 
 describe('cn', () => {
@@ -137,6 +138,28 @@ describe('getErrorMessage', () => {
 
   it('accepts a custom fallback', () => {
     expect(getErrorMessage(null, 'custom fallback')).toBe('custom fallback');
+  });
+});
+
+describe('getTimeOfDay', () => {
+  it('returns dawn just before 6am in São Paulo (UTC-3)', () => {
+    expect(getTimeOfDay(new Date('2025-06-15T08:59:00Z'))).toBe('dawn');
+  });
+
+  it('returns morning at 6am in São Paulo', () => {
+    expect(getTimeOfDay(new Date('2025-06-15T09:00:00Z'))).toBe('morning');
+  });
+
+  it('returns afternoon at noon in São Paulo', () => {
+    expect(getTimeOfDay(new Date('2025-06-15T15:00:00Z'))).toBe('afternoon');
+  });
+
+  it('returns evening at 6pm in São Paulo', () => {
+    expect(getTimeOfDay(new Date('2025-06-15T21:00:00Z'))).toBe('evening');
+  });
+
+  it('returns evening just before midnight in São Paulo', () => {
+    expect(getTimeOfDay(new Date('2025-06-16T02:59:00Z'))).toBe('evening');
   });
 });
 
