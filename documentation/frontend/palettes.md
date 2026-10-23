@@ -82,6 +82,36 @@
 | Orange     | `#DBBC7F` |
 
 
+## Ubuntu (Dark Theme)
+
+| Role        | Hex       |
+|-------------|-----------|
+| Background  | `#2F0A23` |
+| Foreground  | `#FFFFFF` |
+| Card        | `#3F1833` |
+| Primary     | `#E95620` |
+| Muted       | `#301728` |
+| Accent      | `#A8389D` |
+| Success     | `#4D9806` |
+| Warning     | `#C29E00` |
+| Destructive | `#CC0000` |
+| Info        | `#069598` |
+
+## Mint Dark (Dark Theme)
+
+| Role        | Hex       |
+|-------------|-----------|
+| Background  | `#2E2E33` |
+| Foreground  | `#D9D9D9` |
+| Card        | `#35353B` |
+| Primary     | `#209FDF` |
+| Muted       | `#27272B` |
+| Accent      | `#9B58B6` |
+| Success     | `#73D016` |
+| Warning     | `#F27836` |
+| Destructive | `#FC4036` |
+| Info        | `#5EBAE8` |
+
 ## Alucard (Light Theme)
 
 | Role               | Hex       |
@@ -162,3 +192,33 @@
 | Cyan       | `#007197` |
 | Red        | `#F52A65` |
 | Orange     | `#B15C00` |
+
+## Ubuntu Light (Light Theme)
+
+| Role        | Hex       |
+|-------------|-----------|
+| Background  | `#FFFFFF` |
+| Foreground  | `#2F0A23` |
+| Card        | `#FBF9FB` |
+| Primary     | `#E95620` |
+| Muted       | `#EDE8EC` |
+| Accent      | `#78216F` |
+| Success     | `#4D9806` |
+| Warning     | `#C29E00` |
+| Destructive | `#CC0000` |
+| Info        | `#069598` |
+
+## Mint Light (Light Theme)
+
+| Role        | Hex       |
+|-------------|-----------|
+| Background  | `#F7F7F8` |
+| Foreground  | `#303030` |
+| Card        | `#FFFFFF` |
+| Primary     | `#1B86BB` |
+| Muted       | `#ECECEE` |
+| Accent      | `#8646A0` |
+| Success     | `#4D8A0F` |
+| Warning     | `#D8540E` |
+| Destructive | `#E9170C` |
+| Info        | `#136086` |

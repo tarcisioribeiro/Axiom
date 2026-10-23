@@ -240,6 +240,7 @@ app_name/
 - `monthly_planning`: overrides de planejamento mensal
 - `exchange_rates`: cotações BRL (BCB PTAX)
 - `dashboard`: métricas e visualizações agregadas
+- `daily_review`: modal bloqueante de revisão de pendências do dia anterior
 
 **Sistema**:
 - `authentication`: JWT, 2FA (TOTP), verificação de e-mail
@@ -252,8 +253,8 @@ app_name/
 **Apps grandes, flat** (um único `models.py`/`views.py` por app, agrupado internamente por seções — **não** dividido em sub-pacotes de diretório):
 - `security` (11 modelos): senhas, cartões/contas armazenados, arquivos confidenciais, config e alertas do cofre, tokens de compartilhamento, logs de auditoria
 - `library` (17 modelos): acervo (livros, autores, editoras, leituras, resumos, highlights, metas de leitura) + extensão "Intellect" (cursos, habilidades, flashcards, grafo de conhecimento, badges)
-- `personal_planning` (30 modelos): hábitos/rotinas, metas, gamificação (XP/níveis/badges/desafios), bem-estar emocional, treinos, nutrição
-- `agents`: 6 agentes de IA especializados (finance, budget, forecast, insight, library, planning), RAG via pgvector
+- `personal_planning` (30 modelos): hábitos/rotinas, metas, gamificação (XP/níveis/badges/streaks), bem-estar emocional, treinos, nutrição
+- `agents`: 10 agentes de IA especializados (finance, budget, forecast, insight, library, planning legados + personal, financial, security, intellect modulares), RAG via pgvector
 
 ### 4. Camada de Middleware
 
@@ -325,18 +326,21 @@ O frontend utiliza uma camada de serviços que abstrai toda a lógica de comunic
 
 O ORM do Django funciona como um Repository Pattern, abstraindo o acesso ao banco de dados e permitindo queries Python em vez de SQL direto.
 
-### 4. ViewSet Pattern (DRF)
+### 4. Generic Views Pattern (DRF)
 
-Django REST Framework utiliza ViewSets que agrupam operações CRUD em uma única classe, seguindo convenções REST.
+O projeto **não** usa ViewSets do DRF — as views estendem as classes genéricas
+`BaseListCreateView` / `BaseRetrieveUpdateDestroyView` (`app/base_views.py`),
+que já incluem `IsAuthenticated` + `GlobalDefaultPermission` (permissões
+derivadas automaticamente do método HTTP).
 
 ```python
-class AccountViewSet(viewsets.ModelViewSet):
-    queryset = Account.objects.filter(is_deleted=False)
+class AccountListCreateView(BaseListCreateView):
     serializer_class = AccountSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return self.queryset.filter(owner=self.request.user.member)
+        return Account.objects.filter(
+            is_deleted=False, owner=self.request.user.member
+        )
 ```
 
 ### 5. Middleware Pattern
@@ -401,7 +405,7 @@ O API Client do frontend é um singleton que garante configuração única de in
 **App**: `agents` (`apps/api/agents/`)
 
 **Funcionalidades principais**:
-- 6 agentes de domínio (`finance`, `budget`, `forecast`, `insight`, `library`, `planning`), selecionados automaticamente por `core/router.py`
+- 10 agentes de domínio — legados `finance`, `budget`, `forecast`, `insight`, `library`, `planning` + modulares `personal`, `financial`, `security`, `intellect` (mais o fallback `NoAccessAgent`, não selecionável) —, selecionados automaticamente por `core/router.py`
 - Endpoints: `ask/` (síncrono), `stream/` (SSE), `history/`, `sessions/`, `status/`
 - Geração de embeddings via Ollama (`nomic-embed-text`, cache Redis)
 - Busca vetorial com pgvector (`tools/rag_tools.py`)

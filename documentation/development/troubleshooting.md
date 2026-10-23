@@ -2,6 +2,11 @@
 
 Este guia ajuda a diagnosticar e resolver problemas comuns no Axiom.
 
+> Os comandos abaixo usam `docker compose` (plugin v2), referenciado como `$DC`:
+> ```bash
+> DC="docker compose -f infra/docker/docker-compose.yml --project-directory ."
+> ```
+
 ## Índice
 
 - [Problemas com Docker](#problemas-com-docker)
@@ -20,38 +25,38 @@ Este guia ajuda a diagnosticar e resolver problemas comuns no Axiom.
 
 **Sintomas:**
 ```bash
-docker-compose ps
+$DC ps
 # Container está "Exit 1" ou "Restarting"
 ```
 
 **Diagnóstico:**
 ```bash
 # Ver logs do container
-docker-compose logs api
-docker-compose logs db
-docker-compose logs frontend
+$DC logs api
+$DC logs db
+$DC logs frontend
 
 # Ver logs em tempo real
-docker-compose logs -f
+$DC logs -f
 ```
 
 **Soluções:**
 
 1. **Verificar se há erros nos logs**
    ```bash
-   docker-compose logs api | grep -i error
+   $DC logs api | grep -i error
    ```
 
 2. **Reconstruir containers**
    ```bash
-   docker-compose down
-   docker-compose up -d --build
+   $DC down
+   $DC up -d --build
    ```
 
 3. **Limpar volumes (⚠️ apaga dados)**
    ```bash
-   docker-compose down -v
-   docker-compose up -d
+   $DC down -v
+   $DC up -d
    ```
 
 4. **Verificar .env**
@@ -98,16 +103,16 @@ netstat -ano | findstr :39100
 
 3. **Parar todos os containers e tentar novamente**
    ```bash
-   docker-compose down
+   $DC down
    docker ps -a  # Verificar se não há containers órfãos
-   docker-compose up -d
+   $DC up -d
    ```
 
 ### Container "unhealthy"
 
 **Sintomas:**
 ```bash
-docker-compose ps
+$DC ps
 # Status: "unhealthy"
 ```
 
@@ -123,20 +128,20 @@ docker inspect axiom-db | grep -A 10 "Health"
 1. **Aguardar start period**
    ```bash
    # Containers podem levar até 40s para ficarem healthy
-   docker-compose logs -f db
+   $DC logs -f db
    # Aguarde: "database system is ready to accept connections"
    ```
 
 2. **Verificar dependências**
    ```bash
    # API depende do DB estar healthy
-   docker-compose restart api
+   $DC restart api
    ```
 
 3. **Testar health check manualmente**
    ```bash
    # Database
-   docker-compose exec db pg_isready -U axiom_user -d axiom_db
+   $DC exec db pg_isready -U axiom_user -d axiom_db
 
    # API
    curl http://localhost:39100/health/
@@ -156,7 +161,7 @@ PermissionError: [Errno 13] Permission denied
 sudo chown -R $USER:$USER apps/api/media apps/api/logs apps/api/staticfiles
 
 # Ou rodar container como seu usuário
-docker-compose exec -u $(id -u):$(id -g) api bash
+$DC exec -u $(id -u):$(id -g) api bash
 ```
 
 ### Docker out of disk space
@@ -205,17 +210,17 @@ django.db.utils.OperationalError: could not connect to server: Connection refuse
 **Diagnóstico:**
 ```bash
 # Verificar se container db está rodando
-docker-compose ps db
+$DC ps db
 
 # Verificar logs do PostgreSQL
-docker-compose logs db
+$DC logs db
 ```
 
 **Soluções:**
 
 1. **Aguardar DB inicializar**
    ```bash
-   docker-compose logs -f db
+   $DC logs -f db
    # Aguarde: "database system is ready to accept connections"
    ```
 
@@ -230,15 +235,15 @@ docker-compose logs db
 
 3. **Testar conexão manualmente**
    ```bash
-   docker-compose exec db psql -U axiom_user -d axiom_db
+   $DC exec db psql -U axiom_user -d axiom_db
    # Se funcionar, problema é na config do Django
    ```
 
 4. **Recriar banco de dados**
    ```bash
-   docker-compose down
+   $DC down
    docker volume rm axiom_postgres_data
-   docker-compose up -d
+   $DC up -d
    ```
 
 ### Tabelas não existem
@@ -251,10 +256,10 @@ django.db.utils.ProgrammingError: relation "accounts_account" does not exist
 **Solução:**
 ```bash
 # Executar migrations
-docker-compose exec api python manage.py migrate
+$DC exec api python manage.py migrate
 
 # Verificar status
-docker-compose exec api python manage.py showmigrations
+$DC exec api python manage.py showmigrations
 ```
 
 ### Extensão pgvector não instalada
@@ -267,14 +272,14 @@ django.db.utils.ProgrammingError: type "vector" does not exist
 **Solução:**
 ```bash
 # Acessar PostgreSQL
-docker-compose exec db psql -U axiom_user -d axiom_db
+$DC exec db psql -U axiom_user -d axiom_db
 
 # No psql, instalar extensão
 CREATE EXTENSION IF NOT EXISTS vector;
 \q
 
 # Executar migrations novamente
-docker-compose exec api python manage.py migrate
+$DC exec api python manage.py migrate
 ```
 
 ### Banco está bloqueado
@@ -288,14 +293,14 @@ database is locked
 
 ```bash
 # Verificar conexões ativas
-docker-compose exec db psql -U axiom_user -d axiom_db -c "
+$DC exec db psql -U axiom_user -d axiom_db -c "
   SELECT pid, usename, application_name, state
   FROM pg_stat_activity
   WHERE datname = 'axiom_db';
 "
 
 # Matar conexões ociosas (⚠️ cuidado em produção!)
-docker-compose exec db psql -U axiom_user -d axiom_db -c "
+$DC exec db psql -U axiom_user -d axiom_db -c "
   SELECT pg_terminate_backend(pid)
   FROM pg_stat_activity
   WHERE datname = 'axiom_db' AND pid <> pg_backend_pid();
@@ -307,12 +312,12 @@ docker-compose exec db psql -U axiom_user -d axiom_db -c "
 **Diagnóstico:**
 ```bash
 # Habilitar log de queries lentas
-docker-compose exec db psql -U axiom_user -d axiom_db -c "
+$DC exec db psql -U axiom_user -d axiom_db -c "
   ALTER DATABASE axiom_db SET log_min_duration_statement = 1000;
 "
 
 # Ver queries lentas nos logs
-docker-compose logs db | grep "duration"
+$DC logs db | grep "duration"
 ```
 
 **Soluções:**
@@ -342,7 +347,7 @@ docker-compose logs db | grep "duration"
 
 3. **Analisar query plan**
    ```bash
-   docker-compose exec api python manage.py shell
+   $DC exec api python manage.py shell
    ```
    ```python
    from accounts.models import Account
@@ -363,7 +368,7 @@ Migration accounts.0002_auto_20260112_1234 is applied before its dependency
 
 1. **Fake migration (se já aplicada manualmente)**
    ```bash
-   docker-compose exec api python manage.py migrate accounts --fake 0002
+   $DC exec api python manage.py migrate accounts --fake 0002
    ```
 
 2. **Resetar migrations (⚠️ perde dados!)**
@@ -372,13 +377,13 @@ Migration accounts.0002_auto_20260112_1234 is applied before its dependency
    rm apps/api/accounts/migrations/0*.py
 
    # Recriar migrations
-   docker-compose exec api python manage.py makemigrations
-   docker-compose exec api python manage.py migrate --fake-initial
+   $DC exec api python manage.py makemigrations
+   $DC exec api python manage.py migrate --fake-initial
    ```
 
 3. **Squash migrations (avançado)**
    ```bash
-   docker-compose exec api python manage.py squashmigrations accounts 0001 0010
+   $DC exec api python manage.py squashmigrations accounts 0001 0010
    ```
 
 ### Conflitos de merge em migrations
@@ -391,8 +396,8 @@ Conflicting migrations detected; multiple leaf nodes in the migration graph
 **Solução:**
 ```bash
 # Django cria migration de merge automaticamente
-docker-compose exec api python manage.py makemigrations --merge
-docker-compose exec api python manage.py migrate
+$DC exec api python manage.py makemigrations --merge
+$DC exec api python manage.py migrate
 ```
 
 ### Tabela já existe
@@ -405,7 +410,7 @@ django.db.utils.ProgrammingError: relation "accounts_account" already exists
 **Solução:**
 ```bash
 # Fake initial migration
-docker-compose exec api python manage.py migrate --fake-initial
+$DC exec api python manage.py migrate --fake-initial
 ```
 
 ## Problemas de Autenticação
@@ -500,7 +505,7 @@ const newAccessToken = await refreshAccessToken();
 **Diagnóstico:**
 ```bash
 # Verificar permissões do usuário
-docker-compose exec api python manage.py shell
+$DC exec api python manage.py shell
 ```
 ```python
 from django.contrib.auth.models import User
@@ -512,10 +517,10 @@ print(user.groups.all())
 **Solução:**
 ```bash
 # Configurar permissões
-docker-compose exec api python manage.py setup_permissions
+$DC exec api python manage.py setup_permissions
 
 # Ou adicionar manualmente
-docker-compose exec api python manage.py shell
+$DC exec api python manage.py shell
 ```
 ```python
 from django.contrib.auth.models import User, Permission
@@ -558,7 +563,7 @@ cryptography.fernet.InvalidToken
 3. **Resetar dados (⚠️ perde tudo criptografado)**
    ```bash
    # Opção nuclear: dropar tabelas afetadas
-   docker-compose exec db psql -U axiom_user -d axiom_db
+   $DC exec db psql -U axiom_user -d axiom_db
    ```
    ```sql
    TRUNCATE credit_cards_creditcard CASCADE;
@@ -595,7 +600,7 @@ No 'Access-Control-Allow-Origin' header is present
 **Diagnóstico:**
 ```bash
 # Verificar configuração CORS
-docker-compose exec api python manage.py shell
+$DC exec api python manage.py shell
 ```
 ```python
 from django.conf import settings
@@ -620,7 +625,7 @@ print(settings.CORS_ALLOW_CREDENTIALS)
 
 3. **Reiniciar API**
    ```bash
-   docker-compose restart api
+   $DC restart api
    ```
 
 ### Cookies não sendo enviados
@@ -653,9 +658,12 @@ print(settings.CORS_ALLOW_CREDENTIALS)
    - Frontend e Backend devem estar no mesmo domínio (localhost)
    - Ou configurar CORS corretamente para cross-origin
 
-## Troubleshooting do AI Assistant
+## Troubleshooting do Assistente de IA (app `agents`)
 
 ### Groq API key inválida
+
+Só se aplica se `LLM_PROVIDER=groq` (ou `groq` estiver em `LLM_FALLBACK_PROVIDERS`)
+— por padrão o provedor é `ollama` (self-hosted, sem API key).
 
 **Sintomas:**
 ```
@@ -672,33 +680,32 @@ cat .env | grep GROQ_API_KEY
 GROQ_API_KEY=gsk_sua_chave_aqui
 
 # Reiniciar API
-docker-compose restart api
+$DC restart api
 ```
 
 ### Erro ao gerar embeddings
 
+Os embeddings (`AgentEmbedding`, pgvector) são gerados via Ollama
+(`OLLAMA_EMBED_MODEL`, padrão `nomic-embed-text`) ou pelo provedor cloud
+configurado — não há modelo `sentence-transformers` local no projeto.
+
 **Sintomas:**
 ```
-OSError: Can't load tokenizer for 'sentence-transformers/all-MiniLM-L6-v2'
+ConnectionError: could not reach Ollama embed endpoint
 ```
 
 **Soluções:**
 
-1. **Verificar conexão com internet** (para download inicial do modelo)
-
-2. **Baixar modelo manualmente**
+1. **Verificar se o modelo de embedding foi baixado**
    ```bash
-   docker-compose exec api python -c "
-   from sentence_transformers import SentenceTransformer
-   model = SentenceTransformer('all-MiniLM-L6-v2')
-   print('Modelo baixado com sucesso!')
-   "
+   $DC exec ollama ollama list
+   # Se OLLAMA_EMBED_MODEL não aparecer, o ollama-init ainda não baixou —
+   # acompanhe: $DC logs -f ollama-init
    ```
 
-3. **Limpar cache e tentar novamente**
+2. **Reprocessar embeddings existentes**
    ```bash
-   docker-compose exec api rm -rf /root/.cache/torch
-   docker-compose restart api
+   $DC exec api python manage.py vectorize_existing --domain=all --reset
    ```
 
 ### Redis connection failed
@@ -711,54 +718,42 @@ redis.exceptions.ConnectionError: Error connecting to Redis
 **Diagnóstico:**
 ```bash
 # Verificar se Redis está rodando
-docker-compose ps redis
+$DC ps redis
 
 # Testar conexão
-docker-compose exec redis redis-cli ping
+$DC exec redis redis-cli ping
 # Deve retornar: PONG
 ```
 
 **Solução:**
 ```bash
 # Reiniciar Redis
-docker-compose restart redis
+$DC restart redis
 
 # Verificar URL no .env
 cat .env | grep REDIS_URL
 # Deve ser: redis://redis:6379/0
 ```
 
-### AI Assistant muito lento
+### Assistente muito lento
 
 **Diagnóstico:**
 ```bash
-# Verificar logs para identificar gargalo
-docker-compose logs -f api | grep "ai_assistant"
+# Verificar logs do worker Ollama (modelo rodando em CPU é o gargalo mais comum)
+$DC logs -f ollama
 
 # Verificar uso de CPU/memória
-docker stats axiom-api
+docker stats axiom-llm axiom-api
 ```
 
 **Soluções:**
 
-1. **Reduzir número de resultados**
-   ```python
-   # apps/api/ai_assistant/config.py
-   TOP_K_RESULTS = 3  # Em vez de 5
-   ```
-
-2. **Aumentar cache TTL**
-   ```python
-   # apps/api/ai_assistant/config.py
-   CACHE_TTL = 3600  # 1 hora
-   ```
-
-3. **Verificar se cache está funcionando**
-   ```bash
-   docker-compose exec redis redis-cli
-   > KEYS ai:*
-   > TTL ai:embedding:12345
-   ```
+1. **Usar um provedor cloud como fallback** (`LLM_FALLBACK_PROVIDERS=groq` no
+   `.env`) enquanto o Ollama local processa em CPU.
+2. **Trocar para um modelo Ollama menor** (`OLLAMA_MODEL=mistral:7b-instruct`
+   já é o padrão — evite modelos de 14b+ sem GPU).
+3. **Ajustar `LLM_TIMEOUT_CHAT`/`LLM_TIMEOUT_EMBED`** se o timeout estiver
+   cortando respostas longas antes de completar.
 
 ### Respostas irrelevantes
 
@@ -766,25 +761,14 @@ docker stats axiom-api
 
 **Soluções:**
 
-1. **Regenerar embeddings**
+1. **Reprocessar embeddings**
    ```bash
-   docker-compose exec api python manage.py shell
-   ```
-   ```python
-   from ai_assistant.services.embedding_service import EmbeddingService
-   service = EmbeddingService()
-   service.generate_all_embeddings()
+   $DC exec api python manage.py vectorize_existing --domain=all --reset
    ```
 
 2. **Adicionar mais dados**
    - Cadastre mais transações, senhas, livros
    - Quanto mais dados, melhor o contexto
-
-3. **Ajustar similaridade threshold**
-   ```python
-   # apps/api/ai_assistant/config.py
-   SIMILARITY_THRESHOLD = 0.5  # Reduzir para incluir mais resultados
-   ```
 
 ## Problemas de Performance
 
@@ -793,7 +777,7 @@ docker stats axiom-api
 **Diagnóstico:**
 ```bash
 # Verificar tamanho do bundle
-cd frontend
+cd apps/web
 npm run build
 ls -lh dist/assets/*.js
 ```
@@ -867,19 +851,19 @@ ERROR: Could not find a version that satisfies the requirement
 
 1. **Atualizar pip**
    ```bash
-   docker-compose exec api pip install --upgrade pip
+   $DC exec api pip install --upgrade pip
    ```
 
 2. **Limpar cache**
    ```bash
-   docker-compose exec api pip cache purge
-   docker-compose up -d --build api
+   $DC exec api pip cache purge
+   $DC up -d --build api
    ```
 
 3. **Verificar Python version**
    ```bash
-   docker-compose exec api python --version
-   # Deve ser 3.11+
+   $DC exec api python --version
+   # Deve ser 3.12+
    ```
 
 ### Falha ao instalar dependências npm
@@ -894,7 +878,7 @@ npm ERR! ERESOLVE could not resolve
 
 1. **Limpar cache**
    ```bash
-   cd frontend
+   cd apps/web
    rm -rf node_modules package-lock.json
    npm cache clean --force
    npm install
@@ -935,7 +919,7 @@ npm ERR! ERESOLVE could not resolve
 3. **Build cache**
    ```bash
    # Usar BuildKit
-   DOCKER_BUILDKIT=1 docker-compose build
+   DOCKER_BUILDKIT=1 $DC build
    ```
 
 ## Logs de Debug Úteis
@@ -970,10 +954,10 @@ LOGGING = {
 
 ```bash
 # Terminal 1: Logs da API
-docker-compose logs -f api
+$DC logs -f api
 
 # Terminal 2: Logs do DB
-docker-compose logs -f db
+$DC logs -f db
 
 # Terminal 3: Stats de recursos
 watch -n 1 'docker stats --no-stream axiom-api axiom-db'
@@ -987,19 +971,19 @@ Se nada disso resolver:
    ```bash
    # Versões
    docker --version
-   docker-compose --version
+   docker compose version
    python --version
    node --version
 
    # Logs
-   docker-compose logs > logs.txt
+   $DC logs > logs.txt
 
    # Status
-   docker-compose ps
+   $DC ps
    docker stats --no-stream
    ```
 
-2. **Abrir issue no GitHub**
+2. **Abrir issue no GitLab (tracker interno do projeto)**
    - Descreva o problema
    - Cole logs relevantes
    - Informe versões
@@ -1011,4 +995,4 @@ Se nada disso resolver:
 
 ---
 
-**Dica**: Mantenha sempre logs (`docker-compose logs -f`) abertos durante desenvolvimento!
+**Dica**: Mantenha sempre logs (`$DC logs -f`) abertos durante desenvolvimento!

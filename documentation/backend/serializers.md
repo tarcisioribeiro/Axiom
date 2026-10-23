@@ -499,49 +499,58 @@ class PasswordViewSet(viewsets.ModelViewSet):
         })
 ```
 
-## Serializers para IA Assistant
+## Serializers do módulo Agents (IA)
 
-### Query Serializer
+### Ask Serializer
 
 ```python
-# ai_assistant/serializers.py
-class QuerySerializer(serializers.Serializer):
-    """Serializer para consulta ao AI Assistant."""
-    question = serializers.CharField(
-        min_length=3,
-        max_length=1000,
-        help_text="Pergunta em linguagem natural"
-    )
-    top_k = serializers.IntegerField(
-        default=10,
-        min_value=1,
-        max_value=50,
-        required=False,
-        help_text="Número de resultados relevantes"
-    )
-    session_id = serializers.CharField(
-        required=False,
-        allow_null=True,
-        help_text="ID da sessão para manter contexto"
-    )
-
-    def validate_question(self, value):
-        """Valida que a pergunta não está vazia."""
-        if not value.strip():
-            raise serializers.ValidationError("Pergunta não pode estar vazia")
-        return value.strip()
+# agents/serializers.py
+_VALID_AGENT_NAMES = {
+    "personal", "financial", "security", "intellect",
+    "finance", "budget", "forecast", "planning", "library", "insight",
+}
 
 
-class QueryResponseSerializer(serializers.Serializer):
-    """Serializer para resposta do AI Assistant."""
-    answer = serializers.CharField(help_text="Resposta gerada pela IA")
-    routing_decision = serializers.CharField(
-        help_text="Decisão de roteamento (local/cloud)"
+class AgentAskSerializer(serializers.Serializer):
+    query = serializers.CharField(max_length=2000)
+    session_id = serializers.CharField(max_length=64, default="default")
+    date_from = serializers.DateField(required=False, allow_null=True)
+    date_to = serializers.DateField(required=False, allow_null=True)
+    forecast_days = serializers.IntegerField(
+        required=False, min_value=7, max_value=90, default=30
     )
-    provider = serializers.CharField(help_text="Provedor usado (Groq)")
-    cached = serializers.BooleanField(
-        default=False,
-        help_text="Se a resposta veio do cache"
+    language = serializers.CharField(
+        max_length=10, required=False, default="pt-BR"
+    )
+    agent_name = serializers.CharField(
+        max_length=32, required=False, allow_null=True,
+        allow_blank=True, default=None,
+    )
+    book_id = serializers.IntegerField(required=False, allow_null=True, default=None)
+
+    def validate_agent_name(self, value):
+        if not value:
+            return None
+        if value not in _VALID_AGENT_NAMES:
+            raise serializers.ValidationError(
+                f"Agente '{value}' inválido. Opções: {sorted(_VALID_AGENT_NAMES)}"
+            )
+        return value
+
+
+class AgentConversationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AgentConversation
+        fields = ["id", "session_id", "role", "content", "agent_name", "created_at"]
+        read_only_fields = fields
+
+
+class AgentStatusSerializer(serializers.Serializer):
+    available = serializers.BooleanField()
+    provider = serializers.CharField()
+    models = serializers.ListField(child=serializers.CharField())
+    agents = serializers.ListField(
+        child=serializers.DictField(child=serializers.CharField()), default=list,
     )
 ```
 

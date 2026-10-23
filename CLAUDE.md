@@ -22,12 +22,13 @@ Axiom/
 
 ### Backend (Django)
 
-**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, receivables, vaults, dashboard, authentication, members, app (core), security, library, personal_planning, notifications, budgets, bank_reconciliation, monthly_planning, agents, exchange_rates, webhooks, admin_panel, storage
+**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, receivables, vaults, dashboard, authentication, members, app (core), security, library, personal_planning, notifications, budgets, bank_reconciliation, monthly_planning, agents, exchange_rates, webhooks, admin_panel, storage, daily_review
 
 **Large flat apps** — `library`, `security`, `personal_planning` are each a **single flat app** (one `models.py`/`views.py`), not sub-packages. Don't create sub-directories.
 - `library`: books/authors/readings, Intellect extension (courses, skills, flashcards SM-2, knowledge graph, `IntellectBadge`)
 - `security`: password vault (passwords, cards, accounts, archives), vault config/session keys, credential-sharing tokens
 - `personal_planning`: habits/goals (`TaskInstance` lazily generated from `RoutineTask`), gamification (XP/badges — unrelated to `library`'s `IntellectBadge`), wellness center, workout/nutrition tracking. Exercise images come only from `ExerciseDatasetEntry` (via `Exercise.dataset_entry` FK); no free-form upload.
+- `daily_review`: blocking "previous day" review modal — walks through pending items from `personal_planning` (reflection, tasks, avoid-habit goals, workout, meals, hydration, emotional check-in, self-esteem, weigh-in, wellness interventions) and `library`/Intellect (study sessions, due flashcards) before the user can use the app normally. `ReviewProgress` (last reviewed day per member) + `ReviewResolution` (per-pending-item `skip`/`keep_pending` justification, `steps.py` defines per-day vs. continuous/windowed steps). Endpoints: `daily-review/`, `/resolve/`, `/backlog/`, `/complete/`.
 
 **Base Model** (`app/models.py`): integer PK + unique `uuid` field, timestamps, audit fields (`created_by`, `updated_by`, `deleted_by`, `deleted_at`), `is_deleted`. All models extend this. Also defines shared choices: `PAYMENT_FREQUENCY_CHOICES`, `PAYMENT_METHOD_CHOICES`, `LOAN_STATUS_CHOICES`, `BILL_STATUS_CHOICES`.
 
@@ -49,13 +50,13 @@ Axiom/
 
 **Desktop theme sync**: `ThemePreference` (one per user) updated via `PUT /api/v1/theme-sync/` (`Authorization: ThemeSync <token>`, no JWT). Token issued with `manage.py issue_theme_sync_token` or `POST /api/v1/me/theme/sync-token/` (authenticated; used by the dotfiles repo's `setup-env.sh`). Web app reads via `GET /api/v1/me/theme/` in `hooks/use-desktop-theme-sync.ts` (applies when different from `localStorage.desktopThemeSynced`).
 
-**Agents / LLM** (`apps/api/agents/`): Six domain agents selected by `core/router.py`. Endpoints: `/api/v1/agents/` (ask/, stream/, history/, sessions/, status/). **Rule**: `providers/` is the **only** place in `agents/` allowed to import models from other apps — tools, domain agents, and views consume data through it. Provider functions taking `user` must be decorated with `@requires_screen(...)` (`providers/access.py`) so agents respect screen access. See `documentation/architecture/agents-llm-boundary.md`.
+**Agents / LLM** (`apps/api/agents/`): Ten domain agents selected by `core/router.py` — `FinanceAgent`, `BudgetAgent`, `ForecastAgent`, `LibraryAgent`, `PlanningAgent`, `InsightAgent` (legacy six) plus `PersonalAgent`, `FinancialAgent`, `SecurityAgent`, `IntellectAgent` (newer, module-scoped); `NoAccessAgent` is a fallback when the user lacks screen access, not a selectable domain agent. Endpoints: `/api/v1/agents/` (ask/, stream/, history/, sessions/, status/). **Rule**: `providers/` is the **only** place in `agents/` allowed to import models from other apps — tools, domain agents, and views consume data through it. Provider functions taking `user` must be decorated with `@requires_screen(...)` (`providers/access.py`) so agents respect screen access. See `documentation/architecture/agents-llm-boundary.md`.
 
 **Async Tasks**: Worker `axiom-worker`, beat `axiom-queue` (`DatabaseScheduler`). Periodic tasks live only in `CELERY_BEAT_SCHEDULE` (`app/settings.py`); `app.conf.beat_schedule` in `celery.py` is silently overridden. Tests: `CELERY_TASK_ALWAYS_EAGER=True`.
 
 **Webhooks**: `dispatch_event(event, payload, user=user)` from `webhooks.dispatch`. Signed with HMAC-SHA256 (`X-Axiom-Signature`).
 
-**Misc**: All endpoints `/api/v1/`. `PageNumberPagination` PAGE_SIZE=50. `DjangoFilterBackend`. Timezone `America/Sao_Paulo` — always `timezone.now()`; for dates use `timezone.localdate()` (never `timezone.now().date()`, which is the UTC date). PostgreSQL 16; tests use SQLite in-memory. Redis cache prefix `axiom`. TTLs: `CACHE_TTL_DASHBOARD_STATS` 60s, `CACHE_TTL_ACCOUNT_BALANCES` 30s, `CACHE_TTL_CATEGORY_BREAKDOWN` 300s, `CACHE_TTL_BALANCE_FORECAST` 120s.
+**Misc**: All endpoints `/api/v1/`. `PageNumberPagination` PAGE_SIZE=50. `DjangoFilterBackend`. DRF throttling (per-scope rate limiting) is enabled on sensitive endpoints — see `documentation/api/endpoints.md`. Timezone `America/Sao_Paulo` — always `timezone.now()`; for dates use `timezone.localdate()` (never `timezone.now().date()`, which is the UTC date). PostgreSQL 16; tests use SQLite in-memory. Redis cache prefix `axiom`. TTLs: `CACHE_TTL_DASHBOARD_STATS` 60s, `CACHE_TTL_ACCOUNT_BALANCES` 30s, `CACHE_TTL_CATEGORY_BREAKDOWN` 300s, `CACHE_TTL_BALANCE_FORECAST` 120s.
 
 **Key models**:
 - `Receivable`: mirror of `payables`; recording receipt (`received_value`) triggers revenue, not creation. Statuses: `active`, `received`, `overdue`, `cancelled`.
@@ -81,7 +82,7 @@ Depois, usando a extensão claude-in-chrome, abra `localhost:39101` e faça logi
 
 **API Client** (`services/api-client.ts`): axios, `withCredentials: true`. Base URL from `window.location.hostname`, fallback `VITE_API_BASE_URL`. Auto-refresh on 401. Error classes: `AuthenticationError`, `ValidationError` (`.errors` field map), `NotFoundError`, `PermissionError`.
 
-**State**: Zustand: `auth-store.ts` (user, `hasPermission()`, `hasSystemAccess()`), `notifications-store.ts`, `command-palette-store.ts`.
+**State**: Zustand: `auth-store.ts` (user, `hasPermission()`, 2FA flow — `verify2FA`, `requires2FA`, `tempToken` — `isAdmin`), `notifications-store.ts`, `command-palette-store.ts`, `breadcrumb-extra-store.ts`.
 
 **Translation**: two layers:
 - `config/translations.ts`: `translate(section, key)`, `autoTranslate()`. `lib/helpers.ts`: `translateCategory(cat, type)`. `config/categories.ts`: `EXPENSE_CATEGORIES_CANONICAL` / `REVENUE_CATEGORIES_CANONICAL` for dropdowns. Import from `@/config/constants`.
@@ -97,7 +98,7 @@ Depois, usando a extensão claude-in-chrome, abra `localhost:39101` e faça logi
 
 **Common Components** (`components/common/`) — use before creating new ones: `PageContainer`, `EmptyState`, `LoadingState`, `DataTable`, `PageHeader`, `SearchInput`, `StatCard`, `ExportModal`, `AnimatedPage`, `IconButton`, `ErrorBoundary`, `LanguageSelector`, `ThemeToggle`.
 
-**UI Primitives** (`components/ui/`): `button`, `input`, `select`, `checkbox`, `dialog`, `alert-dialog`, `form-field`, `date-picker`, `dropdown-menu`, `popover`, `badge`, `card`, `progress`, `star-rating`, `textarea`, `toast`, `toaster`, `tooltip`, `skeleton`, `skeleton-variants`, `scroll-area`, `table`, `label`, `visually-hidden`, `file-input`, `icon-picker`, `circular-progress`, `success-animation`, `currency-input` (BRL, `accentColor` variants), `form-section`, `status-toggle`, `number-stepper` (integer − / + with ↑/↓ keys, typeable, `optional` for empty), `decimal-input` (pt-BR comma, `unit` suffix, optional `step` − / +), `slider` (styled native range, `tone`, `floor`), `color-picker` (swatch + popover palette + hex). Never use raw `<input type="number|range|color|checkbox">`.
+**UI Primitives** (`components/ui/`): `button`, `button-tooltip`, `plain-button`, `input`, `select`, `checkbox`, `dialog`, `alert-dialog`, `form-field`, `date-picker`, `time-picker`, `clock-dial`, `dropdown-menu`, `popover`, `badge`, `card`, `progress`, `star-rating`, `textarea`, `toast`, `toaster`, `tooltip`, `tooltip-bubble`, `tabs`, `skeleton`, `skeleton-variants`, `scroll-area`, `table`, `label`, `visually-hidden`, `file-input`, `icon-picker`, `circular-progress`, `success-animation`, `currency-input` (BRL, `accentColor` variants), `form-section`, `status-toggle`, `number-stepper` (integer − / + with ↑/↓ keys, typeable, `optional` for empty), `decimal-input` (pt-BR comma, `unit` suffix, optional `step` − / +), `slider` (styled native range, `tone`, `floor`), `color-picker` (swatch + popover palette + hex). Never use raw `<input type="number|range|color|checkbox">`.
 
 **Dialogs** (rules in `documentation/frontend/design-patterns.md` §2): `DialogHeader` is always sticky and `DialogDescription` is always `sr-only` (primitive enforces both). Title needs an icon: `<DialogTitle mode={x ? 'edit' : 'create'}>` for forms, `<DialogTitle icon={Icon}>` for detail/action. Forms/actions: sticky footer (`DialogFooter` or `.dialog-footer`), "Cancelar" = `variant="outline"` + `X`, "Salvar" = default variant + `Save` (no category colors). Detail: `<DialogCloseFooter>{actions}</DialogCloseFooter>` (Fechar left, actions right). No `max-h-[NNvh]`/fixed heights/inner `overflow-y-auto` — at ≥1920×1080 no dialog may scroll; paginate long lists inside with `PaginatedSlide pinNav={false}` (≤5). No subtitle, no card repeating the title, no helper text under fields/buttons. Validation errors do not render under fields: each message goes to a toast (`notifyFormErrors` from `@/lib/form-errors`, passed as `handleSubmit(onSubmit, notifyFormErrors)`) and the invalid field gets a red border via `aria-invalid` (primitives in `components/ui/` already style it). Live computed values stay. Fields with `NumberStepper` or stepped `DecimalInput` are centered (label + control) automatically via `data-stepper` CSS in `index.css` — don't add `text-center`/`mx-auto` by hand.
 
@@ -144,6 +145,19 @@ $DC exec api python manage.py purge_deleted_records        # LGPD: hard-delete >
 $DC exec api python manage.py vault_recovery
 $DC exec api python manage.py rotate_encryption_key        # --old-key X --new-key Y --dry-run
 $DC exec api python manage.py import_exercise_dataset      # one-time per env
+$DC exec api python manage.py index_library                # (re)build library/Intellect embeddings
+$DC exec api python manage.py vectorize_existing            # backfill AgentEmbedding for existing records
+$DC exec api python manage.py check_backup_health
+$DC exec api python manage.py issue_theme_sync_token
+$DC exec api python manage.py fix_installments_paid_status
+$DC exec api python manage.py send_due_notifications
+$DC exec api python manage.py seed_wellness_interventions   # one-time per env
+$DC exec api python manage.py fix_storage_config_for_local
+$DC exec api python manage.py migrate_media_to_minio
+$DC exec api python manage.py process_existing_transfers
+$DC exec api python manage.py check_vault_yield_health
+$DC exec api python manage.py generate_vault_contributions
+$DC exec api python manage.py reconcile_vault_yield
 ```
 
 ### Frontend
@@ -273,11 +287,13 @@ MINIO_CA_BUNDLE             # path to CA cert for self-signed TLS
 LLM_PROVIDER                # ollama (default) | groq | anthropic | openai
 LLM_FALLBACK_PROVIDERS      # comma-separated fallback order, e.g. groq,anthropic
 OLLAMA_BASE_URL, OLLAMA_MODEL, OLLAMA_EMBED_MODEL
+OLLAMA_PORT                 # default 39107 (host port, container exposes ollama on 11434)
 GROQ_API_KEY, GROQ_MODEL
 ANTHROPIC_API_KEY, ANTHROPIC_MODEL
 OPENAI_API_KEY, OPENAI_MODEL
 LLM_TIMEOUT_CHAT            # default 120s
 LLM_TIMEOUT_EMBED           # default 30s
+LLM_MAX_TOKENS              # default 2048
 ```
 
 ## Key Rotation
@@ -299,6 +315,7 @@ Rotate: `manage.py rotate_encryption_key --old-key X --new-key Y` (supports `--d
 | Redis | localhost:39103 |
 | MinIO API | localhost:39105 |
 | MinIO Console | localhost:39106 |
+| Ollama | localhost:39107 |
 
 ## Commit Convention
 

@@ -103,8 +103,8 @@ FRONTEND_PORT=39101
 # Porta externa do PostgreSQL (acessível no host)
 DB_PORT=39102
 
-# Porta do Redis (cache semântico)
-REDIS_PORT=6379
+# Porta do Redis (cache + broker Celery)
+REDIS_PORT=39103
 
 # ============================================
 # REDIS CONFIGURATION
@@ -166,7 +166,7 @@ python -c "from django.core.management.utils import get_random_secret_key; print
 **Método 2: Com Docker**
 
 ```bash
-docker-compose run --rm api python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+docker compose -f infra/docker/docker-compose.yml --project-directory . run --rm api python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
 **Método 3: Online (menos seguro)**
@@ -198,7 +198,7 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 **Método 2: Com Docker**
 
 ```bash
-docker-compose run --rm api python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+docker compose -f infra/docker/docker-compose.yml --project-directory . run --rm api python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
 **Exemplo de saída:**
@@ -311,17 +311,19 @@ LOGGING = {
 ### Visualizando Logs
 
 ```bash
+DC="docker compose -f infra/docker/docker-compose.yml --project-directory ."
+
 # Docker - todos os serviços
-docker-compose logs -f
+$DC logs -f
 
 # Docker - apenas erros
-docker-compose logs -f | grep ERROR
+$DC logs -f | grep ERROR
 
 # Docker - últimas 100 linhas
-docker-compose logs --tail=100
+$DC logs --tail=100
 
 # Docker - serviço específico
-docker-compose logs -f api
+$DC logs -f api
 ```
 
 ## Configuração Avançada
@@ -464,10 +466,10 @@ Execute:
 
 ```bash
 # Docker
-docker-compose exec api python validate_config.py
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python validate_config.py
 
 # Local
-cd api
+cd apps/api
 python validate_config.py
 ```
 

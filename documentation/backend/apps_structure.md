@@ -9,24 +9,34 @@ O backend do Axiom é organizado em apps Django modulares, cada uma responsável
 ```
 apps/api/
 ├── app/                    # Configuração principal e utilitários
-├── authentication/         # Autenticação JWT via cookies
-├── members/               # Gestão de membros
-├── accounts/              # Contas bancárias
-├── credit_cards/          # Cartões de crédito e faturas
-├── expenses/              # Despesas e despesas fixas
-├── revenues/              # Receitas
-├── loans/                 # Empréstimos
-├── transfers/             # Transferências entre contas
-├── payables/              # Contas a pagar
-├── dashboard/             # Dashboard e estatísticas
-├── budgets/               # Orçamentos
-├── bank_reconciliation/   # Conciliação bancária
-├── notifications/         # Sistema de notificações
-├── security/              # Módulo de segurança (senhas, credenciais, vault)
-├── library/               # Módulo de biblioteca (livros)
-├── vaults/                # Cofre de arquivos e segredos
-└── personal_planning/     # Planejamento pessoal
+├── storage/                # Armazenamento de arquivos (local ou MinIO/S3)
+├── authentication/         # Autenticação JWT via cookies + política de dispositivo Web
+├── accounts/               # Contas bancárias
+├── credit_cards/           # Cartões de crédito e faturas
+├── expenses/               # Despesas e despesas fixas
+├── loans/                  # Empréstimos
+├── members/                # Gestão de membros
+├── revenues/                # Receitas
+├── transfers/              # Transferências entre contas
+├── dashboard/              # Dashboard e estatísticas
+├── security/               # Módulo de segurança (senhas, credenciais, vault)
+├── library/                # Módulo de biblioteca (livros, Intelecto)
+├── personal_planning/      # Planejamento pessoal (hábitos, metas, bem-estar, treinos)
+├── payables/               # Contas a pagar
+├── receivables/            # Contas a receber
+├── vaults/                 # Cofres (poupança com objetivo)
+├── notifications/          # Sistema de notificações
+├── budgets/                # Orçamentos
+├── bank_reconciliation/    # Conciliação bancária (OFX/CSV)
+├── monthly_planning/       # Overrides de planejamento mensal (MonthlyPlan)
+├── agents/                 # Assistente de IA (agentes especializados, roteador, providers)
+├── admin_panel/            # Painel administrativo (SystemConfig, screens, acesso por tela)
+├── webhooks/               # Webhooks outbound assinados (HMAC-SHA256)
+├── exchange_rates/         # Cotações de câmbio (PTAX/Banco Central)
+└── daily_review/           # Revisão diária bloqueante de pendências do dia anterior
 ```
+
+Apps Django de terceiros relevantes em `INSTALLED_APPS`: `django_prometheus` (métricas), `django_admin_dracula` (tema do Django Admin), `django_celery_beat` (agendador do Celery Beat), além do stack DRF padrão (`rest_framework`, `rest_framework_simplejwt` + `token_blacklist`, `django_filters`, `drf_spectacular`, `corsheaders`).
 
 ## Apps Principais
 
@@ -417,7 +427,13 @@ notifications/
 
 ### 17. Vaults
 
-**Responsabilidade**: Cofre de arquivos e segredos com criptografia por chave de vault por usuário.
+**Responsabilidade**: Cofres de poupança com objetivo (não confundir com o cofre de senhas da app `security`) — dinheiro separado de uma conta bancária para uma meta com valor e data-alvo, incluindo rendimento (yield) e contribuições recorrentes.
+
+**Modelos**:
+- `Vault`: Cofre vinculado a uma conta, com meta de valor/data e configuração de rendimento
+- `VaultTransaction`: Movimentações de depósito/retirada/rendimento do cofre
+- `VaultRecurringContribution`: Contribuições automáticas recorrentes
+- `FinancialGoal`: Metas financeiras de médio/longo prazo (quitação de dívida, imóvel, aposentadoria)
 
 **Estrutura**:
 ```
@@ -428,7 +444,7 @@ vaults/
 ├── urls.py
 ├── services/
 └── management/
-    └── commands/
+    └── commands/        # check_vault_yield_health, generate_vault_contributions, reconcile_vault_yield
 ```
 
 ### 18. Personal Planning
@@ -450,6 +466,56 @@ personal_planning/
 ├── signals.py             # Atualização de progresso de metas
 └── urls.py
 ```
+
+### 19. Receivables
+
+**Responsabilidade**: Contas a receber — espelho de `payables`. Registrar o recebimento (`received_value`) dispara a criação da receita correspondente, não a criação do `Receivable` em si.
+
+**Modelos**: `Receivable` (status `active`/`received`/`overdue`/`cancelled`), `ReceivableInstallment`.
+
+### 20. Monthly Planning
+
+**Responsabilidade**: Overrides de planejamento por usuário e por mês (receitas extras, ajustes de orçamento), expostos via `monthly-plan/summary/` e `monthly-plan/apply/`.
+
+**Modelos**: `MonthlyPlan` (`extra_revenues`, `budget_overrides`, etc.).
+
+### 21. Admin Panel
+
+**Responsabilidade**: Painel administrativo — configuração do sistema, controle de acesso por tela e defaults de novos usuários.
+
+**Modelos**: `SystemConfig` (config criptografada: chaves de LLM, e-mail, MinIO — editável via Django Admin em `/admin/`), `UserScreenAccess`, `ScreenDefault`.
+
+**Outros arquivos**: `screens.py` (fonte única de rotas/ações por tela, usada pelo `ScreenAccessMiddleware`), `access.py` (resolve as ações permitidas de um usuário), `defaults.py` (aplica `ScreenDefault` a usuários novos).
+
+### 22. Webhooks
+
+**Responsabilidade**: Entrega de webhooks outbound assinados quando eventos relevantes ocorrem (nova despesa, fatura fechada, orçamento excedido, depósito em cofre, etc.), via `dispatch_event(event, payload, user=user)` em `webhooks/dispatch.py`.
+
+**Modelos**: `Webhook`, `WebhookDelivery`. Assinatura HMAC-SHA256 no header `X-Axiom-Signature`. Entregas processadas por tarefa Celery (`tasks.py`).
+
+### 23. Exchange Rates
+
+**Responsabilidade**: Cotações oficiais do Banco Central (PTAX) para moedas e criptomoedas em relação ao Real, atualizadas por tarefa Celery periódica.
+
+**Modelos**: `ExchangeRate`. Conversão via `ExchangeRate.convert(amount, from_currency, to_currency)` (cross-rate via BRL).
+
+### 24. Daily Review
+
+**Responsabilidade**: Revisão diária bloqueante das pendências do dia anterior (despesas/receitas não confirmadas, etc.) antes de liberar o uso normal do sistema no dia.
+
+**Modelos**: `ReviewProgress` (último dia revisado por membro), `ReviewResolution` (justificativa dada a um item pendente — `skip` ou `keep_pending`).
+
+**Endpoints**: `daily-review/`, `daily-review/resolve/`, `daily-review/backlog/`, `daily-review/complete/`.
+
+### 25. Storage
+
+**Responsabilidade**: Abstração de armazenamento de arquivos — local em disco ou MinIO/S3, conforme `MINIO_ENDPOINT` estar configurado.
+
+**Arquivos principais**: `backends.py` (seleção do backend), `health.py` (health check usado no painel administrativo), `media_proxy.py` (proxy de acesso a arquivos). Comandos de management: `migrate_media_to_minio`, `fix_storage_config_for_local`.
+
+### 26. Agents (Assistente de IA)
+
+**Responsabilidade**: Agentes especializados do assistente de IA (Finance, Budget, Forecast, Insight, Library, Planning), selecionados por `core/router.py`. Ver [`documentation/backend/agents.md`](./agents.md) para detalhes.
 
 ## Padrões de Organização
 
@@ -589,7 +655,7 @@ graph TD
 
 1. **Índices de Banco de Dados**:
    - Campos frequentemente consultados têm `db_index=True`
-   - Índices compostos para queries comuns (ex: `owner + tipo` em ContentEmbedding)
+   - Índices compostos para queries comuns (ex: `user + domain` em `AgentEmbedding`)
 
 2. **Select Related / Prefetch Related**:
    - ViewSets usam `select_related` para ForeignKeys

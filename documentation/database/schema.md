@@ -354,6 +354,14 @@ Todos com `owner → Member (PROTECT, na maioria)`.
 
 **`SystemConfig`** *(não é `BaseModel`)*: `key` (unique), `_value` (Fernet-encrypted se `is_secret`), `is_secret`, `category` (choices `CATEGORY_CHOICES`: llm/email/backup/app/security/storage), `label`/`description`, `requires_restart`, `is_editable`, `updated_by → User`. Métodos `get_value()`/`set_value()` (encriptam/decriptam transparentemente), property `masked_value` (`••••••••` se secreto).
 
+**`UserScreenAccess(BaseModel)`**: acesso concedido/negado por usuário, tela e ação, consultado pelo `ScreenAccessMiddleware` a cada request às rotas registradas em `admin_panel/screens.py`. **`ScreenDefault(BaseModel)`**: template de acesso aplicado automaticamente a usuários novos.
+
+### Daily Review — `daily_review_reviewprogress` / `daily_review_reviewresolution`
+
+**`ReviewProgress(BaseModel)`**: `owner → Member (OneToOne, CASCADE)`, `last_reviewed_date`. Último dia cuja revisão bloqueante de pendências o usuário já concluiu.
+
+**`ReviewResolution(BaseModel)`**: `owner → Member (CASCADE)`, `action` (`skip`/`keep_pending`). Justificativa dada a um item pendente da revisão diária.
+
 ### Authentication — `authentication_totpdevice`
 
 **`TOTPDevice(BaseModel)`**: `user → User (OneToOne, CASCADE)`, `secret` (seed TOTP), `is_active` (False até confirmação do primeiro código), `backup_codes` (JSON — lista de hashes SHA-256, plaintext nunca armazenado), `activated_at`. Métodos: `generate_provisioning_uri()` (para QR code), `verify_token()` (janela ±30s), `verify_backup_code()` (consumo único), classmethod `generate_backup_codes()` (8 códigos).

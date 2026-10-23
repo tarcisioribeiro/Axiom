@@ -60,38 +60,24 @@ export const apiClient = new ApiClient();
 
 ## Request Interceptor
 
-Processa requisições antes de enviá-las ao servidor.
-
-```typescript
-private setupInterceptors() {
-  // Request interceptor
-  this.client.interceptors.request.use(
-    (config) => {
-      console.log('[ApiClient] Request to', config.url);
-
-      // Remove Content-Type se for FormData
-      if (config.data instanceof FormData) {
-        delete config.headers['Content-Type'];
-      }
-
-      return config;
-    },
-    (error) => Promise.reject(error)
-  );
-
-  // Response interceptor (próxima seção)
-}
-```
+Processa requisições antes de enviá-las ao servidor. Loga via `lib/logger.ts` (não `console.log` direto) e remove o `Content-Type` quando o body é `FormData`, para o browser definir o boundary automaticamente.
 
 ### Características
 
 - **Cookies automáticos:** `withCredentials: true` envia cookies httpOnly em todas as requisições
+- **Timeout:** 30s (`REQUEST_TIMEOUT_MS`)
 - **FormData handling:** Remove Content-Type para permitir boundary automático
-- **Logging:** Console logs em desenvolvimento
+- **Logging:** via `lib/logger.ts`, suprimido em produção
 
 ## Response Interceptor
 
-Trata respostas e erros de forma centralizada.
+Trata respostas e erros de forma centralizada. Além do refresh de token, o interceptor de resposta real (`src/services/api-client.ts`) também:
+
+- Em qualquer resposta de sucesso com método != GET, invalida o cache do TanStack Query (`queryClient.invalidateQueries()`) — por isso mutações não precisam chamar `invalidateQueries` manualmente para a maioria dos casos (ver [state_management.md](./state_management.md) e a convenção de query keys no `CLAUDE.md`).
+- Detecta a resposta 403 específica da política de dispositivo (web PC-only, `lib/web-access.ts`) e marca `useWebAccessStore` em vez de tratar como `PermissionError` comum.
+- Faz retry com backoff exponencial (até `MAX_RETRIES = 3`) em erro de rede e em `429` (respeitando o header `Retry-After` quando presente).
+- Se o refresh de token falhar, limpa os dados locais e redireciona para `/login` (`window.location.href`), além de rejeitar com `AuthenticationError`.
+- Se a resposta de erro vier como `Blob` (ex.: download que falhou), tenta parsear como JSON antes de repassar ao `handleAxiosError`.
 
 ### Fluxo de Token Refresh
 
@@ -113,68 +99,9 @@ sequenceDiagram
     ApiClient-->>Component: Dados
 ```
 
-### Implementação
+### Implementação (resumo)
 
-```typescript
-this.client.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config;
-
-    // NÃO tenta refresh para endpoints de autenticação
-    const authEndpoints = [
-      API_CONFIG.ENDPOINTS.LOGIN,
-      API_CONFIG.ENDPOINTS.REFRESH_TOKEN,
-      API_CONFIG.ENDPOINTS.VERIFY_TOKEN,
-    ];
-
-    const isAuthEndpoint = authEndpoints.some(endpoint =>
-      originalRequest.url?.includes(endpoint)
-    );
-
-    // Se 401 e não é endpoint de auth e não tentou retry ainda
-    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
-      if (this.isRefreshing) {
-        // Aguarda refresh em andamento
-        return new Promise((resolve) => {
-          this.refreshSubscribers.push(() => {
-            resolve(this.client(originalRequest));
-          });
-        });
-      }
-
-      originalRequest._retry = true;
-      this.isRefreshing = true;
-
-      try {
-        console.log('[ApiClient] Attempting token refresh');
-
-        await axios.post(
-          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REFRESH_TOKEN}`,
-          {},
-          { withCredentials: true }
-        );
-
-        console.log('[ApiClient] Token refreshed successfully');
-
-        // Notifica requisições em espera
-        this.refreshSubscribers.forEach((callback) => callback());
-        this.refreshSubscribers = [];
-
-        return this.client(originalRequest);
-      } catch (refreshError) {
-        console.error('[ApiClient] Token refresh failed:', refreshError);
-        this.clearTokens();
-        return Promise.reject(new AuthenticationError('Session expired'));
-      } finally {
-        this.isRefreshing = false;
-      }
-    }
-
-    return Promise.reject(this.handleError(error));
-  }
-);
-```
+Endpoints de autenticação (`LOGIN`, `REFRESH_TOKEN`, `VERIFY_TOKEN`, `REGISTER`) nunca disparam refresh. Em um 401 fora desses endpoints, se já houver um refresh em andamento a requisição entra numa fila (`refreshSubscribers`) e é refeita quando ele terminar; senão, o client tenta `POST REFRESH_TOKEN` (cookie httpOnly) e repete a requisição original — falhando, chama `clearTokens()`, redireciona para `/login` e rejeita com `AuthenticationError`.
 
 ### Características
 
@@ -184,6 +111,8 @@ this.client.interceptors.response.use(
 - **Tratamento de erros:** Converte erros HTTP em classes customizadas
 
 ## Classes de Erro Customizadas
+
+Definidas em `src/services/api-errors.ts` (não em `api-client.ts`), junto com `handleAxiosError()` — a função que o interceptor de resposta chama para converter o `AxiosError` na classe certa. Só `AuthenticationError` e `ValidationError` são exportadas; `NotFoundError` e `PermissionError` ficam internas ao módulo e são identificadas por `err.name` ou `instanceof` dentro do próprio módulo.
 
 ```typescript
 export class AuthenticationError extends Error {
@@ -220,65 +149,9 @@ export class PermissionError extends Error {
 
 ## Tratamento de Erros
 
-### handleError Method
+### handleAxiosError (em `api-errors.ts`)
 
-```typescript
-private handleError(error: AxiosError): Error {
-  const response = error.response;
-
-  if (!response) {
-    return new Error('Erro de rede. Verifique sua conexão.');
-  }
-
-  const data = response.data as any;
-
-  const formatErrorMessage = (data: any): string => {
-    if (typeof data === 'string') return data;
-    if (data.detail) return data.detail;
-
-    // Django REST Framework validation errors
-    if (data && typeof data === 'object') {
-      const errorMessages: string[] = [];
-
-      for (const [field, errors] of Object.entries(data)) {
-        if (Array.isArray(errors)) {
-          errorMessages.push(`${field}: ${errors.join(', ')}`);
-        }
-      }
-
-      if (errorMessages.length > 0) {
-        return errorMessages.join('\n');
-      }
-    }
-
-    return 'Ocorreu um erro desconhecido';
-  };
-
-  switch (response.status) {
-    case 400:
-      return new ValidationError(
-        formatErrorMessage(data) || 'Erro de validação',
-        data.errors || data
-      );
-    case 401:
-      return new AuthenticationError(
-        formatErrorMessage(data) || 'Falha na autenticação'
-      );
-    case 403:
-      return new PermissionError(
-        formatErrorMessage(data) || 'Sem permissão'
-      );
-    case 404:
-      return new NotFoundError(
-        formatErrorMessage(data) || 'Recurso não encontrado'
-      );
-    case 500:
-      return new Error('Erro interno do servidor');
-    default:
-      return new Error(formatErrorMessage(data));
-  }
-}
-```
+Converte o `AxiosError` na classe certa por status HTTP (400→`ValidationError`, 401→`AuthenticationError`, 403→`PermissionError`, 404→`NotFoundError`, demais→`Error` genérico). Antes disso, trata dois casos especiais: resposta HTML (ex.: erro 500 de proxy, ou `DisallowedHost` do Django) vira uma mensagem amigável em vez de tentar parsear JSON. A extração da mensagem (`formatErrorMessage`) também entende o formato `{error, details: [...]}` usado por alguns endpoints, além do formato padrão do DRF (`{campo: [mensagens]}` e `{detail: "..."}`).
 
 ## Métodos HTTP
 
@@ -423,99 +296,57 @@ public clearTokens() {
 
 ## Services - Camada de API
 
-Cada módulo tem seu service que usa o `apiClient`.
+Cada módulo tem um service que estende `BaseService<T, CreateData, UpdateData>` (`services/base-service.ts`) — não uma classe escrita à mão. `BaseService` já implementa `getAll`, `getAllPaginated`, `getAllPages` (percorre todas as páginas automaticamente), `getById`, `create`, `update` (PUT), `patch`, `delete` e `batchCreate` (cria vários em paralelo).
 
 ### Padrão de Service
 
 ```typescript
 // services/accounts-service.ts
-import { apiClient } from './api-client';
-import { API_CONFIG } from '@/config/constants';
-import type { Account, AccountFormData, PaginatedResponse } from '@/types';
+import { BaseService } from './base-service';
+import { API_CONFIG } from '@/config/api-config';
+import type { Account, AccountFormData } from '@/types';
 
-class AccountsService {
-  async getAll(): Promise<Account[]> {
-    const response = await apiClient.get<PaginatedResponse<Account>>(
-      API_CONFIG.ENDPOINTS.ACCOUNTS
-    );
-    return response.results;
+class AccountsService extends BaseService<Account, AccountFormData> {
+  constructor() {
+    super(API_CONFIG.ENDPOINTS.ACCOUNTS);
   }
-
-  async getById(id: number): Promise<Account> {
-    return apiClient.get<Account>(`${API_CONFIG.ENDPOINTS.ACCOUNTS}${id}/`);
-  }
-
-  async create(data: AccountFormData): Promise<Account> {
-    return apiClient.post<Account>(API_CONFIG.ENDPOINTS.ACCOUNTS, data);
-  }
-
-  async update(id: number, data: Partial<AccountFormData>): Promise<Account> {
-    return apiClient.put<Account>(
-      `${API_CONFIG.ENDPOINTS.ACCOUNTS}${id}/`,
-      data
-    );
-  }
-
-  async delete(id: number): Promise<void> {
-    return apiClient.delete(`${API_CONFIG.ENDPOINTS.ACCOUNTS}${id}/`);
-  }
+  // Métodos extras específicos do domínio entram aqui
 }
 
-// Exporta instância singleton
 export const accountsService = new AccountsService();
 ```
 
+Para um recurso sem métodos extras, use o helper `createCrudService<T, CreateData>(endpoint)` em vez de declarar uma classe.
+
 ### Uso em Componentes
 
+Consumo via TanStack Query (`useQuery`/`useMutation`), nunca `useState`/`useEffect` manual:
+
 ```typescript
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { accountsService } from '@/services/accounts-service';
-import { useState, useEffect } from 'react';
+import { queryClient } from '@/lib/query-client';
 
 function AccountsList() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: accounts = [], isLoading } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => accountsService.getAll(),
+  });
 
-  useEffect(() => {
-    loadAccounts();
-  }, []);
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => accountsService.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['accounts'] }),
+  });
 
-  const loadAccounts = async () => {
-    try {
-      setLoading(true);
-      const data = await accountsService.getAll();
-      setAccounts(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    try {
-      await accountsService.delete(id);
-      setAccounts(accounts.filter(a => a.id !== id));
-      toast({ title: 'Conta excluída com sucesso' });
-    } catch (err: any) {
-      toast({
-        title: 'Erro ao excluir',
-        description: err.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage message={error} />;
+  if (isLoading) return <LoadingState />;
 
   return (
     <div>
-      {accounts.map(account => (
+      {accounts.map((account) => (
         <AccountCard
           key={account.id}
           account={account}
-          onDelete={() => handleDelete(account.id)}
+          onDelete={() => deleteMutation.mutate(account.id)}
         />
       ))}
     </div>
@@ -523,40 +354,24 @@ function AccountsList() {
 }
 ```
 
+Erros de mutação não precisam de tratamento manual de toast na maioria dos casos: `QueryCache.onError` em `lib/query-client.ts` já exibe um toast (debounced).
+
 ## Configuração de Endpoints
 
-Centralize endpoints em `config/constants.ts`:
+`API_CONFIG` (com `BASE_URL` e todos os `ENDPOINTS`, ~200 rotas) é definido em **`config/api-config.ts`**; `config/constants.ts` apenas faz `export * from './api-config'` (+ translations + categories) por compatibilidade — importe de `@/config/constants` nos componentes.
+
+`BASE_URL` não é só `VITE_API_BASE_URL`: é calculado em runtime a partir de `window.location.hostname` (evita bloqueio de cookie `SameSite` ao acessar por IP/hostname diferente do configurado), usando `VITE_API_BASE_URL` (fallback `http://localhost:39100`) só para decidir a porta em dev local; em produção (sem porta explícita = via ingress) usa o mesmo origin com path routing.
 
 ```typescript
+// config/api-config.ts (resumo)
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:39100',
+  BASE_URL: getApiBaseUrl(), // ver lógica acima
   ENDPOINTS: {
-    // Auth
     LOGIN: '/api/v1/authentication/token/',
-    LOGOUT: '/api/v1/authentication/logout/',
     REFRESH_TOKEN: '/api/v1/authentication/token/refresh/',
-    VERIFY_TOKEN: '/api/v1/authentication/token/verify/',
-    USER_PERMISSIONS: '/api/v1/user/permissions/',
-
-    // Financial
     ACCOUNTS: '/api/v1/accounts/',
     EXPENSES: '/api/v1/expenses/',
-    REVENUES: '/api/v1/revenues/',
-    CREDIT_CARDS: '/api/v1/credit-cards/',
-    TRANSFERS: '/api/v1/transfers/',
-    LOANS: '/api/v1/loans/',
-
-    // Security
-    PASSWORDS: '/api/v1/security/passwords/',
-    STORED_CARDS: '/api/v1/security/stored-cards/',
-
-    // Library
-    BOOKS: '/api/v1/library/books/',
-    AUTHORS: '/api/v1/library/authors/',
-
-    // AI
-    AI_QUERY: '/api/v1/agents/ask/',
-    AI_STREAM: '/api/v1/agents/stream/',
+    // ...~200 rotas, uma por recurso
   },
 };
 ```
@@ -564,7 +379,7 @@ export const API_CONFIG = {
 ## Tratamento de Erros em Componentes
 
 ```typescript
-import { AuthenticationError, ValidationError } from '@/services/api-client';
+import { AuthenticationError, ValidationError } from '@/services/api-errors';
 
 const handleSave = async () => {
   try {
@@ -591,27 +406,9 @@ const handleSave = async () => {
 };
 ```
 
-## Timeout e Retry (Futura melhoria)
+## Timeout e Retry
 
-```typescript
-// config com timeout
-this.client = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
-  timeout: 10000, // 10 segundos
-  withCredentials: true,
-});
-
-// Retry com axios-retry
-import axiosRetry from 'axios-retry';
-
-axiosRetry(this.client, {
-  retries: 3,
-  retryDelay: axiosRetry.exponentialDelay,
-  retryCondition: (error) => {
-    return error.response?.status === 503;
-  },
-});
-```
+Já implementado nativamente no `api-client.ts` (sem `axios-retry`): timeout de 30s e retry com backoff exponencial (até 3 tentativas) para erro de rede e para `429` — ver "Response Interceptor" acima.
 
 ## Boas Práticas
 
@@ -627,14 +424,17 @@ const accounts = await apiClient.get('/api/v1/accounts/');
 
 ### 2. Trate erros específicos
 
+`NotFoundError` e `PermissionError` não são exportadas por `api-errors.ts` — para distingui-las de fora do módulo, compare `err.name`:
+
 ```typescript
 // ✅ Bom
 try {
   await accountsService.delete(id);
 } catch (err) {
-  if (err instanceof NotFoundError) {
+  const name = (err as Error).name;
+  if (name === 'NotFoundError') {
     toast({ title: 'Conta não encontrada' });
-  } else if (err instanceof PermissionError) {
+  } else if (name === 'PermissionError') {
     toast({ title: 'Sem permissão para excluir' });
   } else {
     toast({ title: 'Erro ao excluir' });

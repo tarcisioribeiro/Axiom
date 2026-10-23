@@ -151,10 +151,13 @@ Monte planos de treino com dias, grupos musculares e exercícios específicos (s
 Cadastre alimentos com macronutrientes (proteína, carboidrato, gordura, calorias). Monte cardápios (opções de refeição com ingredientes e quantidades, incluindo ingredientes alternativos entre si). Registre o que você comeu em cada refeição do dia (café da manhã, almoço, lanche, jantar) com controle calórico e de macros.
 
 **Gamificação**
-Cada tarefa concluída, meta atingida e reflexão registrada rende **XP**, que acumula em níveis e desbloqueia **badges** de conquista. O sistema acompanha sua sequência atual e sua maior sequência já alcançada, com marcos especiais em 7, 30 e 100 dias. Crie **Desafios** de duração fixa (7 a 100 dias, ex.: "30 dias sem açúcar") vinculados opcionalmente a um hábito existente, com taxa de conclusão acompanhada em tempo real.
+Cada tarefa concluída, meta atingida e reflexão registrada rende **XP**, que acumula em níveis e desbloqueia **badges** de conquista. O sistema acompanha sua sequência atual (streak) e sua maior sequência já alcançada, com marcos especiais em 7, 30 e 100 dias.
 
 **Bem-Estar Emocional**
 Um espaço de autocuidado psicológico integrado ao planejamento. Faça **check-ins emocionais** diários (solidão, ansiedade, motivação, energia) e avaliações padronizadas de autoestima (Escala de Rosenberg), com análise gerada por IA. O **Modo Crise** permite registrar um impulso (compulsão, procrastinação, etc.) e receber uma resposta de apoio gerada por IA na hora. Um catálogo de **intervenções** (exercícios e técnicas breves) pode ser seguido e avaliado, e um **relatório semanal** gerado por IA resume padrões emocionais e sugere pontos de atenção.
+
+**Revisão Diária**
+Um modal bloqueante que, antes de liberar o uso normal do dia, percorre as pendências do dia anterior: reflexão não registrada, tarefas não concluídas, metas de hábito a evitar, treino do dia, refeições e hidratação não registradas, check-in emocional, autoestima, sessões de estudo e flashcards vencidos. Cada pendência pode ser resolvida (registrando o que faltou) ou justificada (pular ou manter pendente). Itens "contínuos" (bem-estar da semana, flashcards vencidos) só aparecem na revisão do dia mais recente, e a justificativa vale até o fim da janela.
 
 ---
 
@@ -169,10 +172,14 @@ O Axiom tem um assistente conversacional integrado que conhece todos os seus dad
 - **Insight** — padrões de comportamento financeiro, anomalias, tendências
 - **Library** — estatísticas de leitura, próximos livros, progresso de metas
 - **Planning** — hábitos, metas pessoais, consistência de rotinas
+- **Personal** — visão combinada de planejamento pessoal e bem-estar
+- **Financial** — módulo financeiro consolidado (complementar aos agentes de finanças acima)
+- **Security** — cofre de senhas: saúde das senhas, duplicadas, alertas
+- **Intellect** — cursos, habilidades e flashcards do módulo Intelecto da Biblioteca
 
 As respostas são entregues em streaming (você vê o texto sendo digitado em tempo real). O histórico de conversas é preservado por sessão.
 
-O assistente funciona com diferentes backends de IA: **Ollama** (auto-hospedado, sem custo e sem envio de dados para fora), **Groq** ou **Anthropic Claude** — configurável pelo administrador.
+O assistente funciona com diferentes backends de IA: **Ollama** (auto-hospedado, sem custo e sem envio de dados para fora), **Groq**, **Anthropic Claude** ou **OpenAI** — configurável pelo administrador.
 
 ---
 

@@ -48,6 +48,7 @@ O sistema de agentes do Axiom (`apps/api/agents/`) suporta quatro provedores de 
 | `OLLAMA_EMBED_MODEL` | Modelo Ollama (Embedding) | Não | Não | — |
 | `LLM_TIMEOUT_CHAT` | Timeout Chat (segundos) | Não | Não | `120` |
 | `LLM_TIMEOUT_EMBED` | Timeout Embedding (segundos) | Não | Não | `30` |
+| `LLM_MAX_TOKENS` | Máximo de tokens de saída | Não | Não | `2048` |
 | `GROQ_API_KEY` | Chave API Groq 🔒 | **Sim** | Não | — |
 | `GROQ_MODEL` | Modelo Groq | Não | Não | — |
 | `ANTHROPIC_API_KEY` | Chave API Anthropic 🔒 | **Sim** | Não | — |
@@ -82,6 +83,9 @@ Segundos de espera máxima por uma resposta de chat antes de abortar com erro. P
 
 **`LLM_TIMEOUT_EMBED`**
 Segundos de espera máxima por um embedding. Padrão: `30`. Embeddings são mais rápidos que chat; raramente precisa ser aumentado.
+
+**`LLM_MAX_TOKENS`**
+Máximo de tokens de saída de uma resposta de chat, aplicado a todos os providers (Ollama, Groq, OpenAI, Anthropic). Padrão: `2048`. Aumente se as respostas estiverem sendo cortadas; diminua para reduzir custo/latência.
 
 **`ANTHROPIC_API_KEY`**
 Chave secreta da API Anthropic. Obrigatória quando `LLM_PROVIDER=anthropic`. Começa com `sk-ant-api03-`. Armazenada criptografada no banco.
@@ -163,6 +167,7 @@ OLLAMA_MODEL       = mistral:7b-instruct
 OLLAMA_EMBED_MODEL = nomic-embed-text
 LLM_TIMEOUT_CHAT   = 120
 LLM_TIMEOUT_EMBED  = 30
+LLM_MAX_TOKENS     = 2048
 ```
 
 ---
