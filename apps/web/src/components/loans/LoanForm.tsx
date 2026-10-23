@@ -331,7 +331,7 @@ export function LoanForm({
               </div>
             )}
 
-            <div className="col-span-2 space-y-sm">
+            <div className="space-y-sm col-span-2">
               <Label htmlFor="description" className="gap-xs flex items-center">
                 <FileText className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.descriptionLabel')}
@@ -679,7 +679,7 @@ export function LoanForm({
               />
             </div>
 
-            <div className="col-span-2 space-y-sm">
+            <div className="space-y-sm col-span-2">
               <Label htmlFor="contract_document" className="gap-xs flex items-center">
                 <FileText className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.contractDocumentLabel')}

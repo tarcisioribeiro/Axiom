@@ -214,7 +214,7 @@ export function VaultContributionsDialog({
                   : t('pages.vaults.recurringContributions.newBtn')}
               </h4>
               <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2 space-y-sm">
+                <div className="space-y-sm col-span-2">
                   <Label
                     className="gap-xs flex items-center"
                     htmlFor="contrib_description"
