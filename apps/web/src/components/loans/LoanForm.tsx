@@ -331,7 +331,7 @@ export function LoanForm({
               </div>
             )}
 
-            <div className="col-span-2">
+            <div className="col-span-2 space-y-sm">
               <Label htmlFor="description" className="gap-xs flex items-center">
                 <FileText className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.descriptionLabel')}
@@ -345,7 +345,7 @@ export function LoanForm({
               />
             </div>
 
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="value" className="gap-xs flex items-center">
                 <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.totalValueLabel')}
@@ -357,7 +357,7 @@ export function LoanForm({
               />
             </div>
 
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="payed_value" className="gap-xs flex items-center">
                 <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.paidValueLabel')}
@@ -372,7 +372,7 @@ export function LoanForm({
               />
             </div>
 
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="date" className="gap-xs flex items-center">
                 <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.dateLabel')}
@@ -384,7 +384,7 @@ export function LoanForm({
               />
             </div>
 
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="horary" className="gap-xs flex items-center">
                 <Clock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.timeLabel')}
@@ -409,7 +409,7 @@ export function LoanForm({
           icon={Users}
         >
           <div className={cn('gap-md grid', cols)}>
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="category" className="gap-xs flex items-center">
                 <Tag className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.categoryLabel')}
@@ -439,7 +439,7 @@ export function LoanForm({
               </Select>
             </div>
 
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="account" className="gap-xs flex items-center">
                 <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.accountLabel')}
@@ -465,7 +465,7 @@ export function LoanForm({
             </div>
 
             {((!isEditing && formData.loan_type === 'lent') || isEditing) && (
-              <div>
+              <div className="space-y-sm">
                 <Label htmlFor="benefited" className="gap-xs flex items-center">
                   <Users className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.loans.form.benefitedLabel')}
@@ -497,7 +497,7 @@ export function LoanForm({
             )}
 
             {((!isEditing && formData.loan_type === 'borrowed') || isEditing) && (
-              <div>
+              <div className="space-y-sm">
                 <Label htmlFor="creditor" className="gap-xs flex items-center">
                   <Users className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.loans.form.creditorLabel')}
@@ -528,7 +528,7 @@ export function LoanForm({
               </div>
             )}
 
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="status" className="gap-xs flex items-center">
                 <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.statusLabel')}
@@ -564,7 +564,7 @@ export function LoanForm({
           icon={BadgePercent}
         >
           <div className={cn('gap-md grid', cols)}>
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="installments" className="gap-xs flex items-center">
                 <Hash className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.installmentsLabel')}
@@ -577,7 +577,7 @@ export function LoanForm({
               />
             </div>
 
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="interest_rate" className="gap-xs flex items-center">
                 <Percent className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.interestRateLabel')}
@@ -590,7 +590,7 @@ export function LoanForm({
               />
             </div>
 
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="due_date" className="gap-xs flex items-center">
                 <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.dueDateLabel')}
@@ -604,7 +604,7 @@ export function LoanForm({
               />
             </div>
 
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="payment_frequency" className="gap-xs flex items-center">
                 <Clock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.paymentFrequencyLabel')}
@@ -626,7 +626,7 @@ export function LoanForm({
               </Select>
             </div>
 
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="late_fee" className="gap-xs flex items-center">
                 <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.lateFeeLabel')}
@@ -638,7 +638,7 @@ export function LoanForm({
               />
             </div>
 
-            <div>
+            <div className="space-y-sm">
               <Label htmlFor="guarantor" className="gap-xs flex items-center">
                 <Shield className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.guarantorLabel')}
@@ -665,7 +665,7 @@ export function LoanForm({
               </Select>
             </div>
 
-            <div className={isEditing ? 'col-span-3' : 'col-span-2'}>
+            <div className={cn('space-y-sm', isEditing ? 'col-span-3' : 'col-span-2')}>
               <Label htmlFor="notes" className="gap-xs flex items-center">
                 <FileText className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.notesLabel')}
@@ -679,7 +679,7 @@ export function LoanForm({
               />
             </div>
 
-            <div className="col-span-2">
+            <div className="col-span-2 space-y-sm">
               <Label htmlFor="contract_document" className="gap-xs flex items-center">
                 <FileText className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.contractDocumentLabel')}

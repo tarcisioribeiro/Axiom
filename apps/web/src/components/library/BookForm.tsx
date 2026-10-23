@@ -758,7 +758,7 @@ export function BookForm({
 
                   {alreadyRead && (
                     <div className="gap-md grid grid-cols-2 rounded-md border p-3">
-                      <div>
+                      <div className="space-y-sm">
                         <Label className="gap-xs flex items-center">
                           <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                           {t('pages.books.form.startDateLabel')}
@@ -772,7 +772,7 @@ export function BookForm({
                           disabled={isLoading}
                         />
                       </div>
-                      <div>
+                      <div className="space-y-sm">
                         <Label className="gap-xs flex items-center">
                           <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                           {t('pages.books.form.endDateLabel')}
