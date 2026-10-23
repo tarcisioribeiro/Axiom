@@ -121,7 +121,7 @@
   "overrides": {
     "esbuild": "0.28.1",
     "flatted": "3.4.2",
-    "dompurify": "3.4.16",
+    "dompurify": "3.4.17",
     "fast-uri": "4.2.1",
     "lodash": "4.18.1",
     "@xmldom/xmldom": "0.8.15",
