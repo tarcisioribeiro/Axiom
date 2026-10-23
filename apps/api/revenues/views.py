@@ -138,7 +138,8 @@ class FixedRevenueListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         return (
-            FixedRevenue.objects.select_related("account", "member")
+            FixedRevenue.objects.filter(created_by=self.request.user)
+            .select_related("account", "member")
             .annotate(total_generated=Count("id"))
             .order_by("due_day", "description")
         )
@@ -156,6 +157,11 @@ class FixedRevenueListCreateView(BaseListCreateView):
 
 class FixedRevenueDetailView(BaseRetrieveUpdateDestroyView):
     queryset = FixedRevenue.objects.select_related("account", "member")
+
+    def get_queryset(self):
+        return FixedRevenue.objects.filter(
+            created_by=self.request.user
+        ).select_related("account", "member")
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
@@ -179,11 +185,22 @@ class BulkGenerateFixedRevenuesView(APIView):
         serializer = BulkGenerateRevenuesRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        result = bulk_generate_fixed_revenues(
-            month=serializer.validated_data["month"],
-            revenue_values=serializer.validated_data["revenue_values"],
-            user=request.user,
-        )
+        try:
+            result = bulk_generate_fixed_revenues(
+                month=serializer.validated_data["month"],
+                revenue_values=serializer.validated_data["revenue_values"],
+                user=request.user,
+            )
+        except FixedRevenue.DoesNotExist:
+            return Response(
+                {
+                    "error": (
+                        "Uma ou mais receitas fixas não foram"
+                        " encontradas ou estão inativas"
+                    )
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         response_serializer = BulkGenerateRevenuesResponseSerializer(result)
         return Response(
@@ -280,7 +297,11 @@ class ExportRevenuesView(APIView):
         search = request.query_params.get("search")
         account_ids = request.query_params.getlist("account")
 
-        qs = Revenue.objects.select_related("account").order_by("-date", "-id")
+        qs = (
+            Revenue.objects.filter(created_by=request.user)
+            .select_related("account")
+            .order_by("-date", "-id")
+        )
 
         if date_from:
             qs = qs.filter(date__gte=date_from)

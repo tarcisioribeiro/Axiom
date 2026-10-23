@@ -126,6 +126,77 @@ class TestLLMClientOpenAI(TestCase):
         self.assertTrue(LLMClient.is_available())
 
 
+def _cfg_groq_only(key: str, default: object = None) -> object:
+    return {
+        "LLM_PROVIDER": "groq",
+        "GROQ_API_KEY": "gsk-test",
+        "GROQ_MODEL": "llama-test",
+    }.get(key, default)
+
+
+class TestLLMClientMaxTokensCap(TestCase):
+    """
+    Regression: only the Anthropic path used to cap output length. Ollama,
+    Groq, and OpenAI chat payloads never set a token limit — unbounded
+    output on 3 of 4 providers, including Ollama (the documented default).
+    """
+
+    @patch("agents.core.llm_client._cfg", side_effect=_cfg_ollama_only)
+    @patch("requests.post")
+    def test_ollama_chat_caps_output_via_num_predict(
+        self, mock_post: MagicMock, _mock_cfg: MagicMock
+    ) -> None:
+        from agents.core.llm_client import LLMClient
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"message": {"content": "resposta"}}
+        mock_post.return_value = mock_response
+
+        LLMClient.chat([{"role": "user", "content": "oi"}])
+
+        json_payload = mock_post.call_args.kwargs["json"]
+        # Ollama's /api/chat ignores a top-level "max_tokens" key — the
+        # actual knob is options.num_predict.
+        self.assertIn("options", json_payload)
+        self.assertEqual(json_payload["options"]["num_predict"], 2048)
+
+    @patch("agents.core.llm_client._cfg", side_effect=_cfg_groq_only)
+    @patch("requests.post")
+    def test_groq_chat_sets_max_tokens(
+        self, mock_post: MagicMock, _mock_cfg: MagicMock
+    ) -> None:
+        from agents.core.llm_client import LLMClient
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "choices": [{"message": {"content": "resposta"}}]
+        }
+        mock_post.return_value = mock_response
+
+        LLMClient.chat([{"role": "user", "content": "oi"}])
+
+        json_payload = mock_post.call_args.kwargs["json"]
+        self.assertEqual(json_payload["max_tokens"], 2048)
+
+    @patch("agents.core.llm_client._cfg", side_effect=_cfg_openai)
+    @patch("requests.post")
+    def test_openai_chat_sets_max_tokens(
+        self, mock_post: MagicMock, _mock_cfg: MagicMock
+    ) -> None:
+        from agents.core.llm_client import LLMClient
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "choices": [{"message": {"content": "resposta"}}]
+        }
+        mock_post.return_value = mock_response
+
+        LLMClient.chat([{"role": "user", "content": "oi"}])
+
+        json_payload = mock_post.call_args.kwargs["json"]
+        self.assertEqual(json_payload["max_tokens"], 2048)
+
+
 def _cfg_groq_with_ollama_fallback(key: str, default: object = None) -> object:
     return {
         "LLM_PROVIDER": "groq",

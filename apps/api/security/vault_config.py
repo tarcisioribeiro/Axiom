@@ -672,6 +672,7 @@ class VaultChangePasswordView(APIView):
     """
 
     permission_classes = [IsAuthenticated]
+    throttle_classes = [VaultUnlockRateThrottle]
 
     def post(self, request):
         member = _get_member(request.user)
@@ -689,6 +690,20 @@ class VaultChangePasswordView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Verificar lockout por tentativas falhas anteriores
+        failed = _get_failed_attempts(request.user.id)
+        if failed >= VAULT_MAX_FAILED_ATTEMPTS:
+            return Response(
+                {
+                    "error": (
+                        "Cofre bloqueado temporariamente após"
+                        f" {VAULT_MAX_FAILED_ATTEMPTS} tentativas incorretas."
+                        " Tente novamente em 15 minutos."
+                    )
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
         serializer = VaultChangePasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         current_password = serializer.validated_data["current_master_password"]
@@ -702,6 +717,26 @@ class VaultChangePasswordView(APIView):
                 vault_config.encrypted_vault_key, derived_key
             )
         except DecryptionError:
+            attempts = _increment_failed_attempts(request.user.id)
+            logger.warning(
+                "Vault change master password failed — wrong current "
+                "password for user %s (attempt=%s, vault_config.id=%s)",
+                request.user.id,
+                attempts,
+                vault_config.id,
+            )
+            ActivityLog.log_action(
+                user=request.user,
+                action="failed_vault_change_master_password",
+                description=(
+                    f"Tentativa de troca da senha mestre do cofre"
+                    f" falhou (tentativa {attempts})"
+                ),
+                model_name="VaultConfig",
+                object_id=vault_config.id,
+                description_key="vault.failed_change_master_password",
+                description_params={"attempts": attempts},
+            )
             return Response(
                 {"error": "Senha mestre atual incorreta."},
                 status=status.HTTP_400_BAD_REQUEST,

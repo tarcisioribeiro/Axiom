@@ -315,3 +315,104 @@ class GlobalDefaultPermissionTest(TestCase):
         )
         print(has_permission)
         # Resultado depende da implementação - pode ser True ou False
+
+
+class GlobalDefaultPermissionObjectLevelTest(TestCase):
+    """
+    Regression for the systemic IDOR root cause found in the audit:
+    GlobalDefaultPermission used to only implement has_permission (a
+    Django model-level check), never has_object_permission, so DRF's
+    object-level check silently fell back to always-True for every
+    RetrieveUpdateDestroyAPIView-based view.
+    """
+
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.permission = GlobalDefaultPermission()
+        self.view = Mock()
+        self.view.queryset = Account.objects.all()
+
+        self.owner = User.objects.create_user(
+            username="obj_owner",
+            email="obj_owner@test.com",
+            password="testpass123",
+        )
+        self.other = User.objects.create_user(
+            username="obj_other",
+            email="obj_other@test.com",
+            password="testpass123",
+        )
+        self.superuser = User.objects.create_superuser(
+            username="obj_super",
+            email="obj_super@test.com",
+            password="testpass123",
+        )
+
+        content_type = ContentType.objects.get_for_model(Account)
+        permission, _ = Permission.objects.get_or_create(
+            codename="view_account",
+            content_type=content_type,
+            defaults={"name": "Can view account"},
+        )
+        self.owner.user_permissions.add(permission)
+        self.other.user_permissions.add(permission)
+
+    def _request(self, user):
+        request = self.factory.get("/api/v1/accounts/1/")
+        request.user = user
+        return request
+
+    def test_owner_can_access_own_object(self):
+        obj = Mock(created_by_id=self.owner.id)
+        self.assertTrue(
+            self.permission.has_object_permission(
+                self._request(self.owner), self.view, obj
+            )
+        )
+
+    def test_other_authenticated_user_cannot_access_object(self):
+        obj = Mock(created_by_id=self.owner.id)
+        self.assertFalse(
+            self.permission.has_object_permission(
+                self._request(self.other), self.view, obj
+            )
+        )
+
+    def test_superuser_can_access_any_object(self):
+        obj = Mock(created_by_id=self.owner.id)
+        self.assertTrue(
+            self.permission.has_object_permission(
+                self._request(self.superuser), self.view, obj
+            )
+        )
+
+    def test_object_without_created_by_keeps_permissive_fallback(self):
+        """
+        Ownerless records (created_by=None) are still permitted — a
+        deliberate, documented scope boundary: this fix closes
+        retrieve/update/destroy IDOR, not every shared-resource case.
+        """
+        obj = Mock(created_by_id=None)
+        self.assertTrue(
+            self.permission.has_object_permission(
+                self._request(self.other), self.view, obj
+            )
+        )
+
+    def test_denies_when_base_model_permission_is_missing(self):
+        """
+        has_object_permission must short-circuit through has_permission
+        first: a user with no model-level permission at all is denied
+        regardless of object ownership.
+        """
+        no_perm_user = User.objects.create_user(
+            username="obj_noperm",
+            email="obj_noperm@test.com",
+            password="testpass123",
+        )
+        obj = Mock(created_by_id=no_perm_user.id)
+        self.assertFalse(
+            self.permission.has_object_permission(
+                self._request(no_perm_user), self.view, obj
+            )
+        )

@@ -31,6 +31,16 @@ class GlobalDefaultPermission(permissions.BasePermission):
 
         return bool(request.user.has_perm(model_permission_codename))
 
+    def has_object_permission(self, request: Any, view: Any, obj: Any) -> bool:
+        if not self.has_permission(request, view):
+            return False
+        if request.user.is_superuser:
+            return True
+        owner_id = getattr(obj, "created_by_id", None)
+        if owner_id is None:
+            return True
+        return bool(owner_id == request.user.id)
+
     def _get_model_permission_codename(
         self, method: str, view: Any
     ) -> Optional[str]:

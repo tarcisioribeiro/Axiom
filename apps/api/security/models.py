@@ -557,10 +557,15 @@ ACTION_TYPES = (
     ("logout", "Logout"),
     ("failed_login", "Tentativa de Login Falha"),
     ("failed_vault_unlock", "Tentativa de Desbloqueio do Cofre Falha"),
+    (
+        "failed_vault_change_master_password",
+        "Tentativa de Troca da Senha Mestre do Cofre Falha",
+    ),
     ("other", "Outro"),
     ("purge", "Purga de Dados (LGPD/GDPR)"),
     ("shared_reveal", "Acesso via Link Compartilhado"),
     ("copy", "Cópia para Área de Transferência"),
+    ("system_config_revealed", "Revelação de Configuração do Sistema"),
 )
 
 

@@ -143,9 +143,8 @@ class FixedExpenseListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         return (
-            FixedExpense.objects.select_related(
-                "account", "member", "credit_card"
-            )
+            FixedExpense.objects.filter(created_by=self.request.user)
+            .select_related("account", "member", "credit_card")
             .annotate(total_generated=Count("generated_expenses"))
             .order_by("due_day", "description")
         )
@@ -165,6 +164,11 @@ class FixedExpenseDetailView(BaseRetrieveUpdateDestroyView):
     queryset = FixedExpense.objects.select_related(
         "account", "member", "credit_card"
     )
+
+    def get_queryset(self):
+        return FixedExpense.objects.filter(
+            created_by=self.request.user
+        ).select_related("account", "member", "credit_card")
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
@@ -236,15 +240,15 @@ class BulkMarkPaidView(APIView):
         expense_ids = serializer.validated_data["expense_ids"]
 
         account_ids = set(
-            Expense.objects.filter(id__in=expense_ids)
+            Expense.objects.filter(id__in=expense_ids, created_by=request.user)
             .values_list("account_id", flat=True)
             .distinct()
         )
 
         with transaction.atomic():
-            updated = Expense.objects.filter(id__in=expense_ids).update(
-                payed=True, updated_by=request.user
-            )
+            updated = Expense.objects.filter(
+                id__in=expense_ids, created_by=request.user
+            ).update(payed=True, updated_by=request.user)
             for account_id in account_ids:
                 if account_id:
                     recalculate_account_balance(account_id)
@@ -378,7 +382,11 @@ class ExportExpensesView(APIView):
         search = request.query_params.get("search")
         account_ids = request.query_params.getlist("account")
 
-        qs = Expense.objects.select_related("account").order_by("-date", "-id")
+        qs = (
+            Expense.objects.filter(created_by=request.user)
+            .select_related("account")
+            .order_by("-date", "-id")
+        )
 
         if date_from:
             qs = qs.filter(date__gte=date_from)

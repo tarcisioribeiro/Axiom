@@ -150,6 +150,7 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
         fe.id: fe
         for fe in FixedExpense.objects.filter(
             id__in=ids,
+            created_by=user,
             is_deleted=False,
             is_active=True,
         ).select_related("credit_card", "account", "member")

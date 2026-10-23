@@ -934,7 +934,75 @@ class VaultExportZipTest(BaseSecurityCoverageTestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp["Content-Type"], "application/octet-stream")
         self.assertEqual(resp["X-Vault-Export-Format"], "AES-256-GCM")
-        self.assertTrue(len(resp.content) > 12)
+        self.assertEqual(resp["X-Vault-Export-Salt-Bytes"], "16")
+        self.assertEqual(resp["X-Vault-Export-Nonce-Bytes"], "12")
+        # salt(16) + nonce(12) + at least the GCM auth tag.
+        self.assertTrue(len(resp.content) > 28)
+
+
+class VaultExportZipKeyDerivationTest(BaseSecurityCoverageTestCase):
+    """
+    Regression for the vault-export threat-model break: the export used to
+    be encrypted with a global key (settings.BACKUP_ENCRYPTION_KEY, which —
+    separately — was never actually wired into Django settings, so this
+    passphrase always resolved to an empty string) instead of the user's
+    own vault key. Anyone could decrypt anyone's export without their
+    master password. Fixed by deriving the export key from the per-user
+    vault key when the vault is configured and unlocked.
+    """
+
+    MASTER_PASSWORD = "ExportDerivPass1!"
+
+    def setUp(self):
+        super().setUp()
+        self.client.post(
+            reverse("vault-setup"),
+            {
+                "master_password": self.MASTER_PASSWORD,
+                "confirm_master_password": self.MASTER_PASSWORD,
+            },
+        )
+        self._make_password("ExportDerivPW", password="Secr3tValue!")
+
+    @staticmethod
+    def _decrypt(blob: bytes, passphrase: bytes) -> bytes:
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+        salt, nonce, ciphertext = blob[:16], blob[16:28], blob[28:]
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt,
+            iterations=100_000,
+        )
+        aes_key = kdf.derive(passphrase)
+        return AESGCM(aes_key).decrypt(nonce, ciphertext, None)
+
+    def test_export_decrypts_with_the_users_own_vault_key(self):
+        from security.vault_config import _get_vault_key_from_cache
+
+        vault_key = _get_vault_key_from_cache(self.user.id)
+        self.assertIsNotNone(vault_key)
+
+        resp = self.client.get(reverse("vault-export-zip"))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        plaintext = self._decrypt(resp.content, vault_key)
+        self.assertTrue(plaintext.startswith(b"PK"))  # ZIP local-file magic
+
+    def test_export_no_longer_decrypts_with_the_global_backup_key(self):
+        from cryptography.exceptions import InvalidTag
+
+        from app.config import cfg
+
+        resp = self.client.get(reverse("vault-export-zip"))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        backup_passphrase = cfg("BACKUP_ENCRYPTION_KEY", "").encode()
+        with self.assertRaises(InvalidTag):
+            self._decrypt(resp.content, backup_passphrase)
 
 
 # ---------------------------------------------------------------------------
