@@ -182,6 +182,7 @@ Há três tipos de modal:
 - **[regra]** Animações indesejadas são removidas (ex.: giro de número em contador, tela piscando).
 - **[pontual]** Animação na troca entre senha e 2FA, ao abrir campos de data e horário e ao ocultar o widget do agente.
 - **[pontual]** Widget de timer de estudo (`StudyTimer.tsx`): a troca de controles por fase (Iniciar → Pausar/Encerrar → Retomar/Encerrar) anima com fade + leve scale (`AnimatePresence mode="wait"`, chave pela fase). "Descartar" é um `Button` `variant="ghost"` `size="sm"` com ícone `RotateCcw`, não mais um texto solto (21/10/2026).
+- **[pontual]** Card de refeição no Diário (`NutritionPage.tsx`, `MealTimeline`): o ícone de status e a área de botões/calorias trocam com fade + leve scale (`AnimatePresence mode="wait"`, chave pelo status `done`/`late`/`pending`) ao registrar ou excluir o lançamento — mesmo mecanismo nas duas direções. Fundo do ícone com `transition-colors`. A barra circular de aderência do topo usa `transition-[stroke-dashoffset] duration-slow` (nunca a classe genérica `transition`, que não cobre essa propriedade — mesmo ajuste de `VaultHealthSection`). Na Hidratação (`Hydration.tsx`): o valor do card superior (`WaterTotal`) e o texto de total/percentual do `WaterLogPanel` entram com `animate-fade-in` (chave pelo valor), e a barra (`Progress`) usa `duration-slow` no indicador, igual às demais barras do app (23/10/2026).
 
 ## 9. Tema, cores e tipografia
 
