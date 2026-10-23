@@ -18,6 +18,9 @@ from personal_planning.models import (
     BodyMetric,
     DailyReflection,
     Goal,
+    HydrationGoal,
+    MealType,
+    RoutineTask,
     TaskInstance,
     WorkoutDay,
     WorkoutPlan,
@@ -377,3 +380,41 @@ class PlannedWorkoutDaysOrderTests(DailyReviewTestCase):
             [d.id for d in result],
             [mobility.id, resistance.id, cardio.id],
         )
+
+
+class TasksStepHidesLinkedTasksTests(DailyReviewTestCase):
+    """Tarefas vinculadas a refeição/hidratação/treino já são cobradas nas
+    próprias etapas — não devem aparecer também em "tasks"."""
+
+    def make_instance(self, name, category, **routine_kwargs):
+        template = RoutineTask.objects.create(
+            name=name, category=category, owner=self.member, **routine_kwargs
+        )
+        return TaskInstance.objects.create(
+            template=template,
+            task_name=name,
+            category=category,
+            scheduled_date=self.yesterday,
+            status="pending",
+            owner=self.member,
+        )
+
+    def test_meal_hydration_and_workout_linked_tasks_are_hidden(self):
+        meal_type = MealType.objects.create(name="Almoço", owner=self.member)
+        HydrationGoal.objects.create(daily_target_ml=2000, owner=self.member)
+
+        self.make_instance(
+            "Registrar almoço", "nutrition", linked_meal_type=meal_type
+        )
+        self.make_instance(
+            "Beber água",
+            "nutrition",
+            linked_hydration_goal=HydrationGoal.objects.get(owner=self.member),
+        )
+        self.make_instance("Treinar", "exercise", linked_workout=True)
+        self.make_instance("Meditar", "spiritual")
+
+        steps = self.steps()
+        self.assertIn("tasks", steps)
+        labels = {item["label"] for item in steps["tasks"]["items"]}
+        self.assertEqual(labels, {"Meditar"})

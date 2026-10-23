@@ -7,7 +7,6 @@ import Cookies from 'js-cookie';
 
 import { API_CONFIG } from '@/config/constants';
 import { logger } from '@/lib/logger';
-import { queryClient } from '@/lib/query-client';
 import { isWebDeviceBlockResponse, useWebAccessStore } from '@/lib/web-access';
 
 import {
@@ -59,13 +58,7 @@ class ApiClient {
     );
 
     this.client.interceptors.response.use(
-      (response) => {
-        const method = response.config.method?.toUpperCase();
-        if (method && method !== 'GET') {
-          void queryClient.invalidateQueries();
-        }
-        return response;
-      },
+      (response) => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & {
           _retry?: boolean;

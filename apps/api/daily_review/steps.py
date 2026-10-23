@@ -93,12 +93,21 @@ def _tasks(ctx: Context, day: date) -> list[Item]:
     # Instâncias são geradas sob demanda: sem isso, um dia em que o usuário
     # não abriu o app não teria tarefas a revisar.
     InstanceGenerator.generate_for_date(ctx.member, day)
-    qs = TaskInstance.objects.filter(
-        owner=ctx.member,
-        scheduled_date=day,
-        status__in=("pending", "in_progress"),
-        is_deleted=False,
-    ).order_by("scheduled_time", "occurrence_index")
+    # Tarefas vinculadas a refeição/hidratação/treino já são cobradas nas
+    # etapas "meals"/"hydration"/"workout" — listá-las aqui também duplicaria
+    # a pendência.
+    qs = (
+        TaskInstance.objects.filter(
+            owner=ctx.member,
+            scheduled_date=day,
+            status__in=("pending", "in_progress"),
+            is_deleted=False,
+        )
+        .exclude(template__linked_meal_type__isnull=False)
+        .exclude(template__linked_hydration_goal__isnull=False)
+        .exclude(template__linked_workout=True)
+        .order_by("scheduled_time", "occurrence_index")
+    )
     return [
         {
             "key": str(t.uuid),
