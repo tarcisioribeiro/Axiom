@@ -10,6 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from admin_panel.models import UserScreenAccess
 from daily_review.models import ReviewProgress, ReviewResolution
+from daily_review.steps import Context, _planned_workout_days
 from daily_review.views import Review
 from library.models import Course
 from members.models import Member
@@ -18,6 +19,8 @@ from personal_planning.models import (
     DailyReflection,
     Goal,
     TaskInstance,
+    WorkoutDay,
+    WorkoutPlan,
 )
 
 URL = "/api/v1/daily-review/"
@@ -338,4 +341,39 @@ class PreferencesAndCourseTests(DailyReviewTestCase):
         self.assertEqual(ok.status_code, 201, ok.content)
         self.assertEqual(
             Course.objects.get(title="Curso").study_weekdays, [0, 4]
+        )
+
+
+class PlannedWorkoutDaysOrderTests(DailyReviewTestCase):
+    """Mesma ordem usada em 'Plano de hoje' e no dropdown de registro de
+    sessão: mobilidade, depois resistência, depois cardio."""
+
+    def test_sorted_by_category_not_by_plan_order(self):
+        weekday = self.yesterday.weekday()
+
+        def plan_with_day(name, category, order):
+            plan = WorkoutPlan.objects.create(
+                name=name, category=category, owner=self.member
+            )
+            return WorkoutDay.objects.create(
+                plan=plan,
+                name=name,
+                days_of_week=[weekday],
+                order=order,
+                owner=self.member,
+            )
+
+        # Criados fora de ordem de categoria, mas com `order`/plano
+        # crescente — a ordenação antiga (plan, order, name) os listaria
+        # nesta mesma ordem de criação, que é a errada.
+        cardio = plan_with_day("Esteira", "cardio", order=0)
+        mobility = plan_with_day("Mobilidade", "mobility", order=1)
+        resistance = plan_with_day("Costas", "resistance", order=2)
+
+        ctx = Context(member=self.member, today=self.today)
+        result = _planned_workout_days(ctx, self.yesterday)
+
+        self.assertEqual(
+            [d.id for d in result],
+            [mobility.id, resistance.id, cardio.id],
         )

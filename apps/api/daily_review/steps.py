@@ -133,6 +133,11 @@ def _goals(ctx: Context, day: date) -> list[Item]:
     return [{"key": str(g.uuid), "label": g.title, "id": g.id} for g in qs]
 
 
+# Mesma ordem usada em "Plano de hoje" e no dropdown de registro de sessão
+# (DIVISION_CATEGORY_ORDER em apps/web/src/lib/workout-calendar.ts).
+_WORKOUT_CATEGORY_ORDER = {"mobility": 0, "resistance": 1, "cardio": 2}
+
+
 def _planned_workout_days(ctx: Context, day: date) -> list[WorkoutDay]:
     days = WorkoutDay.objects.filter(
         owner=ctx.member,
@@ -140,7 +145,13 @@ def _planned_workout_days(ctx: Context, day: date) -> list[WorkoutDay]:
         plan__is_deleted=False,
         is_deleted=False,
     ).select_related("plan")
-    return [d for d in days if day.weekday() in (d.days_of_week or [])]
+    today_days = [d for d in days if day.weekday() in (d.days_of_week or [])]
+    return sorted(
+        today_days,
+        key=lambda d: _WORKOUT_CATEGORY_ORDER.get(
+            d.plan.category, len(_WORKOUT_CATEGORY_ORDER)
+        ),
+    )
 
 
 def _workouts(ctx: Context, day: date) -> list[Item]:
