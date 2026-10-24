@@ -8,6 +8,7 @@ import {
   ArrowUp,
   Minus,
   BarChart3,
+  Calendar,
   TrendingDown,
   TrendingUp,
   Wallet,
@@ -18,6 +19,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar, FilterField } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -124,40 +126,6 @@ function SummaryCard({
   );
 }
 
-interface MonthSelectorProps {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-  placeholder: string;
-}
-
-function MonthSelector({
-  label,
-  value,
-  onChange,
-  options,
-  placeholder,
-}: MonthSelectorProps) {
-  return (
-    <div className="gap-xs flex flex-col">
-      <span className="text-muted-foreground text-xs font-medium">{label}</span>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-48">
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
-
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
@@ -228,22 +196,36 @@ export default function MonthComparison({
     <Wrapper>
       {headerTarget ? createPortal(header, headerTarget) : header}
 
-      <div className="gap-md bg-muted/40 p-md flex flex-wrap items-end rounded-lg border">
-        <MonthSelector
-          label={t('monthComparison.monthA')}
-          value={monthA}
-          onChange={setMonthA}
-          options={monthOptions}
-          placeholder={t('monthComparison.selectMonthA')}
-        />
-        <MonthSelector
-          label={t('monthComparison.monthB')}
-          value={monthB}
-          onChange={setMonthB}
-          options={monthOptions}
-          placeholder={t('monthComparison.selectMonthB')}
-        />
-      </div>
+      <FilterBar>
+        <FilterField label={t('monthComparison.monthA')} icon={Calendar}>
+          <Select value={monthA} onValueChange={setMonthA}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('monthComparison.selectMonthA')} />
+            </SelectTrigger>
+            <SelectContent>
+              {monthOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+        <FilterField label={t('monthComparison.monthB')} icon={Calendar}>
+          <Select value={monthB} onValueChange={setMonthB}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('monthComparison.selectMonthB')} />
+            </SelectTrigger>
+            <SelectContent>
+              {monthOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+      </FilterBar>
 
       {isLoading && <LoadingState />}
 
