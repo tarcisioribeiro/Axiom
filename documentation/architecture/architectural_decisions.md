@@ -815,7 +815,8 @@ apps/api/
 ├── dashboard/         # Dashboard financeiro
 ├── security/          # Senhas e arquivos
 ├── library/           # Livros e autores
-├── ai_assistant/      # AI Assistant
+├── personal_planning/ # Hábitos, metas, bem-estar, treinos, nutrição
+├── agents/            # Assistente de IA (RAG via pgvector)
 ├── authentication/    # Auth
 ├── members/           # Membros
 └── app/               # Config central

@@ -27,6 +27,7 @@ def bulk_generate_fixed_revenues(month, revenue_values, user, upsert=False):
         fr.id: fr
         for fr in FixedRevenue.objects.filter(
             id__in=ids,
+            created_by=user,
             is_deleted=False,
             is_active=True,
         ).select_related("account", "member")

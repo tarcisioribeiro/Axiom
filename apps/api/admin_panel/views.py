@@ -163,6 +163,13 @@ class SystemConfigRevealView(AdminBaseView):
                 {"error": "Configuração não encontrada."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        ActivityLog.log_action(
+            user=request.user,
+            action="system_config_revealed",
+            description=f"Valor da configuração '{key}' revelado",
+            model_name="SystemConfig",
+            object_id=config.id,
+        )
         return Response({"value": config.get_value()})
 
 

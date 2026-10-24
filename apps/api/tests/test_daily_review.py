@@ -10,6 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from admin_panel.models import UserScreenAccess
 from daily_review.models import ReviewProgress, ReviewResolution
+from daily_review.steps import Context, _planned_workout_days
 from daily_review.views import Review
 from library.models import Course
 from members.models import Member
@@ -17,7 +18,12 @@ from personal_planning.models import (
     BodyMetric,
     DailyReflection,
     Goal,
+    HydrationGoal,
+    MealType,
+    RoutineTask,
     TaskInstance,
+    WorkoutDay,
+    WorkoutPlan,
 )
 
 URL = "/api/v1/daily-review/"
@@ -339,3 +345,76 @@ class PreferencesAndCourseTests(DailyReviewTestCase):
         self.assertEqual(
             Course.objects.get(title="Curso").study_weekdays, [0, 4]
         )
+
+
+class PlannedWorkoutDaysOrderTests(DailyReviewTestCase):
+    """Mesma ordem usada em 'Plano de hoje' e no dropdown de registro de
+    sessão: mobilidade, depois resistência, depois cardio."""
+
+    def test_sorted_by_category_not_by_plan_order(self):
+        weekday = self.yesterday.weekday()
+
+        def plan_with_day(name, category, order):
+            plan = WorkoutPlan.objects.create(
+                name=name, category=category, owner=self.member
+            )
+            return WorkoutDay.objects.create(
+                plan=plan,
+                name=name,
+                days_of_week=[weekday],
+                order=order,
+                owner=self.member,
+            )
+
+        # Criados fora de ordem de categoria, mas com `order`/plano
+        # crescente — a ordenação antiga (plan, order, name) os listaria
+        # nesta mesma ordem de criação, que é a errada.
+        cardio = plan_with_day("Esteira", "cardio", order=0)
+        mobility = plan_with_day("Mobilidade", "mobility", order=1)
+        resistance = plan_with_day("Costas", "resistance", order=2)
+
+        ctx = Context(member=self.member, today=self.today)
+        result = _planned_workout_days(ctx, self.yesterday)
+
+        self.assertEqual(
+            [d.id for d in result],
+            [mobility.id, resistance.id, cardio.id],
+        )
+
+
+class TasksStepHidesLinkedTasksTests(DailyReviewTestCase):
+    """Tarefas vinculadas a refeição/hidratação/treino já são cobradas nas
+    próprias etapas — não devem aparecer também em "tasks"."""
+
+    def make_instance(self, name, category, **routine_kwargs):
+        template = RoutineTask.objects.create(
+            name=name, category=category, owner=self.member, **routine_kwargs
+        )
+        return TaskInstance.objects.create(
+            template=template,
+            task_name=name,
+            category=category,
+            scheduled_date=self.yesterday,
+            status="pending",
+            owner=self.member,
+        )
+
+    def test_meal_hydration_and_workout_linked_tasks_are_hidden(self):
+        meal_type = MealType.objects.create(name="Almoço", owner=self.member)
+        HydrationGoal.objects.create(daily_target_ml=2000, owner=self.member)
+
+        self.make_instance(
+            "Registrar almoço", "nutrition", linked_meal_type=meal_type
+        )
+        self.make_instance(
+            "Beber água",
+            "nutrition",
+            linked_hydration_goal=HydrationGoal.objects.get(owner=self.member),
+        )
+        self.make_instance("Treinar", "exercise", linked_workout=True)
+        self.make_instance("Meditar", "spiritual")
+
+        steps = self.steps()
+        self.assertIn("tasks", steps)
+        labels = {item["label"] for item in steps["tasks"]["items"]}
+        self.assertEqual(labels, {"Meditar"})

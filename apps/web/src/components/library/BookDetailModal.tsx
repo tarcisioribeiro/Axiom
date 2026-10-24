@@ -927,6 +927,7 @@ export function BookDetailModal({
                   items={readings}
                   pageSize={LIST_PAGE_SIZE}
                   pinNav={false}
+                  growOnAdd
                   className="space-y-sm"
                 >
                   {(pageReadings) =>

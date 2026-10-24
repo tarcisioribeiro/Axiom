@@ -276,7 +276,7 @@ REST_FRAMEWORK = {
 - `members` (Membros)
 - `security` (Senhas armazenadas)
 - `library` (Biblioteca de livros)
-- `ai_assistant` (Assistente AI)
+- `agents` (Assistente de IA)
 - `personal_planning` (Planejamento pessoal)
 
 **Criação de Usuário Admin**:
@@ -356,108 +356,48 @@ def get_user_permissions(request):
 
 ## Setup de Permissões
 
-### Management Command (Futura Implementação)
+### Management Command (Implementado)
 
-O comando `setup_permissions` ainda não foi implementado, mas a estrutura recomendada seria:
+`app/management/commands/setup_permissions.py` cria (ou reutiliza) o grupo `members` e concede CRUD completo (`view`/`add`/`change`/`delete`) nos modelos de praticamente todas as apps de domínio — `accounts`, `credit_cards`, `transfers`, `loans`, `payables`, `receivables`, `members`, `library`, `security`, `personal_planning` (hábitos, treino, nutrição), `vaults`, `notifications`, `budgets`, `monthly_planning`, `webhooks`. Permissões/ContentTypes ausentes geram apenas um aviso no console (`self.style.WARNING`/`ERROR`), sem interromper o comando. Idempotente: só adiciona a permissão se ainda não estiver no grupo.
 
 ```python
-# app/management/commands/setup_permissions.py
-from django.core.management.base import BaseCommand
-from django.contrib.auth.models import Group, Permission
-from django.contrib.contenttypes.models import ContentType
-
-
+# app/management/commands/setup_permissions.py (resumo)
 class Command(BaseCommand):
-    help = 'Configura grupos e permissões do sistema'
-
     def handle(self, *args, **options):
-        self.stdout.write('Configurando grupos e permissões...')
+        members_group, created = Group.objects.get_or_create(name="members")
 
-        # Criar grupos
-        admins_group, _ = Group.objects.get_or_create(name='admins')
-        members_group, _ = Group.objects.get_or_create(name='members')
+        app_models = {
+            "accounts": ["account"],
+            "expenses": ["expense", "fixedexpense", "fixedexpensegenerationlog"],
+            "revenues": ["revenue"],
+            "credit_cards": [...],
+            "transfers": ["transfer"],
+            "loans": ["loan"],
+            "payables": ["payable"],
+            "receivables": ["receivable", "receivableinstallment"],
+            # ... library, security, personal_planning, vaults,
+            # notifications, budgets, monthly_planning, webhooks
+        }
 
-        # Permissões para admins (todas)
-        all_permissions = Permission.objects.all()
-        admins_group.permissions.set(all_permissions)
-
-        # Permissões para members (seletivas)
-        members_permissions = self.get_members_permissions()
-        members_group.permissions.set(members_permissions)
-
-        self.stdout.write(self.style.SUCCESS('Grupos configurados com sucesso!'))
-
-    def get_members_permissions(self):
-        """Retorna permissões para o grupo members"""
-        permissions = []
-
-        # Accounts (view, add, change)
-        permissions += self.get_permissions_for_model('accounts', 'account',
-                                                      ['view', 'add', 'change'])
-
-        # Credit Cards (view, add, change)
-        permissions += self.get_permissions_for_model('credit_cards', 'creditcard',
-                                                      ['view', 'add', 'change'])
-
-        # Expenses (todas)
-        permissions += self.get_permissions_for_model('expenses', 'expense',
-                                                      ['view', 'add', 'change', 'delete'])
-
-        # Revenues (todas)
-        permissions += self.get_permissions_for_model('revenues', 'revenue',
-                                                      ['view', 'add', 'change', 'delete'])
-
-        # Loans (view apenas)
-        permissions += self.get_permissions_for_model('loans', 'loan', ['view'])
-
-        # Transfers (view apenas)
-        permissions += self.get_permissions_for_model('transfers', 'transfer', ['view'])
-
-        # Security (todas)
-        permissions += self.get_permissions_for_model('security', 'password',
-                                                      ['view', 'add', 'change', 'delete'])
-        permissions += self.get_permissions_for_model('security', 'storedcreditcard',
-                                                      ['view', 'add', 'change', 'delete'])
-
-        # Library (todas)
-        permissions += self.get_permissions_for_model('library', 'book',
-                                                      ['view', 'add', 'change', 'delete'])
-
-        # Personal Planning (todas)
-        permissions += self.get_permissions_for_model('personal_planning', 'goal',
-                                                      ['view', 'add', 'change', 'delete'])
-
-        return permissions
-
-    def get_permissions_for_model(self, app_label, model_name, actions):
-        """
-        Obtém permissões específicas para um modelo
-
-        Args:
-            app_label: Nome do app Django (ex: 'accounts')
-            model_name: Nome do modelo (ex: 'account')
-            actions: Lista de ações (ex: ['view', 'add'])
-        """
-        permissions = []
-        try:
-            content_type = ContentType.objects.get(
-                app_label=app_label,
-                model=model_name
-            )
-            for action in actions:
-                codename = f'{action}_{model_name}'
-                perm = Permission.objects.get(
-                    content_type=content_type,
-                    codename=codename
-                )
-                permissions.append(perm)
-        except (ContentType.DoesNotExist, Permission.DoesNotExist) as e:
-            self.stdout.write(self.style.WARNING(
-                f'Permissão não encontrada: {app_label}.{action}_{model_name}'
-            ))
-
-        return permissions
+        for app_label, models in app_models.items():
+            for model_name in models:
+                for perm_type in ["view", "add", "change", "delete"]:
+                    # busca o Permission por content_type + codename
+                    # e adiciona ao grupo "members" se ainda não tiver
+                    ...
 ```
+
+**Uso**: `$DC exec api python manage.py setup_permissions` (ver [`documentation/backend/management_commands.md`](../backend/management_commands.md)).
+
+### Acesso por Tela — camada adicional (`admin_panel`)
+
+Além das permissões Django por modelo acima, o Axiom tem uma **segunda camada** de controle de acesso, orientada a telas do frontend: o `ScreenAccessMiddleware` (`admin_panel/middleware.py`). Veja [`documentation/backend/middleware_signals.md`](../backend/middleware_signals.md) para o middleware e [`documentation/admin-panel/README.md`](../admin-panel/README.md) para o painel.
+
+- **`admin_panel/screens.py`**: registro único das rotas da API agrupadas por tela/módulo (`planning`, `finance`, `security`, `intellect`) e por tipo de ação (`"crud"` deriva a ação do método HTTP; `"read"` só permite GET; um nome de ação explícito exige essa ação específica).
+- **`UserScreenAccess`**: acesso concedido/negado por usuário, tela e ação.
+- **`ScreenDefault`**: template de acesso aplicado automaticamente a usuários novos.
+- Usuários `staff`/`superuser` sempre passam direto — a camada só se aplica a usuários comuns.
+- Toda rota nova sob os prefixos `finance`/`planning`/`security`/`library` **precisa** ser registrada em `screens.py`, senão `tests/test_screen_access.py` falha.
 
 ### Uso do Comando
 

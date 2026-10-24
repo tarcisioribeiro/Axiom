@@ -2,6 +2,13 @@
 
 Este guia detalha os comandos e práticas do dia a dia no desenvolvimento do Axiom.
 
+> Todos os comandos abaixo assumem a raiz do monorepo como diretório de trabalho e usam
+> `docker compose` (plugin v2), não o binário legado `docker-compose`.
+
+```bash
+DC="docker compose -f infra/docker/docker-compose.yml --project-directory ."
+```
+
 ## Índice
 
 - [Comandos Diários](#comandos-diários)
@@ -18,157 +25,113 @@ Este guia detalha os comandos e práticas do dia a dia no desenvolvimento do Axi
 ### Iniciando o Ambiente
 
 ```bash
-# Docker (recomendado)
-docker-compose up -d
+$DC up -d
 
 # Verificar status dos containers
-docker-compose ps
+$DC ps
 
 # Aguardar todos os serviços ficarem healthy
-docker-compose logs -f | grep healthy
+$DC logs -f | grep healthy
 ```
+
+Serviços do compose: `db` (PostgreSQL + pgvector), `redis`, `minio` + `minio-init`,
+`api`, `worker` (Celery worker, container `axiom-worker`), `queue` (Celery beat,
+container `axiom-queue`), `frontend`, `db-backup`, `ollama` + `ollama-init`.
 
 ### Parando o Ambiente
 
 ```bash
 # Parar todos os containers (mantém volumes)
-docker-compose down
+$DC down
 
 # Parar e remover volumes (⚠️ apaga dados!)
-docker-compose down -v
+$DC down -v
 
 # Parar apenas um serviço
-docker-compose stop api
+$DC stop api
 ```
 
 ### Reiniciando Serviços
 
 ```bash
 # Reiniciar todos os serviços
-docker-compose restart
+$DC restart
 
 # Reiniciar apenas o backend
-docker-compose restart api
+$DC restart api
 
-# Reiniciar após mudar dependências (rebuild)
-docker-compose up -d --build
-
-# Rebuild sem cache (quando há problemas)
-docker-compose build --no-cache
-docker-compose up -d
+# Rebuild completo (comando oficial do projeto — ver CLAUDE.md)
+docker compose -f infra/docker/docker-compose.yml --project-directory . up --build -d && docker system prune -af
 ```
 
 ### Acessando Shells
 
 ```bash
 # Shell Bash do container API
-docker-compose exec api bash
+$DC exec api bash
 
 # Shell Python (Django)
-docker-compose exec api python manage.py shell
+$DC exec api python manage.py shell
 
 # Shell do PostgreSQL
-docker-compose exec db psql -U axiom_user -d axiom_db
+$DC exec db psql -U $DB_USER -d axiom_db
 
 # Shell do Redis
-docker-compose exec redis redis-cli
+$DC exec redis redis-cli
 ```
 
 ### Comandos Rápidos
 
 ```bash
 # Ver logs em tempo real
-docker-compose logs -f
+$DC logs -f
 
 # Ver logs de um serviço específico
-docker-compose logs -f api
-docker-compose logs -f frontend
-docker-compose logs -f db
+$DC logs -f api
+$DC logs -f worker
+$DC logs -f queue
+$DC logs -f frontend
+$DC logs -f db
 
 # Ver apenas últimas N linhas
-docker-compose logs --tail=50 api
+$DC logs --tail=50 api
 
 # Verificar uso de recursos
-docker stats axiom-api axiom-db axiom-cache
+docker stats axiom-api axiom-db axiom-cache axiom-worker axiom-queue
 ```
 
 ## Hot Reload e Desenvolvimento Iterativo
 
-O Axiom está configurado para hot reload automático em desenvolvimento.
-
-### Backend (Django)
-
-**Hot reload está ATIVO por padrão** quando `DEBUG=True`.
+**O container `api` roda a imagem de produção e não monta o código-fonte** (ver
+CLAUDE.md, seção Docker) — não há hot reload dentro do Docker para o backend. Para
+iterar rapidamente em um arquivo sem rebuild completo:
 
 ```bash
-# Qualquer alteração em arquivos .py recarrega automaticamente
-# Logs mostrarão:
-# Watching for file changes with StatReloader
-# Performing system checks...
-# Starting development server at http://0.0.0.0:39100/
+docker cp apps/api/<app>/<arquivo>.py axiom-api:/app/<app>/<arquivo>.py
+$DC restart api
 ```
 
-**Arquivos que acionam reload:**
-- `*.py` - Código Python
-- `*.html` - Templates Django (se usar)
-
-**Arquivos que NÃO acionam reload:**
-- `*.md` - Documentação
-- `*.txt` - Arquivos de configuração
-- `requirements.txt` - Requer rebuild
-
-**Quando o hot reload não funciona:**
+Para hot reload real do backend, rode o Django localmente (fora do Docker):
 
 ```bash
-# Reinicie o container
-docker-compose restart api
-
-# Se ainda não funcionar, rebuild
-docker-compose up -d --build api
+source .venv/bin/activate
+cd apps/api && python manage.py runserver 0.0.0.0:39100
 ```
 
 ### Frontend (React + Vite)
 
-**Hot Module Replacement (HMR) está ATIVO por padrão** em desenvolvimento.
+Em desenvolvimento local (fora do Docker), o Vite oferece Hot Module Replacement
+(HMR) automático:
 
 ```bash
-# Qualquer alteração em arquivos .tsx, .ts, .css recarrega automaticamente
-# Vite otimiza para recarregar apenas o módulo alterado
-
-# Logs mostrarão:
-# VITE v7.2.4 ready in 432 ms
-# ➜ Local: http://localhost:3000/
-# ➜ Network: http://172.18.0.5:3000/
-```
-
-**Arquivos que acionam HMR:**
-- `*.tsx`, `*.ts` - Componentes React, services
-- `*.css` - Estilos
-- `*.json` - Configurações
-
-**Quando o HMR não funciona:**
-
-```bash
-# Reinicie o frontend
-docker-compose restart frontend
-
-# Limpe cache e reinstale
-docker-compose down
-docker-compose up -d --build frontend
-```
-
-**Desenvolvimento local (sem Docker):**
-
-```bash
-# Backend (terminal 1)
-cd api
-source venv/bin/activate
-python manage.py runserver 0.0.0.0:39100
-
-# Frontend (terminal 2)
-cd frontend
+cd apps/web
+npm install
 npm run dev
+# ➜  Local:   http://localhost:3000/ (porta fixada em vite.config.ts)
 ```
+
+O container `frontend` do compose serve o build de produção via nginx (sem HMR) —
+useful apenas para validar o build final, não para iterar.
 
 ## Debugging e Logs
 
@@ -176,31 +139,18 @@ npm run dev
 
 ```bash
 # Logs gerais
-docker-compose logs -f api
+$DC logs -f api
 
-# Filtrar por nível de log
-docker-compose logs api | grep ERROR
-docker-compose logs api | grep WARNING
+# Filtrar por nível de log (LOG_FORMAT=json por padrão — ver docker-compose.yml)
+$DC logs api | grep ERROR
+$DC logs api | grep WARNING
 
-# Logs de requisições HTTP
-docker-compose logs api | grep "GET\|POST\|PUT\|DELETE"
-
-# Logs do AI Assistant
-docker-compose logs api | grep ai_assistant
+# Logs dos workers Celery (notificações, rendimentos de cofre, etc.)
+$DC logs -f worker
+$DC logs -f queue
 ```
 
-### Debugging com `print()` e `logger`
-
-**Usar `print()` (simples):**
-
-```python
-# Em qualquer arquivo .py
-def minha_funcao():
-    print("DEBUG: Valor da variável:", variavel)
-    # Aparecerá nos logs do container
-```
-
-**Usar `logger` (recomendado):**
+### Debugging com `logger`
 
 ```python
 import logging
@@ -217,97 +167,31 @@ def minha_funcao():
 ### Debugging Interativo com `pdb`
 
 ```python
-# Em qualquer arquivo .py, adicione:
 import pdb; pdb.set_trace()
-
-# Ou use breakpoint() (Python 3.7+)
+# ou
 breakpoint()
 ```
 
-**Para funcionar com Docker:**
-
 ```bash
-# Inicie o container em modo interativo
-docker-compose stop api
-docker-compose run --rm --service-ports api
-
-# Agora quando o código atingir o breakpoint, você terá acesso ao pdb
+# Inicie o container em modo interativo para interagir com o pdb
+$DC stop api
+$DC run --rm --service-ports api
 ```
-
-**Comandos do pdb:**
-- `n` - next (próxima linha)
-- `s` - step (entrar em função)
-- `c` - continue (continuar execução)
-- `p variavel` - print (imprimir variável)
-- `l` - list (mostrar código ao redor)
-- `q` - quit (sair)
-
-### Debugging com VS Code
-
-Crie `.vscode/launch.json`:
-
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Python: Django",
-      "type": "python",
-      "request": "attach",
-      "connect": {
-        "host": "localhost",
-        "port": 5678
-      },
-      "pathMappings": [
-        {
-          "localRoot": "${workspaceFolder}/api",
-          "remoteRoot": "/app"
-        }
-      ]
-    }
-  ]
-}
-```
-
-Adicione `debugpy` ao `requirements.txt` e configure no `settings.py`.
 
 ### Logs do Frontend (React)
 
 ```bash
-# Logs do container
-docker-compose logs -f frontend
-
-# Console do navegador (F12)
-# Logs aparecem no console do browser
+$DC logs -f frontend
+# Console do navegador (F12) para logs do runtime
 ```
-
-**Debugging no navegador:**
-
-```typescript
-// Em qualquer componente ou service
-console.log("DEBUG:", variavel);
-console.error("Erro:", error);
-console.table(array); // Exibe array como tabela
-
-// Breakpoint no código
-debugger; // Para aqui quando DevTools está aberto
-```
-
-**React Developer Tools:**
-
-1. Instale a extensão React DevTools
-2. Abra DevTools (F12)
-3. Aba "Components" - Inspeciona árvore de componentes
-4. Aba "Profiler" - Analisa performance
 
 ### Monitoramento de Performance
 
 ```bash
-# Uso de CPU e memória
 docker stats axiom-api axiom-db axiom-cache
 
 # Queries lentas no PostgreSQL
-docker-compose exec db psql -U axiom_user -d axiom_db -c "
+$DC exec db psql -U $DB_USER -d axiom_db -c "
   SELECT query, calls, total_time, mean_time
   FROM pg_stat_statements
   ORDER BY total_time DESC
@@ -317,107 +201,58 @@ docker-compose exec db psql -U axiom_user -d axiom_db -c "
 
 ## Testes Automatizados
 
-### Testes do Backend (Django)
+### Backend (Django/pytest)
 
 ```bash
-# Executar todos os testes
-docker-compose exec api python manage.py test
+# Todos os testes
+$DC exec api python -m pytest tests/
 
-# Executar testes de um app específico
-docker-compose exec api python manage.py test accounts
-docker-compose exec api python manage.py test authentication
+# Um app/arquivo específico
+$DC exec api python -m pytest tests/test_views.py -k nome_do_teste
 
-# Executar um teste específico
-docker-compose exec api python manage.py test accounts.tests.test_models.AccountModelTest
-
-# Com pytest (mais recursos)
-docker-compose exec api pytest
-
-# Com coverage (cobertura de código)
-docker-compose exec api pytest --cov=. --cov-report=html
-
-# Abrir relatório de cobertura
-# Abre apps/api/htmlcov/index.html no navegador
+# Com cobertura
+$DC exec api python -m pytest tests/ --cov
 ```
 
-### Testes do Frontend (React)
+`DJANGO_SETTINGS_MODULE=app.settings`, SQLite em memória nos testes,
+`CELERY_TASK_ALWAYS_EAGER=True` (ver `apps/api/pyproject.toml`).
+
+### Frontend (Vitest)
 
 ```bash
-# Entrar no container
-docker-compose exec frontend sh
-
-# Executar testes (se configurado)
-npm run test
-
-# Executar linting
-npm run lint
-
-# Build de produção (valida TypeScript)
-npm run build
+cd apps/web
+npm run test -- --run                  # todos os testes
+npm run test -- --run -t "test name"   # um teste específico
+npm run test:coverage
 ```
+
+Stack: Vitest 4 + `@testing-library/react` v16 + happy-dom, `globals: false`
+(importe `describe`/`it`/`expect`/`vi` explicitamente). O hook de pre-push roda
+`test:coverage` automaticamente.
 
 ### Escrevendo Testes
 
-**Backend - teste de modelo:**
+**Backend — teste de API (padrão real do projeto):**
 
 ```python
-# accounts/tests/test_models.py
-from django.test import TestCase
-from accounts.models import Account
-
-class AccountModelTest(TestCase):
+class BaseAPITestCase(APITestCase):
     def setUp(self):
-        self.account = Account.objects.create(
-            name="Teste",
-            initial_balance=1000.00
-        )
-
-    def test_account_creation(self):
-        self.assertEqual(self.account.name, "Teste")
-        self.assertEqual(self.account.current_balance, 1000.00)
-
-    def test_account_str(self):
-        self.assertEqual(str(self.account), "Teste")
+        self.user = User.objects.create_superuser(...)
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
 ```
 
-**Backend - teste de API:**
+- Respostas de listagem: `response.data["results"]` / `response.data["count"]`
+- `is_superuser=True` contorna `GlobalDefaultPermission`
+- `/api/v1/user/permissions/` bloqueia superusers — para testar permissões use um
+  usuário comum
 
-```python
-# accounts/tests/test_api.py
-from rest_framework.test import APITestCase
-from rest_framework import status
+**Frontend — teste de componente:**
 
-class AccountAPITest(APITestCase):
-    def test_list_accounts(self):
-        response = self.client.get('/api/v1/accounts/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_create_account(self):
-        data = {'name': 'Nova Conta', 'initial_balance': 500}
-        response = self.client.post('/api/v1/accounts/', data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-```
-
-**Frontend - teste de componente:**
-
-```typescript
-// components/ui/button.test.tsx
-import { render, screen } from '@testing-library/react';
-import { Button } from './button';
-
-describe('Button', () => {
-  it('renders button with text', () => {
-    render(<Button>Click me</Button>);
-    expect(screen.getByText('Click me')).toBeInTheDocument();
-  });
-
-  it('calls onClick when clicked', () => {
-    const handleClick = jest.fn();
-    render(<Button onClick={handleClick}>Click me</Button>);
-    screen.getByText('Click me').click();
-    expect(handleClick).toHaveBeenCalledTimes(1);
-  });
-});
+```tsx
+// Envolva com QueryClientProvider; resete entre testes:
+queryClient.clear();  // beforeEach
+queryClient.setDefaultOptions({ queries: { retry: false } });
 ```
 
 ## Operações de Banco de Dados
@@ -425,98 +260,73 @@ describe('Button', () => {
 ### Migrations
 
 ```bash
-# Criar migrations após mudanças em models.py
-docker-compose exec api python manage.py makemigrations
+# Criar migrations após mudanças em models.py (sempre localmente, commitar antes do push)
+$DC exec api python manage.py makemigrations
 
 # Aplicar migrations
-docker-compose exec api python manage.py migrate
+$DC exec api python manage.py migrate
 
 # Ver status das migrations
-docker-compose exec api python manage.py showmigrations
+$DC exec api python manage.py showmigrations
 
 # Ver SQL que será executado (sem executar)
-docker-compose exec api python manage.py sqlmigrate accounts 0001
+$DC exec api python manage.py sqlmigrate accounts 0001
 
 # Reverter migrations (⚠️ cuidado!)
-docker-compose exec api python manage.py migrate accounts 0001
-
-# Fake migrations (marca como aplicada sem executar)
-docker-compose exec api python manage.py migrate --fake
+$DC exec api python manage.py migrate accounts 0001
 ```
 
 ### Backup e Restore
 
 ```bash
-# Criar backup
-docker-compose exec db pg_dump -U axiom_user axiom_db > backups/backup_$(date +%Y%m%d_%H%M%S).sql
+# Backup manual (pg_dump cru — para o backup diário automatizado criptografado, ver
+# documentation/observability/backup-strategy.md)
+$DC exec db pg_dump -U $DB_USER axiom_db > backups/backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Restaurar backup
-docker-compose exec -T db psql -U axiom_user axiom_db < backups/backup_20260112_103045.sql
-
-# Backup de um app específico (apenas dados)
-docker-compose exec api python manage.py dumpdata accounts --indent 2 > backups/accounts_data.json
-
-# Restaurar dados de um app
-docker-compose exec -T api python manage.py loaddata < backups/accounts_data.json
+$DC exec -T db psql -U $DB_USER axiom_db < backups/your_backup.sql
 ```
 
 ### Queries Diretas
 
 ```bash
-# Acessar psql
-docker-compose exec db psql -U axiom_user -d axiom_db
+$DC exec db psql -U $DB_USER -d axiom_db
 
-# Exemplos de queries úteis
 \dt                           # Listar tabelas
-\d accounts_account          # Descrever tabela
-\dx                          # Listar extensões (pgvector)
+\d accounts_account           # Descrever tabela
+\dx                           # Listar extensões (pgvector)
 
 SELECT * FROM accounts_account LIMIT 10;
 SELECT COUNT(*) FROM expenses_expense;
-SELECT * FROM auth_user WHERE is_superuser = true;
-```
-
-### Reset do Banco de Dados
-
-```bash
-# ⚠️ ATENÇÃO: Apaga TODOS os dados!
-
-# Método 1: Dropar e recriar banco
-docker-compose exec db psql -U axiom_user -d postgres -c "DROP DATABASE axiom_db;"
-docker-compose exec db psql -U axiom_user -d postgres -c "CREATE DATABASE axiom_db OWNER axiom_user;"
-docker-compose exec api python manage.py migrate
-
-# Método 2: Flush (limpa dados, mantém estrutura)
-docker-compose exec api python manage.py flush --no-input
-
-# Método 3: Dropar volumes Docker
-docker-compose down -v
-docker-compose up -d
-docker-compose exec api python manage.py migrate
 ```
 
 ## Comandos Personalizados do Django
 
-O Axiom possui comandos personalizados:
+O Axiom possui diversos comandos personalizados em `apps/api/*/management/commands/`.
+Os mais usados no dia a dia:
 
 ```bash
-# Atualizar saldos das contas
-docker-compose exec api python manage.py update_balances
-
-# Configurar permissões de grupos de usuários
-docker-compose exec api python manage.py setup_permissions
-
-# Processar transferências existentes
-docker-compose exec api python manage.py process_existing_transfers
-
-# Criar superuser interativo
-docker-compose exec api python manage.py createsuperuser
+$DC exec api python manage.py update_balances          # recalcula saldos de contas
+$DC exec api python manage.py setup_permissions         # configura permissões de grupos
+$DC exec api python manage.py close_overdue_bills       # fecha faturas/contas vencidas
+$DC exec api python manage.py purge_deleted_records      # LGPD: hard-delete de soft-deleted > 90 dias
+$DC exec api python manage.py send_due_notifications     # dispara notificações de vencimento
+$DC exec api python manage.py vault_recovery
+$DC exec api python manage.py rotate_encryption_key      # --old-key X --new-key Y --dry-run
+$DC exec api python manage.py check_backup_health
+$DC exec api python manage.py reconcile_vault_yield
+$DC exec api python manage.py import_exercise_dataset    # one-time por ambiente
 ```
+
+Veja a lista completa em cada app (`management/commands/`) — inclui também
+`check_vault_yield_health`, `generate_vault_contributions`, `index_library`,
+`issue_theme_sync_token`, `migrate_media_to_minio`, `seed_wellness_interventions`,
+`vectorize_existing`, entre outros.
 
 **Criar seu próprio comando:**
 
 ```python
-# accounts/management/commands/meu_comando.py
+# <app>/management/commands/meu_comando.py
 from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
@@ -529,10 +339,8 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Comando executado!'))
 ```
 
-Executar:
-
 ```bash
-docker-compose exec api python manage.py meu_comando --param=valor
+$DC exec api python manage.py meu_comando --param=valor
 ```
 
 ## Qualidade de Código
@@ -540,168 +348,77 @@ docker-compose exec api python manage.py meu_comando --param=valor
 ### Backend (Python)
 
 ```bash
-# Formatar código com Black
-docker-compose exec api black .
-
-# Organizar imports com isort
-docker-compose exec api isort .
-
-# Lint com flake8
-docker-compose exec api flake8 .
-
-# Executar todos de uma vez
-docker-compose exec api bash -c "black . && isort . && flake8 ."
+source .venv/bin/activate
+cd apps/api && black . && isort . && flake8 .
 ```
 
-**Configuração do Black:**
+**Configuração real** (`apps/api/pyproject.toml` e `.flake8`):
 
-```toml
-# apps/api/pyproject.toml
-[tool.black]
-line-length = 100
-target-version = ['py311']
-exclude = '''
-/(
-    \.git
-  | \.venv
-  | migrations
-  | __pycache__
-)/
-'''
-```
-
-**Configuração do isort:**
-
-```toml
-# apps/api/pyproject.toml
-[tool.isort]
-profile = "black"
-line_length = 100
-skip = ["migrations", ".venv"]
-```
-
-**Configuração do flake8:**
-
-```ini
-# apps/api/.flake8
-[flake8]
-max-line-length = 100
-exclude = .git,__pycache__,*/migrations/*,venv
-ignore = E203, W503
-```
+- Black: `line-length = 79`, `target-version = ['py312']`, exclui migrations.
+- isort: `profile = "black"`, `line_length = 79`.
+- flake8: `max-line-length = 79`, `extend-ignore = E203, W503`, regra customizada
+  `DRF001` proíbe `fields = "__all__"` em serializers
+  (`apps/api/flake8_no_serializer_all.py`).
 
 ### Frontend (TypeScript)
 
 ```bash
-# Lint com ESLint
-cd frontend
-npm run lint
-
-# Lint com auto-fix
-npm run lint -- --fix
-
-# Type check com TypeScript
-npx tsc --noEmit
-
-# Formatar com Prettier (se configurado)
-npx prettier --write "src/**/*.{ts,tsx}"
+cd apps/web
+npm run lint          # ESLint
+npm run lint:fix
+npm run typecheck      # tsc -p tsconfig.app.json --noEmit
+npm run format         # Prettier
+npm run format:check
 ```
 
-**Configuração do ESLint:**
+Config real: `apps/web/eslint.config.js` e `.prettierrc` (com plugin `tailwindcss`).
 
-```javascript
-// apps/web/eslint.config.js
-export default {
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:react-hooks/recommended',
-  ],
-  rules: {
-    '@typescript-eslint/no-unused-vars': 'warn',
-    'react-hooks/exhaustive-deps': 'warn',
-  },
-};
-```
-
-### Pre-commit Hooks (Opcional)
-
-Crie `.git/hooks/pre-commit`:
+### Git Hooks
 
 ```bash
-#!/bin/bash
-
-echo "Running code quality checks..."
-
-# Backend
-docker-compose exec -T api black --check . || exit 1
-docker-compose exec -T api flake8 . || exit 1
-
-# Frontend
-cd frontend && npm run lint || exit 1
-
-echo "All checks passed!"
+pre-commit install
+pre-commit install --hook-type commit-msg  # obrigatório — validado em CI
 ```
 
+`pre-commit` roda black/isort/flake8/mypy no backend; `husky` + `lint-staged` roda
+ESLint + Prettier no frontend a cada commit. O hook de pre-push do frontend roda
+`npm run test:coverage`.
+
+### CI/CD local
+
+```bash
+source .venv/bin/activate && ./ci-check.sh
+```
+
+Simula interativamente os jobs do stage `lint` do `.gitlab-ci.yml` (black/isort/
+flake8, migrations, bandit, pip-audit, eslint/prettier, npm-audit, kubeconform,
+commitlint, gitleaks) — os únicos jobs executáveis localmente. Os pipelines do
+GitLab só disparam em Merge Request ou push para `develop`/`main`; os jobs de
+build/scan/deploy/smoke/backup/cleanup exigem cluster e credenciais reais e por
+isso não são simulados.
+
 ## Gerenciamento de Dependências
+
+Todas as dependências são fixadas em versão exata (sem `^`/`~`).
 
 ### Backend (Python)
 
 ```bash
-# Instalar nova dependência
-docker-compose exec api pip install nome-do-pacote
-
-# Atualizar requirements.txt
-docker-compose exec api pip freeze > apps/api/requirements.txt
-
-# Reinstalar dependências após atualizar requirements.txt
-docker-compose up -d --build api
+# Adicionar ao arquivo correto (requirements.txt, requirements-dev.txt ou
+# requirements-lint.txt) com a versão exata, depois rebuild:
+$DC up -d --build api
 ```
 
 ### Frontend (npm)
 
 ```bash
-# Instalar nova dependência
-docker-compose exec frontend npm install nome-do-pacote
-
-# Instalar dependência de desenvolvimento
-docker-compose exec frontend npm install --save-dev nome-do-pacote
-
-# Atualizar dependências
-docker-compose exec frontend npm update
-
-# Reconstruir após adicionar dependências
-docker-compose up -d --build frontend
-```
-
-### Atualizando Versões
-
-**Python packages:**
-
-```bash
-# Ver pacotes desatualizados
-docker-compose exec api pip list --outdated
-
-# Atualizar específico
-docker-compose exec api pip install --upgrade django
-
-# Congelar versões
-docker-compose exec api pip freeze > apps/api/requirements.txt
-```
-
-**npm packages:**
-
-```bash
-# Ver pacotes desatualizados
-cd frontend
+cd apps/web
+npm install nome-do-pacote --save-exact
 npm outdated
-
-# Atualizar específico
-npm update react
-
-# Atualizar para latest (pode quebrar)
-npm install react@latest
 ```
+
+Dependabot abre PRs mensais; atualizações de dependência vão em PR dedicada com
+commit type `chore(deps):`.
 
 ## Fluxo de Trabalho Típico
 
@@ -712,35 +429,29 @@ npm install react@latest
    git checkout -b feature/nome-da-feature
    ```
 
-2. **Desenvolver** (com hot reload ativo)
-   ```bash
-   docker-compose up -d
-   # Editar código
-   # Ver mudanças automaticamente
-   ```
+2. **Desenvolver** (ver seção de hot reload acima — backend local para iterar rápido)
 
 3. **Testar**
    ```bash
-   docker-compose exec api python manage.py test
-   cd frontend && npm run lint
+   $DC exec api python -m pytest tests/
+   cd apps/web && npm run lint && npm run test -- --run
    ```
 
 4. **Code quality**
    ```bash
-   docker-compose exec api black .
-   docker-compose exec api flake8 .
+   cd apps/api && black . && isort . && flake8 .
    ```
 
-5. **Commit**
+5. **Commit** (formato `<tipo>(<escopo opcional>): <descrição>` — ver
+   [Convenção de Commits](./commit_convention.md))
    ```bash
-   git add .
    git commit -m "feat: adiciona nova feature X"
    ```
 
-6. **Push e PR**
+6. **Push e Merge Request**
    ```bash
    git push origin feature/nome-da-feature
-   # Criar Pull Request no GitHub
+   # Abrir Merge Request no GitLab (develop como branch de destino)
    ```
 
 ## Próximos Passos
@@ -748,7 +459,3 @@ npm install react@latest
 - Leia o [Guia de Contribuição](./contribution_guide.md) para padrões de código
 - Consulte [Troubleshooting](./troubleshooting.md) para resolver problemas
 - Veja [Configuração](./configuration.md) para ajustes avançados
-
----
-
-**Dica**: Mantenha o `docker-compose logs -f` sempre aberto em um terminal separado!

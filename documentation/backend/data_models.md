@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-Este documento detalha os modelos de dados do Axiom, incluindo campos, relacionamentos, validações e métodos especiais.
+Este documento detalha os modelos de dados do Axiom, incluindo campos, relacionamentos, validações e métodos especiais. Não cobre todas as apps — `payables`, `receivables`, `vaults`, `budgets`, `bank_reconciliation`, `monthly_planning`, `webhooks`, `exchange_rates`, `admin_panel`, `personal_planning` e `daily_review` têm seus modelos listados de forma resumida em [`apps_structure.md`](./apps_structure.md).
 
 ## BaseModel (Modelo Abstrato)
 
@@ -990,121 +990,53 @@ class Reading(BaseModel):
 
 ## Modelos do Módulo de IA
 
-### ContentEmbedding (Embedding de Conteúdo)
+> Esta seção substitui um `ContentEmbedding` fictício (app `ai_assistant` que não existe no projeto) pelos modelos reais de `apps/api/agents/models.py`.
+
+### AgentEmbedding (Embedding de Agente)
 
 ```python
-# ai_assistant/models.py
+# agents/models.py
 from pgvector.django import VectorField
-from django.contrib.postgres.fields import ArrayField
 
-class ContentEmbedding(BaseModel):
-    """Armazena embeddings para busca semântica com pgvector."""
+class AgentEmbedding(models.Model):
+    """Embedding vetorial (pgvector) por domínio e fonte.
+    Armazenado em vectors.agent_embeddings (schema dedicado no PostgreSQL)."""
 
-    # Identificação do conteúdo
-    content_type = models.CharField(max_length=100, db_index=True)
-    content_id = models.PositiveIntegerField()
-
-    # Classificação
-    tipo = models.CharField(
-        max_length=20,
-        choices=TipoConteudo.choices,  # planejamento, seguranca, financeiro, leitura
-        db_index=True
-    )
-    sensibilidade = models.CharField(
-        max_length=10,
-        choices=Sensibilidade.choices,  # baixa, media, alta
-        default='baixa',
-        db_index=True
-    )
-    tags = ArrayField(
-        models.CharField(max_length=50),
-        default=list,
-        blank=True
-    )
-
-    # Temporal
-    data_referencia = models.DateField(null=True, blank=True, db_index=True)
-
-    # Conteúdo
-    texto_original = models.TextField()
-    texto_busca = models.TextField()
-
-    # Embedding (384 dimensões para all-MiniLM-L6-v2)
-    embedding = VectorField(dimensions=384, null=True, blank=True)
-
-    # Metadados adicionais
-    metadata = models.JSONField(default=dict, blank=True)
-
-    # Proprietário
-    owner = models.ForeignKey(
-        'members.Member',
-        on_delete=models.CASCADE,
-        related_name='content_embeddings'
-    )
-
-    # Status de indexação
-    is_indexed = models.BooleanField(default=False, db_index=True)
-    indexed_at = models.DateTimeField(null=True, blank=True)
-    embedding_model = models.CharField(max_length=100, default='all-MiniLM-L6-v2')
-
-    class Meta:
-        verbose_name = 'Embedding de Conteudo'
-        verbose_name_plural = 'Embeddings de Conteudo'
-        ordering = ['-created_at']
-        unique_together = [['content_type', 'content_id', 'owner']]
-        indexes = [
-            models.Index(fields=['owner', 'tipo'], name='idx_owner_tipo'),
-            models.Index(fields=['owner', 'sensibilidade'], name='idx_owner_sens'),
-            models.Index(fields=['owner', 'is_indexed'], name='idx_owner_indexed'),
-            models.Index(fields=['content_type', 'content_id'], name='idx_content_ref'),
-            models.Index(fields=['owner', '-data_referencia'], name='idx_owner_data'),
-        ]
-
-    def __str__(self):
-        return f"{self.content_type}:{self.content_id} ({self.tipo}/{self.sensibilidade})"
-
-    def mark_indexed(self):
-        """Marca como indexado com timestamp atual."""
-        from django.utils import timezone
-        self.is_indexed = True
-        self.indexed_at = timezone.now()
-        self.save(update_fields=['is_indexed', 'indexed_at', 'updated_at'])
-
-    def clear_embedding(self):
-        """Limpa embedding para re-indexação."""
-        self.embedding = None
-        self.is_indexed = False
-        self.indexed_at = None
-        self.save(update_fields=['embedding', 'is_indexed', 'indexed_at', 'updated_at'])
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='agent_embeddings')
+    domain = models.CharField(max_length=20, choices=DOMAIN_CHOICES)  # finance, budget, planning, library, general
+    source_type = models.CharField(max_length=50, choices=AGENT_SOURCE_TYPE_CHOICES)  # expense, revenue, budget, task, goal, routine, book_summary, reading_note, highlight, credit_card_bill
+    source_id = models.UUIDField()
+    source_title = models.CharField(max_length=255)
+    content = models.TextField()
+    embedding = VectorField(dimensions=768)  # não BaseModel: campos de auditoria/soft-delete declarados manualmente
+    is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 ```
 
-**Mapeamento de sensibilidade**:
+Gerado por `manage.py vectorize_existing` (domínios financeiro/orçamento/planejamento/biblioteca) e `manage.py index_library` (chunks de resumos/notas/destaques). Consumido pelo `IntellectAgent` via RAG.
+
+### AgentConversation (Histórico de Conversa)
+
 ```python
-CONTENT_SENSITIVITY_MAP = {
-    # Segurança - SEMPRE ALTA
-    'password': Sensibilidade.ALTA,
-    'storedcreditcard': Sensibilidade.ALTA,
-    'storedbankaccount': Sensibilidade.ALTA,
-    'archive': Sensibilidade.MEDIA,
+# agents/models.py
+class AgentConversation(BaseModel):
+    """Histórico de mensagens de conversa com os agentes por sessão."""
 
-    # Financeiro
-    'account': Sensibilidade.MEDIA,
-    'creditcard': Sensibilidade.MEDIA,
-    'expense': Sensibilidade.BAIXA,
-    'revenue': Sensibilidade.BAIXA,
-    'transfer': Sensibilidade.BAIXA,
-    'loan': Sensibilidade.MEDIA,
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='agent_conversations')
+    session_id = models.CharField(max_length=64, db_index=True)
+    query_id = models.UUIDField(null=True, blank=True, db_index=True)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)  # user, agent
+    content = models.TextField()
+    agent_name = models.CharField(max_length=50, null=True, blank=True)
 
-    # Biblioteca
-    'book': Sensibilidade.BAIXA,
-    'summary': Sensibilidade.BAIXA,
-    'reading': Sensibilidade.BAIXA,
-
-    # Planejamento
-    'routinetask': Sensibilidade.BAIXA,
-    'goal': Sensibilidade.BAIXA,
-    'dailyreflection': Sensibilidade.MEDIA,
-}
+    class Meta:
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['user', 'session_id']),
+            models.Index(fields=['user', '-created_at']),
+        ]
 ```
 
 ## Relacionamentos entre Modelos

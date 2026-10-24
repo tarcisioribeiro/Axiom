@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   TrendingDown,
   Snowflake,
@@ -325,17 +326,27 @@ export default function DebtPayoffPlanner({
             <Card className="lg:col-span-2">
               <CardHeader className="pb-sm">
                 <CardTitle className="gap-sm flex items-center text-base">
-                  {strategy === 'snowball' ? (
-                    <Snowflake className="text-primary h-4 w-4" />
-                  ) : (
-                    <Flame className="text-primary h-4 w-4" />
-                  )}
-                  {t('pages.debtPayoff.plan', {
-                    strategy:
-                      strategy === 'snowball'
-                        ? t('pages.debtPayoff.snowball')
-                        : t('pages.debtPayoff.avalanche'),
-                  })}
+                  <AnimatePresence mode="wait" initial={false}>
+                    <motion.span
+                      key={strategy}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="gap-sm flex items-center"
+                    >
+                      {strategy === 'snowball' ? (
+                        <Snowflake className="text-primary h-4 w-4" />
+                      ) : (
+                        <Flame className="text-primary h-4 w-4" />
+                      )}
+                      {t('pages.debtPayoff.plan', {
+                        strategy:
+                          strategy === 'snowball'
+                            ? t('pages.debtPayoff.snowball')
+                            : t('pages.debtPayoff.avalanche'),
+                      })}
+                    </motion.span>
+                  </AnimatePresence>
                 </CardTitle>
               </CardHeader>
               <CardContent>

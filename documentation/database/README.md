@@ -78,8 +78,9 @@ Guia de migrations Django:
 - `library_publisher` - Editoras
 - `library_booksummary` - Resumos de leitura
 
-#### AI Assistant
-- `ai_assistant_contentembedding` - Embeddings vetoriais
+#### Módulo Agents (IA)
+- `"vectors"."agent_embeddings"` (`agents.AgentEmbedding`, schema PostgreSQL dedicado `vectors`) - Embeddings vetoriais
+- `agents_agentconversation` (`agents.AgentConversation`) - Histórico de conversas com os agentes
 
 #### Sistema
 - `members_member` - Membros/Usuários unificados
@@ -113,8 +114,8 @@ class BaseModel(models.Model):
 - Mascaramento em listagens
 
 #### Busca Vetorial
-- Embeddings de 384 dimensões
-- Busca por similaridade com pgvector
+- Embeddings de 768 dimensões (`nomic-embed-text` via Ollama)
+- Busca por similaridade com pgvector (índice HNSW em `vectors.agent_embeddings`)
 - Suporte a RAG (Retrieval Augmented Generation)
 
 ## Diagrama de Alto Nível
@@ -153,7 +154,7 @@ graph TB
     end
 
     subgraph "AI"
-        Embedding[ai_assistant_contentembedding]
+        Embedding["vectors.agent_embeddings"]
     end
 
     User --> Member

@@ -2,7 +2,7 @@
 
 Diagramas em [Mermaid](https://mermaid.js.org/) do Axiom. Renderizados automaticamente no GitLab, GitHub e VS Code (extensão *Markdown Preview Mermaid Support*).
 
-> Auditados e reescritos em 2026-08 contra o estado real do código (`apps/api/*/models.py`). Cobrem todos os apps em `INSTALLED_APPS` (`apps/api/app/settings.py`), incluindo módulos que haviam crescido sem documentação (extensão "Intellect" da biblioteca, gamificação e bem-estar emocional do planejamento pessoal).
+> Auditados e reescritos em 2026-08, com nova revisão em 2026-10, contra o estado real do código (`apps/api/*/models.py`). Cobrem todos os apps em `INSTALLED_APPS` (`apps/api/app/settings.py`), incluindo módulos que haviam crescido sem documentação (extensão "Intellect" da biblioteca, gamificação e bem-estar emocional do planejamento pessoal, revisão diária bloqueante e screen access do admin_panel).
 
 ## Índice
 
@@ -23,13 +23,15 @@ Diagramas em [Mermaid](https://mermaid.js.org/) do Axiom. Renderizados automatic
 15. [ERD — Planejamento Pessoal (Treino)](#15-erd--planejamento-pessoal-treino)
 16. [ERD — Planejamento Pessoal (Nutrição)](#16-erd--planejamento-pessoal-nutrição)
 17. [ERD — Sistema (Notificações, Webhooks, Admin, Auth, Membros)](#17-erd--sistema-notificações-webhooks-admin-auth-membros)
-18. [Diagrama de Classes — Camada de Serviços Frontend](#18-diagrama-de-classes--camada-de-serviços-frontend)
-19. [Diagrama de Classes — Camada de Views Backend](#19-diagrama-de-classes--camada-de-views-backend)
-20. [Diagrama de Estado — Autenticação](#20-diagrama-de-estado--autenticação)
-21. [Diagrama de Estado — Cofre (Vault)](#21-diagrama-de-estado--cofre-vault)
-22. [Pipeline de Agentes de IA — Componentes](#22-pipeline-de-agentes-de-ia--componentes)
-23. [Pipeline de Agentes de IA — Sequência de Streaming](#23-pipeline-de-agentes-de-ia--sequência-de-streaming)
-24. [ERD — Módulo Agentes](#24-erd--módulo-agentes)
+18. [ERD — Revisão Diária (daily_review)](#18-erd--revisão-diária-daily_review)
+19. [Diagrama de Sequência — Revisão Diária Bloqueante](#19-diagrama-de-sequência--revisão-diária-bloqueante)
+20. [Diagrama de Classes — Camada de Serviços Frontend](#20-diagrama-de-classes--camada-de-serviços-frontend)
+21. [Diagrama de Classes — Camada de Views Backend](#21-diagrama-de-classes--camada-de-views-backend)
+22. [Diagrama de Estado — Autenticação](#22-diagrama-de-estado--autenticação)
+23. [Diagrama de Estado — Cofre (Vault)](#23-diagrama-de-estado--cofre-vault)
+24. [Pipeline de Agentes de IA — Componentes](#24-pipeline-de-agentes-de-ia--componentes)
+25. [Pipeline de Agentes de IA — Sequência de Streaming](#25-pipeline-de-agentes-de-ia--sequência-de-streaming)
+26. [ERD — Módulo Agentes](#26-erd--módulo-agentes)
 
 ---
 
@@ -137,7 +139,7 @@ graph LR
 
     subgraph Finance["Finanças"]
         Accounts["accounts"]
-        Expenses["expenses\n(+ Tag, CategorizationRule,\nAutomationRule, ExpenseSplit)"]
+        Expenses["expenses\n(+ Tag, AutomationRule,\nExpenseSplit, FixedExpenseGenerationLog)"]
         Revenues["revenues\n(+ FixedRevenue)"]
         CreditCards["credit_cards\n(Purchase + Installment)"]
         Transfers["transfers\n(+ FixedTransfer)"]
@@ -419,7 +421,7 @@ erDiagram
 
 ## 6. ERD — Automação, Tags e Divisão de Despesas
 
-Extensões do app `expenses` sem paralelo em `revenues`. **Nota**: `Tag`, `CategorizationRule` e `AutomationRule` usam `owner: ForeignKey(User)` diretamente (não `Member`) — inconsistente com o restante do domínio financeiro, que sempre usa `Member`.
+Extensões do app `expenses` sem paralelo em `revenues`. **Nota**: `Tag` e `AutomationRule` usam `owner: ForeignKey(User)` diretamente (não `Member`) — inconsistente com o restante do domínio financeiro, que sempre usa `Member`. Não existe (e nunca existiu como entidade própria) um modelo `CategorizationRule` separado — a "categorização automática por palavra-chave" citada no README é hoje coberta pelo próprio `AutomationRule` (condição `merchant` + ação `set_category`).
 
 ```mermaid
 erDiagram
@@ -440,16 +442,6 @@ erDiagram
         uuid uuid UK
         string name
         string color "hex #RRGGBB"
-        int owner_id FK "→ User"
-    }
-
-    CategorizationRule {
-        bigint id PK
-        uuid uuid UK
-        string merchant_contains
-        string category
-        bool is_active
-        int priority "menor = maior prioridade"
         int owner_id FK "→ User"
     }
 
@@ -492,8 +484,11 @@ erDiagram
         decimal default_value
         int due_day
         bool is_active
-        string last_generated_month
+        bool allow_value_edit
+        string merchant
         int account_id FK
+        int credit_card_id FK "nullable"
+        int member_id FK "nullable"
     }
 
     FixedRevenue {
@@ -503,7 +498,24 @@ erDiagram
         decimal default_value
         int due_day
         bool is_active
+        bool allow_value_edit
+        string last_generated_month "YYYY-MM"
         int account_id FK
+        int member_id FK "nullable"
+    }
+
+    FixedExpenseGenerationLog {
+        bigint id PK
+        string month UK "YYYY-MM, global (não por template)"
+        int total_generated
+        json fixed_expense_ids
+    }
+
+    FixedRevenueGenerationLog {
+        bigint id PK
+        string month UK "YYYY-MM, global"
+        int total_generated
+        json fixed_revenue_ids
     }
 
     Expense }o--o{ Tag : "M2M tags"
@@ -511,10 +523,11 @@ erDiagram
     Expense ||--o{ AutomationRuleLog : "log"
     AutomationRule ||--o{ AutomationRuleLog : "applies"
     User ||--o{ Tag : owner
-    User ||--o{ CategorizationRule : owner
     User ||--o{ AutomationRule : owner
     FixedExpense ||--o{ Expense : "template for"
 ```
+
+`FixedExpenseGenerationLog`/`FixedRevenueGenerationLog` não têm FK para o template — é um log global por mês (idempotência da geração em lote), por isso não aparecem conectados por uma relação no diagrama acima.
 
 ---
 
@@ -1122,17 +1135,22 @@ erDiagram
         int goal_id FK
     }
 
-    Challenge {
+    FocusBlock {
         bigint id PK
-        uuid uuid UK
-        string title
-        int duration_days "7/21/30/66/100"
-        date start_date
-        date end_date
-        string status
-        decimal completion_rate
+        string name "ex: Manhã Produtiva"
+        string icon "nome do ícone Lucide"
+        int order
+        bool is_active
+        json weekdays "0-6, mesma convenção de custom_weekdays"
         int owner_id FK
-        int template_task_id FK "nullable"
+    }
+
+    FocusBlockTask {
+        bigint id PK
+        int occurrence_index "null = tarefa inteira; valor = 1 ocorrência"
+        int order
+        int focus_block_id FK
+        int routine_task_id FK
     }
 
     DailyReflection {
@@ -1145,14 +1163,19 @@ erDiagram
     }
 
     RoutineTask ||--o{ TaskInstance : "generates (template)"
-    RoutineTask ||--o{ Challenge : "template_task (opcional)"
     RoutineTask ||--o{ RoutineTask : "chained_task (self)"
+    RoutineTask }o--o{ FocusBlock : "M2M via FocusBlockTask"
+    FocusBlock ||--o{ FocusBlockTask : "block_tasks"
+    RoutineTask ||--o{ FocusBlockTask : "focus_block_links"
     Goal ||--o{ GoalFailure : "failures"
     Goal }o--|| RoutineTask : "related_task (opcional)"
     Member ||--o{ RoutineTask : owner
     Member ||--o{ Goal : owner
+    Member ||--o{ FocusBlock : owner
     Member ||--o{ DailyReflection : owner
 ```
+
+> **Nota**: o modelo `Challenge` (desafios de duração fixa) existiu no código entre as migrations `0028_challenge_bodymetric_chained_task` e `0049_delete_challenge` — **foi removido** e não existe mais. `FocusBlock`/`FocusBlockTask` são uma feature mais recente (agrupamento reutilizável de `RoutineTask`s, ex. "Manhã Produtiva"), cadastrada na tela de Tarefas Rotineiras e exibida no Checklist Diário.
 
 ---
 
@@ -1389,6 +1412,25 @@ erDiagram
 
 ```mermaid
 erDiagram
+    Member {
+        bigint id PK
+    }
+
+    HydrationGoal {
+        bigint id PK
+        int daily_target_ml
+        int owner_id FK "OneToOne"
+    }
+
+    WaterLog {
+        bigint id PK
+        date date
+        time time "nullable"
+        int amount_ml
+        int task_instance_id FK "nullable, SET_NULL"
+        int owner_id FK
+    }
+
     Food {
         bigint id PK
         string name
@@ -1439,6 +1481,8 @@ erDiagram
     Food ||--o{ MenuOptionIngredient : "menu_ingredients"
     MealType ||--o{ MealLog : "logs"
     MenuOption ||--o{ MealLog : "logs (opcional)"
+    Member ||--o| HydrationGoal : "1:1"
+    Member ||--o{ WaterLog : owner
 ```
 
 ---
@@ -1517,16 +1561,130 @@ erDiagram
         int user_id FK "OneToOne"
     }
 
+    ThemePreference {
+        bigint id PK
+        string theme "14 variantes (dracula, catppuccin-mocha, ...)"
+        string sync_token_hash "SHA-256, token plaintext nunca persistido"
+        int user_id FK "OneToOne"
+    }
+
+    UserPreference {
+        bigint id PK
+        bool daily_review_on_weekends
+        smallint self_esteem_frequency_days "1/7/14"
+        bool tours_disabled
+        int user_id FK "OneToOne"
+    }
+
+    UserScreenAccess {
+        bigint id PK
+        string screen "chave de admin_panel.screens.SCREENS"
+        json actions
+        int user_id FK
+    }
+
+    ScreenDefault {
+        bigint id PK
+        string screen UK
+        json actions "aplicadas a todo novo usuário comum"
+    }
+
     Member ||--o| User : "1:1 (login opcional)"
     Member ||--o{ Notification : owner
     Member ||--o{ NotificationPreference : owner
     Webhook ||--o{ WebhookDelivery : "deliveries"
     User ||--o| TOTPDevice : "1:1"
+    User ||--o| ThemePreference : "1:1"
+    User ||--o| UserPreference : "1:1"
+    User ||--o{ UserScreenAccess : "acessos por tela"
+```
+
+**Screen access** (`UserScreenAccess`/`ScreenDefault`): ausência de linha para `(user, screen)` significa sem acesso — staff/superuser ignoram essa camada (`ScreenAccessMiddleware` libera direto). Novo usuário comum recebe uma cópia de `ScreenDefault` por tela. `ThemePreference`/`UserPreference` vivem em `authentication/models.py`, não em `admin_panel`, mas estão aqui por serem configuração "de sistema" por usuário.
+
+---
+
+## 18. ERD — Revisão Diária (daily_review)
+
+Modal bloqueante que impede o uso normal do app enquanto houver pendências do dia anterior (ou de dias mais antigos, resolvidos em lote pelo "backlog"). As pendências em si **não são persistidas** — são calculadas sob demanda por `daily_review/steps.py` a partir dos modelos reais de `personal_planning` (reflexão, tarefas, metas de hábito a evitar, treino, refeições, hidratação, check-in emocional, autoestima) e `library` (sessões de estudo, flashcards vencidos). Só a *resolução* de um item pendente é persistida.
+
+```mermaid
+erDiagram
+    Member {
+        bigint id PK
+    }
+
+    ReviewProgress {
+        bigint id PK
+        uuid uuid UK
+        date last_reviewed_date
+        int owner_id FK "OneToOne"
+    }
+
+    ReviewResolution {
+        bigint id PK
+        uuid uuid UK
+        string step "chave em daily_review.steps.STEPS_BY_KEY"
+        date reference_date
+        string item_key "vazio nas etapas 'single'"
+        string action "skip/keep_pending"
+        string justification "código, ex: no_time/forgot/rest"
+        int owner_id FK
+    }
+
+    Member ||--o| ReviewProgress : "1:1"
+    Member ||--o{ ReviewResolution : owner
 ```
 
 ---
 
-## 18. Diagrama de Classes — Camada de Serviços Frontend
+## 19. Diagrama de Sequência — Revisão Diária Bloqueante
+
+Fluxo desde a abertura do app até a liberação do uso normal do dia. `GET /daily-review/` nunca falha por haver pendências — ele é a própria fonte da lista; só `POST /complete/` recusa (400) se ainda sobrar algo pendente no dia ou antes dele.
+
+```mermaid
+sequenceDiagram
+    actor U as Usuário
+    participant FE as Frontend
+    participant V as DailyReviewView
+    participant RV as DailyReviewResolveView
+    participant CV as DailyReviewCompleteView
+    participant ST as steps.py (STEPS)
+    participant DB as PostgreSQL
+
+    U->>FE: abre o app
+    FE->>V: GET /api/v1/daily-review/
+    V->>ST: Review.build() — percorre etapas por dia e contínuas
+    ST->>DB: consulta pendências reais\n(TaskInstance, DailyReflection, WorkoutSession, ...)
+    V-->>FE: {backlog, days: [{date, steps: [{key, items}]}]}
+    FE->>U: exibe modal bloqueante com pendências
+
+    loop para cada item pendente
+        alt usuário registra o item faltante
+            U->>FE: navega à tela normal (ex: planning.reflections) e registra
+            FE->>FE: refetch invalida a query de daily-review
+        else usuário justifica
+            U->>FE: escolhe justificativa (pular/manter pendente)
+            FE->>RV: POST /daily-review/resolve/\n{step, date, item_key, justification}
+            RV->>DB: ReviewResolution.update_or_create(...)
+            RV-->>FE: 201 Created
+        end
+    end
+
+    FE->>CV: POST /daily-review/complete/\n{date, resolutions?}
+    CV->>DB: aplica resolutions pendentes (atomic)
+    CV->>ST: Review.build() — confere se ainda há pendência <= date
+    alt ainda há pendência
+        CV-->>FE: 400 {"detail": "Ainda há itens pendentes.", pending}
+    else nada pendente
+        CV->>DB: ReviewProgress.last_reviewed_date = date
+        CV-->>FE: 204 No Content
+        FE->>U: libera uso normal do dia
+    end
+```
+
+---
+
+## 20. Diagrama de Classes — Camada de Serviços Frontend
 
 Hierarquia de classes de serviço e padrão singleton.
 
@@ -1592,7 +1750,7 @@ Nota: páginas novas seguem o padrão TanStack Query (`useQuery`/`useMutation` s
 
 ---
 
-## 19. Diagrama de Classes — Camada de Views Backend
+## 21. Diagrama de Classes — Camada de Views Backend
 
 Hierarquia de views Django REST Framework.
 
@@ -1671,7 +1829,7 @@ Nota: nem toda view do sistema segue esse padrão genérico — agregações (`G
 
 ---
 
-## 20. Diagrama de Estado — Autenticação
+## 22. Diagrama de Estado — Autenticação
 
 Estados possíveis da sessão do usuário, incluindo o desvio por 2FA (TOTP) quando `TOTPDevice.is_active=True`.
 
@@ -1701,7 +1859,7 @@ stateDiagram-v2
 
 ---
 
-## 21. Diagrama de Estado — Cofre (Vault)
+## 23. Diagrama de Estado — Cofre (Vault)
 
 Estados do cofre de segurança pessoal. A `vault_key` em texto plano nunca é persistida — vive só no Redis, associada à sessão, com TTL configurável por usuário (`VaultConfig.session_ttl_minutes`, padrão 60 min).
 
@@ -1728,7 +1886,7 @@ stateDiagram-v2
 
 ---
 
-## 22. Pipeline de Agentes de IA — Componentes
+## 24. Pipeline de Agentes de IA — Componentes
 
 Visão dos componentes do módulo `apps/api/agents/` e suas dependências.
 
@@ -1758,7 +1916,7 @@ graph TB
             TEMP["parse_temporal_intent\n(datas relativas)"]
         end
 
-        subgraph Agents["Agentes"]
+        subgraph Agents["Agentes (legados)"]
             FA["FinanceAgent"]
             BA["BudgetAgent"]
             FCA["ForecastAgent"]
@@ -1767,12 +1925,23 @@ graph TB
             IA["InsightAgent"]
         end
 
+        subgraph AgentsNew["Agentes (modulares)"]
+            PEA["PersonalAgent"]
+            FIA["FinancialAgent"]
+            SEA["SecurityAgent"]
+            INA["IntellectAgent"]
+            NAA["NoAccessAgent\n(fallback, não-selecionável)"]
+        end
+
         subgraph Tools["Tools"]
             FT["financial_tools"]
             BT["budget_tools"]
             FCT["forecast_tools"]
             PT["planning_tools"]
             RT["rag_tools"]
+            PST["personal_tools"]
+            SST["security_tools"]
+            LP["providers/library_provider"]
         end
     end
 
@@ -1791,20 +1960,24 @@ graph TB
     STMV --> ROUTER
     ASKV --> ROUTER
     ROUTER --> BASE
-    BASE --> FA & BA & FCA & PA & LA & IA
+    BASE --> FA & BA & FCA & PA & LA & IA & PEA & FIA & SEA & INA
+    ROUTER -.->|"fallback (sem screen access)"| NAA
     FA --> FT
     BA --> BT
     FCA --> FCT
     PA --> PT
     LA --> RT
+    PEA --> PST & PT
+    FIA --> FT & BT & FCT
+    SEA --> SST
+    INA --> LP
 
     ROUTER --> LLMC
-    FA & BA & FCA & PA & LA & IA --> LLMC
+    FA & BA & FCA & PA & LA & IA & PEA & FIA & SEA & INA --> LLMC
 
     STMV & ASKV --> MEM
-    FA & BA --> TEMP
-    FT & BT & FCT & PT & RT --> PG
-    RT --> PG
+    FA & BA & PEA & FIA --> TEMP
+    FT & BT & FCT & PT & RT & PST & SST & LP --> PG
 
     MEM --> REDIS
     STMV --> PG
@@ -1819,7 +1992,7 @@ graph TB
 
 ---
 
-## 23. Pipeline de Agentes de IA — Sequência de Streaming
+## 25. Pipeline de Agentes de IA — Sequência de Streaming
 
 Fluxo detalhado do modo streaming (SSE) desde a digitação do usuário até a resposta completa no frontend.
 
@@ -1876,7 +2049,7 @@ sequenceDiagram
 
 ---
 
-## 24. ERD — Módulo Agentes
+## 26. ERD — Módulo Agentes
 
 Modelos de dados do módulo de agentes de IA. **Este ERD já estava correto** em versões anteriores desta documentação — mantido aqui por completude e para deixar claro que não deve ser confundido com o obsoleto "Módulo AI Assistant" (`ContentEmbedding`, 384 dims, `sentence-transformers`) documentado por engano em `database/schema.md` até esta revisão: esse modelo não existe no código atual.
 

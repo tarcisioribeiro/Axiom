@@ -9,22 +9,21 @@ primeiro push.
 ## Visão geral do pipeline
 
 ```
-lint → typecheck → test → build → scan → deploy-staging → smoke-staging → test-backup-restore → promote → deploy-production → smoke-production
+lint → (typecheck → test, estágios sem jobs hoje) → build → scan → deploy-staging → smoke-staging → test-backup-restore → deploy-production → smoke-production → cleanup
 ```
 
 | Estágio               | Jobs                                                                                                                                      | Quando executa           |
 |-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|
-| `lint`                | `lint:backend`, `lint:bandit`, `lint:pip-audit`, `lint:frontend`, `lint:npm-audit`, `lint:commits`, `lint:secrets`, `lint:k8s`           | todo push / MR           |
-| `typecheck`           | `typecheck:backend`, `typecheck:frontend`                                                                                                 | todo push / MR           |
-| `test`                | `test:backend`, `test:frontend`, `build:storybook`                                                                                       | todo push / MR           |
-| `build`               | `build:api`, `build:frontend`                                                                                                             | develop / main / tag     |
-| `scan`                | `scan:api`, `scan:frontend` (Trivy HIGH/CRITICAL)                                                                                        | develop / main / tag     |
+| `lint`                | `lint:backend` (black/isort/flake8), `lint:frontend` (eslint/prettier), `lint:migrations`, `lint:bandit`, `lint:pip-audit`, `lint:npm-audit`, `lint:commits`, `lint:secrets` | MR (escopado por `changes:` back/front) |
+| `typecheck` / `test`  | **Nenhum job hoje** — declarados em `stages:` como placeholder; mypy/pytest e vitest/build:storybook ainda não entraram no pipeline (ver [development_workflow.md](./development_workflow.md) para como rodar localmente) | —                        |
+| `build`               | `build:api`, `build:frontend:assets`, `build:frontend`                                                                                    | develop / main           |
+| `scan`                | `scan:api`, `scan:frontend` (Trivy HIGH/CRITICAL)                                                                                        | develop / main           |
 | `deploy-staging`      | `deploy:staging`                                                                                                                          | develop                  |
-| `smoke-staging`       | `smoke:staging`, `backup:staging`, `deploy:rollback:staging` (auto), `rollback:staging` (**manual**)                                     | develop                  |
+| `smoke-staging`       | `backup:staging`, `smoke:staging`, `deploy:rollback:staging` (auto em falha), `rollback:staging` (**manual**)                             | develop                  |
 | `test-backup-restore` | `test:backup-restore`                                                                                                                     | develop                  |
-| `promote`             | `promote:to_main` — abre ou atualiza MR develop→main automaticamente via GitLab API                                                       | develop                  |
-| `deploy-production`   | `deploy:production` (**manual**)                                                                                                          | main                     |
-| `smoke-production`    | `smoke:production`, `deploy:rollback:production` (auto), `rollback:production` (**manual**)                                              | main                     |
+| `deploy-production`   | `deploy:production` (**manual**) — blue-green switch                                                                                      | main                     |
+| `smoke-production`    | `smoke:production`, `deploy:rollback:production` (auto em falha), `rollback:production` (**manual**)                                     | main                     |
+| `cleanup`             | `cleanup:registry` (tags antigas do Container/Package Registry), `cleanup:k8s:staging`, `cleanup:k8s:production` (Jobs concluídos/falhados) | após deploy develop/main |
 
 > Para detalhes sobre os procedimentos de rollback consulte o
 > [Runbook de Rollback](rollback.md).
@@ -66,12 +65,15 @@ Configure estas variáveis **antes do primeiro push** para `develop` ou `main` e
 #### `GITLAB_TOKEN`
 
 Personal Access Token ou Project Access Token do GitLab com escopo `api` e papel
-Developer (ou superior) no projeto. Usado pelo job `promote:to_main` para criar
-ou atualizar o Merge Request develop→main automaticamente via GitLab API.
+Developer (ou superior) no projeto. Usado pelo job `cleanup:registry` (stage
+`cleanup`) para listar e apagar tags antigas do Container Registry e versões
+antigas do Package Registry (SBOM) via API do GitLab.
 
 **Como gerar:** GitLab → User Settings → Access Tokens → Add new token (escopo: `api`)
 
-> **Importante:** NÃO use `$CI_JOB_TOKEN` — ele não tem permissão para criar MRs.
+> **Importante:** NÃO use `$CI_JOB_TOKEN` — ele não tem permissão para listar/deletar
+> via a API do registry. Sem `GITLAB_TOKEN`, `cleanup:registry` apenas pula a limpeza
+> (não falha o pipeline).
 
 | Configuração | Valor |
 |---|---|
@@ -369,7 +371,8 @@ pipeline não falha.
 
 #### `COSIGN_PRIVATE_KEY`
 
-Chave privada PEM do cosign para assinar as imagens Docker com attestation SBOM.
+Chave privada do cosign, **codificada em base64**, para assinar as imagens Docker
+com attestation SBOM.
 
 **Como gerar:**
 
@@ -382,8 +385,8 @@ brew install cosign   # macOS
 cosign generate-key-pair
 # Cria: cosign.key (privada — NUNCA commite) e cosign.pub (pública — commite no repo)
 
-# Cole o conteúdo de cosign.key como valor da variável
-cat cosign.key
+# Cole a saída de base64 como valor da variável (não o conteúdo cru do .key)
+base64 -w 0 cosign.key
 ```
 
 Commite a chave pública no repositório:
@@ -739,19 +742,24 @@ Variáveis de CI/CD no GitLab (Settings → CI/CD → Variables):
 ## Fluxo completo do pipeline após a configuração
 
 ```
-Push para develop
-  → lint (black, isort, flake8, bandit, pip-audit, eslint, prettier, npm audit, commitlint)
-  → typecheck (mypy, tsc)
-  → test:backend (pytest + coverage)
-  → build:api + build:frontend    ← push para o Container Registry + SBOM
+Merge Request (pipeline de MR — único trigger de lint hoje)
+  → lint:backend (black, isort, flake8) + lint:frontend (eslint, prettier)
+    + lint:migrations + lint:bandit + lint:pip-audit + lint:npm-audit
+    + lint:commits + lint:secrets
+  → (typecheck/test: sem jobs hoje — mypy/pytest/vitest rodam local + pre-push hook)
+
+Push para develop (após merge)
+  → build:api + build:frontend:assets + build:frontend  ← push para o Container Registry + SBOM
   → scan:api + scan:frontend       ← Trivy: bloqueia se HIGH/CRITICAL encontrado
   → deploy:staging                 ← kubectl apply + set image → k3s reinicia os pods
-  → smoke:staging                  ← curl /health/, /ready/ + login cookie + /api/v1/me/
   → backup:staging                 ← cria job K8s a partir do CronJob; aguarda conclusão
+  → smoke:staging                  ← curl /health/, /ready/ + login cookie + /api/v1/me/
   → test:backup-restore            ← baixa dump do MinIO, restaura via psql, manage.py check
+  → cleanup:registry + cleanup:k8s:staging
 
-Push para main (+ aprovação manual)
-  → (mesmos estágios acima até scan)
+Push para main (+ aprovação manual em deploy:production)
+  → (mesmos estágios build/scan acima)
   → deploy:production              ← blue-green switch + kubectl set image frontend
   → smoke:production               ← curl /health/, /ready/ + login cookie + /api/v1/me/
+  → cleanup:registry + cleanup:k8s:production
 ```

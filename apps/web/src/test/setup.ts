@@ -35,3 +35,18 @@ beforeAll(async () => {
 afterEach(() => {
   cleanup();
 });
+
+// happy-dom 21 rejects an Animation's `finished` promise with AbortError on
+// cancel (spec-correct), but motion-dom doesn't await/catch it when stopping
+// animations on unmount — pure test-teardown noise, not an app bug.
+// ponytail: global filter, scope to the stack trace if other legit AbortErrors start getting swallowed.
+process.on('unhandledRejection', (reason) => {
+  if (
+    reason instanceof Error &&
+    reason.name === 'AbortError' &&
+    reason.message === 'The animation was canceled.'
+  ) {
+    return;
+  }
+  throw reason;
+});

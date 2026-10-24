@@ -61,4 +61,4 @@ pgvector==0.3.3
 # own floor yet. See apps/api/Dockerfile comment on PIP_CACHE_BUST for why
 # this is necessary instead of relying on weekly cache-bust re-resolution.
 msgpack==1.2.1        # GHSA-6v7p-g79w-8964
-setuptools==83.0.0    # CVE-2025-47273, PYSEC-2026-3447
+setuptools==84.1.0    # CVE-2025-47273, PYSEC-2026-3447, GHSA-xmj3-9gf7-h52w

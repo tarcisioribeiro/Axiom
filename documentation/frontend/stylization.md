@@ -2,12 +2,12 @@
 
 ## Visão Geral
 
-O Axiom utiliza **TailwindCSS** como framework CSS principal, com tema customizado baseado no **Dracula color scheme**, proporcionando uma interface moderna, escura e visualmente agradável.
+O Axiom utiliza **TailwindCSS** como framework CSS principal, com um sistema de temas via **variáveis CSS**: um tema **escuro** e um **claro**, cada um com múltiplas variantes de cor selecionáveis pelo usuário (`ThemeToggle`).
 
 ## Stack de Estilização
 
 - **TailwindCSS 4** - Utility-first CSS framework
-- **Dracula Theme** - Paleta de cores oficial
+- **Sistema de temas (claro/escuro + variantes)** - ver seção "Temas" abaixo
 - **CSS Variables** - Tema dinâmico e customizável
 - **PostCSS** - Processamento CSS
 - **Autoprefixer** - Compatibilidade cross-browser
@@ -26,9 +26,18 @@ apps/web/
 └── postcss.config.js           # Configuração do PostCSS
 ```
 
-## Tema Dracula
+## Temas
 
-### Paleta de Cores
+O tema base é controlado por `hooks/use-theme.ts` (`isDark`/`theme: 'dark' | 'light'`), e cada modo tem múltiplas **variantes de cor** selecionadas via atributo no `<html>`:
+
+- **Escuro** (`.dark[data-dark-theme='...']`): `dracula` (padrão), `catppuccin-mocha`, `tokyo-night`, `gruvbox-dark`, `everforest`, `ubuntu`, `mint-dark`.
+- **Claro** (`:root[data-light-theme='...']`): `alucard` (padrão), `catppuccin-latte`, `everforest-light`, `gruvbox-light`, `tokyo-day`, `ubuntu-light`, `mint-light`.
+
+O `ThemeToggle` (`components/common/ThemeToggle.tsx`) alterna claro/escuro e permite escolher a variante; as opções/labels ficam em `components/common/theme-options.ts`. Cada variante define o mesmo conjunto de variáveis CSS (`--background`, `--primary`, etc.) em `index.css`, então componentes nunca hardcodeiam cor — sempre usam as variáveis via classes Tailwind (`bg-primary`, `text-foreground`...).
+
+A paleta abaixo (Dracula) é só a variante escura padrão — não hardcode esses hex em componentes.
+
+### Paleta de Cores (variante padrão — Dracula)
 
 ```css
 /* Dracula Official Color Palette */
@@ -198,59 +207,28 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
 
-      // Animações customizadas
-      keyframes: {
-        'dialog-overlay-show': {
-          from: { opacity: '0' },
-          to: { opacity: '1' },
-        },
-        'dialog-content-show': {
-          from: {
-            opacity: '0',
-            transform: 'translate(-50%, -48%) scale(0.96)',
-          },
-          to: {
-            opacity: '1',
-            transform: 'translate(-50%, -50%) scale(1)',
-          },
-        },
-        'slide-up-fade': {
-          from: {
-            opacity: '0',
-            transform: 'translate(-50%, -45%) scale(0.95)',
-          },
-          to: {
-            opacity: '1',
-            transform: 'translate(-50%, -50%) scale(1)',
-          },
-        },
-        'bounce-in': {
-          '0%': {
-            opacity: '0',
-            transform: 'translate(-50%, -50%) scale(0.3)',
-          },
-          '50%': {
-            transform: 'translate(-50%, -50%) scale(1.05)',
-          },
-          '100%': {
-            opacity: '1',
-            transform: 'translate(-50%, -50%) scale(1)',
-          },
-        },
-      },
-      animation: {
-        'dialog-overlay-show': 'dialog-overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'dialog-content-show': 'dialog-content-show 200ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'slide-up-fade': 'slide-up-fade 300ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'bounce-in': 'bounce-in 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+      // Tokens de espaçamento semântico (ver seção "Espaçamento Semântico")
+      spacing: {
+        xs: 'var(--spacing-xs)',  // 4px
+        sm: 'var(--spacing-sm)',  // 8px
+        md: 'var(--spacing-md)',  // 16px
+        lg: 'var(--spacing-lg)',  // 24px
+        xl: 'var(--spacing-xl)',  // 32px
       },
     },
   },
   plugins: [
     require('@tailwindcss/forms'),
+    // variante customizada `hoverable:` — @media (hover: hover) and (pointer: fine),
+    // para gatear hover:scale/translate/etc. em telas de toque
+    function ({ addVariant }) {
+      addVariant('hoverable', '@media (hover: hover) and (pointer: fine)');
+    },
   ],
 }
 ```
+
+As keyframes/animations (`animate-fade-in/out`, `animate-pop-in/out`, etc.) são definidas em `index.css` usando só os tokens de duração/easing — ver "Animações" abaixo.
 
 ## Usando TailwindCSS
 
@@ -313,8 +291,9 @@ export default {
   transition-all
 ">
 
-// Dark mode (não usado, mas disponível)
-<div className="bg-white dark:bg-background">
+// Claro/escuro: a classe `dark` no <html> já troca as variáveis CSS —
+// normalmente não é preciso usar o variant dark: do Tailwind
+<div className="bg-background">
 ```
 
 ### Composição com clsx/cn
@@ -397,35 +376,50 @@ function Button({ variant, className, ...props }) {
 
 ## Animações
 
+**Regra do projeto:** apenas `opacity`/`transform`, e só os tokens de duração/easing abaixo — nunca uma duração ou curva ad-hoc.
+
+| Token | Valor | Uso |
+|---|---|---|
+| `fast` | 150ms | hover, clique, saídas |
+| `normal` | 220ms | modal, popover, página, aba, expandir |
+| `medium` | 350ms | layout (ex.: largura da sidebar) |
+| `slow` | 600ms | decorativo (ex.: barra de progresso) |
+
+Easing: `--ease-out` (`cubic-bezier(0.16, 1, 0.3, 1)`) para a maioria; `--ease-in-out` para casos simétricos.
+
 ### Transições CSS
 
 ```tsx
-// Transição simples
+// transition-* "cru" já usa fast + ease-out
 <div className="transition-colors hover:bg-accent">
 
-// Transição múltiplas propriedades
-<div className="transition-all duration-300 ease-in-out">
+// Para outro token, use duration-{normal|medium|slow}
+<div className="transition-all duration-normal">
 
-// Transform
-<button className="hover:scale-105 active:scale-95 transition-transform">
+// Entradas/saídas: classes prontas (ver index.css)
+<div className="animate-fade-in" />           // ou animate-fade-out
+<div className="animate-pop-in" />             // ou animate-pop-out
+// Radix: data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out
 ```
 
 ### Framer Motion
 
-Para animações mais complexas:
+`MotionConfig` em `App.tsx` já define `transitions.normal` como padrão global — um `motion.*` sem a prop `transition` já sai com 220ms + ease-out:
 
 ```tsx
 import { motion } from 'framer-motion';
+import { transitions } from '@/lib/animations/transitions';
 
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  exit={{ opacity: 0, y: -20 }}
-  transition={{ duration: 0.2 }}
->
+// ✅ usa o default global (normal) — omita `transition`
+<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
   {/* Conteúdo */}
 </motion.div>
+
+// Micro-interação: use transitions.fast explicitamente
+<motion.button whileTap={{ scale: 0.96 }} transition={transitions.fast} />
 ```
+
+Toggle de "ver detalhes" (`<Collapse open={x}>`, de `components/ui/collapsible-section.tsx`) em vez de `{x && <div>...</div>}` cru.
 
 ## Ícones (Lucide React)
 
@@ -589,14 +583,17 @@ className={cn("base-classes", condition && "conditional-classes", className)}
 className={`base-classes ${condition ? 'conditional' : ''} ${className}`}
 ```
 
-### 3. Mantenha consistência de spacing
+### 3. Espaçamento semântico, não numérico
+
+`index.css` define `--spacing-{xs,sm,md,lg,xl}`, mapeados em `tailwind.config.js` — prefira essas classes à escala numérica do Tailwind:
 
 ```tsx
-// ✅ Bom - usa scale do Tailwind
-<div className="space-y-4">  {/* 1rem */}
-<div className="p-6">        {/* 1.5rem */}
+// ✅ Bom - espaçamento semântico
+<div className="space-y-md">  {/* 16px */}
+<div className="p-lg">        {/* 24px */}
 
-// ❌ Ruim - valores arbitrários
+// ❌ Ruim - escala numérica ou valores arbitrários
+<div className="space-y-4">
 <div className="space-y-[17px]">
 ```
 

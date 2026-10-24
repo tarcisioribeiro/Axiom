@@ -63,7 +63,8 @@ kubectl wait --namespace cert-manager \
 
 ### ClusterIssuers
 
-Os dois ClusterIssuers estão definidos em `k8s/ingress.yaml`:
+Os dois ClusterIssuers estão definidos em `infra/k8s/base/cluster-issuers.yaml`
+(recurso cluster-scoped, aplicado por ambos os overlays — staging e produção):
 
 | ClusterIssuer        | Endpoint ACME                                    | Uso                        |
 |----------------------|--------------------------------------------------|----------------------------|
@@ -76,8 +77,9 @@ Os dois ClusterIssuers estão definidos em `k8s/ingress.yaml`:
 ### Aplicar os issuers
 
 ```bash
-# Aplica junto com o ingress de produção (contém os ClusterIssuer resources)
-kubectl apply -f k8s/ingress.yaml
+# Recurso cluster-scoped — já incluído no kustomize de ambos os overlays
+# (infra/k8s/overlays/production e /staging), não precisa de apply isolado
+kubectl apply -f infra/k8s/base/cluster-issuers.yaml
 ```
 
 ### Secrets TLS gerados automaticamente

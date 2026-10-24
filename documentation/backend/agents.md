@@ -1,6 +1,6 @@
 # Sistema de Agentes de IA
 
-O Axiom possui um módulo de IA conversacional (`apps/api/agents/`) composto por agentes especializados que respondem perguntas sobre finanças, orçamento, planejamento pessoal e biblioteca. O sistema suporta respostas em streaming (SSE) e modo síncrono, com memória de sessão via Redis e histórico permanente no banco de dados.
+O Axiom possui um módulo de IA conversacional (`apps/api/agents/`) composto por agentes especializados que respondem perguntas sobre finanças, orçamento, planejamento pessoal, biblioteca/Intelecto e o cofre de senhas (apenas metadados). O sistema suporta respostas em streaming (SSE) e modo síncrono, com memória de sessão via Redis e histórico permanente no banco de dados.
 
 ## Índice
 
@@ -198,6 +198,17 @@ flowchart TD
 ## 4. Agentes Especializados
 
 Todos os agentes herdam de `BaseAgent` (`core/base_agent.py`) e implementam três métodos obrigatórios: `can_handle()`, `build_context()` e `build_prompt()`.
+
+> O roteador registra **10 agentes**: 4 "principais" (modulares, agrupando um módulo inteiro do produto) somados aos 6 agentes legados abaixo, mantidos para compatibilidade e também participando do roteamento automático. `_build_registry()`/`_build_name_map()` (`core/router.py`) listam os principais primeiro:
+
+| Agente | `name` | Domínio | Descrição |
+|---|---|---|---|
+| `PersonalAgent` | `personal` | Planejamento Pessoal (completo) | Rotinas, hábitos, metas, treino e nutrição em um único agente |
+| `FinancialAgent` | `financial` | Finanças (completo) | Consolida `finance` + `budget` + `forecast` em um único agente |
+| `SecurityAgent` | `security` | Segurança (cofre de senhas) | Metadados, contagens, datas e logs de atividade — **jamais** expõe senhas, PINs, chaves ou valores criptografados |
+| `IntellectAgent` | `intellect` | Biblioteca / Intelecto | Livros, cursos e habilidades, com RAG (pgvector) sobre resumos e destaques |
+
+**Agentes legados** (ainda registrados e roteáveis; `FinancialAgent` cobre o mesmo escopo das três primeiras):
 
 | Agente | `name` | Domínio | Modelo Padrão (Ollama) | Descrição |
 |---|---|---|---|---|
@@ -546,6 +557,7 @@ AgentEmbedding  [schema: vectors.agent_embeddings]
 | `OPENAI_MODEL` | `gpt-4o-mini` | Modelo OpenAI |
 | `LLM_TIMEOUT_CHAT` | `120` | Timeout em segundos para chat |
 | `LLM_TIMEOUT_EMBED` | `30` | Timeout em segundos para embeddings |
+| `LLM_MAX_TOKENS` | `2048` | Máximo de tokens de saída, aplicado a todos os providers (Ollama via `options.num_predict`, Groq/OpenAI/Anthropic via `max_tokens`) |
 
 ### Configuração via Admin Panel
 

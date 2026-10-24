@@ -212,7 +212,7 @@ class AuthorDetailView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_destroy(self, instance):
-        instance.deleted_at = instance.updated_at
+        instance.deleted_at = timezone.now()
         instance.deleted_by = self.request.user
         instance.save()
         log_activity(
@@ -297,7 +297,7 @@ class PublisherDetailView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_destroy(self, instance):
-        instance.deleted_at = instance.updated_at
+        instance.deleted_at = timezone.now()
         instance.deleted_by = self.request.user
         instance.save()
         log_activity(
@@ -413,7 +413,7 @@ class BookDetailView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_destroy(self, instance):
-        instance.deleted_at = instance.updated_at
+        instance.deleted_at = timezone.now()
         instance.deleted_by = self.request.user
         instance.save()
         log_activity(
@@ -887,7 +887,7 @@ class SummaryDetailView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_destroy(self, instance):
-        instance.deleted_at = instance.updated_at
+        instance.deleted_at = timezone.now()
         instance.deleted_by = self.request.user
         instance.save()
         log_activity(
@@ -1087,7 +1087,7 @@ class ReadingDetailView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_destroy(self, instance):
-        instance.deleted_at = instance.updated_at
+        instance.deleted_at = timezone.now()
         instance.deleted_by = self.request.user
         instance.save()
         log_activity(
@@ -2096,7 +2096,7 @@ class BookHighlightDetailView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_destroy(self, instance):
-        instance.deleted_at = instance.updated_at
+        instance.deleted_at = timezone.now()
         instance.deleted_by = self.request.user
         instance.save()
         log_activity(

@@ -44,6 +44,8 @@ interface ReadingFormProps {
   defaultReadingTime?: number;
   /** Trava data e tempo — leitura vinda de uma sessão do timer. */
   lockSession?: boolean;
+  /** Pré-preenche o período do dia — usado pelo timer de leitura. */
+  defaultTimeOfDay?: string | null;
 }
 
 export function ReadingForm({
@@ -54,6 +56,7 @@ export function ReadingForm({
   isLoading = false,
   defaultReadingTime = 0,
   lockSession = false,
+  defaultTimeOfDay = null,
 }: ReadingFormProps) {
   const { t } = useTranslation();
   const readingSchema = useMemo(() => makeReadingSchema(t), [t]);
@@ -85,7 +88,7 @@ export function ReadingForm({
           reading_time: defaultReadingTime,
           notes: '',
           current_page: null,
-          time_of_day: null,
+          time_of_day: defaultTimeOfDay,
           owner: 0,
         },
   });

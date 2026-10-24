@@ -96,7 +96,7 @@ export function VaultDepositDialog({
           </VisuallyHidden>
         </DialogHeader>
         <div className="space-y-md">
-          <div>
+          <div className="space-y-sm">
             <Label className="gap-xs flex items-center" htmlFor="deposit_amount">
               <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.vaults.depositAmountLabel')}
@@ -109,7 +109,7 @@ export function VaultDepositDialog({
               onChange={(e) => setAmount(e.target.value)}
             />
           </div>
-          <div>
+          <div className="space-y-sm">
             <Label className="gap-xs flex items-center" htmlFor="deposit_description">
               <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('common.fields.description')}
@@ -213,7 +213,7 @@ export function VaultWithdrawDialog({
           </VisuallyHidden>
         </DialogHeader>
         <div className="space-y-md">
-          <div>
+          <div className="space-y-sm">
             <Label className="gap-xs flex items-center" htmlFor="withdraw_amount">
               <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.vaults.withdrawAmountLabel')}
@@ -226,7 +226,7 @@ export function VaultWithdrawDialog({
               onChange={(e) => setAmount(e.target.value)}
             />
           </div>
-          <div>
+          <div className="space-y-sm">
             <Label className="gap-xs flex items-center" htmlFor="withdraw_description">
               <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('common.fields.description')}

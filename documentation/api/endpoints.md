@@ -586,7 +586,7 @@ Exemplo: `accounts.add_account` para criar contas.
 
 ## Rate Limiting
 
-Não implementado atualmente, mas planejado para o futuro.
+Implementado via DRF throttling (`DEFAULT_THROTTLE_CLASSES`/`DEFAULT_THROTTLE_RATES` em `app/settings.py`): `AnonRateThrottle` (`30/minute`) e `UserRateThrottle` (`1000/minute`) por padrão, além de scopes dedicados e mais restritivos para endpoints sensíveis/caros — `login` (30/min), `register` (3/min), `share_token` (10/min), `theme_sync` (30/min), `export` (20/min), `vault_unlock` (10/min), `credit_card_delete` (5/min), `agent` (30/min, chamadas de LLM), `categorization_suggest` (20/min).
 
 ## Próximos Passos
 

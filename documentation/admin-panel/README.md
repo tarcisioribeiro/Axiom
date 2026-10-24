@@ -49,11 +49,19 @@ u.save()
 |--------|----------|-----------|
 | `GET` | `/api/v1/admin/config/` | Lista todas as configurações (valores secretos mascarados) |
 | `PATCH` | `/api/v1/admin/config/<KEY>/` | Atualiza o valor de uma configuração |
+| `POST` | `/api/v1/admin/config/<KEY>/reveal/` | Revela o valor real de uma configuração secreta |
 | `GET` | `/api/v1/admin/health/` | Health check de todos os serviços (DB, Redis, armazenamento, Ollama, email, disco) |
 | `GET` | `/api/v1/admin/integrations/` | Status em tempo real das integrações LLM e email |
 | `GET` | `/api/v1/admin/logs/` | Activity logs paginados (filtrável por usuário, ação, data) |
 | `POST` | `/api/v1/admin/email/test/` | Envia um email de teste para verificar as configurações SMTP |
 | `GET` | `/api/v1/admin/agents/status/` | Status do sistema de agentes LLM |
+| `POST` | `/api/v1/admin/restart/` | Reinicia os serviços da aplicação |
+| `GET`/`POST` | `/api/v1/admin/staff/` | Lista/cria usuários staff |
+| `GET`/`PATCH`/`DELETE` | `/api/v1/admin/staff/<id>/` | Detalha/edita/remove um usuário staff |
+| `GET` | `/api/v1/admin/permissions/screens/` | Catálogo de telas/ações registradas em `admin_panel/screens.py` |
+| `GET` | `/api/v1/admin/permissions/users/` | Lista `UserScreenAccess` por usuário |
+| `GET`/`PATCH` | `/api/v1/admin/permissions/users/<id>/` | Detalha/edita o acesso por tela de um usuário |
+| `GET`/`PATCH` | `/api/v1/admin/permissions/defaults/` | Lê/edita o `ScreenDefault` aplicado a usuários novos |
 
 ### Exemplo: atualizar uma configuração via curl
 

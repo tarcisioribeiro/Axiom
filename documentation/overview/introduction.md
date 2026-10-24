@@ -77,8 +77,8 @@ Biblioteca pessoal digital com recursos avançados:
 
 Assistente de IA especializado em domínios financeiros e pessoais:
 
-- 6 agentes especializados: finanças, orçamento, projeção, planejamento, biblioteca, insights
-- Suporte a 3 providers de LLM: Ollama (local), Groq e Anthropic Claude
+- 10 agentes especializados: finanças, orçamento, projeção, planejamento, biblioteca, insights (legados) + pessoal, financeiro consolidado, segurança e intelecto (modulares)
+- Suporte a 4 providers de LLM: Ollama (local, padrão), Groq, Anthropic Claude e OpenAI
 - Respostas em streaming (SSE) ou modo síncrono
 - Memória de sessão via Redis + histórico permanente no PostgreSQL
 - RAG via pgvector para o `LibraryAgent`
@@ -88,25 +88,25 @@ Assistente de IA especializado em domínios financeiros e pessoais:
 ### Backend
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)
-![Django](https://img.shields.io/badge/Django-5.2-092E20?style=flat-square&logo=django&logoColor=white)
-![DRF](https://img.shields.io/badge/Django_REST_Framework-3.16-ff1709?style=flat-square&logo=django&logoColor=white)
+![Django](https://img.shields.io/badge/Django-6.0-092E20?style=flat-square&logo=django&logoColor=white)
+![DRF](https://img.shields.io/badge/Django_REST_Framework-3.18-ff1709?style=flat-square&logo=django&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192?style=flat-square&logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-HttpOnly_Cookies-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
 ![Fernet](https://img.shields.io/badge/Fernet-Field_Encryption-FFD43B?style=flat-square&logo=python&logoColor=black)
 
 - **Django 6.0** - Framework web principal
-- **Django REST Framework 3.17** - API RESTful
+- **Django REST Framework 3.18** - API RESTful
 - **PostgreSQL 16** com **pgvector** - Banco de dados
 - **Ollama** - LLM local (padrão: `mistral:7b-instruct`, embeddings: `nomic-embed-text` 768 dims)
-- **Groq / Anthropic** - Providers cloud alternativos via `LLM_PROVIDER`
+- **Groq / Anthropic / OpenAI** - Providers cloud alternativos via `LLM_PROVIDER` / `LLM_FALLBACK_PROVIDERS`
 - **Cryptography (Fernet)** - Criptografia de dados
 
 ### Frontend
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
 ![Radix UI](https://img.shields.io/badge/Radix_UI-primitives-161618?style=flat-square&logo=radixui&logoColor=white)
 ![Zustand](https://img.shields.io/badge/Zustand-state_management-443E38?style=flat-square)
@@ -256,4 +256,4 @@ Para começar a usar o Axiom, consulte:
 
 ## Licença
 
-Este projeto está sob a licença MIT. Consulte o arquivo LICENSE para mais detalhes.
+Este projeto é privado e proprietário.

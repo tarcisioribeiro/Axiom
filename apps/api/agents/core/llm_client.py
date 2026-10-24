@@ -382,6 +382,7 @@ class LLMClient:
         ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
         ollama_model = _cfg("OLLAMA_MODEL", "mistral:7b-instruct")
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
+        max_tokens = int(_cfg("LLM_MAX_TOKENS", "2048"))
         effective_model = model or ollama_model
         try:
             resp = requests.post(
@@ -390,6 +391,7 @@ class LLMClient:
                     "model": effective_model,
                     "messages": messages,
                     "stream": False,
+                    "options": {"num_predict": max_tokens},
                 },
                 timeout=timeout_chat,
             )
@@ -415,6 +417,7 @@ class LLMClient:
         ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
         ollama_model = _cfg("OLLAMA_MODEL", "mistral:7b-instruct")
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
+        max_tokens = int(_cfg("LLM_MAX_TOKENS", "2048"))
         effective_model = model or ollama_model
         try:
             resp = requests.post(
@@ -423,6 +426,7 @@ class LLMClient:
                     "model": effective_model,
                     "messages": messages,
                     "stream": True,
+                    "options": {"num_predict": max_tokens},
                 },
                 timeout=timeout_chat,
                 stream=True,
@@ -456,6 +460,7 @@ class LLMClient:
     ) -> str:
         groq_api_key = _cfg("GROQ_API_KEY", "")
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
+        max_tokens = int(_cfg("LLM_MAX_TOKENS", "2048"))
         effective_model = model or _groq_model()
         resp = requests.post(
             f"{_GROQ_BASE_URL}/chat/completions",
@@ -467,6 +472,7 @@ class LLMClient:
                 "model": effective_model,
                 "messages": messages,
                 "stream": False,
+                "max_tokens": max_tokens,
             },
             timeout=timeout_chat,
         )
@@ -480,6 +486,7 @@ class LLMClient:
     ) -> Generator[str, None, None]:
         groq_api_key = _cfg("GROQ_API_KEY", "")
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
+        max_tokens = int(_cfg("LLM_MAX_TOKENS", "2048"))
         effective_model = model or _groq_model()
         resp = requests.post(
             f"{_GROQ_BASE_URL}/chat/completions",
@@ -491,6 +498,7 @@ class LLMClient:
                 "model": effective_model,
                 "messages": messages,
                 "stream": True,
+                "max_tokens": max_tokens,
             },
             timeout=timeout_chat,
             stream=True,
@@ -524,6 +532,7 @@ class LLMClient:
         openai_api_key = _cfg("OPENAI_API_KEY", "")
         openai_model = _cfg("OPENAI_MODEL", "gpt-4o-mini")
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
+        max_tokens = int(_cfg("LLM_MAX_TOKENS", "2048"))
         effective_model = model or openai_model
         resp = requests.post(
             f"{_OPENAI_BASE_URL}/chat/completions",
@@ -535,6 +544,7 @@ class LLMClient:
                 "model": effective_model,
                 "messages": messages,
                 "stream": False,
+                "max_tokens": max_tokens,
             },
             timeout=timeout_chat,
         )
@@ -549,6 +559,7 @@ class LLMClient:
         openai_api_key = _cfg("OPENAI_API_KEY", "")
         openai_model = _cfg("OPENAI_MODEL", "gpt-4o-mini")
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
+        max_tokens = int(_cfg("LLM_MAX_TOKENS", "2048"))
         effective_model = model or openai_model
         resp = requests.post(
             f"{_OPENAI_BASE_URL}/chat/completions",
@@ -560,6 +571,7 @@ class LLMClient:
                 "model": effective_model,
                 "messages": messages,
                 "stream": True,
+                "max_tokens": max_tokens,
             },
             timeout=timeout_chat,
             stream=True,

@@ -295,59 +295,56 @@ last_30_days = DailyReflection.objects.filter(
 
 ---
 
-### 8. Content Embeddings (AI Assistant)
+### 8. Agent Embeddings (Módulo Agents/IA)
 
-**Tabela**: `ai_assistant_contentembedding`
+**Modelo real**: `agents.AgentEmbedding` (`apps/api/agents/models.py`) — **tabela**: `"vectors"."agent_embeddings"` (schema PostgreSQL dedicado `vectors`, criado em `apps/api/agents/migrations/0002_agentembedding.py`).
 
-```python
-class Meta:
-    ordering = ['-created_at']
-    unique_together = [['content_type', 'content_id', 'owner']]
-    indexes = [
-        # Filtro por owner + tipo de conteúdo
-        # Query: ContentEmbedding.objects.filter(owner=member, tipo='financeiro')
-        models.Index(fields=['owner', 'tipo'], name='idx_owner_tipo'),
+Índices reais (criados via SQL bruto nas migrations, não via `Meta.indexes`, pois nomes de índice pgvector excedem o limite de 30 caracteres do Django):
 
-        # Filtro por owner + sensibilidade (roteamento de LLM)
-        # Query: ContentEmbedding.objects.filter(owner=member, sensibilidade='alta')
-        models.Index(fields=['owner', 'sensibilidade'], name='idx_owner_sens'),
+```sql
+-- migration 0002_agentembedding.py
+CREATE INDEX IF NOT EXISTS agents_agentembedding_embedding_ivfflat_idx
+ON "vectors"."agent_embeddings"
+USING ivfflat (embedding vector_cosine_ops)
+WITH (lists = 100);
 
-        # Filtro por owner + status de indexação
-        # Query: ContentEmbedding.objects.filter(owner=member, is_indexed=False)
-        models.Index(fields=['owner', 'is_indexed'], name='idx_owner_indexed'),
+CREATE INDEX IF NOT EXISTS agents_agentembedding_user_domain_idx
+ON "vectors"."agent_embeddings" (user_id, domain);
 
-        # Busca reversa: dado content_type + content_id, achar embedding
-        # Query: ContentEmbedding.objects.get(content_type='expense', content_id=123)
-        models.Index(fields=['content_type', 'content_id'], name='idx_content_ref'),
+CREATE INDEX IF NOT EXISTS agents_agentembedding_source_id_idx
+ON "vectors"."agent_embeddings" (source_id);
 
-        # Filtro temporal por owner
-        # Query: ContentEmbedding.objects.filter(owner=member, data_referencia__gte=start)
-        models.Index(fields=['owner', '-data_referencia'], name='idx_owner_data')
-    ]
+-- migration 0005_agentembedding_hnsw_index.py (substitui o ivfflat para busca vetorial)
+CREATE INDEX IF NOT EXISTS agent_embeddings_embedding_hnsw_idx
+ON "vectors"."agent_embeddings"
+USING hnsw (embedding vector_cosine_ops)
+WITH (m = 16, ef_construction = 64);
+
+CREATE INDEX IF NOT EXISTS agent_embeddings_user_domain_active_idx
+ON "vectors"."agent_embeddings" (user_id, domain)
+WHERE is_deleted = FALSE;
 ```
 
 **Queries Otimizadas - Busca Semântica**:
 
 ```python
-# ✅ Usa índice (owner, tipo) + pgvector index
+# ✅ Usa índice (user_id, domain) parcial + índice HNSW
 from pgvector.django import CosineDistance
+from agents.models import AgentEmbedding
 
-similar_content = ContentEmbedding.objects.filter(
-    owner=member,
-    tipo='financeiro',
-    is_indexed=True
+similar_content = AgentEmbedding.objects.filter(
+    user=request.user,
+    domain='finance',
+    is_deleted=False,
 ).annotate(
     distance=CosineDistance('embedding', query_embedding)
 ).order_by('distance')[:10]
 
-# ✅ Usa índice (owner, sensibilidade)
-sensitive_content = ContentEmbedding.objects.filter(
-    owner=member,
-    sensibilidade='alta'
-)
+# ✅ Busca reversa por fonte (usa agents_agentembedding_source_id_idx)
+AgentEmbedding.objects.filter(source_id=expense.uuid, source_type='expense')
 ```
 
-**Nota**: Para o campo `embedding`, veja seção [Índices pgvector](#índices-pgvector).
+**Nota**: Para detalhes do pipeline de RAG/embeddings (geração via Ollama `nomic-embed-text`, 768 dims), veja [`backend/agents.md`](../backend/agents.md). Para o campo `embedding`, veja seção [Índices pgvector](#índices-pgvector).
 
 ---
 
@@ -735,12 +732,12 @@ Extensão PostgreSQL para armazenar e buscar vetores (embeddings) com alta perfo
 
 ```sql
 -- Criar índice IVFFlat para busca por cosine similarity
-CREATE INDEX idx_embedding_cosine ON ai_assistant_contentembedding
+CREATE INDEX idx_embedding_cosine ON "vectors"."agent_embeddings"
 USING ivfflat (embedding vector_cosine_ops)
 WITH (lists = 100);
 
 -- Criar índice IVFFlat para busca por L2 distance
-CREATE INDEX idx_embedding_l2 ON ai_assistant_contentembedding
+CREATE INDEX idx_embedding_l2 ON "vectors"."agent_embeddings"
 USING ivfflat (embedding vector_l2_ops)
 WITH (lists = 100);
 ```
@@ -767,7 +764,7 @@ WITH (lists = 100);
 
 ```sql
 -- Criar índice HNSW para busca por cosine similarity
-CREATE INDEX idx_embedding_hnsw ON ai_assistant_contentembedding
+CREATE INDEX idx_embedding_hnsw ON "vectors"."agent_embeddings"
 USING hnsw (embedding vector_cosine_ops)
 WITH (m = 16, ef_construction = 64);
 ```
@@ -788,20 +785,23 @@ WITH (m = 16, ef_construction = 64);
 
 ### Índice Recomendado para Axiom
 
-```sql
--- Para datasets típicos (< 100k embeddings), use IVFFlat
-CREATE INDEX idx_contentembedding_vector ON ai_assistant_contentembedding
-USING ivfflat (embedding vector_cosine_ops)
-WITH (lists = 100);
+O projeto evoluiu de IVFFlat (migration `0002_agentembedding.py`) para **HNSW** (migration `0005_agentembedding_hnsw_index.py`), já que a busca de roteamento de agentes exige latência baixa (<5ms) com recall alto independente do volume:
 
--- Setar probes em runtime (mais probes = melhor recall, mais lento)
-SET ivfflat.probes = 10;
+```sql
+CREATE INDEX IF NOT EXISTS agent_embeddings_embedding_hnsw_idx
+ON "vectors"."agent_embeddings"
+USING hnsw (embedding vector_cosine_ops)
+WITH (m = 16, ef_construction = 64);
+
+-- Índice composto para os filtros aplicados antes da busca vetorial
+CREATE INDEX IF NOT EXISTS agent_embeddings_user_domain_active_idx
+ON "vectors"."agent_embeddings" (user_id, domain)
+WHERE is_deleted = FALSE;
 ```
 
 **Justificativa**:
-- Axiom tem datasets pequenos por usuário (< 10k por owner)
-- Filtro `owner=X` reduz drasticamente o conjunto de busca
-- IVFFlat é mais simples e eficiente para este caso
+- HNSW tem latência <5ms com recall ~95%, independente do volume (sem precisar calibrar `lists`/`probes` por tamanho de dataset)
+- O índice composto filtra por `(user_id, domain)` antes da busca vetorial, reduzindo drasticamente o conjunto
 
 ---
 
@@ -809,12 +809,13 @@ SET ivfflat.probes = 10;
 
 ```python
 from pgvector.django import CosineDistance
+from agents.models import AgentEmbedding
 
 # ✅ Query com filtros + busca vetorial
-similar = ContentEmbedding.objects.filter(
-    owner=member,               # Índice: (owner, tipo)
-    tipo='financeiro',          # Filtra antes da busca vetorial
-    is_indexed=True             # Garante que embedding existe
+similar = AgentEmbedding.objects.filter(
+    user=request.user,          # Índice: (user_id, domain)
+    domain='finance',           # Filtra antes da busca vetorial
+    is_deleted=False,
 ).annotate(
     distance=CosineDistance('embedding', query_embedding)
 ).order_by('distance')[:10]    # Top 10 mais similares
@@ -823,10 +824,10 @@ similar = ContentEmbedding.objects.filter(
 **SQL Gerado**:
 ```sql
 SELECT *, (embedding <=> %s) AS distance
-FROM ai_assistant_contentembedding
-WHERE owner_id = %s
-  AND tipo = 'financeiro'
-  AND is_indexed = true
+FROM "vectors"."agent_embeddings"
+WHERE user_id = %s
+  AND domain = 'finance'
+  AND is_deleted = false
 ORDER BY distance
 LIMIT 10;
 ```

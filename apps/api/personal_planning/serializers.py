@@ -146,6 +146,10 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
 class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer para criacao/atualizacao de tarefas rotineiras."""
 
+    owner: serializers.PrimaryKeyRelatedField = (
+        serializers.PrimaryKeyRelatedField(read_only=True)
+    )
+
     class Meta:
         model = RoutineTask
         fields = [
@@ -194,6 +198,19 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
                 return data[field]
             return getattr(self.instance, field, None)
 
+        def effective_owner_id():
+            # `owner` é read_only (definido pelo backend a partir do
+            # usuário autenticado) e por isso nunca está em `data`.
+            if self.instance is not None:
+                return self.instance.owner_id
+            request = self.context.get("request")
+            if request is None:
+                return None
+            from members.models import Member
+
+            member = Member.objects.filter(user=request.user).first()
+            return member.id if member else None
+
         for field in ("linked_meal_type", "linked_hydration_goal"):
             linked = current(field)
             if not linked:
@@ -207,7 +224,7 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
                         )
                     }
                 )
-            if linked.owner_id != getattr(current("owner"), "id", None):
+            if linked.owner_id != effective_owner_id():
                 raise serializers.ValidationError(
                     {field: "Registro vinculado pertence a outro membro"}
                 )
@@ -462,6 +479,9 @@ class GoalSerializer(serializers.ModelSerializer):
 class GoalCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer para criacao/atualizacao de objetivos."""
 
+    owner: serializers.PrimaryKeyRelatedField = (
+        serializers.PrimaryKeyRelatedField(read_only=True)
+    )
     end_date = serializers.DateField(required=False, allow_null=True)
 
     def to_internal_value(self, data):
@@ -520,6 +540,10 @@ class DailyReflectionSerializer(serializers.ModelSerializer):
 
 class DailyReflectionCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer para criacao/atualizacao de reflexoes diarias."""
+
+    owner: serializers.PrimaryKeyRelatedField = (
+        serializers.PrimaryKeyRelatedField(read_only=True)
+    )
 
     class Meta:
         model = DailyReflection
@@ -600,6 +624,10 @@ class TaskInstanceSerializer(serializers.ModelSerializer):
 
 class TaskInstanceCreateSerializer(serializers.ModelSerializer):
     """Serializer para criacao de instancias avulsas (one-off tasks)."""
+
+    owner: serializers.PrimaryKeyRelatedField = (
+        serializers.PrimaryKeyRelatedField(read_only=True)
+    )
 
     class Meta:
         model = TaskInstance
@@ -1079,6 +1107,10 @@ class WorkoutPlanSerializer(serializers.ModelSerializer):
 
 
 class WorkoutPlanCreateUpdateSerializer(serializers.ModelSerializer):
+    owner: serializers.PrimaryKeyRelatedField = (
+        serializers.PrimaryKeyRelatedField(read_only=True)
+    )
+
     class Meta:
         model = WorkoutPlan
         fields = ["id", "name", "description", "is_active", "owner"]
@@ -1433,6 +1465,10 @@ class MenuOptionSerializer(serializers.ModelSerializer):
 
 
 class MenuOptionCreateUpdateSerializer(serializers.ModelSerializer):
+    owner: serializers.PrimaryKeyRelatedField = (
+        serializers.PrimaryKeyRelatedField(read_only=True)
+    )
+
     class Meta:
         model = MenuOption
         fields = ["id", "meal_type", "name", "order", "owner"]

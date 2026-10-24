@@ -2698,21 +2698,25 @@ class VaultExportZipView(VaultLockedMixin, APIView):
         buffer.seek(0)
         timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
 
-        # AES-256-GCM: derive key from BACKUP_ENCRYPTION_KEY via PBKDF2.
-        # The nonce (12 bytes) is prepended to the ciphertext so the frontend
-        # (or CLI) can decrypt with: nonce = data[:12]; ct = data[12:].
+        # AES-256-GCM: derive key from the user's own vault_key (unlocked by
+        # VaultLockedMixin for this request) via PBKDF2, using a fresh random
+        # salt per export. Falls back to BACKUP_ENCRYPTION_KEY only when the
+        # user has no vault configured yet (retrocompatibilidade).
+        # salt (16 bytes) + nonce (12 bytes) are prepended to the ciphertext
+        # so the frontend (or CLI) can decrypt with:
+        # salt = data[:16]; nonce = data[16:28]; ct = data[28:].
         import os
-
-        from django.conf import settings
 
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
         from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-        passphrase = (
-            getattr(settings, "BACKUP_ENCRYPTION_KEY", "") or ""
-        ).encode()
-        salt = b"axiom-vault-export-v1"
+        from app.config import cfg
+        from security.vault_crypto import get_current_vault_key
+
+        vault_key = get_current_vault_key()
+        passphrase = vault_key or cfg("BACKUP_ENCRYPTION_KEY", "").encode()
+        salt = os.urandom(16)
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100_000
         )
@@ -2721,7 +2725,7 @@ class VaultExportZipView(VaultLockedMixin, APIView):
         aesgcm = AESGCM(aes_key)
         plaintext_zip = buffer.read()
         ciphertext = aesgcm.encrypt(nonce, plaintext_zip, None)
-        encrypted_blob = nonce + ciphertext
+        encrypted_blob = salt + nonce + ciphertext
 
         filename = f"axiom_vault_{timestamp}.zip.enc"
         response = HttpResponse(
@@ -2729,6 +2733,7 @@ class VaultExportZipView(VaultLockedMixin, APIView):
         )
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         response["X-Vault-Export-Format"] = "AES-256-GCM"
+        response["X-Vault-Export-Salt-Bytes"] = "16"
         response["X-Vault-Export-Nonce-Bytes"] = "12"
         return response
 

@@ -16,8 +16,10 @@ O Axiom utiliza **Zustand** para gerenciamento de estado global, com foco em sim
 
 ```
 Estado Global (Zustand)
-├── auth-store.ts           # Autenticação, usuário, permissões
-└── [futuras stores]        # Outras stores conforme necessário
+├── auth-store.ts              # Autenticação, usuário, permissões, 2FA, isAdmin
+├── notifications-store.ts     # Notificações (lista, não lidas, polling do sino)
+├── command-palette-store.ts   # Abertura/fechamento da command palette (Cmd+K)
+└── breadcrumb-extra-store.ts  # Rótulo extra do breadcrumb (ex.: nome da entidade atual)
 
 Estado Local (React)
 ├── useState                # Estado de componentes
@@ -45,161 +47,70 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   isInitializing: boolean;
+  isAdmin: boolean;
   error: string | null;
+  requires2FA: boolean;
+  tempToken: string | null;
 
   // Ações
   login: (credentials: LoginCredentials) => Promise<void>;
+  verify2FA: (code: string) => Promise<void>;
   logout: () => void;
   loadUserData: () => Promise<void>;
   setError: (error: string | null) => void;
   hasPermission: (appName: string, action: string) => boolean;
-  hasSystemAccess: () => boolean;
 }
 ```
 
-### Implementação Completa
+`hasSystemAccess()` não existe mais — o controle de acesso por módulo/tela é feito via `hasPermission()` e `lib/screen-access.ts` (ver [routing.md](./routing.md)).
+
+### Fluxo real (`src/stores/auth-store.ts`)
+
+- `login()` chama `authService.login()`; se a resposta trouxer `requires_2fa`, apenas marca `requires2FA`/`tempToken` e retorna — a tela de login then chama `verify2FA(code)` para concluir.
+- Depois do login (ou do 2FA), busca `authService.getUserPermissions()`: se `is_superuser`, monta um usuário admin via `buildAdminUser()` (sem permissões de módulo, `isAdmin: true`); senão monta um usuário membro via `buildMemberUser()` e enriquece com dados do membro (`enrichUserWithMemberData()`, de `stores/auth-helpers.ts`).
+- `loadUserData()` (chamado no mount do `App.tsx`) lê usuário/permissões salvos pelo `authService` (cookies), valida o token com `authService.isAuthenticated()` e, se válido, re-enriquece o usuário e atualiza `is_staff` a partir do servidor — uma promoção/rebaixamento de staff vale sem precisar de novo login.
+- Feedback sonoro de sucesso/erro via `hooks/use-sound-feedback.ts` (`playSuccessSound`/`playErrorSound`); logs via `lib/logger.ts`, não `console.log` direto.
 
 ```typescript
 import { create } from 'zustand';
-import type { User, Permission, LoginCredentials } from '@/types';
 import { authService } from '@/services/auth-service';
-
-let loadUserDataPromise: Promise<void> | null = null;
+import type { LoginCredentials, Permission, User } from '@/types';
+import { buildAdminUser, buildMemberUser, enrichUserWithMemberData } from './auth-helpers';
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  // Estado inicial
   user: null,
   permissions: [],
   isAuthenticated: false,
   isLoading: false,
   isInitializing: true,
+  isAdmin: false,
   error: null,
+  requires2FA: false,
+  tempToken: null,
 
-  // Login
-  login: async (credentials: LoginCredentials) => {
-    set({ isLoading: true, error: null });
-
-    try {
-      const loginResponse = await authService.login(credentials);
-      console.log('[AuthStore] Login successful:', loginResponse.message);
-
-      // Busca permissões do usuário
-      const permissionsResponse = await authService.getUserPermissions();
-      authService.savePermissions(permissionsResponse);
-
-      // Constrói objeto do usuário
-      const user: User = {
-        id: 1,
-        username: credentials.username,
-        email: '',
-        first_name: '',
-        last_name: '',
-        groups: ['Membros'],
-      };
-
-      authService.saveUserData(user);
-
-      set({
-        user,
-        permissions: permissionsResponse,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } catch (error: any) {
-      let errorMessage = error.message || 'Login failed';
-
-      if (error.name === 'PermissionError') {
-        errorMessage = 'Superusuários não podem acessar o frontend.';
-      }
-
-      set({
-        error: errorMessage,
-        isLoading: false,
-      });
-      throw error;
+  login: async (credentials) => {
+    set({ isLoading: true, error: null, requires2FA: false, tempToken: null });
+    const loginResponse = await authService.login(credentials);
+    if (loginResponse.requires_2fa) {
+      set({ isLoading: false, requires2FA: true, tempToken: loginResponse.temp_token });
+      return;
     }
-  },
-
-  // Logout
-  logout: () => {
-    authService.logout();
-    set({
-      user: null,
-      permissions: [],
-      isAuthenticated: false,
-      error: null,
-    });
-  },
-
-  // Carrega dados do usuário (de cookies)
-  loadUserData: async () => {
-    // Evita múltiplas chamadas simultâneas
-    if (loadUserDataPromise) {
-      return loadUserDataPromise;
+    const { permissions, is_superuser, is_staff } = await authService.getUserPermissions();
+    if (is_superuser) {
+      const adminUser = buildAdminUser(credentials.username);
+      authService.saveUserData(adminUser);
+      set({ user: adminUser, permissions: [], isAuthenticated: true, isAdmin: true, isLoading: false });
+      return;
     }
-
-    loadUserDataPromise = (async () => {
-      try {
-        set({ isInitializing: true });
-
-        const user = authService.getUserData();
-        const permissions = authService.getPermissions();
-
-        if (!user) {
-          console.log('[AuthStore] No user data - not authenticated');
-          set({
-            user: null,
-            permissions: [],
-            isAuthenticated: false,
-            isInitializing: false,
-          });
-          return;
-        }
-
-        // Verifica se token ainda é válido
-        const isAuthenticated = await authService.isAuthenticated();
-
-        set({
-          user: isAuthenticated ? user : null,
-          permissions: isAuthenticated ? permissions : [],
-          isAuthenticated,
-          isInitializing: false,
-        });
-      } catch (error) {
-        console.error('[AuthStore] Error loading user data:', error);
-        set({
-          user: null,
-          permissions: [],
-          isAuthenticated: false,
-          isInitializing: false,
-        });
-      } finally {
-        loadUserDataPromise = null;
-      }
-    })();
-
-    return loadUserDataPromise;
+    authService.savePermissions(permissions);
+    let user: User = { ...buildMemberUser(credentials.username), is_staff };
+    user = await enrichUserWithMemberData(user, '[AuthStore] login:');
+    authService.saveUserData(user);
+    set({ user, permissions, isAuthenticated: true, isAdmin: false, isLoading: false });
   },
 
-  // Define mensagem de erro
-  setError: (error: string | null) => {
-    set({ error });
-  },
-
-  // Verifica se usuário tem permissão específica
-  hasPermission: (appName: string, action: string) => {
-    const { permissions } = get();
-    if (!Array.isArray(permissions)) return false;
-    const codename = `${action}_${appName}`;
-    return permissions.some((perm) => perm.codename === codename);
-  },
-
-  // Verifica se usuário tem acesso ao sistema
-  hasSystemAccess: () => {
-    const { user } = get();
-    if (!user || !Array.isArray(user.groups)) return false;
-    return user.groups.includes('Membros');
-  },
+  // verify2FA segue o mesmo fluxo de login, usando o tempToken salvo
+  // loadUserData, logout, setError, hasPermission: ver arquivo real
 }));
 ```
 
@@ -307,6 +218,8 @@ sequenceDiagram
     LoginPage->>LoginPage: navigate('/dashboard')
 ```
 
+Se a resposta do login trouxer `requires_2fa: true`, o fluxo pausa (`requires2FA: true`, `tempToken`) até a tela de login chamar `verify2FA(code)`, que repete a etapa de buscar permissões e montar o usuário.
+
 ## Inicialização da Store
 
 No `App.tsx`, a store é inicializada no mount:
@@ -332,6 +245,20 @@ function App() {
   );
 }
 ```
+
+## Outras Stores
+
+### notifications-store.ts
+
+Lista de notificações, contagem de não lidas e polling periódico do sino de notificações (`startPolling`/`stopPolling`, com backoff após `MAX_CONSECUTIVE_POLL_FAILURES` falhas consecutivas).
+
+### command-palette-store.ts
+
+Apenas `isOpen`/`open`/`close`/`toggle` — controla a Command Palette (Cmd+K / Ctrl+K).
+
+### breadcrumb-extra-store.ts
+
+`extraLabel`/`extraSubLabel` — permite que uma página de detalhe injete um rótulo extra (ex.: nome da entidade) no breadcrumb do header, sem acoplar o `Header` a cada página.
 
 ## Estado Local vs Global
 

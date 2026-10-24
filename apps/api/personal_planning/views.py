@@ -170,7 +170,9 @@ class RoutineTaskListCreateView(BaseListCreateView):
 
     def perform_create(self, serializer):
         task = serializer.save(
-            created_by=self.request.user, updated_by=self.request.user
+            owner=Member.objects.get(user=self.request.user),
+            created_by=self.request.user,
+            updated_by=self.request.user,
         )
         log_activity(
             self.request,
@@ -669,7 +671,9 @@ class GoalListCreateView(BaseListCreateView):
 
     def perform_create(self, serializer):
         goal = serializer.save(
-            created_by=self.request.user, updated_by=self.request.user
+            owner=Member.objects.get(user=self.request.user),
+            created_by=self.request.user,
+            updated_by=self.request.user,
         )
         log_activity(
             self.request,
@@ -974,7 +978,9 @@ class DailyReflectionListCreateView(BaseListCreateView):
 
     def perform_create(self, serializer):
         reflection = serializer.save(
-            created_by=self.request.user, updated_by=self.request.user
+            owner=Member.objects.get(user=self.request.user),
+            created_by=self.request.user,
+            updated_by=self.request.user,
         )
         log_activity(
             self.request,
@@ -1426,7 +1432,9 @@ class TaskInstanceListCreateView(BaseListCreateView):
 
     def perform_create(self, serializer):
         instance = serializer.save(
-            created_by=self.request.user, updated_by=self.request.user
+            owner=Member.objects.get(user=self.request.user),
+            created_by=self.request.user,
+            updated_by=self.request.user,
         )
         log_activity(
             self.request,
@@ -2258,6 +2266,9 @@ class WorkoutPlanListCreateView(BaseListCreateView):
             )
         )
 
+    def perform_create(self, serializer):
+        serializer.save(owner=Member.objects.get(user=self.request.user))
+
 
 class WorkoutPlanRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class = WorkoutPlanSerializer
@@ -2533,6 +2544,9 @@ class MenuOptionListCreateView(BaseListCreateView):
         if meal_type_id:
             qs = qs.filter(meal_type_id=meal_type_id)
         return qs
+
+    def perform_create(self, serializer):
+        serializer.save(owner=Member.objects.get(user=self.request.user))
 
 
 class MenuOptionRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):

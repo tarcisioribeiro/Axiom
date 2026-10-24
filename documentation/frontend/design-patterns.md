@@ -1,6 +1,6 @@
 # Padrões de design do frontend web
 
-**Documento oficial** · versão 1.14 · 21/10/2026
+**Documento oficial** · versão 1.15 · 24/10/2026
 
 Padrões de UI/UX definidos pelo product owner desde 25/08/2026. Toda mudança visual no frontend web segue este documento. Quando um pedido contradiz uma regra, a regra é atualizada aqui primeiro.
 
@@ -142,6 +142,7 @@ Há três tipos de modal:
 - **[regra]** Data em card de registro é texto dd/mm/aaaa (`formatDate`), não bloco com dia em cima e mês embaixo. Ex.: card de sessão de treino, com a data num chip `bg-primary/10` à esquerda.
 - **[pontual]** Linha de métricas/chips abaixo do título do card de sessão de treino fica centralizada na horizontal. O card usa `p-sm` e `mt-xs` entre título e chips, para 5 sessões caberem em 880 px de altura.
 - **[pontual]** Card de intervenção (Bem-Estar Emocional): linha 1 com categoria, duração, dificuldade e título à esquerda, benefício esperado centralizado no card e botão de ação à direita (`grid-cols-[1fr_auto_1fr]` a partir de `sm`); linha 2 só com a descrição. Assim 5 cards cabem na página sem rolagem. Sem rodapé com borda.
+- **[pontual]** Título do card "Plano" no Planejador de Dívidas (`/finance/financial-health/debt-payoff`): ícone (`Snowflake`/`Flame`) + texto ("Plano - Bola de Neve"/"Plano - Avalanche") fazem crossfade (`AnimatePresence` + `motion.span` com `key={strategy}`, só `opacity`, duração padrão do `MotionConfig`) ao trocar a estratégia no card "Configurar plano" (24/10/2026).
 - **[pontual]** Resultado da avaliação de autoestima (Bem-Estar Emocional): nota centralizada, análise em card de largura total e Pontos fortes / Crenças para trabalhar / Sugestões lado a lado em `lg:grid-cols-3` (cards `h-full`), para caber sem rolagem.
 - **[pontual]** Meu Perfil: card em duas colunas da altura toda (`lg:grid-cols-[minmax(0,1fr)_28rem]`): à esquerda foto + nome e, abaixo, Dados Pessoais; à direita, desde o topo, Verificação de E-mail, Preferências e Segurança. Preferências (`SlidersHorizontal`) tem duas linhas iguais, ícone + rótulo à esquerda e "Editar" à direita: "Preferências de notificação" e "Preferências do app" (modal com revisão nos fins de semana, frequência da autoestima, "Nunca exibir tours" e "Resetar tours") (16/10/2026). Sem rolagem em 855 px. O modal Alterar senha usa `warnCapsLock` nos três campos. Em Segurança, duas linhas iguais: ícone + rótulo com badge de status alinhado à direita e, abaixo, o botão à esquerda. "Autenticação de dois fatores" (Ativa/Inativa → Gerenciar 2FA) e "Senha" (badge de força zxcvbn guardada em `Member.password_strength`, "Desconhecida" até o próximo login/troca → Alterar senha; `PasswordRow`). "Alterar dados" fica logo abaixo dos campos, sem rodapé com borda.
 
@@ -182,6 +183,7 @@ Há três tipos de modal:
 - **[regra]** Animações indesejadas são removidas (ex.: giro de número em contador, tela piscando).
 - **[pontual]** Animação na troca entre senha e 2FA, ao abrir campos de data e horário e ao ocultar o widget do agente.
 - **[pontual]** Widget de timer de estudo (`StudyTimer.tsx`): a troca de controles por fase (Iniciar → Pausar/Encerrar → Retomar/Encerrar) anima com fade + leve scale (`AnimatePresence mode="wait"`, chave pela fase). "Descartar" é um `Button` `variant="ghost"` `size="sm"` com ícone `RotateCcw`, não mais um texto solto (21/10/2026).
+- **[pontual]** Card de refeição no Diário (`NutritionPage.tsx`, `MealTimeline`): o ícone de status e a área de botões/calorias trocam com fade + leve scale (`AnimatePresence mode="wait"`, chave pelo status `done`/`late`/`pending`) ao registrar ou excluir o lançamento — mesmo mecanismo nas duas direções. Fundo do ícone com `transition-colors`. A barra circular de aderência do topo usa `transition-[stroke-dashoffset] duration-slow` (nunca a classe genérica `transition`, que não cobre essa propriedade — mesmo ajuste de `VaultHealthSection`). Na Hidratação (`Hydration.tsx`): o valor do card superior (`WaterTotal`) e o texto de total/percentual do `WaterLogPanel` entram com `animate-fade-in` (chave pelo valor), e a barra (`Progress`) usa `duration-slow` no indicador, igual às demais barras do app (23/10/2026).
 
 ## 9. Tema, cores e tipografia
 
@@ -213,6 +215,7 @@ Há três tipos de modal:
 - **[regra]** Datas em dd/mm/aaaa. Intervalos no formato "28/09 - 04/10/2026".
 - **[regra]** Telefone no formato "+DDD (DDI) número". Documento formatado do mesmo jeito.
 - **[regra]** Todo rótulo de campo tem ícone à esquerda (formulários, filtros, checkbox/radio): `<Label className="gap-xs flex items-center">` + ícone `text-muted-foreground h-3.5 w-3.5`. `FormField` e `FilterField` exigem a prop `icon`. Mesmo campo, mesmo ícone: valor/conta `Wallet`, data `CalendarDays`, hora `Clock`, categoria `Tag`, descrição/observações `FileText`, vínculo `Link2`, status `CheckCircle2`, número `Hash`, taxa `Percent`, senha `Lock`, usuário `AtSign`, e-mail `Mail`, telefone `Phone`, documento `IdCard`, busca `Search`. Ficam de fora itens de lista selecionáveis (linhas com checkbox, chips de dia da semana), onde o conteúdo da linha é o rótulo.
+- **[regra]** Todo campo de formulário monta label+controle manual (sem usar `FormField`) com `<div className="space-y-sm">` envolvendo o `Label` e o input/select, para o respiro entre os dois ser sempre o mesmo (`space-y-sm` é também o espaçamento interno do próprio `FormField`). Status: corrigido em `VaultOperationDialogs.tsx` (Depositar/Sacar do Cofre), que estava sem essa classe e tinha o label colado no input (23/10/2026).
 - **[regra]** Todo campo tem placeholder curto (até 3 palavras, sem reticências): texto livre como exemplo `Ex.: Netflix` (`e.g.` em inglês); máscara/formato quando houver (`000.000.000-00`, `nome@email.com`, `https://exemplo.com`, `••••••••`); select `Selecione`; data `dd/mm/aaaa`; hora `hh:mm`; número `0`; moeda `0,00`; busca `Buscar <coisa>`. Defaults já vêm dos primitivos (`SelectValue`, `DatePicker`, `TimePicker`, `NumberStepper`, `DecimalInput`, `CurrencyInput`, `SearchInput`, `PasswordField`). Placeholders genéricos ficam em `common.placeholders.*`. Filtros de "todos" (`Todas as categorias`) continuam como estão.
 - **[pontual]** Decimais pt-BR com uma casa. Plural correto de unidades de medida. Hora sem segundos. "Todo o período" vira "Tudo".
 
