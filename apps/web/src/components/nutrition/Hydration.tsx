@@ -120,7 +120,11 @@ export function WaterLogPanel({ date }: { date: string }) {
       </div>
 
       {goalMl ? (
-        <Progress value={pct} className="h-2" indicatorClassName="bg-info duration-slow" />
+        <Progress
+          value={pct}
+          className="h-2"
+          indicatorClassName="bg-info duration-slow"
+        />
       ) : (
         <p className="text-muted-foreground text-xs">
           {t('pages.nutritionHydration.setGoalHint')}
