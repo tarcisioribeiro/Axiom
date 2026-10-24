@@ -24,12 +24,12 @@ Este guia detalha como configurar o ambiente de desenvolvimento do Axiom.
 #### Para instalação com Docker (Recomendado)
 
 - **Docker**: versão 20.10 ou superior
-- **Docker Compose**: versão 2.0 ou superior
+- **Docker Compose**: versão 2.0 ou superior (plugin `docker compose`, não o binário legado `docker-compose`)
 - **Git**: versão 2.0 ou superior
 
 #### Para instalação local
 
-- **Python**: versão 3.11 ou superior
+- **Python**: versão 3.12 ou superior (versão alvo do Black/flake8 em `apps/api/pyproject.toml`)
 - **Node.js**: versão 18 ou superior
 - **npm**: versão 9 ou superior
 - **PostgreSQL**: versão 16 ou superior (com extensão pgvector)
@@ -69,7 +69,7 @@ A instalação com Docker é a forma mais simples e consistente de executar o Ax
 
 ```bash
 # Clone o repositório
-git clone https://github.com/seu-usuario/Axiom.git
+git clone https://gitlab.tjtux.duckdns.org/tarcisioribeiro/Axiom.git
 
 # Entre no diretório do projeto
 cd Axiom
@@ -113,7 +113,7 @@ GROQ_API_KEY=sua_groq_api_key_aqui
 API_PORT=39100
 FRONTEND_PORT=39101
 DB_PORT=39102
-REDIS_PORT=6379
+REDIS_PORT=39103
 
 # Logging
 LOG_FORMAT=json
@@ -202,7 +202,7 @@ A instalação local é útil para desenvolvimento com debugging avançado ou qu
 ### Passo 1: Clonar o Repositório
 
 ```bash
-git clone https://github.com/seu-usuario/Axiom.git
+git clone https://gitlab.tjtux.duckdns.org/tarcisioribeiro/Axiom.git
 cd Axiom
 ```
 
@@ -395,7 +395,11 @@ Abra seu navegador e acesse:
 3. Faça uma pergunta como: "Quais são minhas despesas deste mês?"
 4. O sistema deve retornar uma resposta contextualizada
 
-**Nota**: O AI Assistant requer que você tenha configurado o `GROQ_API_KEY`. Se não tiver, obtenha uma chave gratuita em https://console.groq.com/keys
+**Nota**: Por padrão (`LLM_PROVIDER=ollama`) o assistente usa o Ollama self-hosted
+(serviço `ollama` do compose), sem precisar de nenhuma chave de API — mas o
+primeiro download dos modelos (`OLLAMA_MODEL`/`OLLAMA_EMBED_MODEL`) pode levar
+alguns minutos. Para usar um provedor em nuvem em vez disso, defina
+`LLM_PROVIDER=groq` (ou `anthropic`/`openai`) e a respectiva `*_API_KEY` no `.env`.
 
 ## Verificação da Instalação
 

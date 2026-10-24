@@ -184,6 +184,59 @@ Este documento detalha todos os recursos e funcionalidades disponíveis no Axiom
 - Listas de transações recentes
 - Alertas de vencimentos próximos
 
+### Orçamentos
+
+#### Funcionalidades
+- Limite de gasto (`limit_amount`) por categoria de despesa, mês e ano, opcionalmente por membro
+- Rolagem de saldo (`rollover_enabled`): saldo não utilizado do mês anterior soma ao limite do mês atual
+- Restrição de unicidade por categoria/mês/ano/membro
+- Alertas de orçamento (próximo do limite / estourado) via sistema de notificações
+
+### Conciliação Bancária
+
+#### Funcionalidades
+- Importação de extrato em OFX, CSV, CNAB 240 ou CNAB 400 (`BankStatementImport`)
+- Hash do arquivo para evitar importação duplicada
+- Cada lançamento do extrato (`BankStatementEntry`) é comparado com despesas/receitas já registradas
+- Status por entrada: pendente, conciliado, divergente, ignorado
+- Nível de confiança do match automático: alta, média, baixa ou manual
+- Contadores de conciliados/divergentes/ignorados por importação
+
+### Cofres (Poupança com Objetivo)
+
+#### Funcionalidades
+- Cofre (`Vault`) vinculado a uma conta bancária, com saldo e rendimento acumulado próprios
+- Taxa de rendimento anual configurável manualmente ou indexada a CDI/SELIC (com alíquota de IR sobre o índice)
+- Depósito e saque (`deposit`/`withdraw`), com aplicação automática de rendimentos pendentes antes da operação
+- Rendimento é lançado como receita (categoria `income`) na conta associada, mantendo o saldo disponível da conta consistente com o valor reservado
+- Simulação de próximo rendimento sem persistir nada (`simulate_yield_preview`)
+- Recálculo de rendimentos retroativo ao trocar a taxa (`recalculate_yields`)
+- Contribuições recorrentes mensais (`VaultRecurringContribution`), geradas via despesa fixa associada e processadas por comando de gestão
+- Metas Financeiras (`FinancialGoal`): agregam um ou mais cofres, com valor-alvo, data-alvo, progresso percentual e valor mensal necessário para atingir o objetivo no prazo
+
+### Planejamento Mensal
+
+#### Funcionalidades
+- Plano mensal (`MonthlyPlan`) por usuário/mês/ano com overrides específicos daquele mês: receitas extras, despesas extras, limites de orçamento, receitas/despesas fixas e contas (bills) sobrescritas, categorias de orçamento desabilitadas
+- Resumo (`summary`) e aplicação (`apply`) dos overrides via endpoints dedicados
+- Registro de quando o plano foi efetivamente aplicado (`applied_at`)
+
+### Câmbio
+
+#### Funcionalidades
+- Cotações diárias oficiais do Banco Central (PTAX) para 14 moedas/criptoativos (USD, EUR, GBP, ARS, CLP, UYU, JPY, CHF, CAD, AUD, MXN, CNY, BTC, ETH)
+- Taxa de compra e venda, com taxa média (`mid_rate`) calculada
+- `ExchangeRate.convert()`: conversão cruzada entre quaisquer duas moedas via BRL
+- Atualização automática diária via tarefa Celery
+
+### Contas a Pagar e a Receber
+
+#### Funcionalidades
+- `Payable`: valores a pagar que não são empréstimos (ex.: dentista, conserto), com valor total/pago, parcelamento (`PayableInstallment`), dívida cumulativa e status (ativo, quitado, em atraso, cancelado)
+- `Receivable`: espelho de `Payable` para receitas a receber (honorários, reembolsos), com parcelamento (`ReceivableInstallment`) e status (ativo, recebido, em atraso, cancelado)
+- Registrar o pagamento/recebimento não cria o `Payable`/`Receivable` em si — ele já existe; o pagamento/recebimento dispara a despesa/receita correspondente
+- Atualização automática de status para quitado/recebido quando o valor pago/recebido atinge o valor total
+
 ## Módulo Security (StreamFort)
 
 ### Senhas
@@ -371,12 +424,18 @@ Este documento detalha todos os recursos e funcionalidades disponíveis no Axiom
 | `PlanningAgent` | Planejamento | Rotinas, metas, reflexões diárias |
 | `LibraryAgent` | Biblioteca | Resumos de livros via RAG (pgvector) |
 | `InsightAgent` | Geral | Orquestrador, briefing diário, perguntas gerais |
+| `PersonalAgent` | Planejamento pessoal | Visão combinada de hábitos, metas e bem-estar |
+| `FinancialAgent` | Finanças (módulo consolidado) | Complementar ao `FinanceAgent`/`BudgetAgent`/`ForecastAgent` |
+| `SecurityAgent` | Cofre de senhas | Saúde das senhas, duplicadas, alertas de segurança |
+| `IntellectAgent` | Intelecto (Biblioteca) | Cursos, habilidades e flashcards |
+
+`NoAccessAgent` é um agente de fallback (não selecionável) usado quando o usuário não tem acesso à tela/módulo correspondente.
 
 ### Tecnologia
 
 - **Embeddings**: `nomic-embed-text` via Ollama — **768 dimensões**, armazenados em `vectors.agent_embeddings` (pgvector)
 - **Busca vetorial**: operador `<=>` (distância coseno) — TOP-5 chunks mais similares
-- **LLM Providers**: `LLM_PROVIDER=ollama` (padrão), `groq` ou `anthropic`
+- **LLM Providers**: `LLM_PROVIDER=ollama` (padrão), `groq`, `anthropic` ou `openai` (com `LLM_FALLBACK_PROVIDERS` para encadear fallbacks)
 - **Seleção de agente**: score por palavras-chave + similaridade semântica (peso 0.15)
 - **Memória**: Redis (TTL 1h, últimos 10 turnos) + PostgreSQL (histórico permanente)
 - **Segurança**: validação de prompt injection server-side (padrões em PT-BR e EN)
@@ -404,6 +463,77 @@ Este documento detalha todos os recursos e funcionalidades disponíveis no Axiom
 
 Consulte [`backend/agents.md`](../backend/agents.md) para pipeline completo (diagramas de sequência, roteador, providers, RAG, endpoints e configuração).
 
+## Módulo Personal Planning
+
+### Tarefas Rotineiras e Hábitos
+
+#### Funcionalidades
+- `RoutineTask` com recorrência (diária, semanal, mensal) e horário alvo
+- `TaskInstance` gerado sob demanda (lazy) por dia, conforme o usuário acessa o calendário — sem instâncias para datas futuras ainda não chegadas
+- Status por instância: pendente, em progresso, concluída, parcial, ignorada
+- Templates de rotina (`UserRoutineTemplate`) para importar pacotes de hábitos em bloco
+- Blocos de foco (`FocusBlock`/`FocusBlockTask`) para agrupar tarefas em um período dedicado
+
+### Metas Pessoais
+
+#### Funcionalidades
+- `Goal`: objetivos com prazo, tipo e progresso, incluindo metas do tipo "evitar hábito" (`avoid_habit`)
+- `GoalFailure`: registro de recaída em metas de hábito a evitar, por data
+- Associação de tarefas rotineiras a uma meta para acompanhar a contribuição de cada hábito
+
+### Reflexões Diárias
+
+#### Funcionalidades
+- `DailyReflection`: diário estruturado com perguntas de reflexão configuráveis, pesquisável por data
+
+### Gamificação
+
+#### Funcionalidades
+- `GamificationProfile`: nível, XP acumulado, sequência atual e maior sequência já alcançada
+- `XPTransaction`: histórico de pontos ganhos por tarefa concluída, meta atingida ou reflexão registrada
+- `Badge`/`UserBadge`: conquistas desbloqueadas, com marcos especiais (7, 30, 100 dias)
+
+### Treinos e Métricas Corporais
+
+#### Funcionalidades
+- `WorkoutPlan`/`WorkoutDay`/`WorkoutExercise`: planos de treino por dia e grupo muscular, com exercícios de um catálogo (`Exercise`, imagens apenas via `ExerciseDatasetEntry`)
+- `WorkoutSession`/`WorkoutSessionExercise`/`WorkoutSessionSet`: sessões realizadas, com séries individuais e carga utilizada, permitindo acompanhar a progressão por exercício
+- `BodyMetric`: medidas antropométricas (peso, circunferências, dobras cutâneas) com cálculo de percentual de gordura corporal (protocolos Navy ou Pollock de 7 dobras)
+
+### Nutrição
+
+#### Funcionalidades
+- `Food`: alimentos com macronutrientes (proteína, carboidrato, gordura, calorias)
+- `MealType`/`MenuOption`/`MenuOptionIngredient`: cardápios com ingredientes e quantidades, incluindo ingredientes alternativos entre si
+- `MealLog`: refeições registradas por dia com controle calórico e de macros
+- `HydrationGoal`/`WaterLog`: meta diária de hidratação e registro de consumo de água
+
+### Bem-Estar Emocional
+
+#### Funcionalidades
+- `EmotionalCheckin`: check-ins diários (solidão, ansiedade, motivação, energia)
+- `SelfEsteemAssessment`: avaliação padronizada de autoestima (Escala de Rosenberg)
+- `CrisisImpulseLog`: registro de impulso (compulsão, procrastinação etc.) no Modo Crise, com resposta de apoio gerada por IA
+- `WellnessIntervention`/`WellnessInterventionCompletion`: catálogo de intervenções (exercícios/técnicas breves) a seguir e avaliar
+- `WellnessWeeklyReport`: relatório semanal gerado por IA resumindo padrões emocionais
+
+### Revisão Diária
+
+#### Funcionalidades
+- Modal bloqueante (app `daily_review`) que percorre as pendências do dia anterior antes de liberar o uso normal do app: reflexão, tarefas, metas de hábito a evitar, treino, refeições, hidratação, check-in emocional, autoestima, estudos (cursos do módulo Intelecto) e flashcards vencidos
+- Etapas "por dia" olham uma data específica; etapas "contínuas" (bem-estar da última semana, pesagem, flashcards) olham o estado atual e só aparecem na revisão do dia mais recente
+- `ReviewProgress`: último dia revisado por membro
+- `ReviewResolution`: justificativa de pular (`skip`) ou manter pendente (`keep_pending`) um item, por etapa/data/item
+
+## Módulo Admin Panel
+
+#### Funcionalidades
+- Visão geral de saúde em tempo real dos serviços dependentes (banco de dados, Redis, e-mail, LLM, MinIO)
+- `SystemConfig`: configurações do sistema editáveis via UI (LLM, e-mail, backup, armazenamento, segurança), com segredos criptografados (Fernet) e auditoria de quem alterou
+- Acesso por tela (`UserScreenAccess`/`ScreenDefault`): ações (visualizar/criar/editar/excluir) concedidas por usuário e por tela; `ScreenDefault` define o padrão para novos usuários
+- Logs da aplicação em tempo real, com filtros
+- Status de integrações ativas (MinIO, Ollama, e-mail SMTP etc.)
+
 ## Sistema de Membros Unificado
 
 ### Funcionalidades
@@ -425,6 +555,20 @@ Consulte [`backend/agents.md`](../backend/agents.md) para pipeline completo (dia
 - Cálculo automático de idade
 
 ## Recursos Transversais
+
+### Webhooks
+
+#### Funcionalidades
+- Webhooks outbound configuráveis pelo usuário, com URL de destino, lista de eventos e assinatura HMAC-SHA256 (`X-Axiom-Signature`)
+- Eventos disponíveis: criação/atualização/exclusão de despesa, receita, transferência, empréstimo; orçamento excedido; depósito/saque de cofre; notificação criada; score de saúde atualizado
+- `WebhookDelivery`: registro de cada tentativa de entrega (status, código HTTP de resposta, duração, nº da tentativa, erro), com retentativas configuráveis (`max_retries`, `timeout_seconds`)
+
+### Notificações
+
+#### Funcionalidades
+- Mais de 20 tipos de notificação (tarefa do dia/atrasada, contas a pagar/receber e faturas a vencer/atrasadas, orçamento, meta financeira, insight de agente, meta de leitura, reconciliação bancária pendente, cartão armazenado a vencer, credencial acessada via link, senha comprometida/anomalia no cofre, recomendações de aprendizado etc.)
+- Preferência por tipo e por canal (`NotificationPreference`): somente no app, somente e-mail, ou ambos
+- Restrição de unicidade por proprietário/tipo/objeto, evitando notificações duplicadas para o mesmo evento
 
 ### Autenticação e Autorização
 
@@ -451,7 +595,7 @@ Consulte [`backend/agents.md`](../backend/agents.md) para pipeline completo (dia
 ### Interface do Usuário
 
 - Design responsivo
-- Tema Dracula (dark mode)
+- 14 temas (7 variantes dark + 7 light: Dracula, Catppuccin, Tokyo Night/Day, Gruvbox, Everforest, Ubuntu, Mint), selecionáveis pelo `ThemeToggle`
 - Ícones Lucide React
 - Componentes shadcn/ui
 - Feedback visual em todas as ações

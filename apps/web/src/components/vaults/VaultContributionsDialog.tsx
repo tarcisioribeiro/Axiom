@@ -214,7 +214,7 @@ export function VaultContributionsDialog({
                   : t('pages.vaults.recurringContributions.newBtn')}
               </h4>
               <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
+                <div className="space-y-sm col-span-2">
                   <Label
                     className="gap-xs flex items-center"
                     htmlFor="contrib_description"
@@ -233,7 +233,7 @@ export function VaultContributionsDialog({
                     )}
                   />
                 </div>
-                <div>
+                <div className="space-y-sm">
                   <Label className="gap-xs flex items-center" htmlFor="contrib_amount">
                     <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.amount')}
@@ -250,7 +250,7 @@ export function VaultContributionsDialog({
                     }
                   />
                 </div>
-                <div>
+                <div className="space-y-sm">
                   <Label className="gap-xs flex items-center" htmlFor="contrib_day">
                     <Hash className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.dayOfMonth')}
@@ -263,7 +263,7 @@ export function VaultContributionsDialog({
                     onChange={(v) => setFormData({ ...formData, day_of_month: v ?? 1 })}
                   />
                 </div>
-                <div>
+                <div className="space-y-sm">
                   <Label className="gap-xs flex items-center" htmlFor="contrib_start">
                     <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.startDate')}
@@ -278,7 +278,7 @@ export function VaultContributionsDialog({
                     }
                   />
                 </div>
-                <div>
+                <div className="space-y-sm">
                   <Label className="gap-xs flex items-center" htmlFor="contrib_end">
                     <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.vaults.recurringContributions.fields.endDate')}

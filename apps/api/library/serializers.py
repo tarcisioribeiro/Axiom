@@ -552,7 +552,7 @@ class ReadingCreateUpdateSerializer(serializers.ModelSerializer):
     def _update_book_status(self, book):
         """
         Atualiza o status do livro baseado nas leituras:
-        - 'to_read' -> 'reading': quando a primeira leitura é cadastrada
+        - 'to_read'/'paused' -> 'reading': quando uma leitura é cadastrada
         - 'reading' -> 'read': quando total de páginas lidas >=
           páginas do livro
         """
@@ -566,8 +566,10 @@ class ReadingCreateUpdateSerializer(serializers.ModelSerializer):
             if book.read_status != "read":
                 book.read_status = "read"
                 book.save(update_fields=["read_status", "updated_at"])
-        # Se tem leituras e está como "para ler", muda para "lendo"
-        elif book.read_status == "to_read" and total_pages_read > 0:
+        # Se tem leituras e está "para ler" ou "pausado", muda para "lendo"
+        elif (
+            book.read_status in ("to_read", "paused") and total_pages_read > 0
+        ):
             book.read_status = "reading"
             book.save(update_fields=["read_status", "updated_at"])
 

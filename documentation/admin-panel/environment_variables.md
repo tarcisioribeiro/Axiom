@@ -29,6 +29,7 @@ Configurações do sistema de agentes inteligentes (`apps/api/agents/`).
 | `OLLAMA_EMBED_MODEL` | | | — | Tag do modelo Ollama para embeddings (RAG). Deve estar baixado localmente. Exemplo: `nomic-embed-text`. |
 | `LLM_TIMEOUT_CHAT` | | | `120` | Segundos máximos de espera por uma resposta de chat. Aumente em hardware lento (ex: `300`). |
 | `LLM_TIMEOUT_EMBED` | | | `30` | Segundos máximos de espera por um embedding. |
+| `LLM_MAX_TOKENS` | | | `2048` | Máximo de tokens de saída do chat, aplicado a todos os providers. |
 | `GROQ_API_KEY` | 🔒 | | — | Chave de API Groq. Obrigatória quando `LLM_PROVIDER=groq`. |
 | `GROQ_MODEL` | | | — | Modelo Groq a utilizar. Exemplo: `openai/gpt-oss-120b`. |
 | `ANTHROPIC_API_KEY` | 🔒 | | — | Chave de API Anthropic. Obrigatória quando `LLM_PROVIDER=anthropic`. Começa com `sk-ant-api03-`. |

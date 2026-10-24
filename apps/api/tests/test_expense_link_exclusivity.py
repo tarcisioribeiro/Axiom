@@ -222,6 +222,7 @@ class BulkGenerateExemptFromExclusivityTest(TestCase):
             is_active=True,
             allow_value_edit=False,
             related_payable=self.payable,
+            created_by=self.user,
         )
 
     def test_bulk_generate_exempt_from_exclusivity(self):

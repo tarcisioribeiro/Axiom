@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/select';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useToast } from '@/hooks/use-toast';
+import { getTimeOfDay } from '@/lib/utils';
 import type { ReadingFormData } from '@/lib/validations';
 import { booksService } from '@/services/books-service';
 import { coursesService } from '@/services/courses-service';
@@ -82,6 +83,20 @@ function sortCoursesByStatus(courses: Course[]): Course[] {
   return courses
     .filter((c) => c.status in COURSE_STATUS_ORDER)
     .sort((a, b) => COURSE_STATUS_ORDER[a.status] - COURSE_STATUS_ORDER[b.status]);
+}
+
+const BOOK_STATUS_ORDER: Record<string, number> = {
+  reading: 0,
+  to_read: 1,
+  paused: 2,
+};
+
+function sortBooksByStatus(books: Book[]): Book[] {
+  return books
+    .filter((b) => b.read_status in BOOK_STATUS_ORDER)
+    .sort(
+      (a, b) => BOOK_STATUS_ORDER[a.read_status] - BOOK_STATUS_ORDER[b.read_status]
+    );
 }
 
 function formatElapsed(seconds: number) {
@@ -153,7 +168,7 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
     if (isReading) {
       void booksService
         .getAll()
-        .then((items) => setBooks(items.filter((b) => b.read_status === 'reading')))
+        .then((items) => setBooks(sortBooksByStatus(items)))
         .catch(() => {});
     } else {
       void coursesService
@@ -437,6 +452,7 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
             <ReadingForm
               books={[confirmBook]}
               defaultReadingTime={durationMinutes}
+              defaultTimeOfDay={getTimeOfDay()}
               lockSession
               onSubmit={(data) => void handleReadingSubmit(data)}
               onCancel={closeConfirm}

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Can } from '@/components/common/Can';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
 import { DecimalInput } from '@/components/ui/decimal-input';
 import { Label } from '@/components/ui/label';
@@ -45,7 +46,9 @@ export function WaterTotal({ date }: { date: string }) {
     <div className="text-right">
       <span className="text-info inline-flex items-center gap-0.5 text-2xl font-bold tabular-nums">
         <Droplets className="h-5 w-5" />
-        {formatLiters(totalMl)}
+        <span key={totalMl} className="animate-fade-in">
+          {formatLiters(totalMl)}
+        </span>
       </span>
       <p className="text-muted-foreground text-xs">
         {goalMl ? `/ ${formatLiters(goalMl)} L` : 'L'}
@@ -107,14 +110,21 @@ export function WaterLogPanel({ date }: { date: string }) {
             {t('pages.nutritionHydration.dayWater')}
           </span>
         </div>
-        <span className="text-info text-sm tabular-nums">
+        <span
+          key={`${totalMl}-${pct}`}
+          className="animate-fade-in text-info text-sm tabular-nums"
+        >
           {formatLiters(totalMl)} L
           {goalMl ? ` / ${formatLiters(goalMl)} L (${pct}%)` : ''}
         </span>
       </div>
 
       {goalMl ? (
-        <Progress value={pct} className="h-2" indicatorClassName="bg-info" />
+        <Progress
+          value={pct}
+          className="h-2"
+          indicatorClassName="bg-info duration-slow"
+        />
       ) : (
         <p className="text-muted-foreground text-xs">
           {t('pages.nutritionHydration.setGoalHint')}
@@ -171,38 +181,46 @@ export function WaterLogPanel({ date }: { date: string }) {
       {!isLoading && logs.length === 0 ? (
         <EmptyState title={t('pages.nutritionHydration.noLogs')} />
       ) : (
-        <ul className="divide-border divide-y">
-          {logs.map((log) => (
-            <li
-              key={log.id}
-              className="py-xs flex items-center justify-between text-sm"
-            >
-              <span className="gap-sm flex items-center">
-                <span className="text-muted-foreground w-12 tabular-nums">
-                  {log.time?.slice(0, 5) ?? '--:--'}
-                </span>
-                <span className="font-medium tabular-nums">{log.amount_ml} ml</span>
-                {log.from_task && (
-                  <span className="text-muted-foreground inline-flex items-center gap-0.5 text-xs">
-                    <Link2 className="h-3 w-3" />
-                    {t('pages.nutritionHydration.fromTask')}
+        <PaginatedSlide
+          key={date}
+          items={logs}
+          pageSize={LIST_PAGE_SIZE}
+          pinNav={false}
+          className="divide-border divide-y"
+        >
+          {(pageLogs) =>
+            pageLogs.map((log) => (
+              <div
+                key={log.id}
+                className="py-xs flex items-center justify-between text-sm"
+              >
+                <span className="gap-sm flex items-center">
+                  <span className="text-muted-foreground w-12 tabular-nums">
+                    {log.time?.slice(0, 5) ?? '--:--'}
                   </span>
-                )}
-              </span>
-              <Can action="delete">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-destructive h-7 w-7 p-0"
-                  aria-label={t('common.actions.delete')}
-                  onClick={() => deleteMutation.mutate(log.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </Can>
-            </li>
-          ))}
-        </ul>
+                  <span className="font-medium tabular-nums">{log.amount_ml} ml</span>
+                  {log.from_task && (
+                    <span className="text-muted-foreground inline-flex items-center gap-0.5 text-xs">
+                      <Link2 className="h-3 w-3" />
+                      {t('pages.nutritionHydration.fromTask')}
+                    </span>
+                  )}
+                </span>
+                <Can action="delete">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive h-7 w-7 p-0"
+                    aria-label={t('common.actions.delete')}
+                    onClick={() => deleteMutation.mutate(log.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </Can>
+              </div>
+            ))
+          }
+        </PaginatedSlide>
       )}
     </div>
   );

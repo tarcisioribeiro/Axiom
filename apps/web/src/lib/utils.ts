@@ -59,6 +59,26 @@ export function parseLocalDate(dateStr: string): Date | undefined {
 }
 
 /**
+ * Período do dia (madrugada/manhã/tarde/noite) a partir do horário atual
+ * no timezone America/Sao_Paulo (independe do timezone do dispositivo).
+ */
+export function getTimeOfDay(
+  date: Date = new Date()
+): 'dawn' | 'morning' | 'afternoon' | 'evening' {
+  const hour = Number(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Sao_Paulo',
+      hour: 'numeric',
+      hourCycle: 'h23',
+    }).format(date)
+  );
+  if (hour < 6) return 'dawn';
+  if (hour < 12) return 'morning';
+  if (hour < 18) return 'afternoon';
+  return 'evening';
+}
+
+/**
  * Copia texto para a área de transferência.
  * Usa navigator.clipboard se disponível (contexto seguro/HTTPS),
  * com fallback via document.execCommand para HTTP/desenvolvimento.

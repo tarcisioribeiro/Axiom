@@ -86,7 +86,7 @@ export function VaultApplyYieldDialog({ open, onOpenChange, vault, onSuccess }: 
         </DialogHeader>
 
         <div className="space-y-md">
-          <div>
+          <div className="space-y-sm">
             <Label className="gap-xs flex items-center" htmlFor="apply_yield_amount">
               <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.vaults.applyYieldAmountLabel')}

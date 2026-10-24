@@ -917,22 +917,23 @@ kubectl get configmap -n ingress-nginx
 # Ver todos os HPAs de produção
 kubectl get hpa -n axiom
 
-# Ver detalhes do HPA da API (min 1 / max 10 réplicas)
-kubectl describe hpa api-hpa -n axiom
+# Ver detalhes do HPA de cada slot blue-green da API
+kubectl describe hpa api-blue-hpa -n axiom
+kubectl describe hpa api-green-hpa -n axiom
 
-# Ver detalhes do HPA do frontend (min 1 / max 5 réplicas)
+# Ver detalhes do HPA do frontend
 kubectl describe hpa frontend-hpa -n axiom
 
 # Ver métricas atuais dos HPAs (requer metrics-server)
 kubectl get hpa -n axiom -o wide
 
 # Ajustar temporariamente os limites do HPA da API
-kubectl patch hpa api-hpa -n axiom \
+kubectl patch hpa api-blue-hpa -n axiom \
   --type='json' \
   -p='[{"op":"replace","path":"/spec/maxReplicas","value":5}]'
 
 # Desabilitar o HPA temporariamente (definir min e max iguais)
-kubectl patch hpa api-hpa -n axiom \
+kubectl patch hpa api-blue-hpa -n axiom \
   --type='json' \
   -p='[{"op":"replace","path":"/spec/minReplicas","value":2},
        {"op":"replace","path":"/spec/maxReplicas","value":2}]'

@@ -549,27 +549,43 @@ class Migration(migrations.Migration):
 
 ---
 
-### 2. RunSQL - SQL Customizado
+### 2. RunSQL / RunPython com SQL customizado
+
+Exemplo real do projeto — `agents/migrations/0005_agentembedding_hnsw_index.py`, que adiciona o índice HNSW em `vectors.agent_embeddings` (schema PostgreSQL dedicado, por isso usa `RunPython` com `schema_editor.execute()` em vez de `RunSQL` puro — permite checar `connection.vendor` e fazer no-op em SQLite, usado nos testes):
 
 ```python
-# ai_assistant/migrations/0002_create_ivfflat_index.py
+# agents/migrations/0005_agentembedding_hnsw_index.py
 from django.db import migrations
+
+
+def add_hnsw_index(apps, schema_editor):
+    if schema_editor.connection.vendor != "postgresql":
+        return
+    schema_editor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS agent_embeddings_embedding_hnsw_idx
+        ON "vectors"."agent_embeddings"
+        USING hnsw (embedding vector_cosine_ops)
+        WITH (m = 16, ef_construction = 64)
+        """
+    )
+
+
+def drop_hnsw_index(apps, schema_editor):
+    if schema_editor.connection.vendor != "postgresql":
+        return
+    schema_editor.execute(
+        'DROP INDEX IF EXISTS "vectors".agent_embeddings_embedding_hnsw_idx'
+    )
+
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('ai_assistant', '0001_initial'),
+        ('agents', '0004_agentembedding_audit_fields'),
     ]
 
     operations = [
-        migrations.RunSQL(
-            sql="""
-                CREATE INDEX idx_embedding_cosine
-                ON ai_assistant_contentembedding
-                USING ivfflat (embedding vector_cosine_ops)
-                WITH (lists = 100);
-            """,
-            reverse_sql="DROP INDEX IF EXISTS idx_embedding_cosine;"
-        ),
+        migrations.RunPython(add_hnsw_index, drop_hnsw_index),
     ]
 ```
 
@@ -577,7 +593,7 @@ class Migration(migrations.Migration):
 - Criar extensões PostgreSQL
 - Criar índices especiais (GIN, GiST, pgvector)
 - Triggers e stored procedures
-- Operações que Django não suporta nativamente
+- Operações que Django não suporta nativamente (ou que dependem de um schema PostgreSQL dedicado, como `vectors` acima)
 
 ---
 

@@ -18,6 +18,12 @@ from members.models import Member
 
 class BaseVaultConfigTestCase(APITestCase):
     def setUp(self):
+        # Throttle/lockout counters live in the cache, not the DB, so they
+        # survive the per-test transaction rollback. Different tests'
+        # freshly-created users can land on the same reused pk (SQLite
+        # autoincrement resets with the rollback), so a throttle counter
+        # left over from a previous test can otherwise leak into this one.
+        cache.clear()
         self.user = User.objects.create_user(
             username="vaultcfgtest",
             email="vaultcfg@test.com",
@@ -36,6 +42,9 @@ class BaseVaultConfigTestCase(APITestCase):
             sex="M",
             user=self.user,
         )
+
+    def tearDown(self):
+        cache.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -378,6 +387,42 @@ class VaultChangePasswordWithConfigTest(BaseVaultConfigTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("error", response.data)
 
+    def test_vault_change_password_locks_out_after_max_attempts(self):
+        """
+        Repeated wrong current_master_password attempts must lock out the
+        same way VaultUnlockView does — regression for the brute-force gap
+        where VaultChangePasswordView never tracked failed attempts.
+        """
+        from security.vault_config import VAULT_MAX_FAILED_ATTEMPTS
+
+        url = reverse("vault-change-password")
+        payload = {
+            "current_master_password": "WrongPassword1!",
+            "new_master_password": self.NEW_PASSWORD,
+            "confirm_new_master_password": self.NEW_PASSWORD,
+        }
+        for _ in range(VAULT_MAX_FAILED_ATTEMPTS):
+            response = self.client.post(url, payload)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        locked_response = self.client.post(url, payload)
+        self.assertEqual(
+            locked_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS
+        )
+
+        # The correct password must also be rejected while locked out.
+        still_locked = self.client.post(
+            url,
+            {
+                "current_master_password": self.MASTER_PASSWORD,
+                "new_master_password": self.NEW_PASSWORD,
+                "confirm_new_master_password": self.NEW_PASSWORD,
+            },
+        )
+        self.assertEqual(
+            still_locked.status_code, status.HTTP_429_TOO_MANY_REQUESTS
+        )
+
 
 # ---------------------------------------------------------------------------
 # VaultSetupView — re-encrypt existing items (_re_encrypt_all_items path)
@@ -393,6 +438,10 @@ class VaultSetupReEncryptTest(APITestCase):
     MASTER_PASSWORD = "ReEncryptPass1!"
 
     def setUp(self):
+        # See BaseVaultConfigTestCase.setUp for why this must be cleared:
+        # throttle/lockout counters live in the cache, not the DB, and can
+        # leak across tests whose freshly-created user reuses the same pk.
+        cache.clear()
         self.user = User.objects.create_user(
             username="reencryptuser",
             email="reencrypt@test.com",
@@ -411,6 +460,9 @@ class VaultSetupReEncryptTest(APITestCase):
             sex="M",
             user=self.user,
         )
+
+    def tearDown(self):
+        cache.clear()
 
     def test_vault_setup_with_existing_password_items(self):
         """

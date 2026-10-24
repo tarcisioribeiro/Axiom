@@ -37,6 +37,7 @@ class BulkGenerateAtomicTest(TestCase):
                 category="others",
                 account=account,
                 due_day=10,
+                created_by=self.user,
                 is_active=True,
             )
             for i in range(2)

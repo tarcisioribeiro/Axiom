@@ -84,15 +84,33 @@ const AlertDialogContent = React.forwardRef<
 ));
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
 
+interface AlertDialogHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+  icon?: IconComponent | React.ReactNode;
+}
+
 const AlertDialogHeader = ({
   className,
+  icon,
+  children,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn('flex flex-col space-y-2 text-center sm:text-left', className)}
-    {...props}
-  />
-);
+}: AlertDialogHeaderProps) => {
+  // Elemento JSX (<Icone />) é renderizado como veio; componente (Icone) —
+  // inclusive os do lucide, que são objetos forwardRef, não funções — vai inline.
+  const isElement = React.isValidElement(icon);
+  const Icon = icon && !isElement ? (icon as IconComponent) : null;
+
+  return (
+    <div
+      className={cn('flex flex-col space-y-2 text-center sm:text-left', className)}
+      {...props}
+    >
+      {isElement
+        ? icon
+        : Icon && <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />}
+      {children}
+    </div>
+  );
+};
 AlertDialogHeader.displayName = 'AlertDialogHeader';
 
 const AlertDialogFooter = ({

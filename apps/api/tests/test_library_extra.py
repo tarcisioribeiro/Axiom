@@ -427,3 +427,82 @@ class BookMarkAsReadViewTest(BaseLibraryTestCase):
         reading = R.objects.get(book=new_book, deleted_at__isnull=True)
         # 10 páginas × 2 min/pág = 20 min
         self.assertEqual(reading.reading_time, 20)
+
+
+# ---------------------------------------------------------------------------
+# Soft-delete timestamp regression (perform_destroy must stamp deleted_at
+# with the moment of deletion, not reuse the stale updated_at).
+# ---------------------------------------------------------------------------
+
+
+class SoftDeleteTimestampTest(BaseLibraryTestCase):
+    def setUp(self):
+        super().setUp()
+        from datetime import timedelta
+
+        from django.utils import timezone as tz
+
+        from library.models import BookHighlight, Reading, Summary
+
+        self.summary = Summary.objects.create(
+            title="Resumo",
+            book=self.book,
+            text="texto",
+            owner=self.member,
+        )
+        self.reading = Reading.objects.create(
+            book=self.book, owner=self.member
+        )
+        self.highlight = BookHighlight.objects.create(
+            book=self.book, text="trecho marcado", owner=self.member
+        )
+
+        # Backdate updated_at well into the past so a buggy
+        # `deleted_at = instance.updated_at` would be trivially detectable
+        # (a fresh delete must always land close to "now", not years ago).
+        # `updated_at` has `auto_now=True`, so it must be backdated with a
+        # queryset `.update()` — `instance.save()` would always overwrite
+        # it back to the current time regardless of the assigned value.
+        stale = tz.now() - timedelta(days=400)
+        type(self.author).objects.filter(pk=self.author.pk).update(
+            updated_at=stale
+        )
+        type(self.publisher).objects.filter(pk=self.publisher.pk).update(
+            updated_at=stale
+        )
+        type(self.book).objects.filter(pk=self.book.pk).update(
+            updated_at=stale
+        )
+        Summary.objects.filter(pk=self.summary.pk).update(updated_at=stale)
+        Reading.objects.filter(pk=self.reading.pk).update(updated_at=stale)
+        BookHighlight.objects.filter(pk=self.highlight.pk).update(
+            updated_at=stale
+        )
+
+    def test_deleting_each_resource_stamps_deleted_at_with_now(self):
+        from datetime import timedelta
+
+        from django.utils import timezone as tz
+
+        cases = [
+            ("author-detail", self.author),
+            ("publisher-detail", self.publisher),
+            ("book-detail", self.book),
+            ("summary-detail", self.summary),
+            ("reading-detail", self.reading),
+            ("highlight-detail", self.highlight),
+        ]
+        for url_name, instance in cases:
+            with self.subTest(url_name=url_name):
+                before = tz.now()
+                url = reverse(url_name, args=[instance.pk])
+                response = self.client.delete(url)
+                self.assertIn(
+                    response.status_code,
+                    (status.HTTP_204_NO_CONTENT, status.HTTP_200_OK),
+                )
+                instance.refresh_from_db()
+                self.assertIsNotNone(instance.deleted_at)
+                self.assertGreaterEqual(
+                    instance.deleted_at, before - timedelta(seconds=5)
+                )

@@ -230,6 +230,7 @@ export default function SpendingInsights({
           initial="enter"
           animate="center"
           exit="exit"
+          className="space-y-lg"
         >
           {/* Trend summary row */}
           <div className="gap-lg grid grid-cols-1 sm:grid-cols-3">

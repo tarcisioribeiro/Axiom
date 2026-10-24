@@ -8,22 +8,20 @@ Este guia estabelece padrões e boas práticas para contribuir com o Axiom.
 - [Padrões de Código](#padrões-de-código)
 - [Convenções de Commits](#convenções-de-commits)
 - [Estratégia de Branches](#estratégia-de-branches)
-- [Processo de Pull Request](#processo-de-pull-request)
+- [Processo de Merge Request](#processo-de-merge-request)
 - [Code Review](#code-review)
 - [Documentação](#documentação)
 
 ## Como Contribuir
 
-### 1. Fork e Clone
+O projeto é hospedado no GitLab (self-hosted), sem workflow de fork — branches
+são criadas direto no repositório e integradas via Merge Request para `develop`.
+
+### 1. Clonar
 
 ```bash
-# Fork no GitHub (botão Fork)
-# Clone seu fork
-git clone https://github.com/seu-usuario/Axiom.git
+git clone https://gitlab.tjtux.duckdns.org/tarcisioribeiro/Axiom.git
 cd Axiom
-
-# Adicione o repositório original como upstream
-git remote add upstream https://github.com/original-repo/Axiom.git
 ```
 
 ### 2. Configurar Ambiente
@@ -33,9 +31,9 @@ Siga o [Guia de Instalação](./installation.md) para configurar seu ambiente lo
 ### 3. Criar Branch
 
 ```bash
-# Atualize main
-git checkout main
-git pull upstream main
+# Atualize develop (branch de integração — não main)
+git checkout develop
+git pull origin develop
 
 # Crie uma branch para sua feature/fix
 git checkout -b feature/nome-da-feature
@@ -51,12 +49,13 @@ git checkout -b feature/nome-da-feature
 ### 5. Testar
 
 ```bash
+DC="docker compose -f infra/docker/docker-compose.yml --project-directory ."
+
 # Backend
-docker-compose exec api python manage.py test
-docker-compose exec api pytest --cov
+$DC exec api python -m pytest tests/ --cov
 
 # Frontend
-cd frontend
+cd apps/web
 npm run lint
 npm run build  # Verifica TypeScript
 ```
@@ -67,17 +66,17 @@ npm run build  # Verifica TypeScript
 # Stage changes
 git add .
 
-# Commit seguindo convenções
+# Commit seguindo convenções (ver commit_convention.md)
 git commit -m "feat: adiciona autenticação OAuth"
 
-# Push para seu fork
+# Push da branch
 git push origin feature/nome-da-feature
 ```
 
-### 7. Abrir Pull Request
+### 7. Abrir Merge Request
 
-- Vá ao GitHub e abra um Pull Request
-- Preencha o template de PR
+- Vá ao GitLab e abra um Merge Request com destino `develop`
+- A pipeline de lint roda automaticamente no MR (ver [deploy.md](./deploy.md))
 - Aguarde code review
 
 ## Padrões de Código
@@ -521,12 +520,12 @@ working on feature
 Use o corpo para explicar **o que** e **por que**, não **como**:
 
 ```bash
-git commit -m "feat(ai-assistant): adiciona cache semântico com Redis
+git commit -m "feat(agents): adiciona cache semântico com Redis
 
 Implementa cache de embeddings e resultados de busca para reduzir
 latência e custos de API. Cache TTL configurável via settings.
 
-- Adiciona RedisClient em ai_assistant/cache.py
+- Adiciona RedisClient em agents/services/cache.py
 - Implementa semantic_search com cache-aside pattern
 - TTL padrão: 1 hora (configurável)
 
@@ -597,18 +596,18 @@ release/v2.0.0-beta
    git commit -m "feat: adiciona nova feature"
    ```
 
-3. **Manter atualizado com main**
+3. **Manter atualizado com develop**
    ```bash
-   git checkout main
-   git pull origin main
+   git checkout develop
+   git pull origin develop
    git checkout feature/nova-feature
-   git rebase main
+   git rebase develop
    ```
 
-4. **Push e PR**
+4. **Push e MR**
    ```bash
    git push origin feature/nova-feature
-   # Abrir Pull Request no GitHub
+   # Abrir Merge Request no GitLab, destino: develop
    ```
 
 5. **Após merge, deletar branch**
@@ -617,9 +616,9 @@ release/v2.0.0-beta
    git push origin --delete feature/nova-feature
    ```
 
-## Processo de Pull Request
+## Processo de Merge Request
 
-### Template de PR
+### Template de MR
 
 ```markdown
 ## Descrição
@@ -640,7 +639,7 @@ Breve descrição do que este PR faz.
 - [ ] Código segue os padrões do projeto
 - [ ] Testes escritos e passando
 - [ ] Documentação atualizada
-- [ ] Sem conflitos com main
+- [ ] Sem conflitos com develop
 - [ ] Code review solicitado
 
 ## Issues Relacionadas
@@ -648,27 +647,27 @@ Closes #123
 Refs #456
 ```
 
-### Antes de Abrir PR
+### Antes de Abrir o MR
 
 ```bash
-# 1. Atualizar com main
-git checkout main
-git pull origin main
+# 1. Atualizar com develop
+git checkout develop
+git pull origin develop
 git checkout sua-branch
-git rebase main
+git rebase develop
 
 # 2. Executar testes
-docker-compose exec api python manage.py test
-docker-compose exec api pytest --cov
-cd frontend && npm run lint && npm run build
+$DC exec api python manage.py test
+$DC exec api pytest --cov
+cd apps/web && npm run lint && npm run build
 
 # 3. Code quality
-docker-compose exec api black .
-docker-compose exec api isort .
-docker-compose exec api flake8 .
+$DC exec api black .
+$DC exec api isort .
+$DC exec api flake8 .
 
 # 4. Verificar commits
-git log main..HEAD --oneline
+git log develop..HEAD --oneline
 
 # 5. Push
 git push origin sua-branch
@@ -767,7 +766,7 @@ Sim! Contribuições de todos os níveis são bem-vindas. Comece com issues marc
 
 ### Como encontrar algo para trabalhar?
 
-1. Veja issues abertas no GitHub
+1. Veja issues abertas no GitLab
 2. Procure por TODOs no código
 3. Melhore documentação
 4. Reporte bugs que encontrar

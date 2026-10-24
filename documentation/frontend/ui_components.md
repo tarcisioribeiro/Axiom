@@ -22,6 +22,7 @@ src/components/ui/
 ├── card.tsx                # Cards de conteúdo
 ├── checkbox.tsx            # Checkboxes
 ├── circular-progress.tsx   # Indicador circular de progresso
+├── clock-dial.tsx          # Mostrador de relógio analógico (usado pelo time-picker)
 ├── collapsible-section.tsx # `Collapse` (expandir/recolher com animação)
 ├── color-picker.tsx        # Swatch + paleta em popover + hex
 ├── currency-input.tsx      # Input BRL (R$) com variantes de cor
@@ -467,6 +468,24 @@ Antes de criar novos componentes, verifique se os componentes comuns cobrem a ne
 | `ErrorBoundary` | React Error Boundary para captura de erros |
 | `LanguageSelector` | Seletor PT-BR / EN-US |
 | `ThemeToggle` | Alternância Dracula / Alucard |
+| `PaginatedSlide` | Paginação interna de listas longas dentro de diálogos (`pinNav`, `LIST_PAGE_SIZE=5`) |
+| `ProtectedRoute` / `AdminRoute` | Guardas de rota por autenticação / screen access / superuser |
+| `Can` | Render condicional por permissão de screen/action (`action`, `screen`) |
+| `FilterBar` | Barra de filtros com campos rotulados e ícone |
+| `DateRangeFilter` | Filtro de intervalo de datas |
+| `CardActions` | Menu dropdown de ações (editar/excluir) para cards de listagem |
+| `StepNav` | Navegação Voltar/Próximo entre etapas de um wizard |
+| `StreakBadge` | Badge de sequência (streak) com dias atuais/melhores |
+| `ProgressGauge` | Medidor circular de progresso com label/sublabel |
+| `ViewModeToggle` | Alternância entre modos de visualização (lista/grade, etc.) |
+| `TransactionsTabsNav` | Navegação de abas compartilhada entre Despesas/Receitas/Cartão |
+| `WebAccessGate` | Bloqueio de acesso em mobile/tablet (web é PC-only, `MIN_VIEWPORT_WIDTH`) |
+| `InstallmentsPlanDialog` | Diálogo de plano de parcelas (cálculo/edição) |
+| `PageTour` | Tour guiado de onboarding por página |
+| `RouteProgressBar` | Barra de progresso de carregamento de rota (lazy loading) |
+| `EmailVerificationBanner` | Banner de pendência de verificação de e-mail |
+| `EnvironmentBanner` | Faixa indicando ambiente não-produção (staging) |
+| `AppVersionBadge` | Badge com a versão atual do app |
 
 ## Radix UI Primitives
 
@@ -635,5 +654,5 @@ function useDeleteAction(onDelete: () => void, itemName: string) {
 
 ## Próximos Passos
 
-- **Estilização:** Veja [estilizacao.md](./stylization.md) para detalhes sobre o tema Dracula
+- **Estilização:** Veja [estilizacao.md](./stylization.md) para detalhes sobre os temas (Dracula e demais variantes)
 - **Roteamento:** Veja [roteamento.md](./routing.md) para integração com rotas

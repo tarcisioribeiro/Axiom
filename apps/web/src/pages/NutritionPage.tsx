@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
   BookOpen,
@@ -696,7 +697,7 @@ export default function NutritionPage() {
                           fill="none"
                           strokeWidth="7"
                           strokeLinecap="round"
-                          className="stroke-category-nutrition duration-slow transition"
+                          className="stroke-category-nutrition duration-slow transition-[stroke-dashoffset]"
                           strokeDasharray={CIRC}
                           strokeDashoffset={dashOffset}
                         />
@@ -1309,17 +1310,27 @@ function MealTimeline({
                 <div className="gap-sm flex min-w-0 items-start">
                   <div
                     className={cn(
-                      'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+                      'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
                       log ? 'bg-success/15' : isLate ? 'bg-warning/15' : theme.iconBg
                     )}
                   >
-                    {log ? (
-                      <CheckCircle2 className="text-success h-5 w-5" />
-                    ) : isLate ? (
-                      <AlertCircle className="text-warning h-5 w-5" />
-                    ) : (
-                      theme.icon
-                    )}
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.span
+                        key={log ? 'done' : isLate ? 'late' : 'pending'}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="flex items-center justify-center"
+                      >
+                        {log ? (
+                          <CheckCircle2 className="text-success h-5 w-5" />
+                        ) : isLate ? (
+                          <AlertCircle className="text-warning h-5 w-5" />
+                        ) : (
+                          theme.icon
+                        )}
+                      </motion.span>
+                    </AnimatePresence>
                   </div>
                   <div className="min-w-0">
                     <p className="leading-snug font-semibold">{mt.name}</p>
@@ -1351,62 +1362,84 @@ function MealTimeline({
                 </div>
 
                 <div className="gap-xs flex shrink-0 items-center">
-                  {log ? (
-                    <>
-                      {log.calories > 0 && (
-                        <span className="mr-xs text-warning inline-flex items-center gap-0.5 text-sm font-semibold tabular-nums">
-                          <Flame className="h-3.5 w-3.5" />
-                          {Math.round(log.calories)} kcal
-                        </span>
-                      )}
-                      <Can action="change">
-                        <Button
-                          aria-label={t('common.actions.edit')}
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => onEdit(log)}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                      </Can>
-                      <Can action="delete">
-                        <Button
-                          aria-label={t('common.actions.delete')}
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive h-7 w-7"
-                          onClick={() => onDelete(log)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </Can>
-                    </>
-                  ) : isLate ? (
-                    <Can action="add">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-warning/50 hover:bg-warning/10 h-7 text-xs"
-                        onClick={() => onRegister(mt.id)}
+                  <AnimatePresence mode="wait" initial={false}>
+                    {log ? (
+                      <motion.div
+                        key="done"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="gap-xs flex items-center"
                       >
-                        <Plus className="h-3 w-3" />
-                        {t('pages.nutritionLog.registerMeal')}
-                      </Button>
-                    </Can>
-                  ) : (
-                    <Can action="add">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-muted-foreground hover:text-foreground h-7 text-xs"
-                        onClick={() => onRegister(mt.id)}
+                        {log.calories > 0 && (
+                          <span className="mr-xs text-warning inline-flex items-center gap-0.5 text-sm font-semibold tabular-nums">
+                            <Flame className="h-3.5 w-3.5" />
+                            {Math.round(log.calories)} kcal
+                          </span>
+                        )}
+                        <Can action="change">
+                          <Button
+                            aria-label={t('common.actions.edit')}
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => onEdit(log)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        </Can>
+                        <Can action="delete">
+                          <Button
+                            aria-label={t('common.actions.delete')}
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive h-7 w-7"
+                            onClick={() => onDelete(log)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </Can>
+                      </motion.div>
+                    ) : isLate ? (
+                      <motion.div
+                        key="late"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
                       >
-                        <Plus className="h-3 w-3" />
-                        {t('pages.nutritionLog.registerMeal')} →
-                      </Button>
-                    </Can>
-                  )}
+                        <Can action="add">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-warning/50 hover:bg-warning/10 h-7 text-xs"
+                            onClick={() => onRegister(mt.id)}
+                          >
+                            <Plus className="h-3 w-3" />
+                            {t('pages.nutritionLog.registerMeal')}
+                          </Button>
+                        </Can>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="pending"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                      >
+                        <Can action="add">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-muted-foreground hover:text-foreground h-7 text-xs"
+                            onClick={() => onRegister(mt.id)}
+                          >
+                            <Plus className="h-3 w-3" />
+                            {t('pages.nutritionLog.registerMeal')} →
+                          </Button>
+                        </Can>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>

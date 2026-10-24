@@ -29,7 +29,7 @@ Documentação do Django REST Framework.
 - **[Middleware e Signals](backend/middleware_signals.md)** - Processamento de requisições e automação
 - **[Criptografia](backend/criptography.md)** - Sistema de criptografia Fernet
 - **[Comandos de Management](backend/management_commands.md)** - Comandos personalizados Django
-- **[Sistema de Agentes (IA)](backend/agents.md)** - 6 agentes especializados, providers LLM, RAG, endpoints e configuração
+- **[Sistema de Agentes (IA)](backend/agents.md)** - 10 agentes especializados (6 legados + 4 modulares), providers LLM, RAG, endpoints e configuração
 
 ### [4. Frontend](frontend/README.md)
 Documentação do React + TypeScript.
@@ -39,7 +39,7 @@ Documentação do React + TypeScript.
 - **[Roteamento](frontend/routing.md)** - React Router e proteção de rotas
 - **[Gerenciamento de Estado](frontend/state_management.md)** - Zustand stores
 - **[API Client](frontend/api_client.md)** - Axios, interceptores e serviços
-- **[Estilização](frontend/stylization.md)** - TailwindCSS e tema Dracula
+- **[Estilização](frontend/stylization.md)** - TailwindCSS e os 14 temas (Dracula, Catppuccin, Tokyo Night/Day, Gruvbox, Everforest, Ubuntu, Mint)
 - **[Padrões de Design](frontend/design-patterns.md)** - Regras visuais obrigatórias (dialogs, tabelas, listas, validação)
 - **[Paletas de Cores](frontend/palettes.md)** - Temas e tokens de cor
 - **[Auditoria de Viewport](frontend/frontend-viewport-audit.md)** - Rolagem por tela em 1920×880
@@ -247,36 +247,33 @@ ORDER BY created_at DESC;
 ### Reportar Problemas
 Se encontrar erros na documentação ou no sistema:
 1. Verifique o [Troubleshooting](development/troubleshooting.md)
-2. Busque em issues existentes no GitHub
+2. Busque em issues existentes no GitLab do projeto
 3. Crie uma nova issue com detalhes
 
 ### Contribuir com a Documentação
-Encontrou algo confuso ou desatualizado? PRs são bem-vindos!
+Encontrou algo confuso ou desatualizado? Merge Requests são bem-vindos!
 
-1. Fork o repositório
+1. Crie uma branch a partir de `develop`
 2. Edite os arquivos `.md` relevantes
 3. Siga o [Guia de Contribuição](development/contribution_guide.md)
-4. Abra um Pull Request
-
-### Contato
-- **Email**: tarcisio.ribeiro.1840@hotmail.com
-- **GitHub**: [@tarcisioribeiro](https://github.com/tarcisioribeiro)
+4. Abra um Merge Request no GitLab
 
 ## 📝 Histórico de Versões da Documentação
 
 | Versão | Data | Mudanças |
 |--------|------|----------|
+| 1.3.0 | 2026-10-23 | Auditoria completa contra o código: app `daily_review` documentada; agentes de IA atualizados de 6 para 10 (`PersonalAgent`, `FinancialAgent`, `SecurityAgent`, `IntellectAgent`); sistema de temas corrigido (14 variantes, não só Dracula); middlewares, screen access, rate limiting e management commands atualizados; correções em CLAUDE.md, README.md, deploy/CI, kubectl e referências GitHub→GitLab |
 | 1.2.0 | 2026-05-20 | Módulos Budgets, Personal Planning, Bank Reconciliation e Agents documentados; contagem de categorias corrigida (22 despesas / 10 receitas); novos componentes UI (`currency-input`, `form-section`, `status-toggle`) e comuns documentados; Vault Health Report marcado como implementado; tecnologia LLM atualizada (Ollama/Groq/Anthropic, nomic-embed-text 768d) |
 | 1.1.0 | 2026-04-01 | Funcionalidades pendentes documentadas com guias de implementação |
 | 1.0.0 | 2026-01-12 | Documentação inicial completa |
 
 ## 📜 Licença
 
-Este projeto está sob a licença MIT. Consulte o arquivo LICENSE na raiz do repositório para mais detalhes.
+Este projeto é privado e proprietário.
 
 ---
 
-**Última atualização**: Maio de 2026
+**Última atualização**: Outubro de 2026
 **Mantido por**: Equipe Axiom
 
 💜 Feito com atenção aos detalhes e amor pelo código limpo.

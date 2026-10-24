@@ -272,11 +272,6 @@ export const Sidebar = () => {
               )}
             >
               <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              {streak && (
-                <span className="text-2xs absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-0.5 font-bold text-white">
-                  {streak}
-                </span>
-              )}
             </button>
           </Tooltip>
         ) : (

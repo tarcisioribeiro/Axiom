@@ -13,17 +13,23 @@ Middlewares são componentes que processam requisições antes de chegarem à vi
 ```python
 # app/settings.py
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'app.middleware.DecryptionCacheMiddleware',  # Limpa cache de decriptação
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # CORS antes de tudo
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Bloqueia login/sessão Web (cookie) em smartphone/tablet; antes do JWT
+    'authentication.device_policy.WebDevicePolicyMiddleware',
     'authentication.middleware.JWTCookieMiddleware',  # JWT via cookies
     'app.middleware.AuditLoggingMiddleware',  # Log de auditoria
+    'admin_panel.middleware.ScreenAccessMiddleware',  # Acesso por tela
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'app.middleware.SecurityHeadersMiddleware',  # Headers de segurança
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 ```
 
@@ -31,19 +37,35 @@ MIDDLEWARE = [
 
 ```mermaid
 graph LR
-    A[Request] --> B[SecurityMiddleware]
+    A[Request] --> P1[PrometheusBeforeMiddleware]
+    P1 --> DC[DecryptionCacheMiddleware]
+    DC --> B[SecurityMiddleware]
     B --> C[CorsMiddleware]
     C --> D[SessionMiddleware]
     D --> E[AuthenticationMiddleware]
-    E --> F[JWTCookieMiddleware]
+    E --> WD[WebDevicePolicyMiddleware]
+    WD --> F[JWTCookieMiddleware]
     F --> G[AuditLoggingMiddleware]
-    G --> H[View]
+    G --> SA[ScreenAccessMiddleware]
+    SA --> H[View]
     H --> I[SecurityHeadersMiddleware]
-    I --> J[AuditLoggingMiddleware]
-    J --> K[Response]
+    I --> P2[PrometheusAfterMiddleware]
+    P2 --> K[Response]
 ```
 
-### 1. JWTCookieMiddleware
+### 1. DecryptionCacheMiddleware
+
+**Responsabilidade**: Limpa, ao final de cada request (`process_response` e `process_exception`), o cache de decriptação de campos criptografados (`app/encryption.py`), que evita decriptar o mesmo valor várias vezes durante um mesmo request.
+
+**Localização**: `apps/api/app/middleware.py`
+
+### 2. WebDevicePolicyMiddleware
+
+**Responsabilidade**: Bloqueia com `403 {"code": "web_device_not_allowed"}` a sessão Web (cookie) acessada de smartphone/tablet (`User-Agent` ou `Sec-CH-UA-Mobile: ?1`). Só afeta os endpoints de login/refresh/2FA e requisições autenticadas por cookie sem header `Authorization` — nunca clientes `Authorization: Bearer`/`ThemeSync`. Desligável via `WEB_BLOCK_MOBILE_DEVICES=False`. Deve vir antes do `JWTCookieMiddleware`.
+
+**Localização**: `apps/api/authentication/device_policy.py`
+
+### 3. JWTCookieMiddleware
 
 **Responsabilidade**: Extrai JWT token de cookies HttpOnly e adiciona ao header Authorization.
 
@@ -109,7 +131,7 @@ const response = await apiClient.get('/api/v1/accounts/');
 // DRF autentica normalmente
 ```
 
-### 2. AuditLoggingMiddleware
+### 4. AuditLoggingMiddleware
 
 **Responsabilidade**: Registra ações dos usuários para auditoria e segurança.
 
@@ -308,7 +330,13 @@ class AuditLoggingMiddleware(MiddlewareMixin):
 - Debugging de problemas
 - Conformidade com regulamentações (LGPD, GDPR)
 
-### 3. SecurityHeadersMiddleware
+### 5. ScreenAccessMiddleware
+
+**Responsabilidade**: Aplica o controle de acesso por tela (`admin_panel/screens.py`) às rotas registradas sob os prefixos `finance`/`planning`/`security`/`library`. Autentica via JWT (ou `request._force_auth_user` em testes), deixa passar `staff`/`superuser`, e responde `403` quando o usuário comum não tem a ação permitida em `UserScreenAccess`. Rotas não registradas em `admin_panel.screens` passam direto.
+
+**Localização**: `apps/api/admin_panel/middleware.py`
+
+### 6. SecurityHeadersMiddleware
 
 **Responsabilidade**: Adiciona headers de segurança às respostas HTTP.
 
@@ -394,104 +422,31 @@ Signals permitem que aplicações desacopladas sejam notificadas quando ações 
 - `request_started`: Quando requisição inicia
 - `request_finished`: Quando requisição termina
 
-### 1. Signals de Atualização de Saldo
+### 1. Atualização de Saldo — NÃO é mais via signal
 
-**Arquivo**: `apps/api/accounts/signals.py`
+**Arquivo**: `apps/api/accounts/services.py` (chamado explicitamente pelas views, não por signal)
 
-**Objetivo**: Atualizar automaticamente o saldo das contas quando receitas/despesas são criadas, editadas ou deletadas.
+> O cálculo de saldo deixou de ser feito por `post_save`/`post_delete` em `accounts/signals.py`. A lógica agora vive em `accounts.services.recalculate_account_balance()` e `get_projected_balance()`, chamada explicitamente por `ExpenseCreateListView`, `ExpenseRetrieveUpdateDestroyView`, `RevenueCreateListView`, `RevenueRetrieveUpdateDestroyView` e as views equivalentes de `Transfer` — sempre dentro do mesmo `transaction.atomic()` da escrita da despesa/receita que a originou. Isso evita o acoplamento implícito de signals e garante que o recálculo aconteça na mesma transação do dado que o disparou.
 
 ```python
-from django.db import models, transaction
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
-from decimal import Decimal
+# accounts/services.py
+def recalculate_account_balance(account_id):
+    """Recalcula current_balance/available_balance a partir de Revenue
+    (received=True) e Expense (payed=True, excluindo saldo inicial)."""
 
-def update_account_balance(account):
-    """
-    Atualiza o saldo de uma conta baseado em receitas e despesas.
-
-    Fórmula: saldo = soma(receitas recebidas) - soma(despesas pagas)
-    """
-    from revenues.models import Revenue
-    from expenses.models import Expense
-
-    with transaction.atomic():
-        # Total de receitas recebidas
-        total_revenues = Revenue.objects.filter(
-            account=account,
-            received=True
-        ).aggregate(total=models.Sum('value'))['total'] or Decimal('0.00')
-
-        # Total de despesas pagas
-        total_expenses = Expense.objects.filter(
-            account=account,
-            payed=True
-        ).aggregate(total=models.Sum('value'))['total'] or Decimal('0.00')
-
-        # Atualizar saldo
-        new_balance = total_revenues - total_expenses
-        account.current_balance = new_balance
-        account.save(update_fields=['current_balance'])
-
-
-@receiver(post_save, sender='revenues.Revenue')
-def update_balance_on_revenue_save(sender, instance, created, **kwargs):
-    """Atualiza saldo da conta quando receita é criada ou editada."""
-    if instance.account:
-        update_account_balance(instance.account)
-
-
-@receiver(post_delete, sender='revenues.Revenue')
-def update_balance_on_revenue_delete(sender, instance, **kwargs):
-    """Atualiza saldo da conta quando receita é deletada."""
-    if instance.account:
-        update_account_balance(instance.account)
-
-
-@receiver(post_save, sender='expenses.Expense')
-def update_balance_on_expense_save(sender, instance, created, **kwargs):
-    """Atualiza saldo da conta quando despesa é criada ou editada."""
-    if instance.account:
-        update_account_balance(instance.account)
-
-
-@receiver(post_delete, sender='expenses.Expense')
-def update_balance_on_expense_delete(sender, instance, **kwargs):
-    """Atualiza saldo da conta quando despesa é deletada."""
-    if instance.account:
-        update_account_balance(instance.account)
-
-
-@receiver(post_save, sender='accounts.Account')
-def create_initial_revenue_on_account_creation(sender, instance, created, **kwargs):
-    """
-    Cria receita de saldo inicial quando conta é criada com saldo > 0.
-    """
-    from revenues.models import Revenue
-
-    if created and instance.current_balance > Decimal('0.00'):
-        revenue_date = instance.opening_date or timezone.now().date()
-        revenue_time = timezone.now().time()
-
-        Revenue.objects.create(
-            description='Saldo inicial',
-            value=instance.current_balance,
-            date=revenue_date,
-            horary=revenue_time,
-            category='deposit',
-            account=instance,
-            received=True,
-            member=instance.owner,
-            created_by=instance.created_by,
-            updated_by=instance.updated_by,
-            notes='Receita criada automaticamente a partir do saldo inicial da conta.'
-        )
+def get_projected_balance(account_id, target_date):
+    """Projeta o saldo em uma data futura a partir de available_balance,
+    somando receitas pendentes e subtraindo despesas pendentes até a data."""
 ```
 
-**Benefícios**:
-- Saldo sempre correto e consistente
-- Não precisa recalcular manualmente
-- Transações atômicas evitam inconsistências
+> ⚠️ Risco conhecido (TODO no código, `security #341`): `recalculate_account_balance` soma todas as `Expense`/`Revenue` vinculadas ao `account_id`, independente de quem as criou. Só é seguro enquanto todo caminho de escrita que define `account` validar a propriedade (ver `expenses/serializers.py`, `transfers/serializers.py`, `loans/views.py`, `payables/views.py`, `receivables/views.py`).
+
+**Signal que permanece em `accounts/signals.py`**: `create_initial_revenue_on_account_creation` — ao criar uma `Account` com `current_balance` diferente de zero, cria automaticamente uma `Revenue` (saldo inicial positivo, `category='deposit'`, `is_initial_balance=True`) ou uma `Expense` (saldo inicial negativo — "cheque especial", `is_initial_balance=True`), marcadas para serem excluídas do saldo projetado.
+
+**Benefícios da mudança**:
+- Saldo recalculado na mesma transação da escrita que o originou (sem race condition entre signal e response)
+- Lógica testável isoladamente, sem depender do ciclo de signals do Django
+- Mais fácil de rastrear: toda chamada a `recalculate_account_balance` é explícita no código da view
 
 ### 2. Signals de Transferência
 
@@ -605,7 +560,11 @@ graph TD
 
 **Arquivo**: `apps/api/loans/signals.py`
 
-**Objetivo**: Atualizar automaticamente `payed_value` e `status` de empréstimos quando despesas/receitas relacionadas são criadas, editadas ou deletadas.
+**Objetivo**: Além de atualizar `payed_value` e `status` de empréstimos quando despesas/receitas relacionadas são criadas, editadas ou deletadas, este módulo também:
+- **Gera parcelas automaticamente** (`generate_loan_installments`, `post_save` de `Loan`): se `installments > 1`, cria em lote os `LoanInstallment` (valor dividido, datas de vencimento respeitando `payment_frequency` — mensal, bimestral, trimestral, semestral, anual).
+- **Preserva despesas ao excluir um empréstimo** (`nullify_expenses_on_loan_delete`, `post_delete` de `Loan`): zera `related_loan` nas `Expense` vinculadas em vez de excluí-las, evitando órfãos.
+- **Considera `initial_payed_value`**: `payed_value` final = `initial_payed_value` (valor já pago informado na criação, sem despesa/receita vinculada) + soma de despesas/receitas vinculadas.
+- **Desativa a despesa fixa ao quitar**: quando o status calculado vira `'paid'`, qualquer `FixedExpense` com `related_loan` apontando para o empréstimo é desativada (`is_active=False`).
 
 ```python
 from django.db.models import Sum

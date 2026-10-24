@@ -93,12 +93,21 @@ def _tasks(ctx: Context, day: date) -> list[Item]:
     # Instâncias são geradas sob demanda: sem isso, um dia em que o usuário
     # não abriu o app não teria tarefas a revisar.
     InstanceGenerator.generate_for_date(ctx.member, day)
-    qs = TaskInstance.objects.filter(
-        owner=ctx.member,
-        scheduled_date=day,
-        status__in=("pending", "in_progress"),
-        is_deleted=False,
-    ).order_by("scheduled_time", "occurrence_index")
+    # Tarefas vinculadas a refeição/hidratação/treino já são cobradas nas
+    # etapas "meals"/"hydration"/"workout" — listá-las aqui também duplicaria
+    # a pendência.
+    qs = (
+        TaskInstance.objects.filter(
+            owner=ctx.member,
+            scheduled_date=day,
+            status__in=("pending", "in_progress"),
+            is_deleted=False,
+        )
+        .exclude(template__linked_meal_type__isnull=False)
+        .exclude(template__linked_hydration_goal__isnull=False)
+        .exclude(template__linked_workout=True)
+        .order_by("scheduled_time", "occurrence_index")
+    )
     return [
         {
             "key": str(t.uuid),
@@ -133,6 +142,11 @@ def _goals(ctx: Context, day: date) -> list[Item]:
     return [{"key": str(g.uuid), "label": g.title, "id": g.id} for g in qs]
 
 
+# Mesma ordem usada em "Plano de hoje" e no dropdown de registro de sessão
+# (DIVISION_CATEGORY_ORDER em apps/web/src/lib/workout-calendar.ts).
+_WORKOUT_CATEGORY_ORDER = {"mobility": 0, "resistance": 1, "cardio": 2}
+
+
 def _planned_workout_days(ctx: Context, day: date) -> list[WorkoutDay]:
     days = WorkoutDay.objects.filter(
         owner=ctx.member,
@@ -140,7 +154,13 @@ def _planned_workout_days(ctx: Context, day: date) -> list[WorkoutDay]:
         plan__is_deleted=False,
         is_deleted=False,
     ).select_related("plan")
-    return [d for d in days if day.weekday() in (d.days_of_week or [])]
+    today_days = [d for d in days if day.weekday() in (d.days_of_week or [])]
+    return sorted(
+        today_days,
+        key=lambda d: _WORKOUT_CATEGORY_ORDER.get(
+            d.plan.category, len(_WORKOUT_CATEGORY_ORDER)
+        ),
+    )
 
 
 def _workouts(ctx: Context, day: date) -> list[Item]:
